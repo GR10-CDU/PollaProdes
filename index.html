@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<!-- APP PRODE — index.html | 2026-03-07 02:30 ARG | pollaprodes.com -->
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#070C15"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>APP PRODE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#070C15}
+body{font-family:'Plus Jakarta Sans',sans-serif;color:#fff;-webkit-font-smoothing:antialiased}
+#root{height:100%}
+@keyframes spin   {to{transform:rotate(360deg)}}
+@keyframes fadeUp {from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse  {0%,100%{opacity:1}50%{opacity:.45}}
+input::placeholder{color:rgba(255,255,255,.2)}
+input:focus{outline:none;border-color:rgba(0,200,150,.55)!important}
+button:active{transform:scale(.96)}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+.fu{animation:fadeUp .3s ease forwards}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const{useState,useEffect,useRef}=React;
+
+// ═══════════════════════════════════════════════
+//  CONFIG — pegá tu Apps Script Web App URL acá
+// ═══════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzL9kXBO6Mp3wPbl5-xlc9ITH6JX37XJ1BXhRMAAeo0AVi4UvGNRZ963jOkRVSU58Y/exec"; // ← https://script.google.com/macros/s/XXX/exec
+
+// ═══════════════════════════════════════════════
+//  COLORES
+// ═══════════════════════════════════════════════
+const C={
+  bg:"#070C15",card:"#0F1623",card2:"#162030",
+  accent:"#00C896",gold:"#FFB800",
+  L:"#4A9EFF",E:"#FFD60A",V:"#FF4D6D",
+  text:"#FFFFFF",text2:"#7D8CA0",border:"rgba(255,255,255,.07)"
+};
+
+// ═══════════════════════════════════════════════
+//  MOCK DATA
+// ═══════════════════════════════════════════════
+const MOCK_PARTIDOS=[
+  {n:1,local:"River Plate",  visit:"Boca Juniors",  hora:"21:00",liga:"Liga Prof.",tipo:"Polla", pctL:42,pctE:28,pctV:30,gL:null,gV:null,estado:"Pendiente"},
+  {n:2,local:"Racing Club",  visit:"Independiente", hora:"18:30",liga:"Liga Prof.",tipo:"Normal",pctL:55,pctE:25,pctV:20,gL:null,gV:null,estado:"Pendiente"},
+  {n:3,local:"San Lorenzo",  visit:"Huracán",       hora:"16:00",liga:"Liga Prof.",tipo:"Normal",pctL:38,pctE:35,pctV:27,gL:null,gV:null,estado:"Pendiente"},
+  {n:4,local:"Vélez",        visit:"Lanús",         hora:"20:00",liga:"Liga Prof.",tipo:"Normal",pctL:50,pctE:30,pctV:20,gL:null,gV:null,estado:"Pendiente"},
+  {n:5,local:"Def. y Just.", visit:"Talleres",      hora:"17:00",liga:"Liga Prof.",tipo:"Normal",pctL:30,pctE:30,pctV:40,gL:null,gV:null,estado:"Pendiente"},
+  {n:6,local:"Estudiantes",  visit:"Gimnasia LP",   hora:"21:30",liga:"Liga Prof.",tipo:"Doble", pctL:60,pctE:20,pctV:20,gL:null,gV:null,estado:"Pendiente"},
+  {n:7,local:"Atl. Tucumán", visit:"Belgrano",      hora:"19:00",liga:"Liga Prof.",tipo:"Doble", pctL:45,pctE:30,pctV:25,gL:null,gV:null,estado:"Pendiente"},
+];
+const MOCK_TABLA=[
+  {pos:1,nombre:"Germán R.",pts:87},{pos:2,nombre:"Lucas M.",pts:81},
+  {pos:3,nombre:"Martina G.",pts:76},{pos:4,nombre:"Carlos P.",pts:71},
+  {pos:5,nombre:"Ana L.",pts:65},{pos:6,nombre:"Diego F.",pts:59},
+  {pos:7,nombre:"Sofía B.",pts:52},{pos:8,nombre:"Pablo H.",pts:45},
+];
+const MOCK_PUNTAJES=[
+  {fecha:4,pts:11,normal:8, doble:2,polla:0,reglas:1},
+  {fecha:3,pts:9, normal:6, doble:2,polla:0,reglas:1},
+  {fecha:2,pts:8, normal:5, doble:2,polla:0,reglas:1},
+  {fecha:1,pts:12,normal:7, doble:4,polla:6,reglas:2},
+];
+const MOCK_PARTICIPANTES=[
+  {id:"USR001",nombre:"Germán R.",email:"german@gmail.com",estado:"Activo",pts:87},
+  {id:"USR002",nombre:"Lucas M.", email:"lucas@gmail.com", estado:"Activo",pts:81},
+  {id:"USR003",nombre:"Martina G.",email:"martina@gmail.com",estado:"Activo",pts:76},
+  {id:"USR004",nombre:"Carlos P.",email:"carlos@gmail.com",estado:"Activo",pts:71},
+];
+const MOCK_MATRIZ={
+  "Germán R.": ["L","E","L","V","L","L","V"],
+  "Lucas M.":  ["V","L","V","L","E","L","L"],
+  "Martina G.":["L","E","E","L","V","V","L"],
+  "Carlos P.": ["L","V","L","V","L","L","V"],
+};
+const REGLAS_DEF=[
+  {cod:"NPF", nombre:"No Puede Fallar",  desc:"1 partido L/V que no puede fallar",     pts:"3 pts",    tipo:"LV"},
+  {cod:"LMR", nombre:"La Marea Roja",    desc:"3 partidos con tarjeta roja",            pts:"1pt/tarj", tipo:"any3"},
+  {cod:"LR",  nombre:"La Rachita",       desc:"5 partidos consecutivos acertados",      pts:"1pt/cons", tipo:"inicio"},
+  {cod:"LLDG",nombre:"Lluvia de Goles",  desc:"1 partido con 5 o más goles",           pts:"4 pts",    tipo:"any"},
+  {cod:"10",  nombre:"El Diego",         desc:"3 empates de tus pronósticos E",         pts:"5 pts",    tipo:"E3"},
+  {cod:"GSA", nombre:"Goles Son Amores", desc:"1 partido L/V, goles de ambos equipos", pts:"1pt/gol",  tipo:"LV"},
+  {cod:"ZPL", nombre:"La Zapali",        desc:"1 partido L/V gana por 3+ goles",       pts:"4 pts",    tipo:"LV"},
+  {cod:"MK",  nombre:"La MK",            desc:"Resultado exacto de 1 partido L/V",     pts:"5 pts",    tipo:"LV_exact"},
+  {cod:"EQS", nombre:"Empate Que Suma",  desc:"1 partido terminará en empate",          pts:"3 pts",    tipo:"any"},
+];
+
+// ═══════════════════════════════════════════════
+//  API
+// ═══════════════════════════════════════════════
+async function api(action,params={}){
+  if(!SCRIPT_URL){await new Promise(r=>setTimeout(r,300));return mockRes(action,params);}
+  try{
+    const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,...params})});
+    return await r.json();
+  }catch{return mockRes(action,params);}
+}
+function mockRes(action,p){
+  switch(action){
+    case"login":
+      if(p.email==="admin@prode.com"&&p.pass==="1234") return{ok:true,user:{id:"ADM001",nombre:"Admin",role:"admin"}};
+      if(p.email==="german@gmail.com"&&p.pass==="1234") return{ok:true,user:{id:"USR001",nombre:"Germán R.",role:"jugador"}};
+      return{ok:false,error:"Email o contraseña incorrectos"};
+    case"getPartidos": return{ok:true,partidos:MOCK_PARTIDOS,fechaCerrada:false,fecha:1,misPronos:{}};
+    case"getTabla":    return{ok:true,tabla:MOCK_TABLA};
+    case"getMisPuntajes": return{ok:true,puntajes:MOCK_PUNTAJES,total:40};
+    case"getAdminStats":  return{ok:true,stats:{participantes:8,fechaActual:1,pronHoy:6,pendientes:2}};
+    case"getParticipantes": return{ok:true,participantes:MOCK_PARTICIPANTES};
+    default: return{ok:true};
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  ESTILOS INLINE
+// ═══════════════════════════════════════════════
+const INP={width:"100%",padding:"13px 16px",background:"rgba(255,255,255,.05)",
+  border:`1px solid ${C.border}`,borderRadius:10,color:C.text,
+  fontSize:15,fontFamily:"'Plus Jakarta Sans',sans-serif",transition:"border-color .2s"};
+
+// ═══════════════════════════════════════════════
+//  MICRO COMPONENTS
+// ═══════════════════════════════════════════════
+function Spinner(){
+  return React.createElement("div",{style:{display:"flex",justifyContent:"center",padding:48}},
+    React.createElement("div",{style:{
+      width:32,height:32,border:`3px solid ${C.border}`,
+      borderTopColor:C.accent,borderRadius:"50%",animation:"spin .7s linear infinite"
+    }})
+  );
+}
+
+function Badge({tipo}){
+  const cfg={
+    Polla: {bg:"rgba(255,184,0,.15)",  color:C.gold,    label:"⭐ POLLA"},
+    Doble: {bg:"rgba(138,108,220,.15)",color:"#9C7FD4", label:"×2 DOBLE"},
+    Normal:{bg:"rgba(255,255,255,.06)",color:C.text2,   label:"NORMAL"},
+  };
+  const s=cfg[tipo]||cfg.Normal;
+  return React.createElement("span",{style:{
+    fontSize:9,fontWeight:700,padding:"3px 8px",borderRadius:5,
+    background:s.bg,color:s.color,letterSpacing:1,textTransform:"uppercase"
+  }},s.label);
+}
+
+function DemoBanner(){
+  if(SCRIPT_URL) return null;
+  return React.createElement("div",{style:{
+    background:"rgba(255,184,0,.1)",borderBottom:"1px solid rgba(255,184,0,.2)",
+    padding:"6px 16px",textAlign:"center",fontSize:11,color:C.gold,letterSpacing:.5
+  }},"⚡ MODO DEMO — Conectá SCRIPT_URL para usar datos reales de tu Google Sheets");
+}
+
+// ═══════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════
+function LoginScreen({onLogin}){
+  const[email,setEmail]=useState("");
+  const[pass,setPass]=useState("");
+  const[loading,setLoading]=useState(false);
+  const[err,setErr]=useState("");
+
+  const handle=async()=>{
+    if(!email||!pass){setErr("Completá todos los campos");return;}
+    setLoading(true);setErr("");
+    const r=await api("login",{email,pass});
+    setLoading(false);
+    if(r.ok) onLogin(r.user);
+    else setErr(r.error||"Error al iniciar sesión");
+  };
+
+  return(
+    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",
+      background:`radial-gradient(ellipse at 30% 40%,rgba(0,200,150,.1) 0%,transparent 55%),
+                  radial-gradient(ellipse at 80% 80%,rgba(74,158,255,.07) 0%,transparent 50%),${C.bg}`,
+      padding:20}}>
+      <div style={{width:"100%",maxWidth:380}} className="fu">
+        <DemoBanner/>
+        <div style={{textAlign:"center",marginBottom:36}}>
+          <div style={{
+            width:88,height:88,borderRadius:24,
+            background:`linear-gradient(135deg,${C.accent},#007A5E)`,
+            display:"flex",alignItems:"center",justifyContent:"center",
+            margin:"0 auto 20px",fontSize:40,
+            boxShadow:`0 20px 60px rgba(0,200,150,.3)`
+          }}>⚽</div>
+          <h1 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:44,fontWeight:900,letterSpacing:3,lineHeight:1}}>APP PRODE</h1>
+          <p style={{color:C.text2,fontSize:13,marginTop:6}}>pollaprodes.com · Temporada 2026</p>
+        </div>
+
+        <div style={{background:C.card,borderRadius:20,padding:32,border:`1px solid ${C.border}`,boxShadow:"0 32px 80px rgba(0,0,0,.5)"}}>
+          <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,letterSpacing:2,marginBottom:24}}>INICIAR SESIÓN</h2>
+          <input type="email" placeholder="Email" value={email}
+            onChange={e=>setEmail(e.target.value)}
+            onKeyDown={e=>e.key==="Enter"&&handle()}
+            style={INP}/>
+          <input type="password" placeholder="Contraseña / PIN" value={pass}
+            onChange={e=>setPass(e.target.value)}
+            onKeyDown={e=>e.key==="Enter"&&handle()}
+            style={{...INP,marginTop:12}}/>
+          {err&&<p style={{color:C.V,fontSize:13,marginTop:10}}>⚠ {err}</p>}
+          <button onClick={handle} disabled={loading} style={{
+            width:"100%",marginTop:20,padding:"15px 0",
+            background:loading?C.card2:`linear-gradient(135deg,${C.accent},#007A5E)`,
+            border:`1px solid ${loading?C.border:"transparent"}`,
+            borderRadius:12,color:loading?C.text2:"#fff",
+            fontFamily:"'Barlow Condensed',sans-serif",fontSize:19,fontWeight:800,letterSpacing:2,
+            cursor:loading?"wait":"pointer",
+            boxShadow:loading?"none":`0 8px 28px rgba(0,200,150,.35)`,transition:"all .2s"
+          }}>{loading?"INGRESANDO...":"ENTRAR"}</button>
+          <div style={{marginTop:20,padding:14,background:"rgba(255,255,255,.03)",borderRadius:10}}>
+            <p style={{fontSize:11,color:C.text2,lineHeight:1.8,margin:0}}>
+              <span style={{color:C.accent,fontWeight:600}}>Jugador:</span> german@gmail.com / 1234<br/>
+              <span style={{color:C.V,fontWeight:600}}>Admin:</span> admin@prode.com / 1234
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+//  FECHA SCREEN
+// ═══════════════════════════════════════════════
+function FechaScreen({user,pronos,setPronos,partidos,setPartidos,onGoReglas}){
+  const[loading,setLoading]=useState(true);
+  const[fechaCerrada,setFechaCerrada]=useState(false);
+  const[fecha,setFecha]=useState(1);
+  const[saving,setSaving]=useState(false);
+  const[saved,setSaved]=useState(false);
+
+  useEffect(()=>{
+    api("getPartidos",{userId:user.id}).then(r=>{
+      if(r.ok){
+        setPartidos(r.partidos);
+        setFechaCerrada(r.fechaCerrada);
+        setFecha(r.fecha||1);
+        if(r.misPronos&&Object.keys(r.misPronos).length) setPronos(r.misPronos);
+      }
+      setLoading(false);
+    });
+  },[]);
+
+  const total=partidos.length;
+  const comp=Object.keys(pronos).length;
+
+  const handleSave=async()=>{
+    setSaving(true);
+    await api("savePronosticos",{userId:user.id,fecha,pronos});
+    setSaving(false);setSaved(true);
+    setTimeout(()=>setSaved(false),2500);
+  };
+
+  if(loading) return React.createElement("div",{style:{paddingTop:40}},React.createElement(Spinner));
+
+  return(
+    <div className="fu">
+      {/* Header */}
+      <div style={{padding:"20px 20px 16px",background:`linear-gradient(180deg,rgba(0,200,150,.08) 0%,transparent 100%)`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+          <div>
+            <p style={{color:C.text2,fontSize:11,letterSpacing:1.5,textTransform:"uppercase",marginBottom:4}}>Fecha Actual</p>
+            <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:48,fontWeight:900,lineHeight:1,letterSpacing:1}}>FECHA {fecha}</h2>
+          </div>
+          <div style={{
+            textAlign:"center",
+            background:comp===total?"rgba(0,200,150,.12)":"rgba(255,255,255,.05)",
+            border:`1px solid ${comp===total?C.accent:C.border}`,borderRadius:14,padding:"10px 16px"
+          }}>
+            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:28,fontWeight:800,color:comp===total?C.accent:C.text,lineHeight:1}}>{comp}/{total}</span>
+            <p style={{fontSize:10,color:C.text2,marginTop:2,letterSpacing:.5}}>pronósticos</p>
+          </div>
+        </div>
+        {fechaCerrada&&(
+          <div style={{marginTop:12,padding:"10px 16px",background:"rgba(255,77,109,.08)",border:"1px solid rgba(255,77,109,.25)",borderRadius:10,display:"flex",alignItems:"center",gap:8}}>
+            <span>🔒</span>
+            <span style={{color:C.V,fontSize:13,fontWeight:600}}>Pronósticos cerrados — solo lectura</span>
+          </div>
+        )}
+        <div style={{marginTop:12,height:3,background:"rgba(255,255,255,.06)",borderRadius:2}}>
+          <div style={{height:"100%",borderRadius:2,width:`${(comp/total)*100}%`,background:`linear-gradient(90deg,${C.accent},#007A5E)`,transition:"width .4s ease"}}/>
+        </div>
+      </div>
+
+      {/* Partidos */}
+      <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:10}}>
+        {partidos.map(p=>{
+          const sel=pronos[p.n];
+          const selClr=sel==="L"?C.L:sel==="E"?C.E:sel==="V"?C.V:null;
+          return(
+            <div key={p.n} style={{
+              background:C.card,border:`1px solid ${selClr?selClr+"50":C.border}`,
+              borderRadius:16,padding:"14px 16px",
+              boxShadow:selClr?`0 4px 24px ${selClr}18`:"none",transition:"all .2s"
+            }}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:12,fontWeight:700,color:C.text2}}>#{p.n}</span>
+                  <Badge tipo={p.tipo}/>
+                </div>
+                <div style={{display:"flex",gap:6}}>
+                  <span style={{fontSize:11,color:C.text2}}>{p.hora}</span>
+                  <span style={{fontSize:10,color:C.text2,background:"rgba(255,255,255,.05)",padding:"2px 8px",borderRadius:4}}>{p.liga}</span>
+                </div>
+              </div>
+              <div style={{display:"flex",alignItems:"center",marginBottom:12}}>
+                <span style={{flex:1,fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:700}}>{p.local}</span>
+                <span style={{padding:"4px 12px",fontFamily:"'Barlow Condensed',sans-serif",fontSize:12,fontWeight:700,color:C.text2,letterSpacing:1}}>VS</span>
+                <span style={{flex:1,fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:700,textAlign:"right"}}>{p.visit}</span>
+              </div>
+
+              {!fechaCerrada&&p.gL===null&&(
+                <div style={{display:"flex",gap:8}}>
+                  {["L","E","V"].map(v=>{
+                    const clr=v==="L"?C.L:v==="E"?C.E:C.V;
+                    const pct=v==="L"?p.pctL:v==="E"?p.pctE:p.pctV;
+                    const isSel=sel===v;
+                    return(
+                      <button key={v} onClick={()=>{setPronos(prev=>({...prev,[p.n]:v}));setSaved(false);}} style={{
+                        flex:1,padding:"11px 0",
+                        background:isSel?clr:"rgba(255,255,255,.04)",
+                        border:`1px solid ${isSel?clr:"rgba(255,255,255,.08)"}`,
+                        borderRadius:12,cursor:"pointer",transition:"all .15s",
+                        display:"flex",flexDirection:"column",alignItems:"center",gap:2
+                      }}>
+                        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:900,color:isSel?"#fff":clr,lineHeight:1}}>{v}</span>
+                        <span style={{fontSize:10,color:isSel?"rgba(255,255,255,.75)":C.text2}}>{pct}%</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {fechaCerrada&&sel&&(
+                <div style={{padding:"8px 12px",background:"rgba(255,255,255,.05)",borderRadius:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span style={{fontSize:12,color:C.text2}}>Tu pronóstico</span>
+                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,color:sel==="L"?C.L:sel==="E"?C.E:C.V}}>{sel}</span>
+                </div>
+              )}
+              {/* PCT bar */}
+              <div style={{display:"flex",gap:2,borderRadius:3,overflow:"hidden",height:3,marginTop:8}}>
+                <div style={{width:`${p.pctL}%`,background:C.L,opacity:.6}}/>
+                <div style={{width:`${p.pctE}%`,background:C.E,opacity:.6}}/>
+                <div style={{width:`${p.pctV}%`,background:C.V,opacity:.6}}/>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Botones */}
+      {!fechaCerrada&&(
+        <div style={{padding:"20px 16px",display:"flex",gap:12}}>
+          <button onClick={handleSave} disabled={saving||comp===0} style={{
+            flex:2,padding:"15px 0",
+            background:saved?"rgba(0,200,150,.12)":`linear-gradient(135deg,${C.accent},#007A5E)`,
+            border:saved?`1px solid ${C.accent}`:"none",
+            borderRadius:14,color:saved?C.accent:"#fff",
+            fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:800,letterSpacing:1,
+            cursor:"pointer",opacity:(saving||comp===0)?.4:1,transition:"all .3s",
+            boxShadow:saved||saving?"none":`0 8px 28px rgba(0,200,150,.28)`
+          }}>{saving?"GUARDANDO...":saved?"✓ GUARDADO":"GUARDAR PRONÓSTICOS"}</button>
+          {comp===total&&(
+            <button onClick={onGoReglas} style={{
+              flex:1,padding:"15px 0",
+              background:"rgba(255,184,0,.1)",border:"1px solid rgba(255,184,0,.35)",
+              borderRadius:14,color:C.gold,
+              fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:800,letterSpacing:1,cursor:"pointer"
+            }}>⭐ REGLAS</button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+//  REGLAS SCREEN
+// ═══════════════════════════════════════════════
+function ReglasScreen({user,partidos,pronos,onBack}){
+  const[sel,setSel]=useState({});
+  const[saving,setSaving]=useState(false);
+  const[saved,setSaved]=useState(false);
+
+  const lv=partidos.filter(p=>pronos[p.n]==="L"||pronos[p.n]==="V");
+  const e=partidos.filter(p=>pronos[p.n]==="E");
+
+  const toggle=cod=>setSel(prev=>
+    prev[cod]?Object.fromEntries(Object.entries(prev).filter(([k])=>k!==cod)):{...prev,[cod]:{partido:null,detalle:""}}
+  );
+
+  const handleSave=async()=>{
+    setSaving(true);
+    await api("saveReglas",{userId:user.id,fecha:1,reglas:sel});
+    setSaving(false);setSaved(true);setTimeout(()=>setSaved(false),2500);
+  };
+
+  return(
+    <div className="fu">
+      <div style={{padding:"16px 20px",display:"flex",alignItems:"center",gap:12,borderBottom:`1px solid ${C.border}`}}>
+        <button onClick={onBack} style={{
+          background:"rgba(255,255,255,.06)",border:"none",width:38,height:38,
+          borderRadius:10,color:C.text2,cursor:"pointer",fontSize:18,
+          display:"flex",alignItems:"center",justifyContent:"center"
+        }}>←</button>
+        <div>
+          <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:26,fontWeight:800,letterSpacing:1}}>REGLAS ESPECIALES</h2>
+          <p style={{color:C.text2,fontSize:12,marginTop:1}}>Fecha 1 · elegí tus apuestas especiales</p>
+        </div>
+      </div>
+
+      <div style={{padding:"12px 16px",display:"flex",flexDirection:"column",gap:10}}>
+        {REGLAS_DEF.map(regla=>{
+          const isSel=!!sel[regla.cod];
+          return(
+            <div key={regla.cod} style={{
+              background:C.card,border:`1px solid ${isSel?"rgba(255,184,0,.35)":C.border}`,
+              borderRadius:16,padding:16,boxShadow:isSel?"0 4px 24px rgba(255,184,0,.12)":"none",transition:"all .2s"
+            }}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                <div style={{flex:1}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:5,flexWrap:"wrap"}}>
+                    <span style={{fontSize:10,fontWeight:800,background:"rgba(255,255,255,.07)",color:C.text2,padding:"2px 8px",borderRadius:4,letterSpacing:1}}>{regla.cod}</span>
+                    <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,fontWeight:700}}>{regla.nombre}</span>
+                    <span style={{fontSize:10,fontWeight:700,color:C.gold,background:"rgba(255,184,0,.1)",padding:"2px 8px",borderRadius:5}}>{regla.pts}</span>
+                  </div>
+                  <p style={{color:C.text2,fontSize:13}}>{regla.desc}</p>
+                </div>
+                <button onClick={()=>toggle(regla.cod)} style={{
+                  width:34,height:34,marginLeft:12,flexShrink:0,
+                  background:isSel?C.gold:"rgba(255,255,255,.06)",border:"none",borderRadius:9,
+                  color:isSel?"#000":C.text2,cursor:"pointer",fontSize:16,
+                  display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700
+                }}>{isSel?"✓":"+"}</button>
+              </div>
+
+              {isSel&&(regla.tipo==="LV"||regla.tipo==="LV_exact")&&(
+                <div style={{marginTop:12}}>
+                  <p style={{fontSize:11,color:C.text2,marginBottom:8,letterSpacing:.5}}>ELEGÍ EL PARTIDO:</p>
+                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                    {lv.map(p=>(
+                      <button key={p.n}
+                        onClick={()=>setSel(prev=>({...prev,[regla.cod]:{...prev[regla.cod],partido:p.n}}))}
+                        style={{
+                          padding:"10px 14px",borderRadius:10,cursor:"pointer",textAlign:"left",fontSize:13,
+                          background:sel[regla.cod]?.partido===p.n?"rgba(0,200,150,.1)":"rgba(255,255,255,.04)",
+                          border:`1px solid ${sel[regla.cod]?.partido===p.n?C.accent:"rgba(255,255,255,.07)"}`,
+                          color:C.text,display:"flex",justifyContent:"space-between",alignItems:"center"
+                        }}>
+                        <span>{p.local} vs {p.visit}</span>
+                        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:16,fontWeight:700,color:pronos[p.n]==="L"?C.L:C.V}}>{pronos[p.n]}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {regla.tipo==="LV_exact"&&sel[regla.cod]?.partido&&(
+                    <input placeholder="Resultado exacto (ej: 2-1)"
+                      value={sel[regla.cod]?.detalle||""}
+                      onChange={e=>setSel(prev=>({...prev,[regla.cod]:{...prev[regla.cod],detalle:e.target.value}}))}
+                      style={{...INP,marginTop:8,fontSize:13}}/>
+                  )}
+                </div>
+              )}
+
+              {isSel&&regla.tipo==="E3"&&(
+                <div style={{marginTop:12}}>
+                  <p style={{fontSize:11,color:C.text2,marginBottom:8}}>TUS EMPATES (elegí 3):</p>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                    {e.map(p=>{
+                      const arr=sel[regla.cod]?.partidos||[];
+                      const isIn=arr.includes(p.n);
+                      return(
+                        <button key={p.n}
+                          onClick={()=>setSel(prev=>{
+                            const a=prev[regla.cod]?.partidos||[];
+                            const next=isIn?a.filter(x=>x!==p.n):(a.length<3?[...a,p.n]:a);
+                            return{...prev,[regla.cod]:{...prev[regla.cod],partidos:next}};
+                          })}
+                          style={{
+                            padding:"6px 12px",borderRadius:8,cursor:"pointer",fontSize:12,
+                            background:isIn?"rgba(255,214,10,.15)":"rgba(255,255,255,.04)",
+                            border:`1px solid ${isIn?C.E:"rgba(255,255,255,.07)"}`,
+                            color:isIn?C.E:C.text2,fontWeight:isIn?700:400
+                          }}>#{p.n} {p.local}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{padding:"16px 16px 32px"}}>
+        <button onClick={handleSave} disabled={saving} style={{
+          width:"100%",padding:"15px 0",
+          background:saved?"rgba(0,200,150,.12)":`linear-gradient(135deg,${C.gold},#CC8E00)`,
+          border:saved?`1px solid ${C.accent}`:"none",
+          borderRadius:14,color:saved?C.accent:"#000",
+          fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,fontWeight:800,letterSpacing:1,cursor:"pointer"
+        }}>{saving?"GUARDANDO...":saved?"✓ REGLAS GUARDADAS":"GUARDAR REGLAS ESPECIALES"}</button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+//  TABLA SCREEN
+// ═══════════════════════════════════════════════
+function TablaScreen({user}){
+  const[tabla,setTabla]=useState([]);
+  const[loading,setLoading]=useState(true);
+  useEffect(()=>{api("getTabla").then(r=>{if(r.ok)setTabla(r.tabla);setLoading(false);});},[]);
+  if(loading) return React.createElement("div",{style:{paddingTop:40}},React.createElement(Spinner));
+
+  const medals=["🥇","🥈","🥉"];
+  const podio=tabla.slice(0,3);
+
+  return(
+    <div className="fu">
+      <div style={{padding:"20px 20px 12px"}}>
+        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:36,fontWeight:900,letterSpacing:1}}>TABLA GENERAL</h2>
+        <p style={{color:C.text2,fontSize:12,marginTop:2}}>Temporada 2026 · {tabla.length} participantes</p>
+      </div>
+
+      {podio.length===3&&(
+        <div style={{
+          margin:"0 16px 16px",
+          background:"linear-gradient(135deg,rgba(255,184,0,.07),rgba(255,184,0,.02))",
+          border:"1px solid rgba(255,184,0,.15)",borderRadius:18,padding:"24px 12px 16px",
+          display:"grid",gridTemplateColumns:"1fr 1.15fr 1fr",gap:8,alignItems:"end"
+        }}>
+          {[podio[1],podio[0],podio[2]].map((r,idx)=>{
+            const realIdx=idx===0?1:idx===1?0:2;
+            const isFirst=realIdx===0;
+            return(
+              <div key={r.nombre} style={{textAlign:"center"}}>
+                <div style={{fontSize:isFirst?38:22,marginBottom:isFirst?4:6}}>{medals[realIdx]}</div>
+                <p style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:isFirst?15:14,fontWeight:isFirst?800:700,color:isFirst?C.gold:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.nombre}</p>
+                <div style={{
+                  background:isFirst?"rgba(255,184,0,.12)":"rgba(255,255,255,.07)",
+                  border:isFirst?"1px solid rgba(255,184,0,.3)":"none",
+                  borderRadius:12,padding:isFirst?"14px 0":"10px 0",marginTop:6
+                }}>
+                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:isFirst?34:26,fontWeight:isFirst?900:800,color:isFirst?C.gold:C.text}}>{r.pts}</span>
+                  <span style={{color:isFirst?C.gold:C.text2,fontSize:10,display:"block",opacity:.7}}>pts</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:4}}>
+        {tabla.map((row,i)=>{
+          const isMe=row.id===user.id||(i===0&&user.id==="USR001");
+          return(
+            <div key={i} style={{
+              display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderRadius:12,
+              background:isMe?"rgba(0,200,150,.07)":"rgba(255,255,255,.02)",
+              border:`1px solid ${isMe?"rgba(0,200,150,.2)":"transparent"}`,
+            }}>
+              <span style={{
+                fontFamily:"'Barlow Condensed',sans-serif",fontSize:i<3?18:15,fontWeight:800,
+                color:i===0?C.gold:i===1?"#C0C0C0":i===2?"#CD7F32":C.text2,
+                width:26,textAlign:"center"
+              }}>{i<3?medals[i]:row.pos}</span>
+              <span style={{
+                flex:1,fontFamily:"'Barlow Condensed',sans-serif",
+                fontSize:16,fontWeight:isMe?700:500,color:isMe?C.accent:C.text
+              }}>{row.nombre}{isMe&&<span style={{color:C.text2,fontWeight:400,fontSize:12}}> (vos)</span>}</span>
+              <div style={{textAlign:"right"}}>
+                <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,color:isMe?C.accent:C.text}}>{row.pts}</span>
+                <span style={{color:C.text2,fontSize:11,marginLeft:3}}>pts</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+//  MIS PUNTAJES
+// ═══════════════════════════════════════════════
+function MisPuntajesScreen({user}){
+  const[data,setData]=useState(null);
+  const[loading,setLoading]=useState(true);
+  useEffect(()=>{api("getMisPuntajes",{userId:user.id}).then(r=>{if(r.ok)setData(r);setLoading(false);});},[]);
+  if(loading) return React.createElement("div",{style:{paddingTop:40}},React.createElement(Spinner));
+
+  const total=data.puntajes.reduce((s,f)=>s+f.pts,0);
+  return(
+    <div className="fu">
+      <div style={{padding:"20px 20px 12px"}}>
+        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:36,fontWeight:900,letterSpacing:1}}>MIS PUNTAJES</h2>
+        <p style={{color:C.text2,fontSize:12,marginTop:2}}>{user.nombre}</p>
+      </div>
+      <div style={{
+        margin:"0 16px 16px",
+        background:`linear-gradient(135deg,rgba(0,200,150,.12),rgba(0,200,150,.03))`,
+        border:"1px solid rgba(0,200,150,.2)",borderRadius:18,padding:"22px 24px",
+        display:"flex",justifyContent:"space-between",alignItems:"center"
+      }}>
+        <div>
+          <p style={{color:C.text2,fontSize:11,letterSpacing:1.5,textTransform:"uppercase",marginBottom:4}}>Total Acumulado</p>
+          <div>
+            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:60,fontWeight:900,color:C.accent,lineHeight:1}}>{total}</span>
+            <span style={{color:C.text2,fontSize:16,marginLeft:8}}>pts</span>
+          </div>
+        </div>
+        <div style={{width:72,height:72,borderRadius:16,background:"rgba(0,200,150,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:36}}>⭐</div>
+      </div>
+
+      <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:10}}>
+        {data.puntajes.map(f=>(
+          <div key={f.fecha} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:16}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,fontWeight:700}}>FECHA {f.fecha}</span>
+              <span>
+                <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:30,fontWeight:800,color:C.accent}}>{f.pts}</span>
+                <span style={{color:C.text2,fontSize:13,marginLeft:4}}>pts</span>
+              </span>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8}}>
+              {[{label:"Normales",val:f.normal,color:C.text},{label:"Dobles",val:f.doble,color:"#9C7FD4"},{label:"Polla",val:f.polla,color:C.gold},{label:"Reglas",val:f.reglas,color:C.accent}].map(item=>(
+                <div key={item.label} style={{background:"rgba(255,255,255,.04)",borderRadius:10,padding:"10px 6px",textAlign:"center"}}>
+                  <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:24,fontWeight:800,color:item.color,lineHeight:1}}>{item.val}</div>
+                  <div style={{fontSize:9,color:C.text2,marginTop:3,letterSpacing:.5}}>{item.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+//  RESULTADOS
+// ═══════════════════════════════════════════════
+function ResultadosScreen({pronos}){
+  const[partidos,setPartidos]=useState([]);
+  const[loading,setLoading]=useState(true);
+  useEffect(()=>{api("getPartidos").then(r=>{if(r.ok)setPartidos(r.partidos);setLoading(false);});},[]);
+  if(loading) return React.createElement("div",{style:{paddingTop:40}},React.createElement(Spinner));
+
+  return(
+    <div className="fu">
+      <div style={{padding:"20px 20px 12px"}}>
+        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:36,fontWeight:900,letterSpacing:1}}>RESULTADOS</h2>
+        <p style={{color:C.text2,fontSize:12,marginTop:2}}>Fecha 1 · en vivo / finales</p>
+      </div>
+      <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:10}}>
+        {partidos.map(p=>{
+          const miP=pronos[p.n];
+          const res=p.gL!==null?(p.gL>p.gV?"L":p.gL===p.gV?"E":"V"):null;
+          const acerto=miP&&res&&miP===res;
+          return(
+            <div key={p.n} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:"14px 16px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                <div style={{display:"flex",gap:8}}><Badge tipo={p.tipo}/></div>
+                <span style={{
+                  fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:20,
+                  background:p.estado==="Jugado"?"rgba(0,200,150,.12)":p.estado==="En Vivo"?"rgba(255,77,109,.12)":"rgba(255,255,255,.05)",
+                  color:p.estado==="Jugado"?C.accent:p.estado==="En Vivo"?C.V:C.text2,
+                  border:p.estado==="En Vivo"?"1px solid rgba(255,77,109,.3)":"none",
+                  animation:p.estado==="En Vivo"?"pulse 2s infinite":"none"
+                }}>{p.estado==="En Vivo"?"● EN VIVO":p.estado.toUpperCase()}</span>
+              </div>
+              <div style={{display:"flex",alignItems:"center"}}>
+                <span style={{flex:1,fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:700}}>{p.local}</span>
+                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:30,fontWeight:900,letterSpacing:3,color:p.gL!==null?C.text:C.text2,padding:"6px 20px",background:"rgba(255,255,255,.06)",borderRadius:12,margin:"0 8px"}}>
+                  {p.gL!==null?`${p.gL} - ${p.gV}`:"- : -"}
+                </div>
+                <span style={{flex:1,fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:700,textAlign:"right"}}>{p.visit}</span>
+              </div>
+              {miP&&(
+                <div style={{marginTop:10,padding:"8px 12px",background:"rgba(255,255,255,.04)",borderRadius:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span style={{fontSize:11,color:C.text2}}>Tu pronóstico:</span>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,fontWeight:800,color:miP==="L"?C.L:miP==="E"?C.E:C.V}}>{miP}</span>
+                    {res&&<span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:6,background:acerto?"rgba(0,200,150,.15)":"rgba(255,77,109,.12)",color:acerto?C.accent:C.V}}>{acerto?"✓ Acertaste":"✗ Fallaste"}</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+//  ADMIN SCREENS
+// ═══════════════════════════════════════════════
+function AdminDashboard(){
+  const[stats,setStats]=useState(null);
+  useEffect(()=>{api("getAdminStats").then(r=>{if(r.ok)setStats(r.stats);});},[]);
+  const actions=[
+    {icon:"🗂️",label:"Nueva Fecha (Setup)",   desc:"Crear estructura de la próxima fecha"},
+    {icon:"🔒",label:"Cerrar Pronósticos",    desc:"Los participantes no podrán modificar"},
+    {icon:"🏆",label:"Calcular Puntajes",     desc:"Calcular puntajes de la fecha"},
+    {icon:"📢",label:"Enviar Notificaciones", desc:"Email a todos los participantes activos"},
+  ];
+  return(
+    <div className="fu" style={{padding:16}}>
+      <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:28,fontWeight:800,letterSpacing:1,marginBottom:16}}>PANEL ADMIN</h2>
+      {stats?(
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
+          {[{label:"Participantes",val:stats.participantes,icon:"👥",color:C.accent},
+            {label:"Fecha Actual",val:stats.fechaActual,icon:"📅",color:C.L},
+            {label:"Pronóst. Hoy",val:stats.pronHoy,icon:"✍️",color:C.gold},
+            {label:"Pendientes",val:stats.pendientes,icon:"⏳",color:C.V}
+          ].map(s=>(
+            <div key={s.label} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:16}}>
+              <span style={{fontSize:26}}>{s.icon}</span>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:40,fontWeight:900,color:s.color,lineHeight:1.1,marginTop:4}}>{s.val}</div>
+              <div style={{fontSize:11,color:C.text2,marginTop:2}}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      ):React.createElement(Spinner)}
+      <p style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,fontWeight:700,color:C.text2,letterSpacing:1.5,marginBottom:10}}>ACCIONES RÁPIDAS</p>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {actions.map(a=>(
+          <button key={a.label}
+            onClick={()=>alert(`"${a.label}"\n\nConectá SCRIPT_URL para activar esta función.`)}
+            style={{padding:"14px 18px",background:C.card,border:`1px solid ${C.border}`,borderRadius:12,cursor:"pointer",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:700}}>{a.icon} {a.label}</div>
+              <div style={{fontSize:12,color:C.text2,marginTop:2}}>{a.desc}</div>
+            </div>
+            <span style={{color:C.text2,fontSize:20}}>›</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AdminPartidosScreen(){
+  return(
+    <div className="fu">
+      <div style={{padding:"16px 20px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:26,fontWeight:800}}>PARTIDOS — FECHA 1</h2>
+        <button style={{padding:"8px 16px",background:"rgba(0,200,150,.1)",border:`1px solid ${C.accent}`,borderRadius:10,color:C.accent,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:700}}>+ AGREGAR</button>
+      </div>
+      <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:8}}>
+        {MOCK_PARTIDOS.map(p=>(
+          <div key={p.n} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 16px",display:"flex",alignItems:"center",gap:12}}>
+            <span style={{color:C.text2,fontSize:13,fontWeight:700,width:24}}>#{p.n}</span>
+            <div style={{flex:1}}>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:16,fontWeight:700}}>{p.local} vs {p.visit}</div>
+              <div style={{display:"flex",gap:8,marginTop:5,alignItems:"center"}}>
+                <Badge tipo={p.tipo}/>
+                <span style={{fontSize:11,color:C.text2}}>{p.hora} · {p.liga}</span>
+              </div>
+            </div>
+            <button style={{background:"rgba(255,255,255,.05)",border:"none",borderRadius:8,padding:"6px 12px",color:C.text2,cursor:"pointer",fontSize:13}}>✏️</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AdminResultadosScreen(){
+  const[partidos,setPartidos]=useState(MOCK_PARTIDOS.map(p=>({...p,gLe:"",gVe:"",tr:0})));
+  const[saving,setSaving]=useState({});
+  const[calculo,setCalculo]=useState(false);
+  return(
+    <div className="fu">
+      <div style={{padding:"16px 20px 12px"}}>
+        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:26,fontWeight:800}}>INGRESAR RESULTADOS</h2>
+        <p style={{color:C.text2,fontSize:12,marginTop:2}}>Fecha 1</p>
+      </div>
+      <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:10}}>
+        {partidos.map((p,i)=>(
+          <div key={p.n} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:"14px 16px"}}>
+            <div style={{marginBottom:10,display:"flex",gap:8,alignItems:"center"}}>
+              <Badge tipo={p.tipo}/>
+              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:15,fontWeight:700}}>#{p.n} {p.local} vs {p.visit}</span>
+            </div>
+            <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
+              <div style={{flex:1}}>
+                <p style={{fontSize:10,color:C.text2,marginBottom:4}}>Goles Local</p>
+                <input type="number" min="0" max="20" value={p.gLe}
+                  onChange={e=>setPartidos(prev=>prev.map((pp,ii)=>ii===i?{...pp,gLe:e.target.value}:pp))}
+                  style={{...INP,padding:12,textAlign:"center",fontSize:22,fontWeight:800}}/>
+              </div>
+              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:24,fontWeight:800,color:C.text2,paddingBottom:10}}>-</span>
+              <div style={{flex:1}}>
+                <p style={{fontSize:10,color:C.text2,marginBottom:4}}>Goles Visit.</p>
+                <input type="number" min="0" max="20" value={p.gVe}
+                  onChange={e=>setPartidos(prev=>prev.map((pp,ii)=>ii===i?{...pp,gVe:e.target.value}:pp))}
+                  style={{...INP,padding:12,textAlign:"center",fontSize:22,fontWeight:800}}/>
+              </div>
+              <div style={{width:60}}>
+                <p style={{fontSize:10,color:C.text2,marginBottom:4}}>🟥 Rojas</p>
+                <input type="number" min="0" max="10" value={p.tr}
+                  onChange={e=>setPartidos(prev=>prev.map((pp,ii)=>ii===i?{...pp,tr:e.target.value}:pp))}
+                  style={{...INP,padding:12,textAlign:"center",fontSize:16,fontWeight:700}}/>
+              </div>
+              <button disabled={p.gLe===""||p.gVe===""}
+                onClick={async()=>{
+                  setSaving(prev=>({...prev,[p.n]:true}));
+                  await api("saveResultado",{fecha:1,n:p.n,gL:+p.gLe,gV:+p.gVe,tr:+p.tr});
+                  setSaving(prev=>({...prev,[p.n]:"ok"}));
+                }}
+                style={{padding:"12px 10px",borderRadius:10,border:"none",
+                  background:saving[p.n]==="ok"?"rgba(0,200,150,.15)":"rgba(255,255,255,.06)",
+                  color:saving[p.n]==="ok"?C.accent:saving[p.n]?C.text2:C.text,
+                  cursor:(p.gLe===""||p.gVe==="")?"not-allowed":"pointer",fontSize:18,flexShrink:0
+                }}>{saving[p.n]==="ok"?"✓":saving[p.n]?"...":"▶"}</button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{padding:16}}>
+        <button onClick={async()=>{setCalculo(true);await api("calcularPuntajes",{fecha:1});setCalculo(false);alert("✅ Puntajes calculados y guardados.");}}
+          style={{width:"100%",padding:"16px 0",background:calculo?C.card2:`linear-gradient(135deg,${C.V},#CC1A3A)`,border:"none",borderRadius:14,color:"#fff",fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,fontWeight:800,letterSpacing:1,cursor:"pointer"}}>
+          {calculo?"CALCULANDO...":"🏆 CALCULAR PUNTAJES FECHA 1"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AdminPronosticosScreen(){
+  const vClr={L:C.L,E:C.E,V:C.V};
+  const usuarios=Object.keys(MOCK_MATRIZ);
+  return(
+    <div className="fu">
+      <div style={{padding:"16px 20px 12px"}}>
+        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:26,fontWeight:800}}>PRONÓSTICOS</h2>
+        <p style={{color:C.text2,fontSize:12,marginTop:2}}>Fecha 1 · matriz completa</p>
+      </div>
+      <div style={{overflowX:"auto",padding:"0 16px"}}>
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,minWidth:320}}>
+          <thead>
+            <tr style={{borderBottom:`1px solid ${C.border}`}}>
+              <th style={{padding:"8px 8px 8px 0",textAlign:"left",color:C.text2,fontWeight:600,width:90}}>Jugador</th>
+              {MOCK_PARTIDOS.map(p=>(
+                <th key={p.n} style={{padding:"8px 4px",textAlign:"center",color:C.text2,fontWeight:600,minWidth:34}}>
+                  #{p.n}<br/><span style={{fontSize:8,color:p.tipo==="Polla"?C.gold:p.tipo==="Doble"?"#9C7FD4":C.text2}}>{p.tipo[0]}</span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {usuarios.map((u,ri)=>(
+              <tr key={u} style={{background:ri%2===0?"transparent":"rgba(255,255,255,.02)"}}>
+                <td style={{padding:"8px 8px 8px 0",fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,fontWeight:600,whiteSpace:"nowrap"}}>{u.split(" ")[0]}</td>
+                {MOCK_PARTIDOS.map(p=>{
+                  const v=MOCK_MATRIZ[u]?.[p.n-1];
+                  return(
+                    <td key={p.n} style={{padding:"4px 3px",textAlign:"center"}}>
+                      {v?(
+                        <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:26,height:26,borderRadius:7,background:`${vClr[v]}15`,color:vClr[v],fontWeight:800,fontSize:12,border:`1px solid ${vClr[v]}40`}}>{v}</span>
+                      ):<span style={{color:C.border,fontSize:10}}>—</span>}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function AdminParticipantesScreen(){
+  const[participantes]=useState(MOCK_PARTICIPANTES);
+  return(
+    <div className="fu">
+      <div style={{padding:"16px 20px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:26,fontWeight:800}}>JUGADORES</h2>
+        <button style={{padding:"8px 16px",background:"rgba(0,200,150,.1)",border:`1px solid ${C.accent}`,borderRadius:10,color:C.accent,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:700}}>+ AGREGAR</button>
+      </div>
+      <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:8}}>
+        {participantes.map(p=>(
+          <div key={p.id} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"14px 16px",display:"flex",alignItems:"center",gap:12}}>
+            <div style={{width:42,height:42,borderRadius:12,flexShrink:0,background:"rgba(0,200,150,.12)",border:"1px solid rgba(0,200,150,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,fontWeight:800,color:C.accent}}>{p.nombre.charAt(0)}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:700}}>{p.nombre}</div>
+              <div style={{fontSize:11,color:C.text2,marginTop:1}}>{p.email}</div>
+            </div>
+            <div style={{textAlign:"right",flexShrink:0}}>
+              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,fontWeight:800,color:C.accent}}>{p.pts}</span>
+              <span style={{color:C.text2,fontSize:10,marginLeft:3}}>pts</span>
+            </div>
+            <span style={{fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:20,flexShrink:0,background:"rgba(0,200,150,.1)",color:C.accent,border:"1px solid rgba(0,200,150,.2)"}}>{p.estado}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+//  LAYOUTS
+// ═══════════════════════════════════════════════
+function BottomNav({nav,screen,setScreen,activeColor}){
+  return(
+    <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:C.card,borderTop:`1px solid ${C.border}`,display:"flex",zIndex:20}}>
+      {nav.map(item=>(
+        <button key={item.key} onClick={()=>setScreen(item.key)} style={{
+          flex:1,padding:"11px 0",background:"transparent",border:"none",cursor:"pointer",
+          display:"flex",flexDirection:"column",alignItems:"center",gap:3,
+          borderTop:screen===item.key?`2px solid ${activeColor}`:"2px solid transparent"
+        }}>
+          <span style={{fontSize:18}}>{item.icon}</span>
+          <span style={{fontSize:9,fontWeight:700,letterSpacing:.5,color:screen===item.key?activeColor:C.text2}}>{item.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function TopBar({title,subtitle,user,onLogout,color}){
+  return(
+    <div style={{padding:"13px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",background:C.card,borderBottom:`1px solid ${C.border}`,position:"sticky",top:0,zIndex:20}}>
+      <div>
+        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:900,letterSpacing:2,color:color||C.accent}}>{title}</span>
+        {subtitle&&<span style={{display:"block",fontSize:10,color:C.text2,marginTop:-1}}>{subtitle}</span>}
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <span style={{fontSize:12,color:C.text2}}>{user.nombre}</span>
+        <button onClick={onLogout} style={{background:"rgba(255,255,255,.06)",border:"none",width:32,height:32,borderRadius:8,color:C.text2,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>⎋</button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+//  MAIN APP
+// ═══════════════════════════════════════════════
+function AppProde(){
+  const[user,setUser]=useState(null);
+  const[screen,setScreen]=useState("login");
+  const[pronos,setPronos]=useState({});
+  const[partidos,setPartidos]=useState(MOCK_PARTIDOS);
+
+  const handleLogin=u=>{setUser(u);setScreen(u.role==="admin"?"admin-dashboard":"fecha");};
+  const handleLogout=()=>{setUser(null);setScreen("login");setPronos({});};
+
+  if(!user) return React.createElement(LoginScreen,{onLogin:handleLogin});
+
+  if(user.role==="admin"){
+    const adminNav=[
+      {key:"admin-dashboard",     icon:"📊",label:"Dashboard"},
+      {key:"admin-partidos",      icon:"⚽",label:"Partidos"},
+      {key:"admin-resultados",    icon:"🎯",label:"Resultados"},
+      {key:"admin-pronosticos",   icon:"📋",label:"Pronóst."},
+      {key:"admin-participantes", icon:"👥",label:"Jugadores"},
+    ];
+    const adminScreens={
+      "admin-dashboard":    React.createElement(AdminDashboard),
+      "admin-partidos":     React.createElement(AdminPartidosScreen),
+      "admin-resultados":   React.createElement(AdminResultadosScreen),
+      "admin-pronosticos":  React.createElement(AdminPronosticosScreen),
+      "admin-participantes":React.createElement(AdminParticipantesScreen),
+    };
+    return(
+      <div style={{background:C.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",paddingBottom:72}}>
+        <DemoBanner/>
+        <TopBar title="⚙ ADMIN PANEL" user={user} onLogout={handleLogout} color={C.V}/>
+        {adminScreens[screen]||adminScreens["admin-dashboard"]}
+        <BottomNav nav={adminNav} screen={screen} setScreen={setScreen} activeColor={C.V}/>
+      </div>
+    );
+  }
+
+  const jugNav=[
+    {key:"fecha",      icon:"📅",label:"Fecha"},
+    {key:"tabla",      icon:"🏆",label:"Tabla"},
+    {key:"puntos",     icon:"⭐",label:"Mis Pts"},
+    {key:"resultados", icon:"📊",label:"Resultados"},
+  ];
+  const jugScreens={
+    fecha:     React.createElement(FechaScreen,{user,pronos,setPronos,partidos,setPartidos,onGoReglas:()=>setScreen("reglas")}),
+    reglas:    React.createElement(ReglasScreen,{user,partidos,pronos,onBack:()=>setScreen("fecha")}),
+    tabla:     React.createElement(TablaScreen,{user}),
+    puntos:    React.createElement(MisPuntajesScreen,{user}),
+    resultados:React.createElement(ResultadosScreen,{pronos}),
+  };
+  return(
+    <div style={{background:C.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",paddingBottom:72}}>
+      <DemoBanner/>
+      <TopBar title="APP PRODE" subtitle="Temporada 2026" user={user} onLogout={handleLogout}/>
+      {jugScreens[screen]||jugScreens.fecha}
+      <BottomNav nav={jugNav} screen={screen} setScreen={setScreen} activeColor={C.accent}/>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(AppProde));
+</script>
+</body>
+</html>
