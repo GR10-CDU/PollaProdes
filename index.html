@@ -38,7 +38,7 @@ const{useState,useEffect,useRef}=React;
 // ═══════════════════════════════════════════════
 //  CONFIG — pegá tu Apps Script Web App URL acá
 // ═══════════════════════════════════════════════
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzL9kXBO6Mp3wPbl5-xlc9ITH6JX37XJ1BXhRMAAeo0AVi4UvGNRZ963jOkRVSU58Y/exec"; // ← https://script.google.com/macros/s/XXX/exec
+const SCRIPT_URL = ""; // ← https://script.google.com/macros/s/XXX/exec
 
 // ═══════════════════════════════════════════════
 //  COLORES
@@ -915,11 +915,103 @@ function AdminParticipantesScreen(){
 }
 
 // ═══════════════════════════════════════════════
-//  LAYOUTS
+//  RESPONSIVE HOOK
+// ═══════════════════════════════════════════════
+function useIsDesktop(){
+  const[isDesktop,setIsDesktop]=useState(window.innerWidth>=900);
+  useEffect(()=>{
+    const fn=()=>setIsDesktop(window.innerWidth>=900);
+    window.addEventListener("resize",fn);
+    return()=>window.removeEventListener("resize",fn);
+  },[]);
+  return isDesktop;
+}
+
+// ═══════════════════════════════════════════════
+//  SIDEBAR (desktop)
+// ═══════════════════════════════════════════════
+function Sidebar({nav,screen,setScreen,activeColor,user,onLogout,title,subtitle}){
+  return(
+    <div style={{
+      width:240,flexShrink:0,height:"100vh",position:"sticky",top:0,
+      background:C.card,borderRight:`1px solid ${C.border}`,
+      display:"flex",flexDirection:"column",
+    }}>
+      {/* Logo */}
+      <div style={{padding:"28px 24px 20px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:4}}>
+          <div style={{
+            width:40,height:40,borderRadius:10,
+            background:`linear-gradient(135deg,${activeColor},${activeColor==="#00C896"?"#007A5E":"#990020"})`,
+            display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,
+            boxShadow:`0 6px 20px ${activeColor}40`
+          }}>⚽</div>
+          <div>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,fontWeight:900,letterSpacing:2,color:activeColor,lineHeight:1}}>{title}</div>
+            {subtitle&&<div style={{fontSize:10,color:C.text2}}>{subtitle}</div>}
+          </div>
+        </div>
+      </div>
+
+      {/* Nav items */}
+      <nav style={{flex:1,padding:"0 12px",display:"flex",flexDirection:"column",gap:4}}>
+        {nav.map(item=>{
+          const isActive=screen===item.key;
+          return(
+            <button key={item.key} onClick={()=>setScreen(item.key)} style={{
+              width:"100%",padding:"11px 14px",
+              background:isActive?`${activeColor}12`:"transparent",
+              border:`1px solid ${isActive?`${activeColor}30`:"transparent"}`,
+              borderRadius:10,cursor:"pointer",
+              display:"flex",alignItems:"center",gap:12,
+              transition:"all .15s",
+            }}>
+              <span style={{fontSize:20,width:24,textAlign:"center"}}>{item.icon}</span>
+              <span style={{
+                fontFamily:"'Barlow Condensed',sans-serif",
+                fontSize:16,fontWeight:700,letterSpacing:.5,
+                color:isActive?activeColor:C.text2
+              }}>{item.label}</span>
+              {isActive&&<div style={{
+                marginLeft:"auto",width:4,height:16,
+                background:activeColor,borderRadius:2
+              }}/>}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* User footer */}
+      <div style={{padding:"16px 16px 24px",borderTop:`1px solid ${C.border}`}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+          <div style={{
+            width:36,height:36,borderRadius:9,
+            background:`${activeColor}18`,border:`1px solid ${activeColor}30`,
+            display:"flex",alignItems:"center",justifyContent:"center",
+            fontFamily:"'Barlow Condensed',sans-serif",fontSize:16,fontWeight:800,color:activeColor
+          }}>{user.nombre.charAt(0)}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:13,fontWeight:600,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{user.nombre}</div>
+            <div style={{fontSize:10,color:C.text2}}>{user.role==="admin"?"Administrador":"Jugador"}</div>
+          </div>
+        </div>
+        <button onClick={onLogout} style={{
+          width:"100%",padding:"9px 0",
+          background:"rgba(255,255,255,.04)",border:`1px solid ${C.border}`,
+          borderRadius:8,color:C.text2,cursor:"pointer",
+          fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:700,letterSpacing:.5
+        }}>⎋  SALIR</button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+//  BOTTOM NAV (mobile)
 // ═══════════════════════════════════════════════
 function BottomNav({nav,screen,setScreen,activeColor}){
   return(
-    <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:C.card,borderTop:`1px solid ${C.border}`,display:"flex",zIndex:20}}>
+    <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.card,borderTop:`1px solid ${C.border}`,display:"flex",zIndex:20}}>
       {nav.map(item=>(
         <button key={item.key} onClick={()=>setScreen(item.key)} style={{
           flex:1,padding:"11px 0",background:"transparent",border:"none",cursor:"pointer",
@@ -934,16 +1026,62 @@ function BottomNav({nav,screen,setScreen,activeColor}){
   );
 }
 
-function TopBar({title,subtitle,user,onLogout,color}){
+// ═══════════════════════════════════════════════
+//  DESKTOP RIGHT PANEL — tabla + info extra
+// ═══════════════════════════════════════════════
+function RightPanel({user,tabla,pronos,partidos}){
   return(
-    <div style={{padding:"13px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",background:C.card,borderBottom:`1px solid ${C.border}`,position:"sticky",top:0,zIndex:20}}>
-      <div>
-        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:900,letterSpacing:2,color:color||C.accent}}>{title}</span>
-        {subtitle&&<span style={{display:"block",fontSize:10,color:C.text2,marginTop:-1}}>{subtitle}</span>}
+    <div style={{
+      width:300,flexShrink:0,height:"100vh",position:"sticky",top:0,
+      overflowY:"auto",padding:"24px 0",
+      borderLeft:`1px solid ${C.border}`,
+    }}>
+      {/* Mini tabla */}
+      <div style={{padding:"0 20px 20px"}}>
+        <p style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:800,letterSpacing:1.5,color:C.text2,marginBottom:12}}>TABLA GENERAL</p>
+        <div style={{display:"flex",flexDirection:"column",gap:4}}>
+          {tabla.slice(0,8).map((r,i)=>{
+            const medals=["🥇","🥈","🥉"];
+            const isMe=r.id===user.id||(i===0&&user.id==="USR001");
+            return(
+              <div key={i} style={{
+                display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:9,
+                background:isMe?"rgba(0,200,150,.07)":"rgba(255,255,255,.02)",
+                border:`1px solid ${isMe?"rgba(0,200,150,.2)":"transparent"}`
+              }}>
+                <span style={{fontSize:i<3?14:12,width:18,textAlign:"center",color:i===0?C.gold:i===1?"#C0C0C0":i===2?"#CD7F32":C.text2,fontFamily:"'Barlow Condensed',sans-serif",fontWeight:800}}>{i<3?medals[i]:r.pos}</span>
+                <span style={{flex:1,fontSize:13,fontWeight:isMe?600:400,color:isMe?C.accent:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.nombre}</span>
+                <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:16,fontWeight:800,color:isMe?C.accent:C.text}}>{r.pts}</span>
+              </div>
+            );
+          })}
+        </div>
       </div>
-      <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <span style={{fontSize:12,color:C.text2}}>{user.nombre}</span>
-        <button onClick={onLogout} style={{background:"rgba(255,255,255,.06)",border:"none",width:32,height:32,borderRadius:8,color:C.text2,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>⎋</button>
+
+      {/* Separador */}
+      <div style={{height:1,background:C.border,margin:"0 20px 20px"}}/>
+
+      {/* Próximos partidos */}
+      <div style={{padding:"0 20px"}}>
+        <p style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:800,letterSpacing:1.5,color:C.text2,marginBottom:12}}>PRÓXIMOS PARTIDOS</p>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {partidos.slice(0,4).map(p=>(
+            <div key={p.n} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+                <Badge tipo={p.tipo}/>
+                <span style={{fontSize:11,color:C.text2}}>{p.hora}</span>
+              </div>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:700,color:C.text}}>{p.local}</div>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:400,color:C.text2,marginTop:1}}>vs {p.visit}</div>
+              {pronos[p.n]&&(
+                <div style={{marginTop:6,display:"inline-flex",alignItems:"center",gap:5,background:"rgba(255,255,255,.05)",padding:"3px 8px",borderRadius:6}}>
+                  <span style={{fontSize:10,color:C.text2}}>Tu pronóstico:</span>
+                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,fontWeight:800,color:pronos[p.n]==="L"?C.L:pronos[p.n]==="E"?C.E:C.V}}>{pronos[p.n]}</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -957,6 +1095,12 @@ function AppProde(){
   const[screen,setScreen]=useState("login");
   const[pronos,setPronos]=useState({});
   const[partidos,setPartidos]=useState(MOCK_PARTIDOS);
+  const[tabla,setTabla]=useState(MOCK_TABLA);
+  const isDesktop=useIsDesktop();
+
+  useEffect(()=>{
+    if(user) api("getTabla").then(r=>{if(r.ok)setTabla(r.tabla);});
+  },[user]);
 
   const handleLogin=u=>{setUser(u);setScreen(u.role==="admin"?"admin-dashboard":"fecha");};
   const handleLogout=()=>{setUser(null);setScreen("login");setPronos({});};
@@ -968,7 +1112,7 @@ function AppProde(){
       {key:"admin-dashboard",     icon:"📊",label:"Dashboard"},
       {key:"admin-partidos",      icon:"⚽",label:"Partidos"},
       {key:"admin-resultados",    icon:"🎯",label:"Resultados"},
-      {key:"admin-pronosticos",   icon:"📋",label:"Pronóst."},
+      {key:"admin-pronosticos",   icon:"📋",label:"Pronósticos"},
       {key:"admin-participantes", icon:"👥",label:"Jugadores"},
     ];
     const adminScreens={
@@ -978,16 +1122,40 @@ function AppProde(){
       "admin-pronosticos":  React.createElement(AdminPronosticosScreen),
       "admin-participantes":React.createElement(AdminParticipantesScreen),
     };
+    const currentScreen=adminScreens[screen]||adminScreens["admin-dashboard"];
+
+    if(isDesktop){
+      return(
+        <div style={{background:C.bg,minHeight:"100vh"}}>
+          <DemoBanner/>
+          <div style={{display:"flex",height:"calc(100vh - (SCRIPT_URL?0:32px))"}}>
+            <Sidebar nav={adminNav} screen={screen} setScreen={setScreen}
+              activeColor={C.V} user={user} onLogout={handleLogout}
+              title="ADMIN PANEL"/>
+            <div style={{flex:1,overflowY:"auto",maxWidth:900}}>
+              {currentScreen}
+            </div>
+          </div>
+        </div>
+      );
+    }
     return(
-      <div style={{background:C.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",paddingBottom:72}}>
+      <div style={{background:C.bg,minHeight:"100vh",paddingBottom:72}}>
         <DemoBanner/>
-        <TopBar title="⚙ ADMIN PANEL" user={user} onLogout={handleLogout} color={C.V}/>
-        {adminScreens[screen]||adminScreens["admin-dashboard"]}
+        <div style={{padding:"13px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",background:C.card,borderBottom:`1px solid ${C.border}`,position:"sticky",top:0,zIndex:20}}>
+          <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,fontWeight:900,letterSpacing:2,color:C.V}}>⚙ ADMIN</span>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:12,color:C.text2}}>{user.nombre}</span>
+            <button onClick={handleLogout} style={{background:"rgba(255,255,255,.06)",border:"none",width:32,height:32,borderRadius:8,color:C.text2,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>⎋</button>
+          </div>
+        </div>
+        {currentScreen}
         <BottomNav nav={adminNav} screen={screen} setScreen={setScreen} activeColor={C.V}/>
       </div>
     );
   }
 
+  // ── JUGADOR ──
   const jugNav=[
     {key:"fecha",      icon:"📅",label:"Fecha"},
     {key:"tabla",      icon:"🏆",label:"Tabla"},
@@ -1001,11 +1169,53 @@ function AppProde(){
     puntos:    React.createElement(MisPuntajesScreen,{user}),
     resultados:React.createElement(ResultadosScreen,{pronos}),
   };
+  const currentScreen=jugScreens[screen]||jugScreens.fecha;
+  const showRightPanel=isDesktop&&screen!=="reglas";
+
+  if(isDesktop){
+    return(
+      <div style={{background:C.bg,minHeight:"100vh"}}>
+        <DemoBanner/>
+        <div style={{display:"flex",height:"100vh"}}>
+          {/* Sidebar */}
+          <Sidebar nav={jugNav} screen={screen} setScreen={s=>{if(s==="reglas")setScreen("reglas");else setScreen(s);}}
+            activeColor={C.accent} user={user} onLogout={handleLogout}
+            title="APP PRODE" subtitle="Temporada 2026"/>
+
+          {/* Main content */}
+          <div style={{
+            flex:1,overflowY:"auto",
+            maxWidth:showRightPanel?640:900,
+            borderRight:showRightPanel?`1px solid ${C.border}`:"none",
+          }}>
+            {currentScreen}
+          </div>
+
+          {/* Right panel */}
+          {showRightPanel&&React.createElement(RightPanel,{user,tabla,pronos,partidos})}
+
+          {/* Relleno si no hay right panel */}
+          {!showRightPanel&&<div style={{flex:1}}/>}
+        </div>
+      </div>
+    );
+  }
+
+  // Mobile
   return(
-    <div style={{background:C.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",paddingBottom:72}}>
+    <div style={{background:C.bg,minHeight:"100vh",paddingBottom:72}}>
       <DemoBanner/>
-      <TopBar title="APP PRODE" subtitle="Temporada 2026" user={user} onLogout={handleLogout}/>
-      {jugScreens[screen]||jugScreens.fecha}
+      <div style={{padding:"13px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",background:C.card,borderBottom:`1px solid ${C.border}`,position:"sticky",top:0,zIndex:20}}>
+        <div>
+          <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:900,letterSpacing:2,color:C.accent}}>APP PRODE</span>
+          <span style={{display:"block",fontSize:10,color:C.text2,marginTop:-1}}>Temporada 2026</span>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:12,color:C.text2}}>{user.nombre}</span>
+          <button onClick={handleLogout} style={{background:"rgba(255,255,255,.06)",border:"none",width:32,height:32,borderRadius:8,color:C.text2,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>⎋</button>
+        </div>
+      </div>
+      {currentScreen}
       <BottomNav nav={jugNav} screen={screen} setScreen={setScreen} activeColor={C.accent}/>
     </div>
   );
