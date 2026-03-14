@@ -1,1227 +1,837 @@
 <!DOCTYPE html>
-<!-- APP PRODE — index.html | 2026-03-07 02:30 ARG | pollaprodes.com -->
+<!-- POLLA PRODES — index.html | 2026-03-14 11:30 ARG -->
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<meta name="theme-color" content="#070C15"/>
+<meta name="theme-color" content="#04080F"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>APP PRODE</title>
+<title>POLLA PRODES</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
+:root{
+  --bg:#04080F;--bg2:#080E1A;--card:#0C1220;--card2:#111826;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+  --accent:#00E090;--accent2:#00B872;--gold:#FFB800;--gold2:#CC9200;
+  --red:#FF3D6B;--blue:#3D9BFF;--purple:#9B6DFF;
+  --text:#FFF;--text2:#6B7A8D;--text3:#3D4A5C;
+  --L:#3D9BFF;--E:#FFD60A;--V:#FF3D6B;
+  --fd:'Barlow Condensed',sans-serif;--fb:'DM Sans',sans-serif;
+  --r:14px;--rs:8px;--sw:240px;--th:56px;
+}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:#070C15}
-body{font-family:'Plus Jakarta Sans',sans-serif;color:#fff;-webkit-font-smoothing:antialiased}
-#root{height:100%}
-@keyframes spin   {to{transform:rotate(360deg)}}
-@keyframes fadeUp {from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse  {0%,100%{opacity:1}50%{opacity:.45}}
-input::placeholder{color:rgba(255,255,255,.2)}
-input:focus{outline:none;border-color:rgba(0,200,150,.55)!important}
-button:active{transform:scale(.96)}
-::-webkit-scrollbar{width:3px;height:3px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
-.fu{animation:fadeUp .3s ease forwards}
+html,body{height:100%}
+body{background:var(--bg);font-family:var(--fb);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+input,button{font-family:var(--fb)}
+button{cursor:pointer;border:none;background:none;color:inherit}
+button:active{transform:scale(.97)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+input::placeholder{color:var(--text3)}
+input:focus{outline:none;border-color:rgba(0,224,144,.5)!important}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.fu{animation:fu .3s ease forwards}
+.fi{animation:fi .25s ease forwards}
+
+/* LAYOUT DESKTOP */
+#app{display:flex;height:100vh;overflow:hidden}
+#sidebar{width:var(--sw);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:100}
+.sl{padding:22px 20px 18px;border-bottom:1px solid var(--border)}
+.sl h1{font-family:var(--fd);font-size:26px;font-weight:900;letter-spacing:3px;color:var(--accent);line-height:1}
+.sl p{font-size:10px;color:var(--text2);margin-top:3px}
+#sidebar-nav{flex:1;padding:10px 0;overflow-y:auto}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s;border-left:3px solid transparent}
+.ni:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.ni.active{background:rgba(0,224,144,.08);color:var(--accent);border-left-color:var(--accent);font-weight:600}
+.ni .ic{font-size:17px;width:22px;text-align:center}
+#sidebar-user{padding:12px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sav{width:34px;height:34px;border-radius:10px;background:rgba(0,224,144,.12);border:1px solid rgba(0,224,144,.2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sui{flex:1;min-width:0}
+.sui .nm{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sui .rl{font-size:10px;color:var(--text2)}
+.btnlo{width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.05);color:var(--text2);font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.btnlo:hover{background:rgba(255,61,107,.15);color:var(--red)}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#topbar{height:var(--th);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;flex-shrink:0}
+#topbar h2{font-family:var(--fd);font-size:20px;font-weight:800;letter-spacing:1px;flex:1}
+#content{flex:1;overflow-y:auto;padding:24px}
+
+/* MOBILE */
+#mh{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:var(--bg2);border-bottom:1px solid var(--border);align-items:center;justify-content:space-between;padding:0 16px;z-index:100}
+#mh .logo{font-family:var(--fd);font-size:22px;font-weight:900;letter-spacing:2px;color:var(--accent)}
+#mh .chip{font-size:12px;color:var(--text2);background:rgba(255,255,255,.06);padding:4px 10px;border-radius:20px}
+#mc{display:none;overflow-y:auto;padding:16px;padding-bottom:80px;margin-top:52px;min-height:calc(100vh - 52px)}
+#bn{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.bni{display:flex}
+.bni-item{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border-top:2px solid transparent}
+.bni-item.active{border-top-color:var(--accent)}
+.bni-item .ic{font-size:19px}
+.bni-item .lb{font-size:9px;font-weight:700;letter-spacing:.3px;color:var(--text2);text-transform:uppercase}
+.bni-item.active .lb{color:var(--accent)}
+
+@media(max-width:768px){
+  #sidebar,#main{display:none}
+  #mh,#mc,#bn{display:flex}
+  #mc{display:block}
+  #app{display:block}
+  body{overflow:hidden}
+}
+
+/* COMPONENTES */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
+.btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;box-shadow:0 6px 24px rgba(0,224,144,.25)}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 10px 32px rgba(0,224,144,.35)}
+.btn-s{background:rgba(255,255,255,.06);border:1px solid var(--border2);color:var(--text)}
+.btn-s:hover{background:rgba(255,255,255,.1)}
+.btn-g{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000}
+.btn-d{background:rgba(255,61,107,.1);border:1px solid rgba(255,61,107,.3);color:var(--red)}
+.btn-lg{padding:14px 28px;font-family:var(--fd);font-size:18px;font-weight:800;letter-spacing:1px;border-radius:var(--r);width:100%}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.csm{padding:14px 16px}
+.ig{display:flex;flex-direction:column;gap:6px}
+.il{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.5px}
+.inp{width:100%;padding:12px 16px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:15px;transition:border-color .2s}
+.bdg{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.bg{background:rgba(0,224,144,.12);color:var(--accent);border:1px solid rgba(0,224,144,.2)}
+.bgold{background:rgba(255,184,0,.12);color:var(--gold);border:1px solid rgba(255,184,0,.2)}
+.bred{background:rgba(255,61,107,.12);color:var(--red);border:1px solid rgba(255,61,107,.2)}
+.bblue{background:rgba(61,155,255,.12);color:var(--blue);border:1px solid rgba(61,155,255,.2)}
+.bgray{background:rgba(255,255,255,.06);color:var(--text2);border:1px solid var(--border)}
+.blive{background:rgba(255,61,107,.15);color:var(--red);border:1px solid rgba(255,61,107,.3);animation:pulse 1.5s infinite}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+.sw{display:flex;justify-content:center;align-items:center;padding:60px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:768px){.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}}
+.ph{margin-bottom:20px}
+.ph h2{font-family:var(--fd);font-size:30px;font-weight:900;letter-spacing:1px}
+.ph p{color:var(--text2);font-size:13px;margin-top:4px}
+.st{font-family:var(--fd);font-size:12px;font-weight:800;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:10px;margin-top:20px}
+.st:first-child{margin-top:0}
+.dv{height:1px;background:var(--border);margin:16px 0}
+.es{text-align:center;padding:50px 20px;color:var(--text2)}
+.es .ic{font-size:44px;margin-bottom:12px}
+.es p{font-size:14px}
+.err{color:var(--red);font-size:13px;padding:10px 14px;background:rgba(255,61,107,.08);border:1px solid rgba(255,61,107,.2);border-radius:var(--rs);margin-top:8px}
+
+/* LOGIN */
+#sl{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 20% 50%,rgba(0,224,144,.08) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(61,155,255,.06) 0%,transparent 40%),var(--bg);padding:20px}
+.lb{width:100%;max-width:400px}
+.llo{text-align:center;margin-bottom:36px}
+.llo .iw{width:88px;height:88px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:44px;margin:0 auto 18px;box-shadow:0 20px 60px rgba(0,224,144,.3)}
+.llo h1{font-family:var(--fd);font-size:46px;font-weight:900;letter-spacing:4px;line-height:1}
+.llo p{font-size:13px;color:var(--text2);margin-top:6px}
+.lcard{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;box-shadow:0 32px 80px rgba(0,0,0,.5)}
+.ltabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px}
+.ltab{flex:1;padding:10px;text-align:center;font-family:var(--fd);font-size:16px;font-weight:800;letter-spacing:1px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px}
+.ltab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.fg{display:flex;flex-direction:column;gap:13px}
+
+/* FECHAS */
+.fc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .2s;margin-bottom:10px}
+.fc:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.fc .nom{font-family:var(--fd);font-size:22px;font-weight:800;margin-bottom:8px}
+.fc .foot{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+
+/* POZOS */
+.pc{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .2s;position:relative}
+.pc:hover{border-color:rgba(0,224,144,.3)}
+.pc.sel{border-color:var(--accent);background:rgba(0,224,144,.06)}
+.pc.ya{border-color:rgba(0,224,144,.3);opacity:.7;cursor:default}
+.pm{font-family:var(--fd);font-size:36px;font-weight:900;line-height:1}
+.pp{font-family:var(--fd);font-size:22px;font-weight:800;color:var(--gold)}
+
+/* PARTIDOS */
+.prg{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-bottom:18px}
+.prgf{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .4s ease}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px;margin-bottom:10px;transition:all .2s}
+.pcard.ok{border-color:rgba(255,255,255,.12)}
+.ph2{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.pteams{display:flex;align-items:center;margin-bottom:13px}
+.pt{flex:1;font-family:var(--fd);font-size:19px;font-weight:800;line-height:1.1}
+.pt.r{text-align:right}
+.pvs{padding:0 12px;font-family:var(--fd);font-size:13px;font-weight:700;color:var(--text3);letter-spacing:1px}
+.psc{padding:5px 14px;background:rgba(255,255,255,.06);border-radius:8px;font-family:var(--fd);font-size:26px;font-weight:900;letter-spacing:2px}
+.lev{display:flex;gap:8px}
+.lb2{flex:1;padding:12px 0;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:all .15s}
+.lb2 .ll{font-family:var(--fd);font-size:24px;font-weight:900;line-height:1}
+.lb2 .lp{font-size:10px;color:var(--text2)}
+.lb2.L{--c:var(--L)}.lb2.E{--c:var(--E)}.lb2.V{--c:var(--V)}
+.lb2 .ll{color:var(--c)}
+.lb2.sel{background:var(--c)!important;border-color:var(--c)!important}
+.lb2.sel .ll{color:#000!important}
+.lb2.sel .lp{color:rgba(0,0,0,.6)!important}
+.pbar{display:flex;gap:2px;height:3px;border-radius:2px;overflow:hidden;margin-top:10px}
+.pl{background:var(--L);opacity:.6}.pe{background:var(--E);opacity:.6}.pv{background:var(--V);opacity:.6}
+.rb{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.25);border-radius:6px;font-size:10px;font-weight:700;color:var(--gold);cursor:pointer;transition:all .2s}
+.rb.ap{background:rgba(255,184,0,.2)}
+.cb{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px}
+.cb.ok{color:var(--accent);background:rgba(0,224,144,.1)}
+.cb.warn{color:var(--gold);background:rgba(255,184,0,.1)}
+.cb.ag{color:var(--text3);background:rgba(255,255,255,.04)}
+.bk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer;margin-bottom:18px;width:fit-content}
+.bk:hover{color:var(--text)}
+
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:flex-end;justify-content:center;animation:fi .2s ease}
+@media(min-width:769px){.mo{align-items:center}}
+.mb{background:var(--card2);border:1px solid var(--border2);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;padding:22px;animation:fu .3s ease}
+@media(min-width:769px){.mb{border-radius:20px}}
+.mh2{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+.mt2{font-family:var(--fd);font-size:22px;font-weight:800;letter-spacing:1px}
+.mc2{width:32px;height:32px;background:rgba(255,255,255,.06);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text2);cursor:pointer}
+.ro{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--rs);padding:13px;margin-bottom:8px;cursor:pointer;transition:all .2s}
+.ro:hover{border-color:rgba(255,184,0,.3);background:rgba(255,184,0,.04)}
+.ro.sel{border-color:var(--gold);background:rgba(255,184,0,.08)}
+.roh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.rnm{font-weight:600;font-size:14px}
+.rpt{font-family:var(--fd);font-size:16px;font-weight:800;color:var(--gold)}
+.rds{font-size:12px;color:var(--text2)}
+
+/* TABLA */
+.podio{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:10px;margin-bottom:18px;align-items:end}
+.pi{text-align:center}
+.pi .med{font-size:28px;margin-bottom:6px}
+.pi.first .med{font-size:40px}
+.pi .pn{font-family:var(--fd);font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pi.first .pn{color:var(--gold);font-size:16px}
+.pb{background:rgba(255,255,255,.06);border-radius:var(--rs);padding:10px;margin-top:6px}
+.pi.first .pb{background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.25)}
+.ppts{font-family:var(--fd);font-size:28px;font-weight:900}
+.pi.first .ppts{color:var(--gold);font-size:36px}
+.tr{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--rs);transition:background .15s}
+.tr:hover{background:rgba(255,255,255,.03)}
+.tr.me{background:rgba(0,224,144,.06);border:1px solid rgba(0,224,144,.15);margin:2px 0}
+.tpos{font-family:var(--fd);font-size:18px;font-weight:900;color:var(--text2);width:28px;text-align:center}
+.tnm{flex:1;font-family:var(--fd);font-size:16px;font-weight:600}
+.tpts{font-family:var(--fd);font-size:22px;font-weight:900}
+
+/* GRILLA */
+.gw{overflow-x:auto}
+.gt{border-collapse:collapse;font-size:12px;min-width:400px;width:100%}
+.gt th{padding:8px 5px;text-align:center;color:var(--text2);font-weight:700;font-size:10px;border-bottom:1px solid var(--border);white-space:nowrap}
+.gt td{padding:5px 3px;text-align:center}
+.gt tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+.uc{text-align:left!important;padding-left:8px!important;font-family:var(--fd);font-size:14px;font-weight:700;white-space:nowrap}
+.uc.me{color:var(--accent)}
+.pc2{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;border-radius:7px;font-family:var(--fd);font-size:13px;font-weight:900}
+.pc2.L{background:rgba(61,155,255,.15);color:var(--L);border:1px solid rgba(61,155,255,.3)}
+.pc2.E{background:rgba(255,214,10,.15);color:var(--E);border:1px solid rgba(255,214,10,.3)}
+.pc2.V{background:rgba(255,61,107,.15);color:var(--V);border:1px solid rgba(255,61,107,.3)}
+.pc2.ok{box-shadow:0 0 0 1px var(--accent)}
+.cd{width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block;margin-left:2px;vertical-align:middle}
+
+/* PERFIL */
+.paw{display:flex;flex-direction:column;align-items:center;padding:26px}
+.pab{width:78px;height:78px;border-radius:20px;background:rgba(0,224,144,.12);border:2px solid rgba(0,224,144,.25);display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:12px}
+.pu{font-family:var(--fd);font-size:28px;font-weight:900;letter-spacing:2px;color:var(--accent)}
+.pnm{font-size:14px;color:var(--text2);margin-top:3px}
+.si{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--border)}
+.si:last-child{border-bottom:none}
+.si .k{font-size:14px;font-weight:500}
+.si .v{font-size:13px;color:var(--text2)}
+.tgl{width:42px;height:24px;background:rgba(255,255,255,.1);border-radius:12px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.tgl.on{background:var(--accent)}
+.tgl::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .2s}
+.tgl.on::after{transform:translateX(18px)}
+
+/* ADMIN */
+.aab{display:flex;justify-content:space-between;align-items:center;padding:15px 17px;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all .2s;width:100%;text-align:left;margin-bottom:8px}
+.aab:hover{border-color:var(--border2);transform:translateX(3px)}
+.aab .t{font-family:var(--fd);font-size:17px;font-weight:700}
+.aab .d{font-size:12px;color:var(--text2);margin-top:2px}
+.si2{width:65px;padding:13px;text-align:center;font-family:var(--fd);font-size:28px;font-weight:900;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:var(--rs);color:var(--text)}
+
+/* ESTADÍSTICAS */
+.gc{display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:8px}
+.gav{width:42px;height:42px;border-radius:12px;background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.gn{font-family:var(--fd);font-size:17px;font-weight:700}
+.gm{font-size:11px;color:var(--text2);margin-top:2px}
+.gmo{font-family:var(--fd);font-size:20px;font-weight:900;color:var(--gold)}
+
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--border2);border-radius:20px;padding:11px 18px;font-size:13px;font-weight:600;z-index:9999;animation:fu .3s ease;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+@media(min-width:769px){.toast{bottom:20px}}
 </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel" data-presets="react">
-const{useState,useEffect,useRef}=React;
+<div id="app">
+  <aside id="sidebar" style="display:none">
+    <div class="sl"><h1>POLLA<br>PRODES</h1><p>pollaprodes.com</p></div>
+    <nav id="sidebar-nav"></nav>
+    <div id="sidebar-user"></div>
+  </aside>
+  <div id="main" style="display:none">
+    <div id="topbar"><h2 id="tt">—</h2><div id="ta"></div></div>
+    <div id="content"></div>
+  </div>
+</div>
+<div id="mh"><div class="logo">⚽ PRODES</div><div class="chip" id="mchip">—</div></div>
+<div id="mc"></div>
+<div id="bn"><div class="bni" id="bni"></div></div>
+<div id="sl" style="display:none"></div>
 
-// ═══════════════════════════════════════════════
-//  CONFIG — pegá tu Apps Script Web App URL acá
-// ═══════════════════════════════════════════════
-const SCRIPT_URL = ""; // ← https://script.google.com/macros/s/XXX/exec
+<script>
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbyPPKluGEMXSluoImUUTgWxxv8YEE_jV7LQ56bv72C9RdGxcCJ95GYsdP2gcSCpYPQ/exec";
+const API_SECRET="PP2026-xK9mQ7vL2nR4wT8yU3pA5cE1hG6jF0bD";
+const SK="pp_session",UK="pp_user";
 
-// ═══════════════════════════════════════════════
-//  COLORES
-// ═══════════════════════════════════════════════
-const C={
-  bg:"#070C15",card:"#0F1623",card2:"#162030",
-  accent:"#00C896",gold:"#FFB800",
-  L:"#4A9EFF",E:"#FFD60A",V:"#FF4D6D",
-  text:"#FFFFFF",text2:"#7D8CA0",border:"rgba(255,255,255,.07)"
+const App={user:null,token:null,screen:null,ctx:{}};
+
+async function api(action,p={}){
+  const b={action,apiSecret:API_SECRET,sessionToken:App.token||undefined,...p};
+  try{const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});return await r.json();}
+  catch(e){return{ok:false,error:"Sin conexión"};}
+}
+
+function save(u,t){App.user=u;App.token=t;localStorage.setItem(SK,t);localStorage.setItem(UK,JSON.stringify(u));}
+function load(){const t=localStorage.getItem(SK),u=localStorage.getItem(UK);if(t&&u){App.token=t;App.user=JSON.parse(u);return true;}return false;}
+function logout(){api("logout");localStorage.removeItem(SK);localStorage.removeItem(UK);App.user=null;App.token=null;showLogin();}
+
+const NAV_J=[
+  {k:"fechas",i:"📅",l:"Fechas",t:"Fechas Disponibles"},
+  {k:"tabla",i:"🏆",l:"Tabla",t:"Tabla de Posiciones"},
+  {k:"grilla",i:"👥",l:"Los Otros",t:"Los Otros"},
+  {k:"stats",i:"📊",l:"Estadísticas",t:"Hall of Fame"},
+  {k:"perfil",i:"👤",l:"Perfil",t:"Mi Perfil"},
+];
+const NAV_A=[
+  {k:"admin-dash",i:"📊",l:"Dashboard",t:"Dashboard"},
+  {k:"admin-fechas",i:"📅",l:"Fechas",t:"Gestión de Fechas"},
+  {k:"admin-res",i:"⚽",l:"Resultados",t:"Ingresar Resultados"},
+  {k:"admin-users",i:"👥",l:"Jugadores",t:"Jugadores"},
+  {k:"perfil",i:"👤",l:"Perfil",t:"Mi Perfil"},
+];
+function nav(){return App.user?.rol==="Admin"?NAV_A:NAV_J;}
+
+function go(k,ctx={}){
+  App.screen=k;App.ctx=ctx;
+  const item=nav().find(n=>n.k===k)||{t:k};
+  renderNav();
+  const tt=document.getElementById("tt");if(tt)tt.textContent=item.t||k;
+  const html=renderScreen(k,ctx);
+  const dc=document.getElementById("content");if(dc)dc.innerHTML=html;
+  const mc=document.getElementById("mc");if(mc)mc.innerHTML=html;
+  setTimeout(()=>afterRender(k,ctx),50);
+}
+
+function renderNav(){
+  const n=nav();
+  const sn=document.getElementById("sidebar-nav");
+  if(sn)sn.innerHTML=n.map(x=>`<div class="ni${App.screen===x.k?" active":""}" onclick="go('${x.k}')"><span class="ic">${x.i}</span><span>${x.l}</span></div>`).join("");
+  const bn=document.getElementById("bni");
+  if(bn)bn.innerHTML=n.slice(0,5).map(x=>`<div class="bni-item${App.screen===x.k?" active":""}" onclick="go('${x.k}')"><span class="ic">${x.i}</span><span class="lb">${x.l}</span></div>`).join("");
+}
+
+function renderScreen(k,ctx){
+  switch(k){
+    case"fechas":return rFechas();
+    case"fecha-det":return rFechaDet(ctx);
+    case"jugar":return rJugar(ctx);
+    case"tabla":return rTabla(ctx);
+    case"grilla":return rGrilla(ctx);
+    case"stats":return rStats();
+    case"perfil":return rPerfil();
+    case"admin-dash":return rAdminDash();
+    case"admin-fechas":return rAdminFechas();
+    case"admin-res":return rAdminRes();
+    case"admin-users":return rAdminUsers();
+    default:return`<div class="es"><div class="ic">🔧</div><p>En construcción</p></div>`;
+  }
+}
+
+/* ── FECHAS ── */
+function rFechas(){return`<div class="fu"><div class="ph"><h2>FECHAS</h2><p>Seleccioná una fecha para jugar</p></div><div id="fl"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+async function lFechas(){
+  const r=await api("getFechas"),el=document.getElementById("fl");
+  if(!el)return;
+  if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}
+  if(!r.fechas?.length){el.innerHTML=`<div class="es"><div class="ic">📅</div><p>No hay fechas disponibles</p></div>`;return;}
+  el.innerHTML=r.fechas.map(f=>{
+    const mins=f.minutosRestantes,urg=mins<120&&mins>0;
+    const pt=mins<=0?"Plazo vencido":mins<60?`⏱ ${mins}min`:mins<1440?`⏱ ${Math.floor(mins/60)}hs`:`📅 ${new Date(f.plazoLimite).toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"})}`;
+    return`<div class="fc" onclick="go('fecha-det',{fechaId:'${f.id}'})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div class="nom">${f.nombre}</div>
+        <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgray"}">${f.estado}</span>
+      </div>
+      ${f.descripcion?`<p style="font-size:13px;color:var(--text2);margin-bottom:8px">${f.descripcion}</p>`:""}
+      <div style="display:flex;gap:8px;font-size:12px;color:var(--text2);flex-wrap:wrap">
+        <span style="${urg?"color:var(--red);font-weight:600":""}">${pt}</span>
+        <span style="color:var(--text3)">·</span><span>${f.liga}</span>
+      </div>
+      <div class="foot">
+        <span style="font-size:12px;color:var(--text2)">⚽ ${f.cantPartidos} partidos</span>
+        ${f.puedeJugar?`<span class="btn btn-p" style="padding:6px 13px;font-size:12px">JUGAR →</span>`:`<span style="font-size:12px;color:var(--text2)">Ver →</span>`}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ── DETALLE FECHA ── */
+function rFechaDet(ctx){return`<div class="fu"><div class="bk" onclick="go('fechas')">← Volver</div><div id="fdc"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+async function lFechaDet(ctx){
+  const r=await api("getFecha",{fechaId:ctx.fechaId}),el=document.getElementById("fdc");
+  if(!el)return;
+  if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}
+  const f=r.fecha,ps=r.partidos||[];
+  el.innerHTML=`
+    <div class="card" style="margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div><h2 style="font-family:var(--fd);font-size:26px;font-weight:900">${f.nombre}</h2>
+        <p style="font-size:12px;color:var(--text2);margin-top:3px">${f.liga} · ${f.temporada}</p></div>
+        <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgray"}">${f.estado}</span>
+      </div>
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--text2)">
+        <span>⚽ ${f.cantPartidos} partidos</span>
+        ${f.minutosRestantes>0?`<span>⏱ ${f.minutosRestantes<60?f.minutosRestantes+"min":Math.floor(f.minutosRestantes/60)+"hs"}</span>`:`<span style="color:var(--red)">🔒 Cerrada</span>`}
+      </div>
+    </div>
+    <p class="st">PARTIDOS</p>
+    ${ps.map(p=>`
+      <div class="card csm" style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="display:flex;align-items:center;gap:8px;flex:1">
+            <span style="font-size:11px;font-weight:700;color:var(--text3)">#${p.numero}</span>
+            <div style="flex:1">
+              <div style="font-family:var(--fd);font-size:16px;font-weight:700">${p.local} <span style="color:var(--text3);font-size:12px">vs</span> ${p.visita}</div>
+              <div style="font-size:11px;color:var(--text2)">${p.liga}${p.fechaHora?" · "+new Date(p.fechaHora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}):""}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            ${p.tipo!=="Normal"?`<span class="bdg ${p.tipo==="Polla"?"bgold":"bgray"}">${p.tipo==="Polla"?"⭐":"×2"} ${p.tipo}</span>`:""}
+            ${p.golesLocal!==null?`<span style="font-family:var(--fd);font-size:20px;font-weight:900">${p.golesLocal}-${p.golesVisita}</span>`:""}
+            ${p.estado==="En Vivo"?`<span class="bdg blive">● VIVO</span>`:""}
+          </div>
+        </div>
+      </div>`).join("")}
+    ${f.puedeJugar?`
+      <p class="st" style="margin-top:22px">ELEGÍ TU POZO</p>
+      <div id="pl2"><div class="sw"><div class="spinner"></div></div></div>
+      <div id="bjw" style="margin-top:18px;display:none"></div>
+    `:`
+      <div style="margin-top:22px;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r);text-align:center">
+        <p style="color:var(--text2);font-size:14px">🔒 Pronósticos cerrados para esta fecha</p>
+      </div>`}`;
+  if(f.puedeJugar)lPozos(ctx.fechaId);
+}
+
+async function lPozos(fid){
+  const r=await api("getPozos",{fechaId:fid,userId:App.user?.id}),el=document.getElementById("pl2");
+  if(!el)return;
+  if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}
+  window._pozos=r.pozos;window._fid=fid;window._sp=null;
+  if(!r.pozos?.length){el.innerHTML=`<div class="es"><div class="ic">💰</div><p>Sin pozos configurados</p></div>`;return;}
+  el.innerHTML=`<div class="g2">${r.pozos.map(p=>`
+    <div class="pc${p.yaInscripto?" ya":""}" id="poz-${p.id}" onclick="${p.yaInscripto?"":"selP('"+p.id+"')"}">
+      ${p.yaInscripto?`<span class="bdg bg" style="margin-bottom:8px;display:inline-flex">✓ INSCRIPTO</span><br>`:""}
+      <div class="pm">$${p.monto.toLocaleString("es-AR")}</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:2px">${p.tipo==="Cerrado"?"🔒 Grupo":"Abierto"}</div>
+      <div class="dv" style="margin:8px 0"></div>
+      <div class="pp">$${p.premioGanador.toLocaleString("es-AR")}</div>
+      <div style="font-size:11px;color:var(--text2)">Premio estimado</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:8px">👥 ${p.inscriptos} inscriptos</div>
+    </div>`).join("")}</div>
+    <div style="text-align:center;padding:10px 0">
+      <span style="font-size:12px;color:var(--text2);cursor:pointer" onclick="togGrupo()">🔒 Tengo código de grupo cerrado →</span>
+    </div>
+    <div id="gf" style="display:none;margin-top:10px">
+      <div class="ig"><label class="il">CÓDIGO DE GRUPO</label>
+      <input class="inp" id="ic" placeholder="Ej: AB1234" maxlength="6" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')buscar()"/></div>
+      <button class="btn btn-s" style="margin-top:10px;width:100%" onclick="buscar()">BUSCAR</button>
+      <div id="gr"></div>
+    </div>`;
+  const ya=r.pozos.find(p=>p.yaInscripto);
+  if(ya){const bw=document.getElementById("bjw");if(bw){bw.style.display="block";bw.innerHTML=`<button class="btn btn-p btn-lg" onclick="go('jugar',{fechaId:'${fid}',pozoId:'${ya.id}'})">▶ JUGAR →</button>`;}}
+}
+
+window.selP=id=>{window._sp=id;document.querySelectorAll(".pc").forEach(c=>c.classList.remove("sel"));const e=document.getElementById("poz-"+id);if(e)e.classList.add("sel");const bw=document.getElementById("bjw");if(bw)bw.style.display="block";if(!document.getElementById("bjw")?.querySelector("button[onclick*=inscribirse]"))if(bw)bw.innerHTML=`<button class="btn btn-p btn-lg" onclick="insc()">PAGAR Y JUGAR →</button>`;};
+window.togGrupo=()=>{const e=document.getElementById("gf");if(e)e.style.display=e.style.display==="none"?"block":"none";};
+window.buscar=async()=>{
+  const c=document.getElementById("ic")?.value;if(!c||c.length<4){toast("Ingresá el código");return;}
+  const r=await api("getGrupoPorCodigo",{codigo:c}),el=document.getElementById("gr");if(!el)return;
+  if(!r.ok){el.innerHTML=`<div class="err" style="margin-top:10px">${r.error}</div>`;return;}
+  el.innerHTML=`<div class="card" style="margin-top:12px;border-color:rgba(0,224,144,.2)">
+    <p style="font-family:var(--fd);font-size:18px;font-weight:800">${r.grupo.nombre}</p>
+    <p style="font-size:12px;color:var(--text2)">👥 ${r.grupo.miembros} miembro${r.grupo.miembros!==1?"s":""}</p>
+    <p style="font-family:var(--fd);font-size:22px;font-weight:900;color:var(--gold);margin-top:8px">$${(r.pozo?.premioEstimado||0).toLocaleString("es-AR")} est.</p>
+    <button class="btn btn-p" style="margin-top:12px;width:100%" onclick="selP('${r.grupo.pozoId}');insc()">UNIRSE — $${(r.pozo?.monto||0).toLocaleString("es-AR")}</button>
+  </div>`;
+};
+window.insc=async()=>{
+  if(!window._sp){toast("Seleccioná un pozo");return;}
+  const r=await api("inscribirse",{fechaId:window._fid,pozoId:window._sp});
+  if(!r.ok){toast("❌ "+r.error);return;}
+  if(r.habilitado){toast("✅ ¡Habilitado!");setTimeout(()=>go("jugar",{fechaId:window._fid,pozoId:window._sp}),900);}
+  else{toast("🔄 Procesando pago...");const mp=await api("crearPreferencia",{inscripcionId:r.inscripcionId});if(mp.ok&&mp.initPoint)window.location.href=mp.initPoint;else toast("💡 "+(mp.error||"MP no configurado"));}
 };
 
-// ═══════════════════════════════════════════════
-//  MOCK DATA
-// ═══════════════════════════════════════════════
-const MOCK_PARTIDOS=[
-  {n:1,local:"River Plate",  visit:"Boca Juniors",  hora:"21:00",liga:"Liga Prof.",tipo:"Polla", pctL:42,pctE:28,pctV:30,gL:null,gV:null,estado:"Pendiente"},
-  {n:2,local:"Racing Club",  visit:"Independiente", hora:"18:30",liga:"Liga Prof.",tipo:"Normal",pctL:55,pctE:25,pctV:20,gL:null,gV:null,estado:"Pendiente"},
-  {n:3,local:"San Lorenzo",  visit:"Huracán",       hora:"16:00",liga:"Liga Prof.",tipo:"Normal",pctL:38,pctE:35,pctV:27,gL:null,gV:null,estado:"Pendiente"},
-  {n:4,local:"Vélez",        visit:"Lanús",         hora:"20:00",liga:"Liga Prof.",tipo:"Normal",pctL:50,pctE:30,pctV:20,gL:null,gV:null,estado:"Pendiente"},
-  {n:5,local:"Def. y Just.", visit:"Talleres",      hora:"17:00",liga:"Liga Prof.",tipo:"Normal",pctL:30,pctE:30,pctV:40,gL:null,gV:null,estado:"Pendiente"},
-  {n:6,local:"Estudiantes",  visit:"Gimnasia LP",   hora:"21:30",liga:"Liga Prof.",tipo:"Doble", pctL:60,pctE:20,pctV:20,gL:null,gV:null,estado:"Pendiente"},
-  {n:7,local:"Atl. Tucumán", visit:"Belgrano",      hora:"19:00",liga:"Liga Prof.",tipo:"Doble", pctL:45,pctE:30,pctV:25,gL:null,gV:null,estado:"Pendiente"},
-];
-const MOCK_TABLA=[
-  {pos:1,nombre:"Germán R.",pts:87},{pos:2,nombre:"Lucas M.",pts:81},
-  {pos:3,nombre:"Martina G.",pts:76},{pos:4,nombre:"Carlos P.",pts:71},
-  {pos:5,nombre:"Ana L.",pts:65},{pos:6,nombre:"Diego F.",pts:59},
-  {pos:7,nombre:"Sofía B.",pts:52},{pos:8,nombre:"Pablo H.",pts:45},
-];
-const MOCK_PUNTAJES=[
-  {fecha:4,pts:11,normal:8, doble:2,polla:0,reglas:1},
-  {fecha:3,pts:9, normal:6, doble:2,polla:0,reglas:1},
-  {fecha:2,pts:8, normal:5, doble:2,polla:0,reglas:1},
-  {fecha:1,pts:12,normal:7, doble:4,polla:6,reglas:2},
-];
-const MOCK_PARTICIPANTES=[
-  {id:"USR001",nombre:"Germán R.",email:"german@gmail.com",estado:"Activo",pts:87},
-  {id:"USR002",nombre:"Lucas M.", email:"lucas@gmail.com", estado:"Activo",pts:81},
-  {id:"USR003",nombre:"Martina G.",email:"martina@gmail.com",estado:"Activo",pts:76},
-  {id:"USR004",nombre:"Carlos P.",email:"carlos@gmail.com",estado:"Activo",pts:71},
-];
-const MOCK_MATRIZ={
-  "Germán R.": ["L","E","L","V","L","L","V"],
-  "Lucas M.":  ["V","L","V","L","E","L","L"],
-  "Martina G.":["L","E","E","L","V","V","L"],
-  "Carlos P.": ["L","V","L","V","L","L","V"],
+/* ── JUGAR ── */
+window._pr={};window._re={};window._ct={};window._pa=[];
+function rJugar(ctx){return`<div class="fu"><div class="bk" onclick="go('fecha-det',{fechaId:'${ctx.fechaId}'})">← Volver</div><div class="prg"><div class="prgf" id="pb" style="width:0%"></div></div><div id="jc"><div class="sw"><div class="spinner"></div></div></div><div id="jf" style="margin-top:18px"></div></div>`;}
+async function lJugar(ctx){
+  const[rf,rm]=await Promise.all([api("getFecha",{fechaId:ctx.fechaId}),api("getMiFecha",{fechaId:ctx.fechaId,pozoId:ctx.pozoId})]);
+  if(!rf.ok){toast("Error");return;}
+  const pa=rf.partidos||{};window._ct=ctx;window._pa=rf.partidos||[];
+  window._pr={};window._re={};
+  if(rm.ok){rm.pronos?.forEach(p=>{window._pr[p.partidoId]={v:p.pronostico,cr:p.cambiosRestantes,reg:p.tieneRegla};});rm.reglas?.forEach(r=>{window._re[r.partidoId]=r;});}
+  rParts(rf.partidos,ctx,rf.fecha.puedeJugar);
+}
+function rParts(parts,ctx,puede){
+  const el=document.getElementById("jc");if(!el)return;
+  const comp=Object.keys(window._pr).length,tot=parts.length;
+  const pb=document.getElementById("pb");if(pb)pb.style.width=`${(comp/tot)*100}%`;
+  el.innerHTML=parts.map(p=>{
+    const pr=window._pr[p.id]||{},re=window._re[p.id];
+    const sel=pr.v,cr=pr.cr!==undefined?pr.cr:3,bloq=!!re||cr===0||!puede||p.golesLocal!==null;
+    return`<div class="pcard${sel?" ok":""}" id="pc-${p.id}">
+      <div class="ph2">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;font-weight:700;color:var(--text2)">#${p.numero}</span>
+          ${p.tipo!=="Normal"?`<span class="bdg ${p.tipo==="Polla"?"bgold":"bgray"}">${p.tipo==="Polla"?"⭐":"×2"} ${p.tipo}</span>`:`<span class="bdg bgray">NORMAL</span>`}
+          ${p.estado==="En Vivo"?`<span class="bdg blive">● VIVO</span>`:""}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${sel?`<span class="cb ${cr===3?"ok":cr>0?"warn":"ag"}">🔄 ${cr}</span>`:""}
+          ${sel?`<span class="rb${re?" ap":""}" onclick="openReg('${p.id}')">⭐ ${re?re.codigo:"REGLA"}</span>`:""}
+        </div>
+      </div>
+      <div class="pteams">
+        <span class="pt">${p.local}</span>
+        ${p.golesLocal!==null?`<span class="psc">${p.golesLocal}-${p.golesVisita}</span>`:`<span class="pvs">VS</span>`}
+        <span class="pt r">${p.visita}</span>
+      </div>
+      ${!bloq?`<div class="lev">${["L","E","V"].map(v=>{const pc=v==="L"?p.pct?.pctL:v==="E"?p.pct?.pctE:p.pct?.pctV;return`<button class="lb2 ${v}${sel===v?" sel":""}" onclick="gP('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')"><span class="ll">${v}</span><span class="lp">${pc||"?"}%</span></button>`}).join("")}</div>`
+      :sel?`<div style="padding:9px 12px;background:rgba(255,255,255,.04);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--text2)">${re?"🔒 Regla":cr===0?"🚫 Sin cambios":"Tu pronóstico"}</span>
+        <span style="font-family:var(--fd);font-size:24px;font-weight:900;color:${sel==="L"?"var(--L)":sel==="E"?"var(--E)":"var(--V)"}">${sel}</span></div>`
+      :`<div style="padding:9px 12px;background:rgba(255,255,255,.03);border-radius:8px;text-align:center;font-size:12px;color:var(--text3)">Sin pronóstico</div>`}
+      <div class="pbar"><div class="pl" style="width:${p.pct?.pctL||33}%"></div><div class="pe" style="width:${p.pct?.pctE||34}%"></div><div class="pv" style="width:${p.pct?.pctV||33}%"></div></div>
+    </div>`;
+  }).join("");
+  const jf=document.getElementById("jf");
+  if(jf&&puede)jf.innerHTML=`<button class="btn btn-p btn-lg" onclick="ag()">💾 GUARDAR PRONÓSTICOS</button>`;
+}
+window.gP=async(pid,v,fid,poid)=>{
+  const prev=window._pr[pid]?{...window._pr[pid]}:null;
+  if(!window._pr[pid])window._pr[pid]={v,cr:3,reg:false};
+  else{window._pr[pid].v=v;if(prev)window._pr[pid].cr=Math.max(0,(window._pr[pid].cr||3)-1);}
+  rParts(window._pa,window._ct,true);
+  const r=await api("guardarPronostico",{fechaId:fid,pozoId:poid,partidoId:pid,pronostico:v});
+  if(!r.ok){toast("❌ "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];rParts(window._pa,window._ct,true);return;}
+  if(r.cambiosRestantes!==undefined){window._pr[pid].cr=r.cambiosRestantes;rParts(window._pa,window._ct,true);}
+  if(r.mensaje&&r.cambio)toast(r.mensaje);
 };
-const REGLAS_DEF=[
-  {cod:"NPF", nombre:"No Puede Fallar",  desc:"1 partido L/V que no puede fallar",     pts:"3 pts",    tipo:"LV"},
-  {cod:"LMR", nombre:"La Marea Roja",    desc:"3 partidos con tarjeta roja",            pts:"1pt/tarj", tipo:"any3"},
-  {cod:"LR",  nombre:"La Rachita",       desc:"5 partidos consecutivos acertados",      pts:"1pt/cons", tipo:"inicio"},
-  {cod:"LLDG",nombre:"Lluvia de Goles",  desc:"1 partido con 5 o más goles",           pts:"4 pts",    tipo:"any"},
-  {cod:"10",  nombre:"El Diego",         desc:"3 empates de tus pronósticos E",         pts:"5 pts",    tipo:"E3"},
-  {cod:"GSA", nombre:"Goles Son Amores", desc:"1 partido L/V, goles de ambos equipos", pts:"1pt/gol",  tipo:"LV"},
-  {cod:"ZPL", nombre:"La Zapali",        desc:"1 partido L/V gana por 3+ goles",       pts:"4 pts",    tipo:"LV"},
-  {cod:"MK",  nombre:"La MK",            desc:"Resultado exacto de 1 partido L/V",     pts:"5 pts",    tipo:"LV_exact"},
-  {cod:"EQS", nombre:"Empate Que Suma",  desc:"1 partido terminará en empate",          pts:"3 pts",    tipo:"any"},
-];
+window.ag=async()=>{
+  const ps=Object.entries(window._pr).map(([id,p])=>({partidoId:id,pronostico:p.v}));
+  const r=await api("autoguardar",{fechaId:window._ct.fechaId,pozoId:window._ct.pozoId,pronos:ps});
+  toast(r.ok?`✅ ${r.guardados} guardados`:"❌ "+r.error);
+};
+window.openReg=async(pid)=>{
+  const re=window._re[pid];if(re){toast(`🔒 "${re.nombre}" — definitiva`);return;}
+  const r=await api("getReglasDisponibles",{fechaId:window._ct.fechaId,pozoId:window._ct.pozoId,partidoId:pid});
+  if(!r.ok){toast("❌ "+r.error);return;}
+  const m=document.createElement("div");m.className="mo";
+  m.onclick=e=>{if(e.target===m)m.remove();};
+  m.innerHTML=`<div class="mb">
+    <div class="mh2">
+      <div><div class="mt2">REGLAS ESPECIALES</div>
+      <p style="font-size:12px;color:var(--text2);margin-top:3px">Pronóstico: <strong style="color:${r.pronosticoActual==="L"?"var(--L)":r.pronosticoActual==="E"?"var(--E)":"var(--V)"}">${r.pronosticoActual}</strong></p></div>
+      <div class="mc2" onclick="this.closest('.mo').remove()">×</div>
+    </div>
+    <div style="background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.15);border-radius:8px;padding:10px 13px;margin-bottom:14px;font-size:12px;color:var(--gold)">
+      ⚠️ Las reglas son <strong>definitivas</strong> — no se pueden cambiar ni eliminar.
+    </div>
+    ${r.disponibles.map(x=>`
+      <div class="ro" onclick="apReg('${pid}','${x.codigo}')">
+        <div class="roh"><span class="rnm">${x.nombre}</span><span class="rpt">${x.pts}</span></div>
+        <p class="rds">${x.desc}</p>
+        ${x.codigo==="MK"?`<input class="inp" id="mk-${pid}" placeholder="Resultado exacto (ej: 2-1)" style="margin-top:8px;font-size:13px" onclick="event.stopPropagation()"/>`:""}
+      </div>`).join("")}
+    ${!r.disponibles.length?`<div class="es" style="padding:28px"><div class="ic">🚫</div><p>No hay reglas para pronóstico ${r.pronosticoActual}</p></div>`:""}
+  </div>`;
+  document.body.appendChild(m);
+};
+window.apReg=async(pid,cod)=>{
+  let det="";
+  if(cod==="MK"){det=document.getElementById("mk-"+pid)?.value||"";if(!det){toast("Ingresá resultado exacto");return;}}
+  document.querySelector(".mo")?.remove();toast("Aplicando...");
+  const r=await api("guardarRegla",{fechaId:window._ct.fechaId,pozoId:window._ct.pozoId,partidoId:pid,codigoRegla:cod,detalle:det});
+  if(!r.ok){toast("❌ "+r.error);return;}
+  window._re[pid]={codigo:cod,nombre:r.regla?.nombre};
+  if(window._pr[pid])window._pr[pid].reg=true;
+  rParts(window._pa,window._ct,true);toast("✅ "+r.mensaje);
+};
 
-// ═══════════════════════════════════════════════
-//  API
-// ═══════════════════════════════════════════════
-async function api(action,params={}){
-  if(!SCRIPT_URL){await new Promise(r=>setTimeout(r,300));return mockRes(action,params);}
-  try{
-    const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,...params})});
-    return await r.json();
-  }catch{return mockRes(action,params);}
+/* ── TABLA ── */
+function rTabla(ctx){return`<div class="fu"><div class="ph"><h2>TABLA</h2><p>Posiciones</p></div><div id="tc"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+async function lTabla(ctx){
+  if(!ctx.fechaId||!ctx.pozoId){const e=document.getElementById("tc");if(e)e.innerHTML=`<div class="es"><div class="ic">🏆</div><p>Seleccioná una fecha para ver la tabla</p></div>`;return;}
+  const r=await api("getTabla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId}),el=document.getElementById("tc");
+  if(!el)return;if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}
+  const t=r.tabla||[],po=t.slice(0,3),re=t.slice(3),md=["🥇","🥈","🥉"];
+  el.innerHTML=`
+    <p style="font-size:11px;color:var(--text2);margin-bottom:12px">Último partido calculado: #${r.ultimoPartidoCalculado||0} de ${r.totalPartidos}</p>
+    ${po.length>=3?`<div class="podio">${[po[1],po[0],po[2]].map((u,i)=>{const ri=i===0?1:i===1?0:2;return`<div class="pi${ri===0?" first":""}"><div class="med">${md[ri]}</div><div class="pn">${u.siglas}</div><div class="pb"><div class="ppts">${u.ptsTotal}</div><div style="font-size:9px;color:var(--text2)">pts</div></div></div>`;}).join("")}</div>`:""}
+    <div>${t.map((u,i)=>`<div class="tr${u.userId===App.user?.id?" me":""}">
+      <span class="tpos" style="color:${i===0?"var(--gold)":i===1?"#C0C0C0":i===2?"#CD7F32":"var(--text2)"}">${i<3?md[i]:u.posicion}</span>
+      <span class="tnm">${u.siglas}${u.userId===App.user?.id?` <span style="font-size:11px;color:var(--text2);font-weight:400">(vos)</span>`:""}</span>
+      <div><span class="tpts" style="color:${u.userId===App.user?.id?"var(--accent)":"var(--text)"}">${u.ptsTotal}</span><span style="font-size:11px;color:var(--text2);margin-left:3px">pts</span></div>
+    </div>`).join("")}</div>`;
 }
-function mockRes(action,p){
-  switch(action){
-    case"login":
-      if(p.email==="admin@prode.com"&&p.pass==="1234") return{ok:true,user:{id:"ADM001",nombre:"Admin",role:"admin"}};
-      if(p.email==="german@gmail.com"&&p.pass==="1234") return{ok:true,user:{id:"USR001",nombre:"Germán R.",role:"jugador"}};
-      return{ok:false,error:"Email o contraseña incorrectos"};
-    case"getPartidos": return{ok:true,partidos:MOCK_PARTIDOS,fechaCerrada:false,fecha:1,misPronos:{}};
-    case"getTabla":    return{ok:true,tabla:MOCK_TABLA};
-    case"getMisPuntajes": return{ok:true,puntajes:MOCK_PUNTAJES,total:40};
-    case"getAdminStats":  return{ok:true,stats:{participantes:8,fechaActual:1,pronHoy:6,pendientes:2}};
-    case"getParticipantes": return{ok:true,participantes:MOCK_PARTICIPANTES};
-    default: return{ok:true};
+
+/* ── GRILLA ── */
+function rGrilla(ctx){return`<div class="fu"><div class="ph"><h2>LOS OTROS</h2><p>Pronósticos de todos</p></div><div id="gc"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+async function lGrilla(ctx){
+  if(!ctx.fechaId||!ctx.pozoId){const e=document.getElementById("gc");if(e)e.innerHTML=`<div class="es"><div class="ic">🔒</div><p>La grilla se muestra cuando cierra la fecha</p></div>`;return;}
+  const r=await api("getGrilla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId}),el=document.getElementById("gc");
+  if(!el)return;if(!r.ok){el.innerHTML=`<div class="es"><div class="ic">🔒</div><p>${r.error}</p></div>`;return;}
+  const pts=r.partidos||[],js=r.jugadores||[];
+  el.innerHTML=`<div class="gw"><table class="gt">
+    <thead><tr>
+      <th style="text-align:left;padding-left:8px">JUGADOR</th>
+      ${pts.map(p=>`<th title="${p.local} vs ${p.visita}">#${p.numero}<br><span style="color:${p.tipo==="Polla"?"var(--gold)":p.tipo==="Doble"?"var(--purple)":"var(--text3)"}">${p.tipo[0]}</span></th>`).join("")}
+      <th>PTS</th>
+    </tr></thead>
+    <tbody>${js.map(j=>`<tr>
+      <td class="uc${j.esTuFecha?" me":""}">${j.siglas}${j.esTuFecha?" 👈":""}</td>
+      ${j.pronosticos.map(pr=>{const v=pr.pronostico,ok=pr.acertado===true;return`<td>${v?`<div style="position:relative;display:inline-block"><span class="pc2 ${v}${ok?" ok":""}">${v}</span>${pr.hizoCambios?`<span class="cd"></span>`:""}${pr.tieneRegla?`<span style="position:absolute;top:-4px;right:-4px;font-size:8px">⭐</span>`:""}</div>`:`<span style="color:var(--text3);font-size:10px">—</span>`}</td>`;}).join("")}
+      <td style="font-family:var(--fd);font-size:16px;font-weight:800;color:${j.esTuFecha?"var(--accent)":"var(--text)"}">${j.puntosAcumulados}</td>
+    </tr>`).join("")}</tbody>
+  </table></div>
+  <div style="margin-top:10px;font-size:11px;color:var(--text2);display:flex;gap:14px;flex-wrap:wrap"><span>⭐ Regla</span><span><span class="cd"></span> Cambio</span></div>`;
+}
+
+/* ── STATS ── */
+window._sd=null;
+function rStats(){return`<div class="fu"><div class="ph"><h2>HALL OF FAME</h2></div><div style="display:flex;gap:4px;background:rgba(255,255,255,.04);border-radius:var(--rs);padding:4px;margin-bottom:16px"><div id="st1" style="flex:1;padding:8px;text-align:center;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;background:var(--card2);color:var(--text)" onclick="stab('fechas',this)">Por fechas</div><div id="st2" style="flex:1;padding:8px;text-align:center;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;color:var(--text2)" onclick="stab('dinero',this)">Por dinero</div></div><div id="sc"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+window.stab=(t,el)=>{document.querySelectorAll("#st1,#st2").forEach(x=>{x.style.background="";x.style.color="var(--text2)"});el.style.background="var(--card2)";el.style.color="var(--text)";if(window._sd)rSD(window._sd,t);};
+async function lStats(){const r=await api("getEstadisticas"),el=document.getElementById("sc");if(!el)return;if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}window._sd=r;rSD(r,"fechas");}
+function rSD(r,t){
+  const el=document.getElementById("sc");if(!el)return;
+  const d=t==="fechas"?r.porFechas:r.porDinero;
+  if(!d?.length){el.innerHTML=`<div class="es"><div class="ic">🏆</div><p>Sin ganadores aún</p></div>`;return;}
+  el.innerHTML=d.map(g=>`<div class="gc"><div class="gav">${g.avatar||"👤"}</div><div style="flex:1"><div class="gn">${g.siglas} <span style="font-size:12px;color:var(--text2);font-weight:400">${g.nombre}</span></div><div class="gm">🏆 ${g.fechasGanadas} fecha${g.fechasGanadas!==1?"s":""} ganada${g.fechasGanadas!==1?"s":""}</div></div><div class="gmo">$${g.dineroTotal.toLocaleString("es-AR")}</div></div>`).join("");
+}
+
+/* ── PERFIL ── */
+function rPerfil(){
+  const u=App.user||{};
+  return`<div class="fu">
+    <div class="card" style="margin-bottom:14px">
+      <div class="paw"><div class="pab">${u.avatar||"👤"}</div><div class="pu">${u.usuario||""}</div><div class="pnm">${u.nombre||""}</div>
+      ${u.cupones>0?`<span class="bdg bgold" style="margin-top:8px">🎟 ${u.cupones} cupón${u.cupones!==1?"es":""}</span>`:""}</div>
+      <div class="si"><span class="k">Alias MP</span><span class="v">${u.alias||`<span style="color:var(--red)">Sin alias — no podrás cobrar</span>`}</span></div>
+      <div class="si"><span class="k">Teléfono</span><span class="v">${u.telefono||"—"}</span></div>
+      <div class="si"><span class="k">Email</span><span class="v">${u.email||"—"}</span></div>
+      <div class="si"><span class="k">Rol</span><span class="v">${u.rol||"Jugador"}</span></div>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <p style="font-family:var(--fd);font-size:13px;font-weight:800;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;margin-bottom:14px">CONFIGURACIÓN</p>
+      <div class="si"><span class="k">Notificaciones PUSH</span><div class="tgl${u.push?" on":""}" onclick="this.classList.toggle('on');api('editarPerfil',{pushActivo:this.classList.contains('on')})"></div></div>
+      <div class="si"><span class="k">Auto-login biométrico</span><div class="tgl${u.biometrico?" on":""}" onclick="this.classList.toggle('on');api('editarPerfil',{biometrico:this.classList.contains('on')})"></div></div>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <p style="font-family:var(--fd);font-size:13px;font-weight:800;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;margin-bottom:14px">EDITAR PERFIL</p>
+      <div class="fg">
+        <div class="ig"><label class="il">ALIAS MERCADOPAGO</label><input class="inp" id="pal" value="${u.alias||""}" placeholder="tu.alias.mp"/></div>
+        <div class="ig"><label class="il">EMAIL</label><input class="inp" id="pem" type="email" value="${u.email||""}" placeholder="tu@email.com"/></div>
+        <button class="btn btn-s" onclick="sP()">Guardar cambios</button>
+      </div>
+    </div>
+    <button class="btn btn-d" style="width:100%" onclick="if(confirm('¿Cerrar sesión?'))logout()">⎋ Cerrar sesión</button>
+  </div>`;
+}
+window.sP=async()=>{const r=await api("editarPerfil",{alias:document.getElementById("pal")?.value,email:document.getElementById("pem")?.value});toast(r.ok?"✅ Guardado":"❌ "+r.error);if(r.ok&&App.user){App.user.alias=document.getElementById("pal")?.value;localStorage.setItem(UK,JSON.stringify(App.user));}};
+
+/* ── ADMIN DASH ── */
+function rAdminDash(){return`<div class="fu"><div class="ph"><h2>DASHBOARD</h2></div><div class="g4" id="ads"><div class="sw"><div class="spinner"></div></div></div><p class="st" style="margin-top:22px">ACCIONES RÁPIDAS</p><button class="aab" onclick="go('admin-fechas')"><div><div class="t">📅 Gestión de Fechas</div><div class="d">Crear fechas, partidos, cerrar</div></div><span style="font-size:20px;color:var(--text2)">›</span></button><button class="aab" onclick="go('admin-res')"><div><div class="t">⚽ Ingresar Resultados</div><div class="d">Cargar resultados de partidos</div></div><span style="font-size:20px;color:var(--text2)">›</span></button><button class="aab" onclick="go('admin-users')"><div><div class="t">👥 Gestión de Jugadores</div><div class="d">Ver, activar y suspender</div></div><span style="font-size:20px;color:var(--text2)">›</span></button></div>`;}
+async function lAdminDash(){
+  const r=await api("getFechas"),el=document.getElementById("ads");if(!el)return;
+  const ab=r.fechas?.filter(f=>f.estado==="Abierta").length||0;
+  el.innerHTML=[{v:r.fechas?.length||0,l:"Fechas",i:"📅",c:"var(--blue)"},{v:ab,l:"Abiertas",i:"🟢",c:"var(--accent)"},{v:"—",l:"Jugadores",i:"👥",c:"var(--purple)"},{v:"—",l:"Recaudado",i:"💰",c:"var(--gold)"}]
+    .map(s=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;text-align:center"><div style="font-size:26px;margin-bottom:6px">${s.i}</div><div style="font-family:var(--fd);font-size:32px;font-weight:900;color:${s.c};line-height:1">${s.v}</div><div style="font-size:11px;color:var(--text2);margin-top:4px">${s.l}</div></div>`).join("");
+}
+
+/* ── ADMIN FECHAS ── */
+function rAdminFechas(){return`<div class="fu"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px"><div class="ph" style="margin-bottom:0"><h2>FECHAS</h2></div><button class="btn btn-p" onclick="showCF()">+ NUEVA</button></div><div id="afl"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+async function lAdminFechas(){
+  const r=await api("getFechas"),el=document.getElementById("afl");if(!el)return;
+  if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}
+  el.innerHTML=(r.fechas||[]).map(f=>`
+    <div class="card csm" style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div><div style="font-family:var(--fd);font-size:18px;font-weight:800">${f.nombre}</div><div style="font-size:12px;color:var(--text2)">⚽ ${f.cantPartidos} partidos · ${f.liga}</div></div>
+        <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgray"}">${f.estado}</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-s" style="padding:6px 11px;font-size:12px" onclick="go('admin-res',{fechaId:'${f.id}'})">Ver partidos</button>
+        ${f.estado==="Abierta"?`<button class="btn btn-s" style="padding:6px 11px;font-size:12px" onclick="cF('${f.id}')">🔒 Cerrar</button>`:""}
+        ${f.estado==="Cerrada"?`<button class="btn btn-s" style="padding:6px 11px;font-size:12px" onclick="calc('${f.id}')">🏆 Calcular</button>`:""}
+      </div>
+    </div>`).join("")||`<div class="es"><div class="ic">📅</div><p>Sin fechas</p></div>`;
+}
+window.showCF=()=>{
+  const m=document.createElement("div");m.className="mo";m.onclick=e=>{if(e.target===m)m.remove();};
+  m.innerHTML=`<div class="mb"><div class="mh2"><div class="mt2">NUEVA FECHA</div><div class="mc2" onclick="this.closest('.mo').remove()">×</div></div>
+  <div class="fg">
+    <div class="ig"><label class="il">NOMBRE</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div>
+    <div class="ig"><label class="il">LIGA</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div>
+    <div class="ig"><label class="il">PLAZO LÍMITE</label><input class="inp" id="nfp" type="datetime-local"/></div>
+    <div class="ig"><label class="il">DESCRIPCIÓN</label><input class="inp" id="nfd" placeholder="Opcional"/></div>
+    <button class="btn btn-p btn-lg" onclick="crF()">CREAR FECHA</button>
+  </div></div>`;
+  document.body.appendChild(m);
+};
+window.crF=async()=>{const r=await api("adminCrearFecha",{nombre:document.getElementById("nfn")?.value,liga:document.getElementById("nfl")?.value,plazoLimite:document.getElementById("nfp")?.value,descripcion:document.getElementById("nfd")?.value});document.querySelector(".mo")?.remove();if(r.ok){toast("✅ Fecha creada");lAdminFechas();}else toast("❌ "+r.error);};
+window.cF=async id=>{if(!confirm("¿Cerrar esta fecha?"))return;const r=await api("adminCerrarFecha",{fechaId:id});toast(r.ok?"✅ Cerrada":"❌ "+r.error);if(r.ok)lAdminFechas();};
+window.calc=async id=>{if(!confirm("¿Calcular puntajes y ganadores?"))return;toast("Calculando...");const r=await api("adminCerrarYCalcular",{fechaId:id});toast(r.ok?"✅ "+r.mensaje:"❌ "+r.error);};
+
+/* ── ADMIN RESULTADOS ── */
+function rAdminRes(){return`<div class="fu"><div class="ph"><h2>RESULTADOS</h2><p>Ingresar resultados de partidos</p></div><div id="arf"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+async function lAdminRes(ctx){
+  const rf=await api("getFechas"),el=document.getElementById("arf");if(!el)return;
+  const fs=rf.fechas?.filter(f=>["Abierta","Cerrada","Jugada"].includes(f.estado))||[];
+  const sf=ctx?.fechaId||fs[0]?.id;
+  if(!sf){el.innerHTML=`<div class="es"><div class="ic">📅</div><p>Sin fechas disponibles</p></div>`;return;}
+  const rp=await api("getFecha",{fechaId:sf});if(!rp.ok){el.innerHTML=`<div class="err">${rp.error}</div>`;return;}
+  el.innerHTML=`<div class="ig" style="margin-bottom:16px"><label class="il">FECHA</label>
+    <select class="inp" onchange="lAR({fechaId:this.value})">${fs.map(f=>`<option value="${f.id}"${f.id===sf?" selected":""}>${f.nombre}</option>`).join("")}</select></div>
+    ${rp.partidos.map(p=>`<div class="card csm" style="margin-bottom:10px">
+      <div style="margin-bottom:12px">
+        <div style="font-family:var(--fd);font-size:17px;font-weight:800">#${p.numero} ${p.local} vs ${p.visita}</div>
+        <div style="display:flex;gap:8px;margin-top:4px">${p.tipo!=="Normal"?`<span class="bdg ${p.tipo==="Polla"?"bgold":"bgray"}">${p.tipo}</span>`:""}<span class="bdg ${p.estado==="Finalizado"?"bg":p.estado==="En Vivo"?"blive":"bgray"}">${p.estado}</span></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <div style="flex:1"><div style="font-size:10px;color:var(--text2);margin-bottom:4px">${p.local}</div><input class="si2" id="gL-${p.id}" type="number" min="0" max="20" value="${p.golesLocal??""}" placeholder="0"/></div>
+        <div style="font-family:var(--fd);font-size:26px;font-weight:900;color:var(--text2);padding-bottom:13px">-</div>
+        <div style="flex:1"><div style="font-size:10px;color:var(--text2);margin-bottom:4px">${p.visita}</div><input class="si2" id="gV-${p.id}" type="number" min="0" max="20" value="${p.golesVisita??""}" placeholder="0"/></div>
+        <div><div style="font-size:10px;color:var(--text2);margin-bottom:4px">🟥</div><input class="si2" id="tr-${p.id}" type="number" min="0" max="10" value="${p.tarjetasRojas||0}" style="width:50px"/></div>
+        <button class="btn btn-p" style="padding:13px 13px;align-self:flex-end" onclick="gR('${p.id}','${sf}')">${p.estado==="Finalizado"?"✓":"▶"}</button>
+      </div>
+    </div>`).join("")}`;
+}
+window.lAR=ctx=>lAdminRes(ctx);
+window.gR=async(pid,fid)=>{const gL=document.getElementById("gL-"+pid)?.value,gV=document.getElementById("gV-"+pid)?.value,tr=document.getElementById("tr-"+pid)?.value;if(gL===""||gV===""){toast("Ingresá ambos goles");return;}toast("Guardando...");const r=await api("adminIngresarResultado",{partidoId:pid,fechaId:fid,golesLocal:+gL,golesVisita:+gV,tarjetasRojas:+tr||0});toast(r.ok?`✅ ${r.resultado||""} — Puntajes calculados`:"❌ "+r.error);};
+
+/* ── ADMIN USUARIOS ── */
+function rAdminUsers(){return`<div class="fu"><div class="ph"><h2>JUGADORES</h2></div><div id="aul"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+async function lAdminUsers(){
+  const r=await api("adminGetUsuarios"),el=document.getElementById("aul");if(!el)return;
+  if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}
+  el.innerHTML=(r.usuarios||[]).map(u=>`<div class="card csm" style="margin-bottom:8px;display:flex;align-items:center;gap:12px">
+    <div style="width:38px;height:38px;border-radius:10px;background:rgba(0,224,144,.1);border:1px solid rgba(0,224,144,.2);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">${u.avatar||"👤"}</div>
+    <div style="flex:1;min-width:0"><div style="font-family:var(--fd);font-size:16px;font-weight:800">${u.usuario} <span style="font-size:12px;color:var(--text2);font-weight:400">${u.nombre}</span></div><div style="font-size:11px;color:var(--text2)">${u.telefono}</div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+      <span class="bdg ${u.estado==="Activo"?"bg":"bred"}">${u.estado}</span>
+      <button class="btn btn-s" style="padding:5px 10px;font-size:11px" onclick="chSt('${u.id}','${u.estado==="Activo"?"Suspendido":"Activo"}')">${u.estado==="Activo"?"Suspender":"Activar"}</button>
+    </div>
+  </div>`).join("")||`<div class="es"><div class="ic">👥</div><p>Sin jugadores</p></div>`;
+}
+window.chSt=async(id,est)=>{if(!confirm(`¿${est==="Suspendido"?"Suspender":"Activar"} este usuario?`))return;const r=await api("adminCambiarEstado",{targetUserId:id,estado:est});toast(r.ok?"✅ Actualizado":"❌ "+r.error);if(r.ok)lAdminUsers();};
+
+/* ── AFTER RENDER ── */
+function afterRender(k,ctx){
+  switch(k){
+    case"fechas":lFechas();break;
+    case"fecha-det":lFechaDet(ctx);break;
+    case"jugar":lJugar(ctx);break;
+    case"tabla":lTabla(ctx);break;
+    case"grilla":lGrilla(ctx);break;
+    case"stats":lStats();break;
+    case"admin-dash":lAdminDash();break;
+    case"admin-fechas":lAdminFechas();break;
+    case"admin-res":lAdminRes(ctx);break;
+    case"admin-users":lAdminUsers();break;
   }
 }
 
-// ═══════════════════════════════════════════════
-//  ESTILOS INLINE
-// ═══════════════════════════════════════════════
-const INP={width:"100%",padding:"13px 16px",background:"rgba(255,255,255,.05)",
-  border:`1px solid ${C.border}`,borderRadius:10,color:C.text,
-  fontSize:15,fontFamily:"'Plus Jakarta Sans',sans-serif",transition:"border-color .2s"};
-
-// ═══════════════════════════════════════════════
-//  MICRO COMPONENTS
-// ═══════════════════════════════════════════════
-function Spinner(){
-  return React.createElement("div",{style:{display:"flex",justifyContent:"center",padding:48}},
-    React.createElement("div",{style:{
-      width:32,height:32,border:`3px solid ${C.border}`,
-      borderTopColor:C.accent,borderRadius:"50%",animation:"spin .7s linear infinite"
-    }})
-  );
-}
-
-function Badge({tipo}){
-  const cfg={
-    Polla: {bg:"rgba(255,184,0,.15)",  color:C.gold,    label:"⭐ POLLA"},
-    Doble: {bg:"rgba(138,108,220,.15)",color:"#9C7FD4", label:"×2 DOBLE"},
-    Normal:{bg:"rgba(255,255,255,.06)",color:C.text2,   label:"NORMAL"},
-  };
-  const s=cfg[tipo]||cfg.Normal;
-  return React.createElement("span",{style:{
-    fontSize:9,fontWeight:700,padding:"3px 8px",borderRadius:5,
-    background:s.bg,color:s.color,letterSpacing:1,textTransform:"uppercase"
-  }},s.label);
-}
-
-function DemoBanner(){
-  if(SCRIPT_URL) return null;
-  return React.createElement("div",{style:{
-    background:"rgba(255,184,0,.1)",borderBottom:"1px solid rgba(255,184,0,.2)",
-    padding:"6px 16px",textAlign:"center",fontSize:11,color:C.gold,letterSpacing:.5
-  }},"⚡ MODO DEMO — Conectá SCRIPT_URL para usar datos reales de tu Google Sheets");
-}
-
-// ═══════════════════════════════════════════════
-//  LOGIN
-// ═══════════════════════════════════════════════
-function LoginScreen({onLogin}){
-  const[email,setEmail]=useState("");
-  const[pass,setPass]=useState("");
-  const[loading,setLoading]=useState(false);
-  const[err,setErr]=useState("");
-
-  const handle=async()=>{
-    if(!email||!pass){setErr("Completá todos los campos");return;}
-    setLoading(true);setErr("");
-    const r=await api("login",{email,pass});
-    setLoading(false);
-    if(r.ok) onLogin(r.user);
-    else setErr(r.error||"Error al iniciar sesión");
-  };
-
-  return(
-    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",
-      background:`radial-gradient(ellipse at 30% 40%,rgba(0,200,150,.1) 0%,transparent 55%),
-                  radial-gradient(ellipse at 80% 80%,rgba(74,158,255,.07) 0%,transparent 50%),${C.bg}`,
-      padding:20}}>
-      <div style={{width:"100%",maxWidth:380}} className="fu">
-        <DemoBanner/>
-        <div style={{textAlign:"center",marginBottom:36}}>
-          <div style={{
-            width:88,height:88,borderRadius:24,
-            background:`linear-gradient(135deg,${C.accent},#007A5E)`,
-            display:"flex",alignItems:"center",justifyContent:"center",
-            margin:"0 auto 20px",fontSize:40,
-            boxShadow:`0 20px 60px rgba(0,200,150,.3)`
-          }}>⚽</div>
-          <h1 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:44,fontWeight:900,letterSpacing:3,lineHeight:1}}>APP PRODE</h1>
-          <p style={{color:C.text2,fontSize:13,marginTop:6}}>pollaprodes.com · Temporada 2026</p>
+/* ── LOGIN ── */
+function showLogin(){
+  document.getElementById("app").style.display="none";
+  ["mh","mc","bn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
+  const el=document.getElementById("sl");el.style.display="flex";
+  el.innerHTML=`<div class="lb fu">
+    <div class="llo"><div class="iw">⚽</div><h1>POLLA<br>PRODES</h1><p>pollaprodes.com · El juego de pronósticos</p></div>
+    <div class="lcard">
+      <div class="ltabs"><div class="ltab active" onclick="ltab('l',this)">INGRESAR</div><div class="ltab" onclick="ltab('r',this)">REGISTRARSE</div></div>
+      <div id="lf">
+        <div class="fg">
+          <div class="ig"><label class="il">TELÉFONO</label><input class="inp" id="lt" type="tel" placeholder="+5493442xxxxxx" onkeydown="if(event.key==='Enter')doL()"/></div>
+          <div class="ig"><label class="il">PIN</label><input class="inp" id="lp" type="password" placeholder="4-8 dígitos" maxlength="8" onkeydown="if(event.key==='Enter')doL()"/></div>
+          <div id="le"></div>
+          <button class="btn btn-p btn-lg" id="blb" onclick="doL()">ENTRAR</button>
         </div>
-
-        <div style={{background:C.card,borderRadius:20,padding:32,border:`1px solid ${C.border}`,boxShadow:"0 32px 80px rgba(0,0,0,.5)"}}>
-          <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,letterSpacing:2,marginBottom:24}}>INICIAR SESIÓN</h2>
-          <input type="email" placeholder="Email" value={email}
-            onChange={e=>setEmail(e.target.value)}
-            onKeyDown={e=>e.key==="Enter"&&handle()}
-            style={INP}/>
-          <input type="password" placeholder="Contraseña / PIN" value={pass}
-            onChange={e=>setPass(e.target.value)}
-            onKeyDown={e=>e.key==="Enter"&&handle()}
-            style={{...INP,marginTop:12}}/>
-          {err&&<p style={{color:C.V,fontSize:13,marginTop:10}}>⚠ {err}</p>}
-          <button onClick={handle} disabled={loading} style={{
-            width:"100%",marginTop:20,padding:"15px 0",
-            background:loading?C.card2:`linear-gradient(135deg,${C.accent},#007A5E)`,
-            border:`1px solid ${loading?C.border:"transparent"}`,
-            borderRadius:12,color:loading?C.text2:"#fff",
-            fontFamily:"'Barlow Condensed',sans-serif",fontSize:19,fontWeight:800,letterSpacing:2,
-            cursor:loading?"wait":"pointer",
-            boxShadow:loading?"none":`0 8px 28px rgba(0,200,150,.35)`,transition:"all .2s"
-          }}>{loading?"INGRESANDO...":"ENTRAR"}</button>
-          <div style={{marginTop:20,padding:14,background:"rgba(255,255,255,.03)",borderRadius:10}}>
-            <p style={{fontSize:11,color:C.text2,lineHeight:1.8,margin:0}}>
-              <span style={{color:C.accent,fontWeight:600}}>Jugador:</span> german@gmail.com / 1234<br/>
-              <span style={{color:C.V,fontWeight:600}}>Admin:</span> admin@prode.com / 1234
-            </p>
-          </div>
+      </div>
+      <div id="rf" style="display:none">
+        <div class="fg">
+          <div class="ig"><label class="il">NOMBRE COMPLETO</label><input class="inp" id="rn" placeholder="Nombre Apellido"/></div>
+          <div class="ig"><label class="il">TELÉFONO</label><input class="inp" id="rt" type="tel" placeholder="+5493442xxxxxx"/></div>
+          <div class="ig"><label class="il">PIN (4-8 dígitos)</label><input class="inp" id="rp" type="password" placeholder="Elegí tu PIN" maxlength="8"/></div>
+          <div class="ig"><label class="il">ALIAS MERCADOPAGO</label><input class="inp" id="ra" placeholder="tu.alias.mp"/></div>
+          <div class="ig"><label class="il">EMAIL (opcional)</label><input class="inp" id="re2" type="email" placeholder="tu@email.com"/></div>
+          <div id="re"></div>
+          <button class="btn btn-p btn-lg" onclick="doR()">CREAR CUENTA</button>
         </div>
       </div>
     </div>
-  );
+  </div>`;
 }
 
-// ═══════════════════════════════════════════════
-//  FECHA SCREEN
-// ═══════════════════════════════════════════════
-function FechaScreen({user,pronos,setPronos,partidos,setPartidos,onGoReglas}){
-  const[loading,setLoading]=useState(true);
-  const[fechaCerrada,setFechaCerrada]=useState(false);
-  const[fecha,setFecha]=useState(1);
-  const[saving,setSaving]=useState(false);
-  const[saved,setSaved]=useState(false);
+window.ltab=(t,el)=>{document.querySelectorAll(".ltab").forEach(x=>x.classList.remove("active"));el.classList.add("active");document.getElementById("lf").style.display=t==="l"?"block":"none";document.getElementById("rf").style.display=t==="r"?"block":"none";};
+window.doL=async()=>{
+  const t=document.getElementById("lt")?.value,p=document.getElementById("lp")?.value,b=document.getElementById("blb"),er=document.getElementById("le");
+  if(!t||!p){if(er)er.innerHTML=`<div class="err">Completá todos los campos</div>`;return;}
+  if(b){b.textContent="INGRESANDO...";b.disabled=true;}
+  const r=await api("login",{telefono:t,pin:p});
+  if(b){b.textContent="ENTRAR";b.disabled=false;}
+  if(!r.ok){if(er)er.innerHTML=`<div class="err">⚠ ${r.error}</div>`;return;}
+  save(r.user,r.sessionToken);initApp();
+};
+window.doR=async()=>{
+  const n=document.getElementById("rn")?.value,t=document.getElementById("rt")?.value,p=document.getElementById("rp")?.value,a=document.getElementById("ra")?.value,e=document.getElementById("re2")?.value,er=document.getElementById("re");
+  if(!n||!t||!p){if(er)er.innerHTML=`<div class="err">Completá los campos obligatorios</div>`;return;}
+  const r=await api("registro",{nombre:n,telefono:t,pin:p,alias:a,email:e});
+  if(!r.ok){if(er)er.innerHTML=`<div class="err">⚠ ${r.error}</div>`;return;}
+  save(r.user,r.sessionToken);toast(`✅ Bienvenido, ${r.user.usuario}`);initApp();
+};
 
-  useEffect(()=>{
-    api("getPartidos",{userId:user.id}).then(r=>{
-      if(r.ok){
-        setPartidos(r.partidos);
-        setFechaCerrada(r.fechaCerrada);
-        setFecha(r.fecha||1);
-        if(r.misPronos&&Object.keys(r.misPronos).length) setPronos(r.misPronos);
-      }
-      setLoading(false);
-    });
-  },[]);
-
-  const total=partidos.length;
-  const comp=Object.keys(pronos).length;
-
-  const handleSave=async()=>{
-    setSaving(true);
-    await api("savePronosticos",{userId:user.id,fecha,pronos});
-    setSaving(false);setSaved(true);
-    setTimeout(()=>setSaved(false),2500);
-  };
-
-  if(loading) return React.createElement("div",{style:{paddingTop:40}},React.createElement(Spinner));
-
-  return(
-    <div className="fu">
-      {/* Header */}
-      <div style={{padding:"20px 20px 16px",background:`linear-gradient(180deg,rgba(0,200,150,.08) 0%,transparent 100%)`}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-          <div>
-            <p style={{color:C.text2,fontSize:11,letterSpacing:1.5,textTransform:"uppercase",marginBottom:4}}>Fecha Actual</p>
-            <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:48,fontWeight:900,lineHeight:1,letterSpacing:1}}>FECHA {fecha}</h2>
-          </div>
-          <div style={{
-            textAlign:"center",
-            background:comp===total?"rgba(0,200,150,.12)":"rgba(255,255,255,.05)",
-            border:`1px solid ${comp===total?C.accent:C.border}`,borderRadius:14,padding:"10px 16px"
-          }}>
-            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:28,fontWeight:800,color:comp===total?C.accent:C.text,lineHeight:1}}>{comp}/{total}</span>
-            <p style={{fontSize:10,color:C.text2,marginTop:2,letterSpacing:.5}}>pronósticos</p>
-          </div>
-        </div>
-        {fechaCerrada&&(
-          <div style={{marginTop:12,padding:"10px 16px",background:"rgba(255,77,109,.08)",border:"1px solid rgba(255,77,109,.25)",borderRadius:10,display:"flex",alignItems:"center",gap:8}}>
-            <span>🔒</span>
-            <span style={{color:C.V,fontSize:13,fontWeight:600}}>Pronósticos cerrados — solo lectura</span>
-          </div>
-        )}
-        <div style={{marginTop:12,height:3,background:"rgba(255,255,255,.06)",borderRadius:2}}>
-          <div style={{height:"100%",borderRadius:2,width:`${(comp/total)*100}%`,background:`linear-gradient(90deg,${C.accent},#007A5E)`,transition:"width .4s ease"}}/>
-        </div>
-      </div>
-
-      {/* Partidos */}
-      <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:10}}>
-        {partidos.map(p=>{
-          const sel=pronos[p.n];
-          const selClr=sel==="L"?C.L:sel==="E"?C.E:sel==="V"?C.V:null;
-          return(
-            <div key={p.n} style={{
-              background:C.card,border:`1px solid ${selClr?selClr+"50":C.border}`,
-              borderRadius:16,padding:"14px 16px",
-              boxShadow:selClr?`0 4px 24px ${selClr}18`:"none",transition:"all .2s"
-            }}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:12,fontWeight:700,color:C.text2}}>#{p.n}</span>
-                  <Badge tipo={p.tipo}/>
-                </div>
-                <div style={{display:"flex",gap:6}}>
-                  <span style={{fontSize:11,color:C.text2}}>{p.hora}</span>
-                  <span style={{fontSize:10,color:C.text2,background:"rgba(255,255,255,.05)",padding:"2px 8px",borderRadius:4}}>{p.liga}</span>
-                </div>
-              </div>
-              <div style={{display:"flex",alignItems:"center",marginBottom:12}}>
-                <span style={{flex:1,fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:700}}>{p.local}</span>
-                <span style={{padding:"4px 12px",fontFamily:"'Barlow Condensed',sans-serif",fontSize:12,fontWeight:700,color:C.text2,letterSpacing:1}}>VS</span>
-                <span style={{flex:1,fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:700,textAlign:"right"}}>{p.visit}</span>
-              </div>
-
-              {!fechaCerrada&&p.gL===null&&(
-                <div style={{display:"flex",gap:8}}>
-                  {["L","E","V"].map(v=>{
-                    const clr=v==="L"?C.L:v==="E"?C.E:C.V;
-                    const pct=v==="L"?p.pctL:v==="E"?p.pctE:p.pctV;
-                    const isSel=sel===v;
-                    return(
-                      <button key={v} onClick={()=>{setPronos(prev=>({...prev,[p.n]:v}));setSaved(false);}} style={{
-                        flex:1,padding:"11px 0",
-                        background:isSel?clr:"rgba(255,255,255,.04)",
-                        border:`1px solid ${isSel?clr:"rgba(255,255,255,.08)"}`,
-                        borderRadius:12,cursor:"pointer",transition:"all .15s",
-                        display:"flex",flexDirection:"column",alignItems:"center",gap:2
-                      }}>
-                        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:900,color:isSel?"#fff":clr,lineHeight:1}}>{v}</span>
-                        <span style={{fontSize:10,color:isSel?"rgba(255,255,255,.75)":C.text2}}>{pct}%</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              {fechaCerrada&&sel&&(
-                <div style={{padding:"8px 12px",background:"rgba(255,255,255,.05)",borderRadius:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <span style={{fontSize:12,color:C.text2}}>Tu pronóstico</span>
-                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,color:sel==="L"?C.L:sel==="E"?C.E:C.V}}>{sel}</span>
-                </div>
-              )}
-              {/* PCT bar */}
-              <div style={{display:"flex",gap:2,borderRadius:3,overflow:"hidden",height:3,marginTop:8}}>
-                <div style={{width:`${p.pctL}%`,background:C.L,opacity:.6}}/>
-                <div style={{width:`${p.pctE}%`,background:C.E,opacity:.6}}/>
-                <div style={{width:`${p.pctV}%`,background:C.V,opacity:.6}}/>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Botones */}
-      {!fechaCerrada&&(
-        <div style={{padding:"20px 16px",display:"flex",gap:12}}>
-          <button onClick={handleSave} disabled={saving||comp===0} style={{
-            flex:2,padding:"15px 0",
-            background:saved?"rgba(0,200,150,.12)":`linear-gradient(135deg,${C.accent},#007A5E)`,
-            border:saved?`1px solid ${C.accent}`:"none",
-            borderRadius:14,color:saved?C.accent:"#fff",
-            fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:800,letterSpacing:1,
-            cursor:"pointer",opacity:(saving||comp===0)?.4:1,transition:"all .3s",
-            boxShadow:saved||saving?"none":`0 8px 28px rgba(0,200,150,.28)`
-          }}>{saving?"GUARDANDO...":saved?"✓ GUARDADO":"GUARDAR PRONÓSTICOS"}</button>
-          {comp===total&&(
-            <button onClick={onGoReglas} style={{
-              flex:1,padding:"15px 0",
-              background:"rgba(255,184,0,.1)",border:"1px solid rgba(255,184,0,.35)",
-              borderRadius:14,color:C.gold,
-              fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:800,letterSpacing:1,cursor:"pointer"
-            }}>⭐ REGLAS</button>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════
-//  REGLAS SCREEN
-// ═══════════════════════════════════════════════
-function ReglasScreen({user,partidos,pronos,onBack}){
-  const[sel,setSel]=useState({});
-  const[saving,setSaving]=useState(false);
-  const[saved,setSaved]=useState(false);
-
-  const lv=partidos.filter(p=>pronos[p.n]==="L"||pronos[p.n]==="V");
-  const e=partidos.filter(p=>pronos[p.n]==="E");
-
-  const toggle=cod=>setSel(prev=>
-    prev[cod]?Object.fromEntries(Object.entries(prev).filter(([k])=>k!==cod)):{...prev,[cod]:{partido:null,detalle:""}}
-  );
-
-  const handleSave=async()=>{
-    setSaving(true);
-    await api("saveReglas",{userId:user.id,fecha:1,reglas:sel});
-    setSaving(false);setSaved(true);setTimeout(()=>setSaved(false),2500);
-  };
-
-  return(
-    <div className="fu">
-      <div style={{padding:"16px 20px",display:"flex",alignItems:"center",gap:12,borderBottom:`1px solid ${C.border}`}}>
-        <button onClick={onBack} style={{
-          background:"rgba(255,255,255,.06)",border:"none",width:38,height:38,
-          borderRadius:10,color:C.text2,cursor:"pointer",fontSize:18,
-          display:"flex",alignItems:"center",justifyContent:"center"
-        }}>←</button>
-        <div>
-          <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:26,fontWeight:800,letterSpacing:1}}>REGLAS ESPECIALES</h2>
-          <p style={{color:C.text2,fontSize:12,marginTop:1}}>Fecha 1 · elegí tus apuestas especiales</p>
-        </div>
-      </div>
-
-      <div style={{padding:"12px 16px",display:"flex",flexDirection:"column",gap:10}}>
-        {REGLAS_DEF.map(regla=>{
-          const isSel=!!sel[regla.cod];
-          return(
-            <div key={regla.cod} style={{
-              background:C.card,border:`1px solid ${isSel?"rgba(255,184,0,.35)":C.border}`,
-              borderRadius:16,padding:16,boxShadow:isSel?"0 4px 24px rgba(255,184,0,.12)":"none",transition:"all .2s"
-            }}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                <div style={{flex:1}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:5,flexWrap:"wrap"}}>
-                    <span style={{fontSize:10,fontWeight:800,background:"rgba(255,255,255,.07)",color:C.text2,padding:"2px 8px",borderRadius:4,letterSpacing:1}}>{regla.cod}</span>
-                    <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,fontWeight:700}}>{regla.nombre}</span>
-                    <span style={{fontSize:10,fontWeight:700,color:C.gold,background:"rgba(255,184,0,.1)",padding:"2px 8px",borderRadius:5}}>{regla.pts}</span>
-                  </div>
-                  <p style={{color:C.text2,fontSize:13}}>{regla.desc}</p>
-                </div>
-                <button onClick={()=>toggle(regla.cod)} style={{
-                  width:34,height:34,marginLeft:12,flexShrink:0,
-                  background:isSel?C.gold:"rgba(255,255,255,.06)",border:"none",borderRadius:9,
-                  color:isSel?"#000":C.text2,cursor:"pointer",fontSize:16,
-                  display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700
-                }}>{isSel?"✓":"+"}</button>
-              </div>
-
-              {isSel&&(regla.tipo==="LV"||regla.tipo==="LV_exact")&&(
-                <div style={{marginTop:12}}>
-                  <p style={{fontSize:11,color:C.text2,marginBottom:8,letterSpacing:.5}}>ELEGÍ EL PARTIDO:</p>
-                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                    {lv.map(p=>(
-                      <button key={p.n}
-                        onClick={()=>setSel(prev=>({...prev,[regla.cod]:{...prev[regla.cod],partido:p.n}}))}
-                        style={{
-                          padding:"10px 14px",borderRadius:10,cursor:"pointer",textAlign:"left",fontSize:13,
-                          background:sel[regla.cod]?.partido===p.n?"rgba(0,200,150,.1)":"rgba(255,255,255,.04)",
-                          border:`1px solid ${sel[regla.cod]?.partido===p.n?C.accent:"rgba(255,255,255,.07)"}`,
-                          color:C.text,display:"flex",justifyContent:"space-between",alignItems:"center"
-                        }}>
-                        <span>{p.local} vs {p.visit}</span>
-                        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:16,fontWeight:700,color:pronos[p.n]==="L"?C.L:C.V}}>{pronos[p.n]}</span>
-                      </button>
-                    ))}
-                  </div>
-                  {regla.tipo==="LV_exact"&&sel[regla.cod]?.partido&&(
-                    <input placeholder="Resultado exacto (ej: 2-1)"
-                      value={sel[regla.cod]?.detalle||""}
-                      onChange={e=>setSel(prev=>({...prev,[regla.cod]:{...prev[regla.cod],detalle:e.target.value}}))}
-                      style={{...INP,marginTop:8,fontSize:13}}/>
-                  )}
-                </div>
-              )}
-
-              {isSel&&regla.tipo==="E3"&&(
-                <div style={{marginTop:12}}>
-                  <p style={{fontSize:11,color:C.text2,marginBottom:8}}>TUS EMPATES (elegí 3):</p>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                    {e.map(p=>{
-                      const arr=sel[regla.cod]?.partidos||[];
-                      const isIn=arr.includes(p.n);
-                      return(
-                        <button key={p.n}
-                          onClick={()=>setSel(prev=>{
-                            const a=prev[regla.cod]?.partidos||[];
-                            const next=isIn?a.filter(x=>x!==p.n):(a.length<3?[...a,p.n]:a);
-                            return{...prev,[regla.cod]:{...prev[regla.cod],partidos:next}};
-                          })}
-                          style={{
-                            padding:"6px 12px",borderRadius:8,cursor:"pointer",fontSize:12,
-                            background:isIn?"rgba(255,214,10,.15)":"rgba(255,255,255,.04)",
-                            border:`1px solid ${isIn?C.E:"rgba(255,255,255,.07)"}`,
-                            color:isIn?C.E:C.text2,fontWeight:isIn?700:400
-                          }}>#{p.n} {p.local}</button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <div style={{padding:"16px 16px 32px"}}>
-        <button onClick={handleSave} disabled={saving} style={{
-          width:"100%",padding:"15px 0",
-          background:saved?"rgba(0,200,150,.12)":`linear-gradient(135deg,${C.gold},#CC8E00)`,
-          border:saved?`1px solid ${C.accent}`:"none",
-          borderRadius:14,color:saved?C.accent:"#000",
-          fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,fontWeight:800,letterSpacing:1,cursor:"pointer"
-        }}>{saving?"GUARDANDO...":saved?"✓ REGLAS GUARDADAS":"GUARDAR REGLAS ESPECIALES"}</button>
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════
-//  TABLA SCREEN
-// ═══════════════════════════════════════════════
-function TablaScreen({user}){
-  const[tabla,setTabla]=useState([]);
-  const[loading,setLoading]=useState(true);
-  useEffect(()=>{api("getTabla").then(r=>{if(r.ok)setTabla(r.tabla);setLoading(false);});},[]);
-  if(loading) return React.createElement("div",{style:{paddingTop:40}},React.createElement(Spinner));
-
-  const medals=["🥇","🥈","🥉"];
-  const podio=tabla.slice(0,3);
-
-  return(
-    <div className="fu">
-      <div style={{padding:"20px 20px 12px"}}>
-        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:36,fontWeight:900,letterSpacing:1}}>TABLA GENERAL</h2>
-        <p style={{color:C.text2,fontSize:12,marginTop:2}}>Temporada 2026 · {tabla.length} participantes</p>
-      </div>
-
-      {podio.length===3&&(
-        <div style={{
-          margin:"0 16px 16px",
-          background:"linear-gradient(135deg,rgba(255,184,0,.07),rgba(255,184,0,.02))",
-          border:"1px solid rgba(255,184,0,.15)",borderRadius:18,padding:"24px 12px 16px",
-          display:"grid",gridTemplateColumns:"1fr 1.15fr 1fr",gap:8,alignItems:"end"
-        }}>
-          {[podio[1],podio[0],podio[2]].map((r,idx)=>{
-            const realIdx=idx===0?1:idx===1?0:2;
-            const isFirst=realIdx===0;
-            return(
-              <div key={r.nombre} style={{textAlign:"center"}}>
-                <div style={{fontSize:isFirst?38:22,marginBottom:isFirst?4:6}}>{medals[realIdx]}</div>
-                <p style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:isFirst?15:14,fontWeight:isFirst?800:700,color:isFirst?C.gold:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.nombre}</p>
-                <div style={{
-                  background:isFirst?"rgba(255,184,0,.12)":"rgba(255,255,255,.07)",
-                  border:isFirst?"1px solid rgba(255,184,0,.3)":"none",
-                  borderRadius:12,padding:isFirst?"14px 0":"10px 0",marginTop:6
-                }}>
-                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:isFirst?34:26,fontWeight:isFirst?900:800,color:isFirst?C.gold:C.text}}>{r.pts}</span>
-                  <span style={{color:isFirst?C.gold:C.text2,fontSize:10,display:"block",opacity:.7}}>pts</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:4}}>
-        {tabla.map((row,i)=>{
-          const isMe=row.id===user.id||(i===0&&user.id==="USR001");
-          return(
-            <div key={i} style={{
-              display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderRadius:12,
-              background:isMe?"rgba(0,200,150,.07)":"rgba(255,255,255,.02)",
-              border:`1px solid ${isMe?"rgba(0,200,150,.2)":"transparent"}`,
-            }}>
-              <span style={{
-                fontFamily:"'Barlow Condensed',sans-serif",fontSize:i<3?18:15,fontWeight:800,
-                color:i===0?C.gold:i===1?"#C0C0C0":i===2?"#CD7F32":C.text2,
-                width:26,textAlign:"center"
-              }}>{i<3?medals[i]:row.pos}</span>
-              <span style={{
-                flex:1,fontFamily:"'Barlow Condensed',sans-serif",
-                fontSize:16,fontWeight:isMe?700:500,color:isMe?C.accent:C.text
-              }}>{row.nombre}{isMe&&<span style={{color:C.text2,fontWeight:400,fontSize:12}}> (vos)</span>}</span>
-              <div style={{textAlign:"right"}}>
-                <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,color:isMe?C.accent:C.text}}>{row.pts}</span>
-                <span style={{color:C.text2,fontSize:11,marginLeft:3}}>pts</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════
-//  MIS PUNTAJES
-// ═══════════════════════════════════════════════
-function MisPuntajesScreen({user}){
-  const[data,setData]=useState(null);
-  const[loading,setLoading]=useState(true);
-  useEffect(()=>{api("getMisPuntajes",{userId:user.id}).then(r=>{if(r.ok)setData(r);setLoading(false);});},[]);
-  if(loading) return React.createElement("div",{style:{paddingTop:40}},React.createElement(Spinner));
-
-  const total=data.puntajes.reduce((s,f)=>s+f.pts,0);
-  return(
-    <div className="fu">
-      <div style={{padding:"20px 20px 12px"}}>
-        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:36,fontWeight:900,letterSpacing:1}}>MIS PUNTAJES</h2>
-        <p style={{color:C.text2,fontSize:12,marginTop:2}}>{user.nombre}</p>
-      </div>
-      <div style={{
-        margin:"0 16px 16px",
-        background:`linear-gradient(135deg,rgba(0,200,150,.12),rgba(0,200,150,.03))`,
-        border:"1px solid rgba(0,200,150,.2)",borderRadius:18,padding:"22px 24px",
-        display:"flex",justifyContent:"space-between",alignItems:"center"
-      }}>
-        <div>
-          <p style={{color:C.text2,fontSize:11,letterSpacing:1.5,textTransform:"uppercase",marginBottom:4}}>Total Acumulado</p>
-          <div>
-            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:60,fontWeight:900,color:C.accent,lineHeight:1}}>{total}</span>
-            <span style={{color:C.text2,fontSize:16,marginLeft:8}}>pts</span>
-          </div>
-        </div>
-        <div style={{width:72,height:72,borderRadius:16,background:"rgba(0,200,150,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:36}}>⭐</div>
-      </div>
-
-      <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:10}}>
-        {data.puntajes.map(f=>(
-          <div key={f.fecha} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:16}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,fontWeight:700}}>FECHA {f.fecha}</span>
-              <span>
-                <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:30,fontWeight:800,color:C.accent}}>{f.pts}</span>
-                <span style={{color:C.text2,fontSize:13,marginLeft:4}}>pts</span>
-              </span>
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8}}>
-              {[{label:"Normales",val:f.normal,color:C.text},{label:"Dobles",val:f.doble,color:"#9C7FD4"},{label:"Polla",val:f.polla,color:C.gold},{label:"Reglas",val:f.reglas,color:C.accent}].map(item=>(
-                <div key={item.label} style={{background:"rgba(255,255,255,.04)",borderRadius:10,padding:"10px 6px",textAlign:"center"}}>
-                  <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:24,fontWeight:800,color:item.color,lineHeight:1}}>{item.val}</div>
-                  <div style={{fontSize:9,color:C.text2,marginTop:3,letterSpacing:.5}}>{item.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════
-//  RESULTADOS
-// ═══════════════════════════════════════════════
-function ResultadosScreen({pronos}){
-  const[partidos,setPartidos]=useState([]);
-  const[loading,setLoading]=useState(true);
-  useEffect(()=>{api("getPartidos").then(r=>{if(r.ok)setPartidos(r.partidos);setLoading(false);});},[]);
-  if(loading) return React.createElement("div",{style:{paddingTop:40}},React.createElement(Spinner));
-
-  return(
-    <div className="fu">
-      <div style={{padding:"20px 20px 12px"}}>
-        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:36,fontWeight:900,letterSpacing:1}}>RESULTADOS</h2>
-        <p style={{color:C.text2,fontSize:12,marginTop:2}}>Fecha 1 · en vivo / finales</p>
-      </div>
-      <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:10}}>
-        {partidos.map(p=>{
-          const miP=pronos[p.n];
-          const res=p.gL!==null?(p.gL>p.gV?"L":p.gL===p.gV?"E":"V"):null;
-          const acerto=miP&&res&&miP===res;
-          return(
-            <div key={p.n} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:"14px 16px"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                <div style={{display:"flex",gap:8}}><Badge tipo={p.tipo}/></div>
-                <span style={{
-                  fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:20,
-                  background:p.estado==="Jugado"?"rgba(0,200,150,.12)":p.estado==="En Vivo"?"rgba(255,77,109,.12)":"rgba(255,255,255,.05)",
-                  color:p.estado==="Jugado"?C.accent:p.estado==="En Vivo"?C.V:C.text2,
-                  border:p.estado==="En Vivo"?"1px solid rgba(255,77,109,.3)":"none",
-                  animation:p.estado==="En Vivo"?"pulse 2s infinite":"none"
-                }}>{p.estado==="En Vivo"?"● EN VIVO":p.estado.toUpperCase()}</span>
-              </div>
-              <div style={{display:"flex",alignItems:"center"}}>
-                <span style={{flex:1,fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:700}}>{p.local}</span>
-                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:30,fontWeight:900,letterSpacing:3,color:p.gL!==null?C.text:C.text2,padding:"6px 20px",background:"rgba(255,255,255,.06)",borderRadius:12,margin:"0 8px"}}>
-                  {p.gL!==null?`${p.gL} - ${p.gV}`:"- : -"}
-                </div>
-                <span style={{flex:1,fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:700,textAlign:"right"}}>{p.visit}</span>
-              </div>
-              {miP&&(
-                <div style={{marginTop:10,padding:"8px 12px",background:"rgba(255,255,255,.04)",borderRadius:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <span style={{fontSize:11,color:C.text2}}>Tu pronóstico:</span>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,fontWeight:800,color:miP==="L"?C.L:miP==="E"?C.E:C.V}}>{miP}</span>
-                    {res&&<span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:6,background:acerto?"rgba(0,200,150,.15)":"rgba(255,77,109,.12)",color:acerto?C.accent:C.V}}>{acerto?"✓ Acertaste":"✗ Fallaste"}</span>}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════
-//  ADMIN SCREENS
-// ═══════════════════════════════════════════════
-function AdminDashboard(){
-  const[stats,setStats]=useState(null);
-  useEffect(()=>{api("getAdminStats").then(r=>{if(r.ok)setStats(r.stats);});},[]);
-  const actions=[
-    {icon:"🗂️",label:"Nueva Fecha (Setup)",   desc:"Crear estructura de la próxima fecha"},
-    {icon:"🔒",label:"Cerrar Pronósticos",    desc:"Los participantes no podrán modificar"},
-    {icon:"🏆",label:"Calcular Puntajes",     desc:"Calcular puntajes de la fecha"},
-    {icon:"📢",label:"Enviar Notificaciones", desc:"Email a todos los participantes activos"},
-  ];
-  return(
-    <div className="fu" style={{padding:16}}>
-      <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:28,fontWeight:800,letterSpacing:1,marginBottom:16}}>PANEL ADMIN</h2>
-      {stats?(
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
-          {[{label:"Participantes",val:stats.participantes,icon:"👥",color:C.accent},
-            {label:"Fecha Actual",val:stats.fechaActual,icon:"📅",color:C.L},
-            {label:"Pronóst. Hoy",val:stats.pronHoy,icon:"✍️",color:C.gold},
-            {label:"Pendientes",val:stats.pendientes,icon:"⏳",color:C.V}
-          ].map(s=>(
-            <div key={s.label} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:16}}>
-              <span style={{fontSize:26}}>{s.icon}</span>
-              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:40,fontWeight:900,color:s.color,lineHeight:1.1,marginTop:4}}>{s.val}</div>
-              <div style={{fontSize:11,color:C.text2,marginTop:2}}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      ):React.createElement(Spinner)}
-      <p style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,fontWeight:700,color:C.text2,letterSpacing:1.5,marginBottom:10}}>ACCIONES RÁPIDAS</p>
-      <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {actions.map(a=>(
-          <button key={a.label}
-            onClick={()=>alert(`"${a.label}"\n\nConectá SCRIPT_URL para activar esta función.`)}
-            style={{padding:"14px 18px",background:C.card,border:`1px solid ${C.border}`,borderRadius:12,cursor:"pointer",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div>
-              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:700}}>{a.icon} {a.label}</div>
-              <div style={{fontSize:12,color:C.text2,marginTop:2}}>{a.desc}</div>
-            </div>
-            <span style={{color:C.text2,fontSize:20}}>›</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function AdminPartidosScreen(){
-  return(
-    <div className="fu">
-      <div style={{padding:"16px 20px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:26,fontWeight:800}}>PARTIDOS — FECHA 1</h2>
-        <button style={{padding:"8px 16px",background:"rgba(0,200,150,.1)",border:`1px solid ${C.accent}`,borderRadius:10,color:C.accent,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:700}}>+ AGREGAR</button>
-      </div>
-      <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:8}}>
-        {MOCK_PARTIDOS.map(p=>(
-          <div key={p.n} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 16px",display:"flex",alignItems:"center",gap:12}}>
-            <span style={{color:C.text2,fontSize:13,fontWeight:700,width:24}}>#{p.n}</span>
-            <div style={{flex:1}}>
-              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:16,fontWeight:700}}>{p.local} vs {p.visit}</div>
-              <div style={{display:"flex",gap:8,marginTop:5,alignItems:"center"}}>
-                <Badge tipo={p.tipo}/>
-                <span style={{fontSize:11,color:C.text2}}>{p.hora} · {p.liga}</span>
-              </div>
-            </div>
-            <button style={{background:"rgba(255,255,255,.05)",border:"none",borderRadius:8,padding:"6px 12px",color:C.text2,cursor:"pointer",fontSize:13}}>✏️</button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function AdminResultadosScreen(){
-  const[partidos,setPartidos]=useState(MOCK_PARTIDOS.map(p=>({...p,gLe:"",gVe:"",tr:0})));
-  const[saving,setSaving]=useState({});
-  const[calculo,setCalculo]=useState(false);
-  return(
-    <div className="fu">
-      <div style={{padding:"16px 20px 12px"}}>
-        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:26,fontWeight:800}}>INGRESAR RESULTADOS</h2>
-        <p style={{color:C.text2,fontSize:12,marginTop:2}}>Fecha 1</p>
-      </div>
-      <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:10}}>
-        {partidos.map((p,i)=>(
-          <div key={p.n} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:"14px 16px"}}>
-            <div style={{marginBottom:10,display:"flex",gap:8,alignItems:"center"}}>
-              <Badge tipo={p.tipo}/>
-              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:15,fontWeight:700}}>#{p.n} {p.local} vs {p.visit}</span>
-            </div>
-            <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
-              <div style={{flex:1}}>
-                <p style={{fontSize:10,color:C.text2,marginBottom:4}}>Goles Local</p>
-                <input type="number" min="0" max="20" value={p.gLe}
-                  onChange={e=>setPartidos(prev=>prev.map((pp,ii)=>ii===i?{...pp,gLe:e.target.value}:pp))}
-                  style={{...INP,padding:12,textAlign:"center",fontSize:22,fontWeight:800}}/>
-              </div>
-              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:24,fontWeight:800,color:C.text2,paddingBottom:10}}>-</span>
-              <div style={{flex:1}}>
-                <p style={{fontSize:10,color:C.text2,marginBottom:4}}>Goles Visit.</p>
-                <input type="number" min="0" max="20" value={p.gVe}
-                  onChange={e=>setPartidos(prev=>prev.map((pp,ii)=>ii===i?{...pp,gVe:e.target.value}:pp))}
-                  style={{...INP,padding:12,textAlign:"center",fontSize:22,fontWeight:800}}/>
-              </div>
-              <div style={{width:60}}>
-                <p style={{fontSize:10,color:C.text2,marginBottom:4}}>🟥 Rojas</p>
-                <input type="number" min="0" max="10" value={p.tr}
-                  onChange={e=>setPartidos(prev=>prev.map((pp,ii)=>ii===i?{...pp,tr:e.target.value}:pp))}
-                  style={{...INP,padding:12,textAlign:"center",fontSize:16,fontWeight:700}}/>
-              </div>
-              <button disabled={p.gLe===""||p.gVe===""}
-                onClick={async()=>{
-                  setSaving(prev=>({...prev,[p.n]:true}));
-                  await api("saveResultado",{fecha:1,n:p.n,gL:+p.gLe,gV:+p.gVe,tr:+p.tr});
-                  setSaving(prev=>({...prev,[p.n]:"ok"}));
-                }}
-                style={{padding:"12px 10px",borderRadius:10,border:"none",
-                  background:saving[p.n]==="ok"?"rgba(0,200,150,.15)":"rgba(255,255,255,.06)",
-                  color:saving[p.n]==="ok"?C.accent:saving[p.n]?C.text2:C.text,
-                  cursor:(p.gLe===""||p.gVe==="")?"not-allowed":"pointer",fontSize:18,flexShrink:0
-                }}>{saving[p.n]==="ok"?"✓":saving[p.n]?"...":"▶"}</button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div style={{padding:16}}>
-        <button onClick={async()=>{setCalculo(true);await api("calcularPuntajes",{fecha:1});setCalculo(false);alert("✅ Puntajes calculados y guardados.");}}
-          style={{width:"100%",padding:"16px 0",background:calculo?C.card2:`linear-gradient(135deg,${C.V},#CC1A3A)`,border:"none",borderRadius:14,color:"#fff",fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,fontWeight:800,letterSpacing:1,cursor:"pointer"}}>
-          {calculo?"CALCULANDO...":"🏆 CALCULAR PUNTAJES FECHA 1"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function AdminPronosticosScreen(){
-  const vClr={L:C.L,E:C.E,V:C.V};
-  const usuarios=Object.keys(MOCK_MATRIZ);
-  return(
-    <div className="fu">
-      <div style={{padding:"16px 20px 12px"}}>
-        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:26,fontWeight:800}}>PRONÓSTICOS</h2>
-        <p style={{color:C.text2,fontSize:12,marginTop:2}}>Fecha 1 · matriz completa</p>
-      </div>
-      <div style={{overflowX:"auto",padding:"0 16px"}}>
-        <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,minWidth:320}}>
-          <thead>
-            <tr style={{borderBottom:`1px solid ${C.border}`}}>
-              <th style={{padding:"8px 8px 8px 0",textAlign:"left",color:C.text2,fontWeight:600,width:90}}>Jugador</th>
-              {MOCK_PARTIDOS.map(p=>(
-                <th key={p.n} style={{padding:"8px 4px",textAlign:"center",color:C.text2,fontWeight:600,minWidth:34}}>
-                  #{p.n}<br/><span style={{fontSize:8,color:p.tipo==="Polla"?C.gold:p.tipo==="Doble"?"#9C7FD4":C.text2}}>{p.tipo[0]}</span>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {usuarios.map((u,ri)=>(
-              <tr key={u} style={{background:ri%2===0?"transparent":"rgba(255,255,255,.02)"}}>
-                <td style={{padding:"8px 8px 8px 0",fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,fontWeight:600,whiteSpace:"nowrap"}}>{u.split(" ")[0]}</td>
-                {MOCK_PARTIDOS.map(p=>{
-                  const v=MOCK_MATRIZ[u]?.[p.n-1];
-                  return(
-                    <td key={p.n} style={{padding:"4px 3px",textAlign:"center"}}>
-                      {v?(
-                        <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:26,height:26,borderRadius:7,background:`${vClr[v]}15`,color:vClr[v],fontWeight:800,fontSize:12,border:`1px solid ${vClr[v]}40`}}>{v}</span>
-                      ):<span style={{color:C.border,fontSize:10}}>—</span>}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-function AdminParticipantesScreen(){
-  const[participantes]=useState(MOCK_PARTICIPANTES);
-  return(
-    <div className="fu">
-      <div style={{padding:"16px 20px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:26,fontWeight:800}}>JUGADORES</h2>
-        <button style={{padding:"8px 16px",background:"rgba(0,200,150,.1)",border:`1px solid ${C.accent}`,borderRadius:10,color:C.accent,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:700}}>+ AGREGAR</button>
-      </div>
-      <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:8}}>
-        {participantes.map(p=>(
-          <div key={p.id} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"14px 16px",display:"flex",alignItems:"center",gap:12}}>
-            <div style={{width:42,height:42,borderRadius:12,flexShrink:0,background:"rgba(0,200,150,.12)",border:"1px solid rgba(0,200,150,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,fontWeight:800,color:C.accent}}>{p.nombre.charAt(0)}</div>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:17,fontWeight:700}}>{p.nombre}</div>
-              <div style={{fontSize:11,color:C.text2,marginTop:1}}>{p.email}</div>
-            </div>
-            <div style={{textAlign:"right",flexShrink:0}}>
-              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,fontWeight:800,color:C.accent}}>{p.pts}</span>
-              <span style={{color:C.text2,fontSize:10,marginLeft:3}}>pts</span>
-            </div>
-            <span style={{fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:20,flexShrink:0,background:"rgba(0,200,150,.1)",color:C.accent,border:"1px solid rgba(0,200,150,.2)"}}>{p.estado}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════
-//  RESPONSIVE HOOK
-// ═══════════════════════════════════════════════
-function useIsDesktop(){
-  const[isDesktop,setIsDesktop]=useState(window.innerWidth>=900);
-  useEffect(()=>{
-    const fn=()=>setIsDesktop(window.innerWidth>=900);
-    window.addEventListener("resize",fn);
-    return()=>window.removeEventListener("resize",fn);
-  },[]);
-  return isDesktop;
-}
-
-// ═══════════════════════════════════════════════
-//  SIDEBAR (desktop)
-// ═══════════════════════════════════════════════
-function Sidebar({nav,screen,setScreen,activeColor,user,onLogout,title,subtitle}){
-  return(
-    <div style={{
-      width:240,flexShrink:0,height:"100vh",position:"sticky",top:0,
-      background:C.card,borderRight:`1px solid ${C.border}`,
-      display:"flex",flexDirection:"column",
-    }}>
-      {/* Logo */}
-      <div style={{padding:"28px 24px 20px"}}>
-        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:4}}>
-          <div style={{
-            width:40,height:40,borderRadius:10,
-            background:`linear-gradient(135deg,${activeColor},${activeColor==="#00C896"?"#007A5E":"#990020"})`,
-            display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,
-            boxShadow:`0 6px 20px ${activeColor}40`
-          }}>⚽</div>
-          <div>
-            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,fontWeight:900,letterSpacing:2,color:activeColor,lineHeight:1}}>{title}</div>
-            {subtitle&&<div style={{fontSize:10,color:C.text2}}>{subtitle}</div>}
-          </div>
-        </div>
-      </div>
-
-      {/* Nav items */}
-      <nav style={{flex:1,padding:"0 12px",display:"flex",flexDirection:"column",gap:4}}>
-        {nav.map(item=>{
-          const isActive=screen===item.key;
-          return(
-            <button key={item.key} onClick={()=>setScreen(item.key)} style={{
-              width:"100%",padding:"11px 14px",
-              background:isActive?`${activeColor}12`:"transparent",
-              border:`1px solid ${isActive?`${activeColor}30`:"transparent"}`,
-              borderRadius:10,cursor:"pointer",
-              display:"flex",alignItems:"center",gap:12,
-              transition:"all .15s",
-            }}>
-              <span style={{fontSize:20,width:24,textAlign:"center"}}>{item.icon}</span>
-              <span style={{
-                fontFamily:"'Barlow Condensed',sans-serif",
-                fontSize:16,fontWeight:700,letterSpacing:.5,
-                color:isActive?activeColor:C.text2
-              }}>{item.label}</span>
-              {isActive&&<div style={{
-                marginLeft:"auto",width:4,height:16,
-                background:activeColor,borderRadius:2
-              }}/>}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* User footer */}
-      <div style={{padding:"16px 16px 24px",borderTop:`1px solid ${C.border}`}}>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
-          <div style={{
-            width:36,height:36,borderRadius:9,
-            background:`${activeColor}18`,border:`1px solid ${activeColor}30`,
-            display:"flex",alignItems:"center",justifyContent:"center",
-            fontFamily:"'Barlow Condensed',sans-serif",fontSize:16,fontWeight:800,color:activeColor
-          }}>{user.nombre.charAt(0)}</div>
-          <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:13,fontWeight:600,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{user.nombre}</div>
-            <div style={{fontSize:10,color:C.text2}}>{user.role==="admin"?"Administrador":"Jugador"}</div>
-          </div>
-        </div>
-        <button onClick={onLogout} style={{
-          width:"100%",padding:"9px 0",
-          background:"rgba(255,255,255,.04)",border:`1px solid ${C.border}`,
-          borderRadius:8,color:C.text2,cursor:"pointer",
-          fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:700,letterSpacing:.5
-        }}>⎋  SALIR</button>
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════
-//  BOTTOM NAV (mobile)
-// ═══════════════════════════════════════════════
-function BottomNav({nav,screen,setScreen,activeColor}){
-  return(
-    <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.card,borderTop:`1px solid ${C.border}`,display:"flex",zIndex:20}}>
-      {nav.map(item=>(
-        <button key={item.key} onClick={()=>setScreen(item.key)} style={{
-          flex:1,padding:"11px 0",background:"transparent",border:"none",cursor:"pointer",
-          display:"flex",flexDirection:"column",alignItems:"center",gap:3,
-          borderTop:screen===item.key?`2px solid ${activeColor}`:"2px solid transparent"
-        }}>
-          <span style={{fontSize:18}}>{item.icon}</span>
-          <span style={{fontSize:9,fontWeight:700,letterSpacing:.5,color:screen===item.key?activeColor:C.text2}}>{item.label}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════
-//  DESKTOP RIGHT PANEL — tabla + info extra
-// ═══════════════════════════════════════════════
-function RightPanel({user,tabla,pronos,partidos}){
-  return(
-    <div style={{
-      width:300,flexShrink:0,height:"100vh",position:"sticky",top:0,
-      overflowY:"auto",padding:"24px 0",
-      borderLeft:`1px solid ${C.border}`,
-    }}>
-      {/* Mini tabla */}
-      <div style={{padding:"0 20px 20px"}}>
-        <p style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:800,letterSpacing:1.5,color:C.text2,marginBottom:12}}>TABLA GENERAL</p>
-        <div style={{display:"flex",flexDirection:"column",gap:4}}>
-          {tabla.slice(0,8).map((r,i)=>{
-            const medals=["🥇","🥈","🥉"];
-            const isMe=r.id===user.id||(i===0&&user.id==="USR001");
-            return(
-              <div key={i} style={{
-                display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:9,
-                background:isMe?"rgba(0,200,150,.07)":"rgba(255,255,255,.02)",
-                border:`1px solid ${isMe?"rgba(0,200,150,.2)":"transparent"}`
-              }}>
-                <span style={{fontSize:i<3?14:12,width:18,textAlign:"center",color:i===0?C.gold:i===1?"#C0C0C0":i===2?"#CD7F32":C.text2,fontFamily:"'Barlow Condensed',sans-serif",fontWeight:800}}>{i<3?medals[i]:r.pos}</span>
-                <span style={{flex:1,fontSize:13,fontWeight:isMe?600:400,color:isMe?C.accent:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.nombre}</span>
-                <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:16,fontWeight:800,color:isMe?C.accent:C.text}}>{r.pts}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Separador */}
-      <div style={{height:1,background:C.border,margin:"0 20px 20px"}}/>
-
-      {/* Próximos partidos */}
-      <div style={{padding:"0 20px"}}>
-        <p style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:800,letterSpacing:1.5,color:C.text2,marginBottom:12}}>PRÓXIMOS PARTIDOS</p>
-        <div style={{display:"flex",flexDirection:"column",gap:8}}>
-          {partidos.slice(0,4).map(p=>(
-            <div key={p.n} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-                <Badge tipo={p.tipo}/>
-                <span style={{fontSize:11,color:C.text2}}>{p.hora}</span>
-              </div>
-              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:700,color:C.text}}>{p.local}</div>
-              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:400,color:C.text2,marginTop:1}}>vs {p.visit}</div>
-              {pronos[p.n]&&(
-                <div style={{marginTop:6,display:"inline-flex",alignItems:"center",gap:5,background:"rgba(255,255,255,.05)",padding:"3px 8px",borderRadius:6}}>
-                  <span style={{fontSize:10,color:C.text2}}>Tu pronóstico:</span>
-                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,fontWeight:800,color:pronos[p.n]==="L"?C.L:pronos[p.n]==="E"?C.E:C.V}}>{pronos[p.n]}</span>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════
-//  MAIN APP
-// ═══════════════════════════════════════════════
-function AppProde(){
-  const[user,setUser]=useState(null);
-  const[screen,setScreen]=useState("login");
-  const[pronos,setPronos]=useState({});
-  const[partidos,setPartidos]=useState(MOCK_PARTIDOS);
-  const[tabla,setTabla]=useState(MOCK_TABLA);
-  const isDesktop=useIsDesktop();
-
-  useEffect(()=>{
-    if(user) api("getTabla").then(r=>{if(r.ok)setTabla(r.tabla);});
-  },[user]);
-
-  const handleLogin=u=>{setUser(u);setScreen(u.role==="admin"?"admin-dashboard":"fecha");};
-  const handleLogout=()=>{setUser(null);setScreen("login");setPronos({});};
-
-  if(!user) return React.createElement(LoginScreen,{onLogin:handleLogin});
-
-  if(user.role==="admin"){
-    const adminNav=[
-      {key:"admin-dashboard",     icon:"📊",label:"Dashboard"},
-      {key:"admin-partidos",      icon:"⚽",label:"Partidos"},
-      {key:"admin-resultados",    icon:"🎯",label:"Resultados"},
-      {key:"admin-pronosticos",   icon:"📋",label:"Pronósticos"},
-      {key:"admin-participantes", icon:"👥",label:"Jugadores"},
-    ];
-    const adminScreens={
-      "admin-dashboard":    React.createElement(AdminDashboard),
-      "admin-partidos":     React.createElement(AdminPartidosScreen),
-      "admin-resultados":   React.createElement(AdminResultadosScreen),
-      "admin-pronosticos":  React.createElement(AdminPronosticosScreen),
-      "admin-participantes":React.createElement(AdminParticipantesScreen),
-    };
-    const currentScreen=adminScreens[screen]||adminScreens["admin-dashboard"];
-
-    if(isDesktop){
-      return(
-        <div style={{background:C.bg,minHeight:"100vh"}}>
-          <DemoBanner/>
-          <div style={{display:"flex",height:"calc(100vh - (SCRIPT_URL?0:32px))"}}>
-            <Sidebar nav={adminNav} screen={screen} setScreen={setScreen}
-              activeColor={C.V} user={user} onLogout={handleLogout}
-              title="ADMIN PANEL"/>
-            <div style={{flex:1,overflowY:"auto",maxWidth:900}}>
-              {currentScreen}
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return(
-      <div style={{background:C.bg,minHeight:"100vh",paddingBottom:72}}>
-        <DemoBanner/>
-        <div style={{padding:"13px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",background:C.card,borderBottom:`1px solid ${C.border}`,position:"sticky",top:0,zIndex:20}}>
-          <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,fontWeight:900,letterSpacing:2,color:C.V}}>⚙ ADMIN</span>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:12,color:C.text2}}>{user.nombre}</span>
-            <button onClick={handleLogout} style={{background:"rgba(255,255,255,.06)",border:"none",width:32,height:32,borderRadius:8,color:C.text2,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>⎋</button>
-          </div>
-        </div>
-        {currentScreen}
-        <BottomNav nav={adminNav} screen={screen} setScreen={setScreen} activeColor={C.V}/>
-      </div>
-    );
+/* ── INIT APP ── */
+function initApp(){
+  document.getElementById("sl").style.display="none";
+  const mob=window.innerWidth<=768;
+  if(mob){
+    ["mh","mc","bn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=id==="mc"?"block":"flex";});
+    const ch=document.getElementById("mchip");if(ch)ch.textContent=App.user?.usuario||"";
+  }else{
+    document.getElementById("app").style.display="flex";
+    const sb=document.getElementById("sidebar"),mn=document.getElementById("main");
+    if(sb)sb.style.display="flex";if(mn)mn.style.display="flex";
+    const su=document.getElementById("sidebar-user");
+    if(su)su.innerHTML=`<div class="sav">${App.user?.avatar||"👤"}</div><div class="sui"><div class="nm">${App.user?.usuario||""}</div><div class="rl">${App.user?.rol||"Jugador"}</div></div><button class="btnlo" onclick="if(confirm('¿Cerrar sesión?'))logout()" title="Salir">⎋</button>`;
   }
-
-  // ── JUGADOR ──
-  const jugNav=[
-    {key:"fecha",      icon:"📅",label:"Fecha"},
-    {key:"tabla",      icon:"🏆",label:"Tabla"},
-    {key:"puntos",     icon:"⭐",label:"Mis Pts"},
-    {key:"resultados", icon:"📊",label:"Resultados"},
-  ];
-  const jugScreens={
-    fecha:     React.createElement(FechaScreen,{user,pronos,setPronos,partidos,setPartidos,onGoReglas:()=>setScreen("reglas")}),
-    reglas:    React.createElement(ReglasScreen,{user,partidos,pronos,onBack:()=>setScreen("fecha")}),
-    tabla:     React.createElement(TablaScreen,{user}),
-    puntos:    React.createElement(MisPuntajesScreen,{user}),
-    resultados:React.createElement(ResultadosScreen,{pronos}),
-  };
-  const currentScreen=jugScreens[screen]||jugScreens.fecha;
-  const showRightPanel=isDesktop&&screen!=="reglas";
-
-  if(isDesktop){
-    return(
-      <div style={{background:C.bg,minHeight:"100vh"}}>
-        <DemoBanner/>
-        <div style={{display:"flex",height:"100vh"}}>
-          {/* Sidebar */}
-          <Sidebar nav={jugNav} screen={screen} setScreen={s=>{if(s==="reglas")setScreen("reglas");else setScreen(s);}}
-            activeColor={C.accent} user={user} onLogout={handleLogout}
-            title="APP PRODE" subtitle="Temporada 2026"/>
-
-          {/* Main content */}
-          <div style={{
-            flex:1,overflowY:"auto",
-            maxWidth:showRightPanel?640:900,
-            borderRight:showRightPanel?`1px solid ${C.border}`:"none",
-          }}>
-            {currentScreen}
-          </div>
-
-          {/* Right panel */}
-          {showRightPanel&&React.createElement(RightPanel,{user,tabla,pronos,partidos})}
-
-          {/* Relleno si no hay right panel */}
-          {!showRightPanel&&<div style={{flex:1}}/>}
-        </div>
-      </div>
-    );
-  }
-
-  // Mobile
-  return(
-    <div style={{background:C.bg,minHeight:"100vh",paddingBottom:72}}>
-      <DemoBanner/>
-      <div style={{padding:"13px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",background:C.card,borderBottom:`1px solid ${C.border}`,position:"sticky",top:0,zIndex:20}}>
-        <div>
-          <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:900,letterSpacing:2,color:C.accent}}>APP PRODE</span>
-          <span style={{display:"block",fontSize:10,color:C.text2,marginTop:-1}}>Temporada 2026</span>
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <span style={{fontSize:12,color:C.text2}}>{user.nombre}</span>
-          <button onClick={handleLogout} style={{background:"rgba(255,255,255,.06)",border:"none",width:32,height:32,borderRadius:8,color:C.text2,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>⎋</button>
-        </div>
-      </div>
-      {currentScreen}
-      <BottomNav nav={jugNav} screen={screen} setScreen={setScreen} activeColor={C.accent}/>
-    </div>
-  );
+  go(App.user?.rol==="Admin"?"admin-dash":"fechas");
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(AppProde));
+/* ── TOAST ── */
+function toast(msg,ms=2800){document.querySelectorAll(".toast").forEach(t=>t.remove());const e=document.createElement("div");e.className="toast";e.textContent=msg;document.body.appendChild(e);setTimeout(()=>e.remove(),ms);}
+
+/* ── RETORNO MP ── */
+(()=>{const p=new URLSearchParams(location.search).get("pago");if(!p)return;history.replaceState({},"",location.pathname);if(p==="ok")toast("✅ ¡Pago aprobado! Podés jugar");else if(p==="error")toast("❌ Pago no procesado");else if(p==="pendiente")toast("⏳ Pago pendiente de acreditación");})();
+
+/* ── BOOT ── */
+async function boot(){
+  if(load()){const r=await api("loginConToken",{sessionToken:App.token});if(r.ok){save(r.user,r.sessionToken);initApp();return;}}
+  showLogin();
+}
+boot();
 </script>
 </body>
 </html>
