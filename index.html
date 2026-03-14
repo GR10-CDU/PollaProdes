@@ -343,7 +343,8 @@ const NAV_J=[
 const NAV_A=[
   {k:"admin-dash",i:"📊",l:"Dashboard",t:"Dashboard"},
   {k:"admin-fechas",i:"📅",l:"Fechas",t:"Gestión de Fechas"},
-  {k:"admin-res",i:"⚽",l:"Resultados",t:"Ingresar Resultados"},
+  {k:"admin-importar",i:"🔗",l:"Importar",t:"Importar Partidos API"},
+  {k:"admin-res",i:"⚽",l:"Resultados",t:"Resultados"},
   {k:"admin-users",i:"👥",l:"Jugadores",t:"Jugadores"},
   {k:"perfil",i:"👤",l:"Perfil",t:"Mi Perfil"},
 ];
@@ -379,6 +380,7 @@ function renderScreen(k,ctx){
     case"perfil":return rPerfil();
     case"admin-dash":return rAdminDash();
     case"admin-fechas":return rAdminFechas();
+    case"admin-importar":return rAdminImportar();
     case"admin-res":return rAdminRes();
     case"admin-users":return rAdminUsers();
     default:return`<div class="es"><div class="ic">🔧</div><p>En construcción</p></div>`;
@@ -780,6 +782,262 @@ async function lAdminUsers(){
 }
 window.chSt=async(id,est)=>{if(!confirm(`¿${est==="Suspendido"?"Suspender":"Activar"} este usuario?`))return;const r=await api("adminCambiarEstado",{targetUserId:id,estado:est});toast(r.ok?"✅ Actualizado":"❌ "+r.error);if(r.ok)lAdminUsers();};
 
+/* ── ADMIN IMPORTAR PARTIDOS ── */
+function rAdminImportar(){
+  return`<div class="fu">
+    <div class="ph"><h2>IMPORTAR PARTIDOS</h2><p>Traer partidos desde API-Football</p></div>
+
+    <!-- PASO 1: Elegir fecha destino -->
+    <div class="card" style="margin-bottom:14px">
+      <p style="font-family:var(--fd);font-size:13px;font-weight:800;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;margin-bottom:14px">PASO 1 — FECHA DESTINO</p>
+      <div class="ig">
+        <label class="il">FECHA DE POLLA PRODES</label>
+        <select class="inp" id="imp-fecha-id" onchange="onChangeFechaImp()">
+          <option value="">Cargando fechas...</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- PASO 2: Elegir liga y ronda -->
+    <div class="card" style="margin-bottom:14px">
+      <p style="font-family:var(--fd);font-size:13px;font-weight:800;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;margin-bottom:14px">PASO 2 — LIGA Y JORNADA</p>
+      <div class="fg">
+        <div class="ig">
+          <label class="il">LIGA</label>
+          <select class="inp" id="imp-liga" onchange="onChangeLiga()">
+            <option value="">Seleccioná una liga</option>
+            <option value="Liga Argentina">🇦🇷 Liga Argentina</option>
+            <option value="Premier League">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
+            <option value="La Liga">🇪🇸 La Liga</option>
+            <option value="Serie A">🇮🇹 Serie A</option>
+            <option value="Ligue 1">🇫🇷 Ligue 1</option>
+            <option value="Champions League">🏆 Champions League</option>
+            <option value="Copa Libertadores">🌎 Copa Libertadores</option>
+            <option value="Copa América">🌎 Copa América</option>
+            <option value="Mundial">🌍 Mundial</option>
+          </select>
+        </div>
+        <div class="ig">
+          <label class="il">JORNADA / RONDA</label>
+          <select class="inp" id="imp-ronda" disabled>
+            <option value="">Primero elegí una liga</option>
+          </select>
+        </div>
+        <button class="btn btn-s" id="btn-buscar-partidos" onclick="buscarPartidosAPI()" disabled>
+          🔍 BUSCAR PARTIDOS
+        </button>
+      </div>
+    </div>
+
+    <!-- PASO 3: Seleccionar partidos -->
+    <div id="imp-partidos-wrap" style="display:none">
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <p style="font-family:var(--fd);font-size:13px;font-weight:800;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase">PASO 3 — SELECCIONAR PARTIDOS</p>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="selTodos(true)">Todos</button>
+            <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="selTodos(false)">Ninguno</button>
+          </div>
+        </div>
+        <div style="background:rgba(0,224,144,.06);border:1px solid rgba(0,224,144,.15);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--accent)">
+          ℹ️ Los tipos se asignan automáticamente: <strong>#10 = Polla ⭐</strong> · <strong>Últimos 25% = Doble ×2</strong> · Resto = Normal
+        </div>
+        <div id="imp-lista"></div>
+      </div>
+
+      <!-- PASO 4: Importar -->
+      <div style="margin-bottom:32px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:13px;color:var(--text2)" id="imp-contador">0 partidos seleccionados</span>
+          <span style="font-size:11px;color:var(--text2)" id="imp-tipos-resumen"></span>
+        </div>
+        <button class="btn btn-p btn-lg" id="btn-importar" onclick="importarPartidos()" disabled>
+          ✅ IMPORTAR PARTIDOS SELECCIONADOS
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+window._impPartidos = [];
+window._impSel = new Set();
+
+async function lAdminImportar(ctx){
+  // Cargar fechas disponibles
+  const r = await api("getFechas");
+  const sel = document.getElementById("imp-fecha-id");
+  if(!sel) return;
+  const fechas = (r.fechas||[]).filter(f=>["Borrador","Abierta"].includes(f.estado));
+  if(!fechas.length){
+    sel.innerHTML=`<option value="">Sin fechas abiertas — creá una primero</option>`;
+    return;
+  }
+  sel.innerHTML = fechas.map(f=>`<option value="${f.id}">${f.nombre}</option>`).join("");
+}
+
+window.onChangeFechaImp = ()=>{
+  // nada por ahora, la fecha se usa al importar
+};
+
+window.onChangeLiga = async()=>{
+  const liga = document.getElementById("imp-liga")?.value;
+  const selRonda = document.getElementById("imp-ronda");
+  const btnBuscar = document.getElementById("btn-buscar-partidos");
+  if(!liga||!selRonda){return;}
+
+  selRonda.disabled = true;
+  selRonda.innerHTML = `<option>Cargando rondas...</option>`;
+  btnBuscar.disabled = true;
+
+  const r = await api("getRondas", {liga});
+  if(!r.ok||!r.rondas?.length){
+    selRonda.innerHTML=`<option value="">Sin rondas disponibles</option>`;
+    return;
+  }
+
+  selRonda.innerHTML = r.rondas.map(rn=>`<option value="${rn}">${rn}</option>`).join("");
+  selRonda.disabled = false;
+  btnBuscar.disabled = false;
+};
+
+window.buscarPartidosAPI = async()=>{
+  const liga  = document.getElementById("imp-liga")?.value;
+  const ronda = document.getElementById("imp-ronda")?.value;
+  if(!liga||!ronda){toast("Seleccioná liga y ronda");return;}
+
+  const btn = document.getElementById("btn-buscar-partidos");
+  if(btn){btn.textContent="🔍 Buscando...";btn.disabled=true;}
+
+  const r = await api("buscarPorRonda",{liga,ronda});
+
+  if(btn){btn.textContent="🔍 BUSCAR PARTIDOS";btn.disabled=false;}
+  if(!r.ok){toast("❌ "+r.error);return;}
+
+  window._impPartidos = r.partidos||[];
+  window._impSel = new Set(window._impPartidos.map(p=>p.apiId));
+
+  renderListaPartidos();
+
+  const wrap = document.getElementById("imp-partidos-wrap");
+  if(wrap) wrap.style.display = "block";
+  toast(`✅ ${r.partidos.length} partidos encontrados`);
+};
+
+function asignarTiposFront(total){
+  const tipos={};
+  const cantDobles = Math.round(total*0.25);
+  for(let n=1;n<=total;n++) tipos[n]="Normal";
+  if(total>=10) tipos[10]="Polla";
+  let d=0;
+  for(let n=total;n>=1&&d<cantDobles;n--){
+    if(n===10)continue;
+    tipos[n]="Doble";d++;
+  }
+  return tipos;
+}
+
+function renderListaPartidos(){
+  const el = document.getElementById("imp-lista");
+  if(!el) return;
+  const ps = window._impPartidos;
+  const tipos = asignarTiposFront(ps.length);
+
+  el.innerHTML = ps.map((p,i)=>{
+    const n = i+1;
+    const tipo = tipos[n];
+    const sel = window._impSel.has(p.apiId);
+    const dt = new Date(p.fecha);
+    const hora = dt.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"});
+    const fecha = dt.toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"short"});
+    return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <input type="checkbox" id="chk-${p.apiId}" ${sel?"checked":""} 
+             onchange="togglePart('${p.apiId}')"
+             style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent)"/>
+      <div style="width:28px;text-align:center">
+        <span style="font-family:var(--fd);font-size:13px;font-weight:800;color:var(--text2)">${n}</span>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:var(--fd);font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          ${p.local} <span style="color:var(--text3);font-size:12px">vs</span> ${p.visita}
+        </div>
+        <div style="font-size:11px;color:var(--text2)">${fecha} · ${hora}</div>
+      </div>
+      <span class="bdg ${tipo==="Polla"?"bgold":tipo==="Doble"?"" :"bgray"}" 
+            style="${tipo==="Doble"?"background:rgba(155,109,255,.12);color:var(--purple);border:1px solid rgba(155,109,255,.2)":""}">
+        ${tipo==="Polla"?"⭐ POLLA":tipo==="Doble"?"×2 DOBLE":"NORMAL"}
+      </span>
+    </div>`;
+  }).join("");
+
+  actualizarContador();
+}
+
+window.togglePart = id=>{
+  if(window._impSel.has(id)) window._impSel.delete(id);
+  else window._impSel.add(id);
+  actualizarContador();
+};
+
+window.selTodos = sel=>{
+  if(sel) window._impPartidos.forEach(p=>window._impSel.add(p.apiId));
+  else window._impSel.clear();
+  // refrescar checkboxes
+  window._impPartidos.forEach(p=>{
+    const chk=document.getElementById("chk-"+p.apiId);
+    if(chk)chk.checked=sel;
+  });
+  actualizarContador();
+};
+
+function actualizarContador(){
+  const n = window._impSel.size;
+  const cnt = document.getElementById("imp-contador");
+  const btn = document.getElementById("btn-importar");
+  const res = document.getElementById("imp-tipos-resumen");
+  if(cnt) cnt.textContent=`${n} partido${n!==1?"s":""} seleccionado${n!==1?"s":""}`;
+  if(btn) btn.disabled = n===0;
+
+  // Calcular tipos de los seleccionados
+  const selArr = window._impPartidos.filter(p=>window._impSel.has(p.apiId));
+  const tipos = asignarTiposFront(selArr.length);
+  const polla  = Object.values(tipos).filter(t=>t==="Polla").length;
+  const doble  = Object.values(tipos).filter(t=>t==="Doble").length;
+  const normal = Object.values(tipos).filter(t=>t==="Normal").length;
+  if(res) res.textContent=`⭐${polla} · ×2 ${doble} · N ${normal}`;
+}
+
+window.importarPartidos = async()=>{
+  const fechaId = document.getElementById("imp-fecha-id")?.value;
+  if(!fechaId){toast("Seleccioná una fecha destino");return;}
+
+  const selArr = window._impPartidos.filter(p=>window._impSel.has(p.apiId));
+  if(!selArr.length){toast("Seleccioná al menos un partido");return;}
+  if(selArr.length>20){toast("Máximo 20 partidos por fecha");return;}
+
+  const btn = document.getElementById("btn-importar");
+  if(btn){btn.textContent="Importando...";btn.disabled=true;}
+
+  // Los tipos se asignan automáticamente en el backend
+  const r = await api("importarPartidos",{
+    fechaId,
+    partidosApi: selArr,
+    // Sin tiposPartido → backend asigna automáticamente
+  });
+
+  if(btn){btn.textContent="✅ IMPORTAR PARTIDOS SELECCIONADOS";btn.disabled=false;}
+
+  if(!r.ok){toast("❌ "+r.error);return;}
+
+  toast(`✅ ${r.importados} partidos importados correctamente`);
+
+  // Limpiar y volver a fechas admin
+  window._impPartidos=[];
+  window._impSel=new Set();
+  document.getElementById("imp-partidos-wrap").style.display="none";
+
+  setTimeout(()=>go("admin-fechas"),1200);
+};
+
 /* ── AFTER RENDER ── */
 function afterRender(k,ctx){
   switch(k){
@@ -791,6 +1049,7 @@ function afterRender(k,ctx){
     case"stats":lStats();break;
     case"admin-dash":lAdminDash();break;
     case"admin-fechas":lAdminFechas();break;
+    case"admin-importar":lAdminImportar(ctx);break;
     case"admin-res":lAdminRes(ctx);break;
     case"admin-users":lAdminUsers();break;
   }
