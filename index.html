@@ -106,6 +106,7 @@ input:focus{outline:none;border-color:rgba(0,224,144,.5)!important}
 .bred{background:rgba(255,61,107,.12);color:var(--red);border:1px solid rgba(255,61,107,.2)}
 .bblue{background:rgba(61,155,255,.12);color:var(--blue);border:1px solid rgba(61,155,255,.2)}
 .bgray{background:rgba(255,255,255,.06);color:var(--text2);border:1px solid var(--border)}
+.btole{background:rgba(255,100,0,.12);color:#FF6400;border:1px solid rgba(255,100,0,.3);animation:pulse 2s infinite}
 .blive{background:rgba(255,61,107,.15);color:var(--red);border:1px solid rgba(255,61,107,.3);animation:pulse 1.5s infinite}
 .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
 .sw{display:flex;justify-content:center;align-items:center;padding:60px}
@@ -450,6 +451,7 @@ async function lFechaDet(ctx){
           </div>
           <div style="display:flex;gap:6px;align-items:center">
             ${p.tipo!=="Normal"?`<span class="bdg ${p.tipo==="Polla"?"bgold":"bgray"}">${p.tipo==="Polla"?"⭐":"×2"} ${p.tipo}</span>`:""}
+            ${p.esToleTole?`<span class="bdg btole">🔥 TOLE TOLE</span>`:""}
             ${p.golesLocal!==null?`<span style="font-family:var(--fd);font-size:20px;font-weight:900">${p.golesLocal}-${p.golesVisita}</span>`:""}
             ${p.estado==="En Vivo"?`<span class="bdg blive">● VIVO</span>`:""}
           </div>
