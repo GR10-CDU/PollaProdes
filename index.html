@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- POLLA PRODES — index.html | 2026-03-14 11:30 ARG -->
+<!-- POLLA PRODES — index.html | 2026-03-14 12:00 ARG -->
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
@@ -35,15 +35,17 @@ input:focus{outline:none;border-color:rgba(0,224,144,.5)!important}
 @keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fi{from{opacity:0}to{opacity:1}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes glow{0%,100%{filter:drop-shadow(0 0 8px rgba(0,224,144,.4))}50%{filter:drop-shadow(0 0 18px rgba(0,224,144,.7))}}
 .fu{animation:fu .3s ease forwards}
 .fi{animation:fi .25s ease forwards}
 
 /* LAYOUT DESKTOP */
 #app{display:flex;height:100vh;overflow:hidden}
 #sidebar{width:var(--sw);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:100}
-.sl{padding:22px 20px 18px;border-bottom:1px solid var(--border)}
-.sl h1{font-family:var(--fd);font-size:26px;font-weight:900;letter-spacing:3px;color:var(--accent);line-height:1}
-.sl p{font-size:10px;color:var(--text2);margin-top:3px}
+.sl{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.sl-logo{flex-shrink:0}
+.sl-text h1{font-family:var(--fd);font-size:22px;font-weight:900;letter-spacing:2px;color:var(--accent);line-height:1}
+.sl-text p{font-size:10px;color:var(--text2);margin-top:2px}
 #sidebar-nav{flex:1;padding:10px 0;overflow-y:auto}
 .ni{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s;border-left:3px solid transparent}
 .ni:hover{background:rgba(255,255,255,.04);color:var(--text)}
@@ -63,7 +65,8 @@ input:focus{outline:none;border-color:rgba(0,224,144,.5)!important}
 
 /* MOBILE */
 #mh{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:var(--bg2);border-bottom:1px solid var(--border);align-items:center;justify-content:space-between;padding:0 16px;z-index:100}
-#mh .logo{font-family:var(--fd);font-size:22px;font-weight:900;letter-spacing:2px;color:var(--accent)}
+.mh-brand{display:flex;align-items:center;gap:8px}
+.mh-brand span{font-family:var(--fd);font-size:20px;font-weight:900;letter-spacing:2px;color:var(--accent)}
 #mh .chip{font-size:12px;color:var(--text2);background:rgba(255,255,255,.06);padding:4px 10px;border-radius:20px}
 #mc{display:none;overflow-y:auto;padding:16px;padding-bottom:80px;margin-top:52px;min-height:calc(100vh - 52px)}
 #bn{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);z-index:100;padding-bottom:env(safe-area-inset-bottom)}
@@ -122,11 +125,14 @@ input:focus{outline:none;border-color:rgba(0,224,144,.5)!important}
 .err{color:var(--red);font-size:13px;padding:10px 14px;background:rgba(255,61,107,.08);border:1px solid rgba(255,61,107,.2);border-radius:var(--rs);margin-top:8px}
 
 /* LOGIN */
-#sl{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 20% 50%,rgba(0,224,144,.08) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(61,155,255,.06) 0%,transparent 40%),var(--bg);padding:20px}
+#sl{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 20% 50%,rgba(0,224,144,.07) 0%,transparent 50%),
+             radial-gradient(ellipse at 80% 20%,rgba(61,155,255,.05) 0%,transparent 40%),
+             var(--bg);padding:20px}
 .lb{width:100%;max-width:400px}
-.llo{text-align:center;margin-bottom:36px}
-.llo .iw{width:88px;height:88px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:44px;margin:0 auto 18px;box-shadow:0 20px 60px rgba(0,224,144,.3)}
-.llo h1{font-family:var(--fd);font-size:46px;font-weight:900;letter-spacing:4px;line-height:1}
+.llo{text-align:center;margin-bottom:32px}
+.llo .logo-wrap{display:flex;justify-content:center;margin-bottom:18px;animation:glow 3s ease-in-out infinite}
+.llo h1{font-family:var(--fd);font-size:46px;font-weight:900;letter-spacing:5px;line-height:1;color:var(--text)}
 .llo p{font-size:13px;color:var(--text2);margin-top:6px}
 .lcard{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;box-shadow:0 32px 80px rgba(0,0,0,.5)}
 .ltabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px}
@@ -249,7 +255,7 @@ input:focus{outline:none;border-color:rgba(0,224,144,.5)!important}
 .aab .d{font-size:12px;color:var(--text2);margin-top:2px}
 .si2{width:65px;padding:13px;text-align:center;font-family:var(--fd);font-size:28px;font-weight:900;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:var(--rs);color:var(--text)}
 
-/* ESTADÍSTICAS */
+/* STATS */
 .gc{display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:8px}
 .gav{width:42px;height:42px;border-radius:12px;background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
 .gn{font-family:var(--fd);font-size:17px;font-weight:700}
@@ -262,9 +268,41 @@ input:focus{outline:none;border-color:rgba(0,224,144,.5)!important}
 </style>
 </head>
 <body>
+
+<!-- SVG LOGO (inline, cero bytes externos) -->
+<svg id="logo-svg" xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="logo" viewBox="0 0 80 80">
+    <!-- Círculo exterior -->
+    <circle cx="40" cy="40" r="34" fill="none" stroke="currentColor" stroke-width="5"/>
+    <!-- Línea vertical izquierda -->
+    <line x1="33" y1="6" x2="33" y2="74" stroke="currentColor" stroke-width="4.5"/>
+    <!-- Línea vertical derecha -->
+    <line x1="47" y1="6" x2="47" y2="74" stroke="currentColor" stroke-width="4.5"/>
+    <!-- Pelota (centro) -->
+    <circle cx="40" cy="40" r="13" fill="white"/>
+    <!-- Pentagono central negro -->
+    <polygon points="40,30 48,36 45,46 35,46 32,36" fill="#1a1a1a"/>
+    <!-- Parches blancos alrededor -->
+    <polygon points="40,30 33,25 27,30 29,38 33,36" fill="white"/>
+    <polygon points="40,30 47,25 53,30 51,38 47,36" fill="white"/>
+    <polygon points="45,46 51,48 52,55 45,58 40,54" fill="white"/>
+    <polygon points="35,46 29,48 28,55 35,58 40,54" fill="white"/>
+    <!-- Brillo -->
+    <circle cx="35" cy="33" r="4" fill="rgba(255,255,255,0.4)"/>
+  </symbol>
+</svg>
+
 <div id="app">
   <aside id="sidebar" style="display:none">
-    <div class="sl"><h1>POLLA<br>PRODES</h1><p>pollaprodes.com</p></div>
+    <div class="sl">
+      <div class="sl-logo">
+        <svg width="36" height="36" style="color:var(--accent)"><use href="#logo"/></svg>
+      </div>
+      <div class="sl-text">
+        <h1>POLLA PRODES</h1>
+        <p>pollaprodes.com</p>
+      </div>
+    </div>
     <nav id="sidebar-nav"></nav>
     <div id="sidebar-user"></div>
   </aside>
@@ -273,7 +311,15 @@ input:focus{outline:none;border-color:rgba(0,224,144,.5)!important}
     <div id="content"></div>
   </div>
 </div>
-<div id="mh"><div class="logo">⚽ PRODES</div><div class="chip" id="mchip">—</div></div>
+
+<!-- MOBILE -->
+<div id="mh">
+  <div class="mh-brand">
+    <svg width="28" height="28" style="color:var(--accent)"><use href="#logo"/></svg>
+    <span>PRODES</span>
+  </div>
+  <div class="chip" id="mchip">—</div>
+</div>
 <div id="mc"></div>
 <div id="bn"><div class="bni" id="bni"></div></div>
 <div id="sl" style="display:none"></div>
@@ -282,13 +328,20 @@ input:focus{outline:none;border-color:rgba(0,224,144,.5)!important}
 const SCRIPT_URL="https://script.google.com/macros/s/AKfycbyPPKluGEMXSluoImUUTgWxxv8YEE_jV7LQ56bv72C9RdGxcCJ95GYsdP2gcSCpYPQ/exec";
 const API_SECRET="PP2026-xK9mQ7vL2nR4wT8yU3pA5cE1hG6jF0bD";
 const SK="pp_session",UK="pp_user";
-
 const App={user:null,token:null,screen:null,ctx:{}};
 
+// ── API (CORS fix: text/plain) ──
 async function api(action,p={}){
   const b={action,apiSecret:API_SECRET,sessionToken:App.token||undefined,...p};
-  try{const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});return await r.json();}
-  catch(e){return{ok:false,error:"Sin conexión"};}
+  try{
+    const r=await fetch(SCRIPT_URL,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain"},
+      body:JSON.stringify(b),
+      redirect:"follow"
+    });
+    return await r.json();
+  }catch(e){return{ok:false,error:"Sin conexión: "+e.message};}
 }
 
 function save(u,t){App.user=u;App.token=t;localStorage.setItem(SK,t);localStorage.setItem(UK,JSON.stringify(u));}
@@ -347,12 +400,18 @@ function renderScreen(k,ctx){
   }
 }
 
+/* ── LOGO SVG reutilizable ── */
+function logoSVG(size,color){
+  color=color||"var(--accent)";
+  return`<svg width="${size}" height="${size}" style="color:${color}"><use href="#logo"/></svg>`;
+}
+
 /* ── FECHAS ── */
 function rFechas(){return`<div class="fu"><div class="ph"><h2>FECHAS</h2><p>Seleccioná una fecha para jugar</p></div><div id="fl"><div class="sw"><div class="spinner"></div></div></div></div>`;}
 async function lFechas(){
   const r=await api("getFechas"),el=document.getElementById("fl");
   if(!el)return;
-  if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}
+  if(!r.ok){el.innerHTML=`<div class="err">⚠ ${r.error}</div>`;return;}
   if(!r.fechas?.length){el.innerHTML=`<div class="es"><div class="ic">📅</div><p>No hay fechas disponibles</p></div>`;return;}
   el.innerHTML=r.fechas.map(f=>{
     const mins=f.minutosRestantes,urg=mins<120&&mins>0;
@@ -437,7 +496,7 @@ async function lPozos(fid){
       <div class="dv" style="margin:8px 0"></div>
       <div class="pp">$${p.premioGanador.toLocaleString("es-AR")}</div>
       <div style="font-size:11px;color:var(--text2)">Premio estimado</div>
-      <div style="font-size:12px;color:var(--text2);margin-top:8px">👥 ${p.inscriptos} inscriptos</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:8px">👥 ${p.inscriptos} inscripto${p.inscriptos!==1?"s":""}</div>
     </div>`).join("")}</div>
     <div style="text-align:center;padding:10px 0">
       <span style="font-size:12px;color:var(--text2);cursor:pointer" onclick="togGrupo()">🔒 Tengo código de grupo cerrado →</span>
@@ -452,7 +511,7 @@ async function lPozos(fid){
   if(ya){const bw=document.getElementById("bjw");if(bw){bw.style.display="block";bw.innerHTML=`<button class="btn btn-p btn-lg" onclick="go('jugar',{fechaId:'${fid}',pozoId:'${ya.id}'})">▶ JUGAR →</button>`;}}
 }
 
-window.selP=id=>{window._sp=id;document.querySelectorAll(".pc").forEach(c=>c.classList.remove("sel"));const e=document.getElementById("poz-"+id);if(e)e.classList.add("sel");const bw=document.getElementById("bjw");if(bw)bw.style.display="block";if(!document.getElementById("bjw")?.querySelector("button[onclick*=inscribirse]"))if(bw)bw.innerHTML=`<button class="btn btn-p btn-lg" onclick="insc()">PAGAR Y JUGAR →</button>`;};
+window.selP=id=>{window._sp=id;document.querySelectorAll(".pc").forEach(c=>c.classList.remove("sel"));const e=document.getElementById("poz-"+id);if(e)e.classList.add("sel");const bw=document.getElementById("bjw");if(bw){bw.style.display="block";bw.innerHTML=`<button class="btn btn-p btn-lg" onclick="insc()">PAGAR Y JUGAR →</button>`;}};
 window.togGrupo=()=>{const e=document.getElementById("gf");if(e)e.style.display=e.style.display==="none"?"block":"none";};
 window.buscar=async()=>{
   const c=document.getElementById("ic")?.value;if(!c||c.length<4){toast("Ingresá el código");return;}
@@ -470,7 +529,7 @@ window.insc=async()=>{
   const r=await api("inscribirse",{fechaId:window._fid,pozoId:window._sp});
   if(!r.ok){toast("❌ "+r.error);return;}
   if(r.habilitado){toast("✅ ¡Habilitado!");setTimeout(()=>go("jugar",{fechaId:window._fid,pozoId:window._sp}),900);}
-  else{toast("🔄 Procesando pago...");const mp=await api("crearPreferencia",{inscripcionId:r.inscripcionId});if(mp.ok&&mp.initPoint)window.location.href=mp.initPoint;else toast("💡 "+(mp.error||"MP no configurado"));}
+  else{toast("🔄 Procesando pago...");const mp=await api("crearPreferencia",{inscripcionId:r.inscripcionId});if(mp.ok&&mp.initPoint)window.location.href=mp.initPoint;else toast("💡 "+(mp.error||"MP no configurado aún"));}
 };
 
 /* ── JUGAR ── */
@@ -478,9 +537,8 @@ window._pr={};window._re={};window._ct={};window._pa=[];
 function rJugar(ctx){return`<div class="fu"><div class="bk" onclick="go('fecha-det',{fechaId:'${ctx.fechaId}'})">← Volver</div><div class="prg"><div class="prgf" id="pb" style="width:0%"></div></div><div id="jc"><div class="sw"><div class="spinner"></div></div></div><div id="jf" style="margin-top:18px"></div></div>`;}
 async function lJugar(ctx){
   const[rf,rm]=await Promise.all([api("getFecha",{fechaId:ctx.fechaId}),api("getMiFecha",{fechaId:ctx.fechaId,pozoId:ctx.pozoId})]);
-  if(!rf.ok){toast("Error");return;}
-  const pa=rf.partidos||{};window._ct=ctx;window._pa=rf.partidos||[];
-  window._pr={};window._re={};
+  if(!rf.ok){toast("Error cargando fecha");return;}
+  window._ct=ctx;window._pa=rf.partidos||[];window._pr={};window._re={};
   if(rm.ok){rm.pronos?.forEach(p=>{window._pr[p.partidoId]={v:p.pronostico,cr:p.cambiosRestantes,reg:p.tieneRegla};});rm.reglas?.forEach(r=>{window._re[r.partidoId]=r;});}
   rParts(rf.partidos,ctx,rf.fecha.puedeJugar);
 }
@@ -508,7 +566,7 @@ function rParts(parts,ctx,puede){
         ${p.golesLocal!==null?`<span class="psc">${p.golesLocal}-${p.golesVisita}</span>`:`<span class="pvs">VS</span>`}
         <span class="pt r">${p.visita}</span>
       </div>
-      ${!bloq?`<div class="lev">${["L","E","V"].map(v=>{const pc=v==="L"?p.pct?.pctL:v==="E"?p.pct?.pctE:p.pct?.pctV;return`<button class="lb2 ${v}${sel===v?" sel":""}" onclick="gP('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')"><span class="ll">${v}</span><span class="lp">${pc||"?"}%</span></button>`}).join("")}</div>`
+      ${!bloq?`<div class="lev">${["L","E","V"].map(v=>{const pc=v==="L"?p.pct?.pctL:v==="E"?p.pct?.pctE:p.pct?.pctV;return`<button class="lb2 ${v}${sel===v?" sel":""}" onclick="gP('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')"><span class="ll">${v}</span><span class="lp">${pc||"?"}%</span></button>`;}).join("")}</div>`
       :sel?`<div style="padding:9px 12px;background:rgba(255,255,255,.04);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
         <span style="font-size:12px;color:var(--text2)">${re?"🔒 Regla":cr===0?"🚫 Sin cambios":"Tu pronóstico"}</span>
         <span style="font-family:var(--fd);font-size:24px;font-weight:900;color:${sel==="L"?"var(--L)":sel==="E"?"var(--E)":"var(--V)"}">${sel}</span></div>`
@@ -522,7 +580,7 @@ function rParts(parts,ctx,puede){
 window.gP=async(pid,v,fid,poid)=>{
   const prev=window._pr[pid]?{...window._pr[pid]}:null;
   if(!window._pr[pid])window._pr[pid]={v,cr:3,reg:false};
-  else{window._pr[pid].v=v;if(prev)window._pr[pid].cr=Math.max(0,(window._pr[pid].cr||3)-1);}
+  else{window._pr[pid].v=v;window._pr[pid].cr=Math.max(0,(prev?.cr||3)-1);}
   rParts(window._pa,window._ct,true);
   const r=await api("guardarPronostico",{fechaId:fid,pozoId:poid,partidoId:pid,pronostico:v});
   if(!r.ok){toast("❌ "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];rParts(window._pa,window._ct,true);return;}
@@ -538,8 +596,7 @@ window.openReg=async(pid)=>{
   const re=window._re[pid];if(re){toast(`🔒 "${re.nombre}" — definitiva`);return;}
   const r=await api("getReglasDisponibles",{fechaId:window._ct.fechaId,pozoId:window._ct.pozoId,partidoId:pid});
   if(!r.ok){toast("❌ "+r.error);return;}
-  const m=document.createElement("div");m.className="mo";
-  m.onclick=e=>{if(e.target===m)m.remove();};
+  const m=document.createElement("div");m.className="mo";m.onclick=e=>{if(e.target===m)m.remove();};
   m.innerHTML=`<div class="mb">
     <div class="mh2">
       <div><div class="mt2">REGLAS ESPECIALES</div>
@@ -547,7 +604,7 @@ window.openReg=async(pid)=>{
       <div class="mc2" onclick="this.closest('.mo').remove()">×</div>
     </div>
     <div style="background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.15);border-radius:8px;padding:10px 13px;margin-bottom:14px;font-size:12px;color:var(--gold)">
-      ⚠️ Las reglas son <strong>definitivas</strong> — no se pueden cambiar ni eliminar.
+      ⚠️ Las reglas son <strong>definitivas</strong>. No se pueden cambiar.
     </div>
     ${r.disponibles.map(x=>`
       <div class="ro" onclick="apReg('${pid}','${x.codigo}')">
@@ -555,13 +612,12 @@ window.openReg=async(pid)=>{
         <p class="rds">${x.desc}</p>
         ${x.codigo==="MK"?`<input class="inp" id="mk-${pid}" placeholder="Resultado exacto (ej: 2-1)" style="margin-top:8px;font-size:13px" onclick="event.stopPropagation()"/>`:""}
       </div>`).join("")}
-    ${!r.disponibles.length?`<div class="es" style="padding:28px"><div class="ic">🚫</div><p>No hay reglas para pronóstico ${r.pronosticoActual}</p></div>`:""}
+    ${!r.disponibles.length?`<div class="es" style="padding:28px"><div class="ic">🚫</div><p>Sin reglas para pronóstico ${r.pronosticoActual}</p></div>`:""}
   </div>`;
   document.body.appendChild(m);
 };
 window.apReg=async(pid,cod)=>{
-  let det="";
-  if(cod==="MK"){det=document.getElementById("mk-"+pid)?.value||"";if(!det){toast("Ingresá resultado exacto");return;}}
+  let det="";if(cod==="MK"){det=document.getElementById("mk-"+pid)?.value||"";if(!det){toast("Ingresá resultado exacto");return;}}
   document.querySelector(".mo")?.remove();toast("Aplicando...");
   const r=await api("guardarRegla",{fechaId:window._ct.fechaId,pozoId:window._ct.pozoId,partidoId:pid,codigoRegla:cod,detalle:det});
   if(!r.ok){toast("❌ "+r.error);return;}
@@ -576,9 +632,10 @@ async function lTabla(ctx){
   if(!ctx.fechaId||!ctx.pozoId){const e=document.getElementById("tc");if(e)e.innerHTML=`<div class="es"><div class="ic">🏆</div><p>Seleccioná una fecha para ver la tabla</p></div>`;return;}
   const r=await api("getTabla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId}),el=document.getElementById("tc");
   if(!el)return;if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}
-  const t=r.tabla||[],po=t.slice(0,3),re=t.slice(3),md=["🥇","🥈","🥉"];
+  const t=r.tabla||[],md=["🥇","🥈","🥉"];
+  const po=t.slice(0,3);
   el.innerHTML=`
-    <p style="font-size:11px;color:var(--text2);margin-bottom:12px">Último partido calculado: #${r.ultimoPartidoCalculado||0} de ${r.totalPartidos}</p>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:14px">Último partido calculado: #${r.ultimoPartidoCalculado||0} de ${r.totalPartidos}</p>
     ${po.length>=3?`<div class="podio">${[po[1],po[0],po[2]].map((u,i)=>{const ri=i===0?1:i===1?0:2;return`<div class="pi${ri===0?" first":""}"><div class="med">${md[ri]}</div><div class="pn">${u.siglas}</div><div class="pb"><div class="ppts">${u.ptsTotal}</div><div style="font-size:9px;color:var(--text2)">pts</div></div></div>`;}).join("")}</div>`:""}
     <div>${t.map((u,i)=>`<div class="tr${u.userId===App.user?.id?" me":""}">
       <span class="tpos" style="color:${i===0?"var(--gold)":i===1?"#C0C0C0":i===2?"#CD7F32":"var(--text2)"}">${i<3?md[i]:u.posicion}</span>
@@ -590,7 +647,7 @@ async function lTabla(ctx){
 /* ── GRILLA ── */
 function rGrilla(ctx){return`<div class="fu"><div class="ph"><h2>LOS OTROS</h2><p>Pronósticos de todos</p></div><div id="gc"><div class="sw"><div class="spinner"></div></div></div></div>`;}
 async function lGrilla(ctx){
-  if(!ctx.fechaId||!ctx.pozoId){const e=document.getElementById("gc");if(e)e.innerHTML=`<div class="es"><div class="ic">🔒</div><p>La grilla se muestra cuando cierra la fecha</p></div>`;return;}
+  if(!ctx.fechaId||!ctx.pozoId){const e=document.getElementById("gc");if(e)e.innerHTML=`<div class="es"><div class="ic">🔒</div><p>La grilla se habilita cuando cierra la fecha</p></div>`;return;}
   const r=await api("getGrilla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId}),el=document.getElementById("gc");
   if(!el)return;if(!r.ok){el.innerHTML=`<div class="es"><div class="ic">🔒</div><p>${r.error}</p></div>`;return;}
   const pts=r.partidos||[],js=r.jugadores||[];
@@ -611,8 +668,8 @@ async function lGrilla(ctx){
 
 /* ── STATS ── */
 window._sd=null;
-function rStats(){return`<div class="fu"><div class="ph"><h2>HALL OF FAME</h2></div><div style="display:flex;gap:4px;background:rgba(255,255,255,.04);border-radius:var(--rs);padding:4px;margin-bottom:16px"><div id="st1" style="flex:1;padding:8px;text-align:center;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;background:var(--card2);color:var(--text)" onclick="stab('fechas',this)">Por fechas</div><div id="st2" style="flex:1;padding:8px;text-align:center;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;color:var(--text2)" onclick="stab('dinero',this)">Por dinero</div></div><div id="sc"><div class="sw"><div class="spinner"></div></div></div></div>`;}
-window.stab=(t,el)=>{document.querySelectorAll("#st1,#st2").forEach(x=>{x.style.background="";x.style.color="var(--text2)"});el.style.background="var(--card2)";el.style.color="var(--text)";if(window._sd)rSD(window._sd,t);};
+function rStats(){return`<div class="fu"><div class="ph"><h2>HALL OF FAME</h2></div><div style="display:flex;gap:4px;background:rgba(255,255,255,.04);border-radius:var(--rs);padding:4px;margin-bottom:16px"><div style="flex:1;padding:8px;text-align:center;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;background:var(--card2);color:var(--text)" onclick="stab('fechas',this)">Por fechas</div><div style="flex:1;padding:8px;text-align:center;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;color:var(--text2)" onclick="stab('dinero',this)">Por dinero</div></div><div id="sc"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+window.stab=(t,el)=>{document.querySelectorAll("[onclick*=stab]").forEach(x=>{x.style.background="";x.style.color="var(--text2)"});el.style.background="var(--card2)";el.style.color="var(--text)";if(window._sd)rSD(window._sd,t);};
 async function lStats(){const r=await api("getEstadisticas"),el=document.getElementById("sc");if(!el)return;if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}window._sd=r;rSD(r,"fechas");}
 function rSD(r,t){
   const el=document.getElementById("sc");if(!el)return;
@@ -628,7 +685,7 @@ function rPerfil(){
     <div class="card" style="margin-bottom:14px">
       <div class="paw"><div class="pab">${u.avatar||"👤"}</div><div class="pu">${u.usuario||""}</div><div class="pnm">${u.nombre||""}</div>
       ${u.cupones>0?`<span class="bdg bgold" style="margin-top:8px">🎟 ${u.cupones} cupón${u.cupones!==1?"es":""}</span>`:""}</div>
-      <div class="si"><span class="k">Alias MP</span><span class="v">${u.alias||`<span style="color:var(--red)">Sin alias — no podrás cobrar</span>`}</span></div>
+      <div class="si"><span class="k">Alias MP</span><span class="v">${u.alias||`<span style="color:var(--red)">Sin alias</span>`}</span></div>
       <div class="si"><span class="k">Teléfono</span><span class="v">${u.telefono||"—"}</span></div>
       <div class="si"><span class="k">Email</span><span class="v">${u.email||"—"}</span></div>
       <div class="si"><span class="k">Rol</span><span class="v">${u.rol||"Jugador"}</span></div>
@@ -759,7 +816,13 @@ function showLogin(){
   ["mh","mc","bn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
   const el=document.getElementById("sl");el.style.display="flex";
   el.innerHTML=`<div class="lb fu">
-    <div class="llo"><div class="iw">⚽</div><h1>POLLA<br>PRODES</h1><p>pollaprodes.com · El juego de pronósticos</p></div>
+    <div class="llo">
+      <div class="logo-wrap">
+        <svg width="90" height="90" style="color:var(--accent)"><use href="#logo"/></svg>
+      </div>
+      <h1>POLLA PRODES</h1>
+      <p>pollaprodes.com · El juego de pronósticos</p>
+    </div>
     <div class="lcard">
       <div class="ltabs"><div class="ltab active" onclick="ltab('l',this)">INGRESAR</div><div class="ltab" onclick="ltab('r',this)">REGISTRARSE</div></div>
       <div id="lf">
@@ -824,11 +887,14 @@ function initApp(){
 function toast(msg,ms=2800){document.querySelectorAll(".toast").forEach(t=>t.remove());const e=document.createElement("div");e.className="toast";e.textContent=msg;document.body.appendChild(e);setTimeout(()=>e.remove(),ms);}
 
 /* ── RETORNO MP ── */
-(()=>{const p=new URLSearchParams(location.search).get("pago");if(!p)return;history.replaceState({},"",location.pathname);if(p==="ok")toast("✅ ¡Pago aprobado! Podés jugar");else if(p==="error")toast("❌ Pago no procesado");else if(p==="pendiente")toast("⏳ Pago pendiente de acreditación");})();
+(()=>{const p=new URLSearchParams(location.search).get("pago");if(!p)return;history.replaceState({},"",location.pathname);if(p==="ok")toast("✅ ¡Pago aprobado! Podés jugar");else if(p==="error")toast("❌ Pago no procesado");else toast("⏳ Pago pendiente de acreditación");})();
 
 /* ── BOOT ── */
 async function boot(){
-  if(load()){const r=await api("loginConToken",{sessionToken:App.token});if(r.ok){save(r.user,r.sessionToken);initApp();return;}}
+  if(load()){
+    const r=await api("loginConToken",{sessionToken:App.token});
+    if(r.ok){save(r.user,r.sessionToken);initApp();return;}
+  }
   showLogin();
 }
 boot();
