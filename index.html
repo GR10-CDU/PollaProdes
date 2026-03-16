@@ -633,7 +633,9 @@ async function loadFechas(){
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
   if(!r.fechas?.length){el.innerHTML=emptyBox("📅","No hay fechas disponibles");return;}
   const ICONS={"Liga Argentina":"🇦🇷","Premier League":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","La Liga":"🇪🇸","Serie A":"🇮🇹","Champions League":"🏆","Copa Libertadores":"🌎","Ligue 1":"🇫🇷"};
-  el.innerHTML=r.fechas.map(f=>{
+  const fechasVisibles = App.user?.rol==="Admin" ? r.fechas : r.fechas.filter(f=>f.estado==="Abierta");
+  if(!fechasVisibles.length){el.innerHTML=emptyBox("📅","No hay fechas disponibles");return;}
+  el.innerHTML=fechasVisibles.map(f=>{
     const mins=f.minutosRestantes,urg=mins<120&&mins>0;
     const pt=mins<=0?"🔒 Plazo vencido":mins<60?`⏱ ${mins}min`:mins<1440?`⏱ ${Math.floor(mins/60)}hs`:`📅 ${new Date(f.plazoLimite).toLocaleDateString("es-AR",{day:"numeric",month:"long"})}`;
     const ic=ICONS[f.liga]||"⚽";
@@ -759,6 +761,80 @@ async function loadJugar(ctx){
       renderPartidos(window._parts,ctx,puede);
     }
   }catch(e){}
+}
+
+
+function renderPartidos(parts, ctx, puede) {
+  const el = document.getElementById("jc");
+  if (!el) return;
+  const comp = Object.keys(window._pr).filter(k => window._pr[k]?.v).length;
+  const tot = parts.length;
+  const pb = document.getElementById("prog");
+  if (pb) pb.style.width = `${tot ? Math.round(comp/tot*100) : 0}%`;
+  const pt = document.getElementById("prog-txt");
+  if (pt) pt.textContent = `${comp} de ${tot} pronósticos`;
+  const pp = document.getElementById("prog-pct");
+  if (pp) pp.textContent = tot ? Math.round(comp/tot*100)+"%" : "";
+
+  el.innerHTML = parts.map(p => {
+    const pr = window._pr[p.id] || {}, re = window._re[p.id];
+    const sel = pr.v, cr = pr.cr !== undefined ? pr.cr : 3;
+    const sinGoles = p.golesLocal === null || p.golesLocal === undefined || p.golesLocal === "";
+    const bloq = !!re || cr === 0 || !puede || !sinGoles;
+    const tipoCls = p.tipo === "Polla" ? " polla" : p.tipo === "Doble" ? " doble" : "";
+    const li = (p.local || "L")[0].toUpperCase();
+    const vi = (p.visita || "V")[0].toUpperCase();
+    const fechaStr = p.fechaHora ? new Date(p.fechaHora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}) : "";
+
+    return `<div class="partido-card${sel ? " pronosticado" : ""}${tipoCls}" id="pc-${p.id}">
+      <div class="pc-header">
+        <div class="pc-header-left">
+          <span style="font-size:11px;font-weight:700;color:var(--txt3)">#${p.numero}</span>
+          ${fechaStr ? `<span class="fecha-badge">${fechaStr}</span>` : ""}
+          ${p.tipo==="Polla" ? `<span class="bdg bgold">⭐ POLLA</span>` : p.tipo==="Doble" ? `<span class="bdg bpur">×2 DOBLE</span>` : `<span class="bdg bgr">Normal</span>`}
+          ${p.esToleTole ? `<span class="bdg btole">🔥 TOLE</span>` : ""}
+          ${p.estado==="En Vivo" ? `<span class="bdg blive">● VIVO</span>` : ""}
+        </div>
+        <div class="pc-header-right">
+          ${sel ? `<span class="cambios ${cr===3?"ok":cr>0?"warn":"none"}">🔄 ${cr}</span>` : ""}
+          ${sel ? `<span class="regla-btn${re?" ap":""}" onclick="openRegla('${p.id}')">⭐ ${re ? re.nombre||re.codigo : "Regla"}</span>` : ""}
+        </div>
+      </div>
+      <div class="pc-body">
+        <div class="team-side">
+          <div class="team-label">Local</div>
+          <div class="team-circle">${li}</div>
+          <div class="team-name">${p.local}</div>
+        </div>
+        <div class="pc-center">
+          ${!sinGoles ?
+            `<div class="score-boxes"><div class="score-box filled">${p.golesLocal}</div><span class="score-dash">-</span><div class="score-box filled">${p.golesVisita}</div></div>` :
+          !bloq ?
+            `<div class="lev-trio">
+              ${["L","E","V"].map(v => {
+                const label = v==="L"?"Local":v==="E"?"Empate":"Visit.";
+                return `<button class="lev-btn ${v}${sel===v?" sel":""}" onclick="pronosticar('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')">
+                  <span class="lev-letra">${v}</span>
+                  <span class="lev-sub">${label}</span>
+                </button>`;
+              }).join("")}
+            </div>` :
+          sel ?
+            `<div class="prono-display"><div class="prono-letra ${sel}">${sel}</div><div class="prono-lbl">tu pronóstico</div></div>` :
+            `<div style="text-align:center;font-size:11px;color:var(--txt3)">${cr===0?"Sin cambios":re?"🔒 Regla":"Sin pronóstico"}</div>`
+          }
+        </div>
+        <div class="team-side">
+          <div class="team-label">Visitante</div>
+          <div class="team-circle">${vi}</div>
+          <div class="team-name">${p.visita}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  const jf = document.getElementById("jf");
+  if (jf && puede) jf.innerHTML = `<button class="btn btn-p btn-lg" onclick="guardarTodos()">💾 Guardar pronósticos</button>`;
 }
 
 
