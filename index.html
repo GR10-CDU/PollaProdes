@@ -1,80 +1,88 @@
 <!DOCTYPE html>
-<!-- POLLA PRODES — index.html | 2026-03-14 12:00 ARG -->
+<!-- POLLA PRODES — index.html | 2026-03-14 17:00 ARG -->
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<meta name="theme-color" content="#04080F"/>
+<meta name="theme-color" content="#F7FBF6"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <title>POLLA PRODES</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
-  --bg:#04080F;--bg2:#080E1A;--card:#0C1220;--card2:#111826;
-  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
-  --accent:#00E090;--accent2:#00B872;--gold:#FFB800;--gold2:#CC9200;
-  --red:#FF3D6B;--blue:#3D9BFF;--purple:#9B6DFF;
-  --text:#FFF;--text2:#6B7A8D;--text3:#3D4A5C;
-  --L:#3D9BFF;--E:#FFD60A;--V:#FF3D6B;
-  --fd:'Barlow Condensed',sans-serif;--fb:'DM Sans',sans-serif;
-  --r:14px;--rs:8px;--sw:240px;--th:56px;
+  --bg:#F7FBF6;--bg2:#FFFFFF;--card:#FFFFFF;--card2:#F2F8F1;
+  --border:#D9E8D5;--border2:#B8D9B2;
+  --accent:#2E7D32;--accent2:#1B5E20;--accent-light:#E8F4E5;
+  --gold:#E65100;--gold2:#BF360C;--gold-light:#FBE9E7;
+  --red:#C62828;--red-light:#FFEBEE;
+  --blue:#1565C0;--blue-light:#E3F2FD;
+  --purple:#4527A0;--purple-light:#EDE7F6;
+  --text:#1B3E1A;--text2:#5A7A58;--text3:#8AAD87;
+  --L:#1565C0;--E:#E65100;--V:#C62828;
+  --fd:"Barlow Condensed",sans-serif;--fb:"Inter",sans-serif;
+  --r:10px;--rs:6px;--sw:200px;--th:52px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{background:var(--bg);font-family:var(--fb);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
-input,button{font-family:var(--fb)}
+body{background:var(--bg);font-family:var(--fb);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden;font-size:14px}
+input,button,select{font-family:var(--fb)}
 button{cursor:pointer;border:none;background:none;color:inherit}
 button:active{transform:scale(.97)}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235A7A58' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
 ::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 input::placeholder{color:var(--text3)}
-input:focus{outline:none;border-color:rgba(0,224,144,.5)!important}
+input:focus,select:focus{outline:none;border-color:var(--accent)!important;box-shadow:0 0 0 2px rgba(46,125,50,.1)}
+
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fi{from{opacity:0}to{opacity:1}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-@keyframes glow{0%,100%{filter:drop-shadow(0 0 8px rgba(0,224,144,.4))}50%{filter:drop-shadow(0 0 18px rgba(0,224,144,.7))}}
-.fu{animation:fu .3s ease forwards}
-.fi{animation:fi .25s ease forwards}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.fu{animation:fu .25s ease forwards}
+.fi{animation:fi .2s ease forwards}
 
 /* LAYOUT DESKTOP */
 #app{display:flex;height:100vh;overflow:hidden}
 #sidebar{width:var(--sw);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:100}
-.sl{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
-.sl-logo{flex-shrink:0}
-.sl-text h1{font-family:var(--fd);font-size:22px;font-weight:900;letter-spacing:2px;color:var(--accent);line-height:1}
-.sl-text p{font-size:10px;color:var(--text2);margin-top:2px}
-#sidebar-nav{flex:1;padding:10px 0;overflow-y:auto}
-.ni{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s;border-left:3px solid transparent}
-.ni:hover{background:rgba(255,255,255,.04);color:var(--text)}
-.ni.active{background:rgba(0,224,144,.08);color:var(--accent);border-left-color:var(--accent);font-weight:600}
-.ni .ic{font-size:17px;width:22px;text-align:center}
-#sidebar-user{padding:12px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px}
-.sav{width:34px;height:34px;border-radius:10px;background:rgba(0,224,144,.12);border:1px solid rgba(0,224,144,.2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sl{padding:18px 16px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sl-logo{flex-shrink:0;width:34px;height:34px;border-radius:8px;overflow:hidden}
+.sl-logo img{width:100%;height:100%;object-fit:cover}
+.sl-text .name{font-family:var(--fd);font-size:18px;font-weight:800;letter-spacing:1.5px;color:var(--accent);line-height:1}
+.sl-text .sub{font-size:10px;color:var(--text3);margin-top:1px}
+.ns{padding:10px 10px 4px;font-size:9px;font-weight:600;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase}
+#sidebar-nav{flex:1;padding:6px 8px;overflow-y:auto}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 10px;font-size:13px;font-weight:400;color:var(--text2);cursor:pointer;transition:all .15s;border-radius:var(--rs);margin-bottom:2px}
+.ni:hover{background:var(--accent-light);color:var(--accent)}
+.ni.active{background:var(--accent-light);color:var(--accent);font-weight:600}
+.ni .ic{font-size:15px;width:20px;text-align:center}
+#sidebar-user{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:9px}
+.sav{width:32px;height:32px;border-radius:8px;background:var(--accent-light);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 .sui{flex:1;min-width:0}
-.sui .nm{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sui .rl{font-size:10px;color:var(--text2)}
-.btnlo{width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.05);color:var(--text2);font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
-.btnlo:hover{background:rgba(255,61,107,.15);color:var(--red)}
+.sui .nm{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.sui .rl{font-size:10px;color:var(--text3)}
+.btnlo{width:26px;height:26px;border-radius:6px;background:var(--bg);border:1px solid var(--border);color:var(--text2);font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.btnlo:hover{background:var(--red-light);color:var(--red);border-color:var(--red)}
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-#topbar{height:var(--th);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;flex-shrink:0}
-#topbar h2{font-family:var(--fd);font-size:20px;font-weight:800;letter-spacing:1px;flex:1}
-#content{flex:1;overflow-y:auto;padding:24px}
+#topbar{height:var(--th);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
+#topbar h2{font-family:var(--fd);font-size:18px;font-weight:700;letter-spacing:.5px;flex:1;color:var(--text)}
+#content{flex:1;overflow-y:auto;padding:20px}
 
 /* MOBILE */
-#mh{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:var(--bg2);border-bottom:1px solid var(--border);align-items:center;justify-content:space-between;padding:0 16px;z-index:100}
+#mh{display:none;position:fixed;top:0;left:0;right:0;height:50px;background:var(--bg2);border-bottom:1px solid var(--border);align-items:center;justify-content:space-between;padding:0 14px;z-index:100}
 .mh-brand{display:flex;align-items:center;gap:8px}
-.mh-brand span{font-family:var(--fd);font-size:20px;font-weight:900;letter-spacing:2px;color:var(--accent)}
-#mh .chip{font-size:12px;color:var(--text2);background:rgba(255,255,255,.06);padding:4px 10px;border-radius:20px}
-#mc{display:none;overflow-y:auto;padding:16px;padding-bottom:80px;margin-top:52px;min-height:calc(100vh - 52px)}
+.mh-brand .logo-img{width:26px;height:26px;border-radius:6px;overflow:hidden}
+.mh-brand span{font-family:var(--fd);font-size:18px;font-weight:800;letter-spacing:1.5px;color:var(--accent)}
+#mh .chip{font-size:11px;color:var(--text2);background:var(--accent-light);border:1px solid var(--border);padding:3px 9px;border-radius:12px}
+#mc{display:none;overflow-y:auto;padding:14px;padding-bottom:76px;margin-top:50px;min-height:calc(100vh - 50px)}
 #bn{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);z-index:100;padding-bottom:env(safe-area-inset-bottom)}
 .bni{display:flex}
-.bni-item{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border-top:2px solid transparent}
+.bni-item{flex:1;padding:9px 4px 7px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;border-top:2px solid transparent;transition:all .15s}
 .bni-item.active{border-top-color:var(--accent)}
-.bni-item .ic{font-size:19px}
-.bni-item .lb{font-size:9px;font-weight:700;letter-spacing:.3px;color:var(--text2);text-transform:uppercase}
+.bni-item .ic{font-size:18px}
+.bni-item .lb{font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.3px}
 .bni-item.active .lb{color:var(--accent)}
 
 @media(max-width:768px){
@@ -86,192 +94,212 @@ input:focus{outline:none;border-color:rgba(0,224,144,.5)!important}
 }
 
 /* COMPONENTES */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
-.btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;box-shadow:0 6px 24px rgba(0,224,144,.25)}
-.btn-p:hover{transform:translateY(-1px);box-shadow:0 10px 32px rgba(0,224,144,.35)}
-.btn-s{background:rgba(255,255,255,.06);border:1px solid var(--border2);color:var(--text)}
-.btn-s:hover{background:rgba(255,255,255,.1)}
-.btn-g{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000}
-.btn-d{background:rgba(255,61,107,.1);border:1px solid rgba(255,61,107,.3);color:var(--red)}
-.btn-lg{padding:14px 28px;font-family:var(--fd);font-size:18px;font-weight:800;letter-spacing:1px;border-radius:var(--r);width:100%}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 16px;border-radius:var(--rs);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s;white-space:nowrap}
+.btn-p{background:var(--accent);color:white;border-color:var(--accent)}
+.btn-p:hover{background:var(--accent2);border-color:var(--accent2)}
+.btn-s{background:var(--bg2);border:1px solid var(--border);color:var(--text)}
+.btn-s:hover{background:var(--accent-light);border-color:var(--accent)}
+.btn-d{background:var(--red-light);border:1px solid var(--red);color:var(--red)}
+.btn-lg{padding:12px 24px;font-family:var(--fd);font-size:17px;font-weight:700;letter-spacing:.5px;border-radius:var(--r);width:100%}
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px}
-.csm{padding:14px 16px}
-.ig{display:flex;flex-direction:column;gap:6px}
-.il{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.5px}
-.inp{width:100%;padding:12px 16px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:15px;transition:border-color .2s}
-.bdg{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
-.bg{background:rgba(0,224,144,.12);color:var(--accent);border:1px solid rgba(0,224,144,.2)}
-.bgold{background:rgba(255,184,0,.12);color:var(--gold);border:1px solid rgba(255,184,0,.2)}
-.bred{background:rgba(255,61,107,.12);color:var(--red);border:1px solid rgba(255,61,107,.2)}
-.bblue{background:rgba(61,155,255,.12);color:var(--blue);border:1px solid rgba(61,155,255,.2)}
-.bgray{background:rgba(255,255,255,.06);color:var(--text2);border:1px solid var(--border)}
-.btole{background:rgba(255,100,0,.12);color:#FF6400;border:1px solid rgba(255,100,0,.3);animation:pulse 2s infinite}
-.blive{background:rgba(255,61,107,.15);color:var(--red);border:1px solid rgba(255,61,107,.3);animation:pulse 1.5s infinite}
-.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
-.sw{display:flex;justify-content:center;align-items:center;padding:60px}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.csm{padding:12px 14px}
+.ig{display:flex;flex-direction:column;gap:5px}
+.il{font-size:11px;font-weight:500;color:var(--text2);letter-spacing:.3px}
+.inp{width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:14px;transition:all .15s}
+.bdg{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.3px}
+.bg{background:var(--accent-light);color:var(--accent);border:1px solid var(--border2)}
+.bgold{background:var(--gold-light);color:var(--gold);border:1px solid #FFCCBC}
+.bred{background:var(--red-light);color:var(--red);border:1px solid #FFCDD2}
+.bblue{background:var(--blue-light);color:var(--blue);border:1px solid #BBDEFB}
+.bgray{background:var(--bg);color:var(--text2);border:1px solid var(--border)}
+.bpurple{background:var(--purple-light);color:var(--purple);border:1px solid #D1C4E9}
+.btole{background:#FFF3E0;color:#E65100;border:1px solid #FFCC80;animation:pulse 2s infinite}
+.blive{background:var(--red-light);color:var(--red);border:1px solid #FFCDD2;animation:pulse 1.5s infinite}
+.spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+.sw{display:flex;justify-content:center;align-items:center;padding:50px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 @media(max-width:768px){.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}}
-.ph{margin-bottom:20px}
-.ph h2{font-family:var(--fd);font-size:30px;font-weight:900;letter-spacing:1px}
-.ph p{color:var(--text2);font-size:13px;margin-top:4px}
-.st{font-family:var(--fd);font-size:12px;font-weight:800;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:10px;margin-top:20px}
+.ph{margin-bottom:18px}
+.ph h2{font-family:var(--fd);font-size:26px;font-weight:800;letter-spacing:.5px;color:var(--text)}
+.ph p{color:var(--text2);font-size:13px;margin-top:3px}
+.st{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;margin-top:18px}
 .st:first-child{margin-top:0}
-.dv{height:1px;background:var(--border);margin:16px 0}
-.es{text-align:center;padding:50px 20px;color:var(--text2)}
-.es .ic{font-size:44px;margin-bottom:12px}
-.es p{font-size:14px}
-.err{color:var(--red);font-size:13px;padding:10px 14px;background:rgba(255,61,107,.08);border:1px solid rgba(255,61,107,.2);border-radius:var(--rs);margin-top:8px}
+.dv{height:1px;background:var(--border);margin:14px 0}
+.es{text-align:center;padding:40px 20px;color:var(--text3)}
+.es .ic{font-size:36px;margin-bottom:10px}
+.es p{font-size:13px}
+.err{color:var(--red);font-size:12px;padding:8px 12px;background:var(--red-light);border:1px solid #FFCDD2;border-radius:var(--rs);margin-top:6px}
+.bk{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text3);cursor:pointer;margin-bottom:16px;width:fit-content}
+.bk:hover{color:var(--accent)}
 
 /* LOGIN */
 #sl{min-height:100vh;display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(ellipse at 20% 50%,rgba(0,224,144,.07) 0%,transparent 50%),
-             radial-gradient(ellipse at 80% 20%,rgba(61,155,255,.05) 0%,transparent 40%),
-             var(--bg);padding:20px}
-.lb{width:100%;max-width:400px}
-.llo{text-align:center;margin-bottom:32px}
-.llo .logo-wrap{display:flex;justify-content:center;margin-bottom:18px;animation:glow 3s ease-in-out infinite}
-.llo h1{font-family:var(--fd);font-size:46px;font-weight:900;letter-spacing:5px;line-height:1;color:var(--text)}
-.llo p{font-size:13px;color:var(--text2);margin-top:6px}
-.lcard{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;box-shadow:0 32px 80px rgba(0,0,0,.5)}
-.ltabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px}
-.ltab{flex:1;padding:10px;text-align:center;font-family:var(--fd);font-size:16px;font-weight:800;letter-spacing:1px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px}
-.ltab.active{color:var(--accent);border-bottom-color:var(--accent)}
-.fg{display:flex;flex-direction:column;gap:13px}
+  background:linear-gradient(160deg,#E8F4E5 0%,#F7FBF6 50%,#E8F5E9 100%);
+  padding:20px}
+.lb{width:100%;max-width:380px}
+.llo{text-align:center;margin-bottom:28px}
+.llo .logo-wrap{display:flex;justify-content:center;margin-bottom:14px}
+.llo .logo-box{width:80px;height:80px;border-radius:20px;overflow:hidden;border:2px solid var(--border2)}
+.llo h1{font-family:var(--fd);font-size:40px;font-weight:900;letter-spacing:4px;line-height:1;color:var(--text)}
+.llo p{font-size:12px;color:var(--text2);margin-top:5px}
+.lcard{background:white;border:1px solid var(--border);border-radius:14px;padding:28px;box-shadow:0 4px 24px rgba(46,125,50,.08)}
+.ltabs{display:flex;background:var(--bg);border-radius:var(--rs);padding:3px;margin-bottom:20px;gap:3px}
+.ltab{flex:1;padding:8px;text-align:center;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border-radius:5px;transition:all .2s}
+.ltab.active{background:white;color:var(--accent);font-weight:600;box-shadow:0 1px 4px rgba(46,125,50,.12)}
+.fg{display:flex;flex-direction:column;gap:12px}
 
 /* FECHAS */
-.fc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .2s;margin-bottom:10px}
-.fc:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
-.fc .nom{font-family:var(--fd);font-size:22px;font-weight:800;margin-bottom:8px}
-.fc .foot{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.fc{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--border2);border-radius:0 var(--r) var(--r) 0;padding:14px 16px;cursor:pointer;transition:all .15s;margin-bottom:8px}
+.fc:hover{border-left-color:var(--accent);background:var(--accent-light)}
+.fc .nom{font-family:var(--fd);font-size:20px;font-weight:700;margin-bottom:6px;color:var(--text)}
+.fc .foot{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 
 /* POZOS */
-.pc{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .2s;position:relative}
-.pc:hover{border-color:rgba(0,224,144,.3)}
-.pc.sel{border-color:var(--accent);background:rgba(0,224,144,.06)}
-.pc.ya{border-color:rgba(0,224,144,.3);opacity:.7;cursor:default}
-.pm{font-family:var(--fd);font-size:36px;font-weight:900;line-height:1}
-.pp{font-family:var(--fd);font-size:22px;font-weight:800;color:var(--gold)}
+.pc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .15s;position:relative}
+.pc:hover{border-color:var(--accent);background:var(--accent-light)}
+.pc.sel{border-color:var(--accent);border-width:2px;background:var(--accent-light)}
+.pc.ya{border-color:var(--border2);opacity:.8;cursor:default}
+.pm{font-family:var(--fd);font-size:30px;font-weight:900;line-height:1;color:var(--text)}
+.pp{font-family:var(--fd);font-size:20px;font-weight:800;color:var(--gold)}
 
 /* PARTIDOS */
-.prg{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-bottom:18px}
-.prgf{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .4s ease}
-.pcard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px;margin-bottom:10px;transition:all .2s}
-.pcard.ok{border-color:rgba(255,255,255,.12)}
-.ph2{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.pteams{display:flex;align-items:center;margin-bottom:13px}
-.pt{flex:1;font-family:var(--fd);font-size:19px;font-weight:800;line-height:1.1}
+.prg{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:16px}
+.prgf{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease}
+.pcard{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:0 var(--r) var(--r) 0;padding:13px 14px;margin-bottom:8px;transition:all .15s}
+.pcard.ok{border-left-color:var(--accent)}
+.pcard.polla{border-left-color:var(--gold)}
+.pcard.doble{border-left-color:var(--purple)}
+.ph2{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.pteams{display:flex;align-items:center;margin-bottom:11px}
+.pt{flex:1;font-size:14px;font-weight:500;color:var(--text);line-height:1.2}
 .pt.r{text-align:right}
-.pvs{padding:0 12px;font-family:var(--fd);font-size:13px;font-weight:700;color:var(--text3);letter-spacing:1px}
-.psc{padding:5px 14px;background:rgba(255,255,255,.06);border-radius:8px;font-family:var(--fd);font-size:26px;font-weight:900;letter-spacing:2px}
-.lev{display:flex;gap:8px}
-.lb2{flex:1;padding:12px 0;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:all .15s}
-.lb2 .ll{font-family:var(--fd);font-size:24px;font-weight:900;line-height:1}
-.lb2 .lp{font-size:10px;color:var(--text2)}
+.pvs{padding:0 10px;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:1px}
+.psc{padding:4px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-family:var(--fd);font-size:22px;font-weight:900;letter-spacing:2px;color:var(--text)}
+.lev{display:flex;gap:6px}
+.lb2{flex:1;padding:10px 0;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:all .15s}
+.lb2:hover{border-color:var(--accent-light)}
+.lb2 .ll{font-family:var(--fd);font-size:22px;font-weight:900;line-height:1}
+.lb2 .lp{font-size:9px;color:var(--text3)}
 .lb2.L{--c:var(--L)}.lb2.E{--c:var(--E)}.lb2.V{--c:var(--V)}
 .lb2 .ll{color:var(--c)}
-.lb2.sel{background:var(--c)!important;border-color:var(--c)!important}
-.lb2.sel .ll{color:#000!important}
-.lb2.sel .lp{color:rgba(0,0,0,.6)!important}
-.pbar{display:flex;gap:2px;height:3px;border-radius:2px;overflow:hidden;margin-top:10px}
-.pl{background:var(--L);opacity:.6}.pe{background:var(--E);opacity:.6}.pv{background:var(--V);opacity:.6}
-.rb{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.25);border-radius:6px;font-size:10px;font-weight:700;color:var(--gold);cursor:pointer;transition:all .2s}
-.rb.ap{background:rgba(255,184,0,.2)}
-.cb{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px}
-.cb.ok{color:var(--accent);background:rgba(0,224,144,.1)}
-.cb.warn{color:var(--gold);background:rgba(255,184,0,.1)}
-.cb.ag{color:var(--text3);background:rgba(255,255,255,.04)}
-.bk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer;margin-bottom:18px;width:fit-content}
-.bk:hover{color:var(--text)}
+.lb2.sel{border-color:var(--c)!important;background:rgba(0,0,0,.04)!important}
+.lb2.sel .ll{color:var(--c)!important}
+.pbar{display:flex;gap:2px;height:3px;border-radius:2px;overflow:hidden;margin-top:8px}
+.pl{background:var(--L);opacity:.5}.pe{background:var(--E);opacity:.5}.pv{background:var(--V);opacity:.5}
+.rb{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:var(--gold-light);border:1px solid #FFCCBC;border-radius:5px;font-size:10px;font-weight:500;color:var(--gold);cursor:pointer}
+.rb.ap{background:#FFE0B2}
+.cb{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:500;padding:2px 6px;border-radius:4px}
+.cb.ok{color:var(--accent);background:var(--accent-light)}
+.cb.warn{color:var(--gold);background:var(--gold-light)}
+.cb.ag{color:var(--text3);background:var(--bg)}
 
 /* MODAL */
-.mo{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:flex-end;justify-content:center;animation:fi .2s ease}
+.mo{position:fixed;inset:0;background:rgba(27,62,26,.5);backdrop-filter:blur(3px);z-index:1000;display:flex;align-items:flex-end;justify-content:center;animation:fi .2s ease}
 @media(min-width:769px){.mo{align-items:center}}
-.mb{background:var(--card2);border:1px solid var(--border2);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;padding:22px;animation:fu .3s ease}
-@media(min-width:769px){.mb{border-radius:20px}}
-.mh2{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
-.mt2{font-family:var(--fd);font-size:22px;font-weight:800;letter-spacing:1px}
-.mc2{width:32px;height:32px;background:rgba(255,255,255,.06);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text2);cursor:pointer}
-.ro{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--rs);padding:13px;margin-bottom:8px;cursor:pointer;transition:all .2s}
-.ro:hover{border-color:rgba(255,184,0,.3);background:rgba(255,184,0,.04)}
-.ro.sel{border-color:var(--gold);background:rgba(255,184,0,.08)}
-.roh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.rnm{font-weight:600;font-size:14px}
-.rpt{font-family:var(--fd);font-size:16px;font-weight:800;color:var(--gold)}
-.rds{font-size:12px;color:var(--text2)}
+.mb{background:var(--bg2);border:1px solid var(--border);border-radius:14px 14px 0 0;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;padding:20px;animation:fu .3s ease}
+@media(min-width:769px){.mb{border-radius:14px}}
+.mh2{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.mt2{font-family:var(--fd);font-size:20px;font-weight:700;letter-spacing:.5px;color:var(--text)}
+.mc2{width:28px;height:28px;background:var(--bg);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text2);cursor:pointer}
+.ro{background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:11px;margin-bottom:6px;cursor:pointer;transition:all .15s}
+.ro:hover{border-color:var(--accent);background:var(--accent-light)}
+.ro.sel{border-color:var(--accent);background:var(--accent-light)}
+.roh{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.rnm{font-weight:500;font-size:13px;color:var(--text)}
+.rpt{font-family:var(--fd);font-size:15px;font-weight:700;color:var(--accent)}
+.rds{font-size:11px;color:var(--text2)}
 
 /* TABLA */
-.podio{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:10px;margin-bottom:18px;align-items:end}
+.podio{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:8px;margin-bottom:16px;align-items:end}
 .pi{text-align:center}
-.pi .med{font-size:28px;margin-bottom:6px}
-.pi.first .med{font-size:40px}
-.pi .pn{font-family:var(--fd);font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pi.first .pn{color:var(--gold);font-size:16px}
-.pb{background:rgba(255,255,255,.06);border-radius:var(--rs);padding:10px;margin-top:6px}
-.pi.first .pb{background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.25)}
-.ppts{font-family:var(--fd);font-size:28px;font-weight:900}
-.pi.first .ppts{color:var(--gold);font-size:36px}
-.tr{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--rs);transition:background .15s}
-.tr:hover{background:rgba(255,255,255,.03)}
-.tr.me{background:rgba(0,224,144,.06);border:1px solid rgba(0,224,144,.15);margin:2px 0}
-.tpos{font-family:var(--fd);font-size:18px;font-weight:900;color:var(--text2);width:28px;text-align:center}
-.tnm{flex:1;font-family:var(--fd);font-size:16px;font-weight:600}
-.tpts{font-family:var(--fd);font-size:22px;font-weight:900}
+.pi .med{font-size:24px;margin-bottom:5px}
+.pi.first .med{font-size:36px}
+.pi .pn{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.pi.first .pn{color:var(--accent);font-size:14px;font-weight:600}
+.pb2{background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:8px;margin-top:5px}
+.pi.first .pb2{background:var(--accent-light);border-color:var(--border2)}
+.ppts{font-family:var(--fd);font-size:24px;font-weight:900;color:var(--text)}
+.pi.first .ppts{color:var(--accent);font-size:30px}
+.tr{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--rs);transition:background .15s}
+.tr:hover{background:var(--bg)}
+.tr.me{background:var(--accent-light);border:1px solid var(--border2);margin:2px 0;border-radius:var(--rs)}
+.tpos{font-family:var(--fd);font-size:16px;font-weight:700;color:var(--text3);width:26px;text-align:center}
+.tnm{flex:1;font-size:14px;font-weight:500;color:var(--text)}
+.tpts{font-family:var(--fd);font-size:20px;font-weight:800;color:var(--text)}
 
 /* GRILLA */
 .gw{overflow-x:auto}
 .gt{border-collapse:collapse;font-size:12px;min-width:400px;width:100%}
-.gt th{padding:8px 5px;text-align:center;color:var(--text2);font-weight:700;font-size:10px;border-bottom:1px solid var(--border);white-space:nowrap}
-.gt td{padding:5px 3px;text-align:center}
-.gt tr:nth-child(even) td{background:rgba(255,255,255,.02)}
-.uc{text-align:left!important;padding-left:8px!important;font-family:var(--fd);font-size:14px;font-weight:700;white-space:nowrap}
+.gt th{padding:7px 5px;text-align:center;color:var(--text2);font-weight:600;font-size:10px;border-bottom:1.5px solid var(--border);white-space:nowrap}
+.gt td{padding:5px 3px;text-align:center;border-bottom:1px solid var(--border)}
+.gt tr:hover td{background:var(--bg)}
+.uc{text-align:left!important;padding-left:10px!important;font-size:13px;font-weight:500;color:var(--text);white-space:nowrap}
 .uc.me{color:var(--accent)}
-.pc2{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;border-radius:7px;font-family:var(--fd);font-size:13px;font-weight:900}
-.pc2.L{background:rgba(61,155,255,.15);color:var(--L);border:1px solid rgba(61,155,255,.3)}
-.pc2.E{background:rgba(255,214,10,.15);color:var(--E);border:1px solid rgba(255,214,10,.3)}
-.pc2.V{background:rgba(255,61,107,.15);color:var(--V);border:1px solid rgba(255,61,107,.3)}
-.pc2.ok{box-shadow:0 0 0 1px var(--accent)}
-.cd{width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block;margin-left:2px;vertical-align:middle}
+.pc2{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:5px;font-family:var(--fd);font-size:13px;font-weight:700}
+.pc2.L{background:var(--blue-light);color:var(--L)}
+.pc2.E{background:#FFF3E0;color:var(--E)}
+.pc2.V{background:var(--red-light);color:var(--V)}
+.pc2.ok{box-shadow:0 0 0 1.5px var(--accent)}
+.cd{width:4px;height:4px;border-radius:50%;background:var(--gold);display:inline-block;margin-left:2px;vertical-align:middle}
 
 /* PERFIL */
-.paw{display:flex;flex-direction:column;align-items:center;padding:26px}
-.pab{width:78px;height:78px;border-radius:20px;background:rgba(0,224,144,.12);border:2px solid rgba(0,224,144,.25);display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:12px}
-.pu{font-family:var(--fd);font-size:28px;font-weight:900;letter-spacing:2px;color:var(--accent)}
-.pnm{font-size:14px;color:var(--text2);margin-top:3px}
-.si{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--border)}
+.paw{display:flex;flex-direction:column;align-items:center;padding:22px}
+.pab{width:68px;height:68px;border-radius:16px;background:var(--accent-light);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:10px}
+.pu{font-family:var(--fd);font-size:24px;font-weight:800;letter-spacing:1.5px;color:var(--accent)}
+.pnm{font-size:13px;color:var(--text2);margin-top:2px}
+.si{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border)}
 .si:last-child{border-bottom:none}
-.si .k{font-size:14px;font-weight:500}
+.si .k{font-size:13px;font-weight:500;color:var(--text)}
 .si .v{font-size:13px;color:var(--text2)}
-.tgl{width:42px;height:24px;background:rgba(255,255,255,.1);border-radius:12px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.tgl{width:40px;height:22px;background:var(--border);border-radius:11px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
 .tgl.on{background:var(--accent)}
-.tgl::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .2s}
+.tgl::after{content:"";position:absolute;width:16px;height:16px;background:white;border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .tgl.on::after{transform:translateX(18px)}
 
 /* ADMIN */
-.aab{display:flex;justify-content:space-between;align-items:center;padding:15px 17px;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all .2s;width:100%;text-align:left;margin-bottom:8px}
-.aab:hover{border-color:var(--border2);transform:translateX(3px)}
-.aab .t{font-family:var(--fd);font-size:17px;font-weight:700}
-.aab .d{font-size:12px;color:var(--text2);margin-top:2px}
-.si2{width:65px;padding:13px;text-align:center;font-family:var(--fd);font-size:28px;font-weight:900;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:var(--rs);color:var(--text)}
+.aab{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all .15s;width:100%;text-align:left;margin-bottom:6px}
+.aab:hover{border-color:var(--accent);background:var(--accent-light);padding-left:18px}
+.aab .t{font-size:14px;font-weight:500;color:var(--text)}
+.aab .d{font-size:11px;color:var(--text2);margin-top:2px}
+
+/* RESULTADOS — compacto */
+.res-card{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--border2);border-radius:0 var(--r) var(--r) 0;padding:11px 14px;margin-bottom:8px}
+.res-card.polla{border-left-color:var(--gold)}
+.res-card.doble{border-left-color:var(--purple)}
+.res-card.fin{border-left-color:var(--accent);opacity:.75}
+.res-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.res-info .num-tipo{font-size:11px;color:var(--text3);font-weight:500}
+.res-info .teams{font-size:14px;font-weight:500;color:var(--text);margin-top:1px}
+.res-inputs{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.score-inp{width:44px;padding:6px 8px;text-align:center;font-family:var(--fd);font-size:22px;font-weight:900;background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);color:var(--text)}
+.score-inp:focus{border-color:var(--accent);background:var(--accent-light)}
+.score-sep{font-family:var(--fd);font-size:20px;font-weight:900;color:var(--text3)}
+.rojas-inp{width:38px;padding:6px 4px;text-align:center;font-size:13px;background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);color:var(--text)}
+.btn-res{padding:7px 10px;background:var(--accent);color:white;border-radius:var(--rs);font-size:12px;font-weight:500;white-space:nowrap}
+.btn-res.done{background:var(--bg);border:1px solid var(--border);color:var(--accent)}
 
 /* STATS */
-.gc{display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:8px}
-.gav{width:42px;height:42px;border-radius:12px;background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
-.gn{font-family:var(--fd);font-size:17px;font-weight:700}
-.gm{font-size:11px;color:var(--text2);margin-top:2px}
-.gmo{font-family:var(--fd);font-size:20px;font-weight:900;color:var(--gold)}
+.gc{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:6px}
+.gav{width:38px;height:38px;border-radius:10px;background:var(--gold-light);border:1px solid #FFCCBC;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.gn{font-size:14px;font-weight:500;color:var(--text)}
+.gm{font-size:11px;color:var(--text2);margin-top:1px}
+.gmo{font-family:var(--fd);font-size:18px;font-weight:800;color:var(--gold)}
+
+/* IMPORTAR */
+.imp-list-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--border)}
+.imp-list-item:last-child{border-bottom:none}
 
 /* TOAST */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--border2);border-radius:20px;padding:11px 18px;font-size:13px;font-weight:600;z-index:9999;animation:fu .3s ease;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.5)}
-@media(min-width:769px){.toast{bottom:20px}}
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:var(--text);color:white;border-radius:20px;padding:9px 16px;font-size:12px;font-weight:500;z-index:9999;animation:fu .3s ease;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+@media(min-width:769px){.toast{bottom:16px}}
 </style>
 </head>
 <body>
 
-<!-- LOGO (PNG embebido inline) -->
-<svg id="logo-svg" xmlns="http://www.w3.org/2000/svg" style="display:none">
+<svg style="display:none">
   <symbol id="logo" viewBox="0 0 500 500">
     <image href="data:image/png;base64,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rZSRtYyNozgd+FWQiKKIiIgiIgIiICIiAiIgIiICx7tu2c27X+mZqWoiaaljSYnkcwVkJfDhFapNomjbho6+1FpronsEby2NxHnBWo4EHBWxveR2P0WubHNV0kYZXsYeEgdVr41LZq6xXee2XGF0U0Ti0ZHUBWJXio6mWCZkkbi17DlpHcVMPdR24iQs03qKqwR5MT3u6+xQ06Feq31lRR1cVTTSuiljILS0q2JK29QSxzRNlieHMcMghdiiPuxbwAquw05qWQMeMMjkJzlSypaiKpgbNA9r43jILTlZadyIiIIiICIiAiIgIiICo2tvVK5/w7lWVRtbeqVz/h3IrVdrv13uX4rvmVRIvTDxVb13673L8V3zKokXph4qziVnfcy9ex4lbDGea3wWvPcy9ex4lbDGea3wRXJERRA9yjZv1/d9L8P0Ukz3KNm/X930vw/RFQNd6FnguUfd4ri70LPBco+7xWvGWwPcv9QIPh+qkAo/7l/qBB8P1UgFloRERBERAREQEREBERATK+E8libbrths2grRLGydkte5uGxtOfkiuzb7tVteg9OztFQw10jS1jAeYK11a01FcdUXye7XSZ8skjyWhxzhVHaPrW661vctxuUzsOceGPOQArScS45VkS0JJOSuyCNzpo42tL5HuAa0d6Qxue4BrS5xOAAOqlVusbBf2lNDqfUER7NpDoo3DkR/wK2kXvul7HIbZbodS3mmBqZAHRh7eYHUfNSha0BoAGAOQC6aKlho6WOmp2COKNoa0Ady71lREREEREBERAREQEREBERAREQEREHFwyCCMj2KOW9JsNp9V0Ut+ssAZXxN4i1g646/JSPXF7WvYWuaC0jBBRWoi722stddLRV8Lop4zggjGV4ehU+95TYNb9U0M97s0DY7gwFxDRjKgrfrRX2W5y265wPhmjcR5QxlWVK89BVS0tQyeGR0crTlrmnBClfu27wc1PUQae1JMDGfJZI4qI5BBwV2wzPY4FjyxzTkOB5q2JK28Wy4UtxpGVVHMyWN4yC05XqC177ANvl70pWw2u7zOmt5IGSc4CnNorV1m1VbY6u2VcUhc0Eta4Ej8llpcSIERBERAREQEREBUbW3qlc/4dyrKo2tvVK5/wAO5Fartd+u9y/Fd8yqJF6YeKreu/Xe5fiu+ZVEi9MPFWcSs77mXr23xK2GM81v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q4TNSx1JHXjaFNXEAbHp++Xh/Db7TNNjl5uFkbRWwTW2opR29HJQsP8AiGVsBsOgtJ2VoFvstLCR3tarjighhHDFE1g9wTTEU9nu6nQ0rI5b5OJ3ggnkVn3SWzXS+nYGMpLfFxtHnFoP9FeeEUVwiijiaGxxsYB7Bhc0RARERBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBUfW3qlcv4dyrCo2tvVK5/wAO5Fartec9b3L8V3zKokXph4qt679d7l+K75lUSL0w8VYlZ33MvXseJWwxnmt8Frz3MvXseJWwxnmt8EVyREUQPco3b9P3dz/D9FJE9yjdv1fd3N8P0RYgXj+4Z4LlH0Hivn/y7PBfY+g8VrxmJ+7lRP8AYOIZ/d+qkMo87lPqJF8P1UhlloRERBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERGhERAREQEREBERAREQEREBERAREQEREBERAREQF0V9JDXUUtHUNLopW8LwDjIREGILjuybJK+4S11TZqx08pJeRWvAJXnG6zsdDuIWStz/GvRERcWhdhmzvRVx+32C2VME/tfUueP0KyYAAMIiAiIiitbaFoHTWvLY626jpZaincMFrJSw/qERBjr/0WdjvCG/sStwP/AM16+jdZ2OjpZK3/APteiIjI+g9Dad0RbhQafppIIAMAPlLz+pVzIiKIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiIP/2Q==" x="0" y="0" width="500" height="500"/>
   </symbol>
@@ -280,29 +308,19 @@ input:focus{outline:none;border-color:rgba(0,224,144,.5)!important}
 <div id="app">
   <aside id="sidebar" style="display:none">
     <div class="sl">
-      <div class="sl-logo">
-        <div style="width:36px;height:36px;border-radius:10px;overflow:hidden;display:inline-block;flex-shrink:0"><svg width="36" height="36"><use href="#logo"/></svg></div>
-      </div>
-      <div class="sl-text">
-        <h1>POLLA PRODES</h1>
-        <p>pollaprodes.com</p>
-      </div>
+      <div class="sl-logo"><svg width="34" height="34"><use href="#logo"/></svg></div>
+      <div class="sl-text"><div class="name">POLLA PRODES</div><div class="sub">pollaprodes.com</div></div>
     </div>
     <nav id="sidebar-nav"></nav>
     <div id="sidebar-user"></div>
   </aside>
   <div id="main" style="display:none">
-    <div id="topbar"><h2 id="tt">—</h2><div id="ta"></div></div>
+    <div id="topbar"><h2 id="tt">—</h2></div>
     <div id="content"></div>
   </div>
 </div>
-
-<!-- MOBILE -->
 <div id="mh">
-  <div class="mh-brand">
-    <div style="width:28px;height:28px;border-radius:8px;overflow:hidden;display:inline-block"><svg width="28" height="28"><use href="#logo"/></svg></div>
-    <span>PRODES</span>
-  </div>
+  <div class="mh-brand"><div class="logo-img"><svg width="26" height="26"><use href="#logo"/></svg></div><span>PRODES</span></div>
   <div class="chip" id="mchip">—</div>
 </div>
 <div id="mc"></div>
@@ -315,39 +333,17 @@ const API_SECRET="PP2026-xK9mQ7vL2nR4wT8yU3pA5cE1hG6jF0bD";
 const SK="pp_session",UK="pp_user";
 const App={user:null,token:null,screen:null,ctx:{}};
 
-// ── API (CORS fix: text/plain) ──
 async function api(action,p={}){
   const b={action,apiSecret:API_SECRET,sessionToken:App.token||undefined,...p};
-  try{
-    const r=await fetch(SCRIPT_URL,{
-      method:"POST",
-      headers:{"Content-Type":"text/plain"},
-      body:JSON.stringify(b),
-      redirect:"follow"
-    });
-    return await r.json();
-  }catch(e){return{ok:false,error:"Sin conexión: "+e.message};}
+  try{const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(b),redirect:"follow"});return await r.json();}
+  catch(e){return{ok:false,error:"Sin conexión: "+e.message};}
 }
-
 function save(u,t){App.user=u;App.token=t;localStorage.setItem(SK,t);localStorage.setItem(UK,JSON.stringify(u));}
 function load(){const t=localStorage.getItem(SK),u=localStorage.getItem(UK);if(t&&u){App.token=t;App.user=JSON.parse(u);return true;}return false;}
 function logout(){api("logout");localStorage.removeItem(SK);localStorage.removeItem(UK);App.user=null;App.token=null;showLogin();}
 
-const NAV_J=[
-  {k:"fechas",i:"📅",l:"Fechas",t:"Fechas Disponibles"},
-  {k:"tabla",i:"🏆",l:"Tabla",t:"Tabla de Posiciones"},
-  {k:"grilla",i:"👥",l:"Los Otros",t:"Los Otros"},
-  {k:"stats",i:"📊",l:"Estadísticas",t:"Hall of Fame"},
-  {k:"perfil",i:"👤",l:"Perfil",t:"Mi Perfil"},
-];
-const NAV_A=[
-  {k:"admin-dash",i:"📊",l:"Dashboard",t:"Dashboard"},
-  {k:"admin-fechas",i:"📅",l:"Fechas",t:"Gestión de Fechas"},
-  {k:"admin-importar",i:"🔗",l:"Importar",t:"Importar Partidos API"},
-  {k:"admin-res",i:"⚽",l:"Resultados",t:"Resultados"},
-  {k:"admin-users",i:"👥",l:"Jugadores",t:"Jugadores"},
-  {k:"perfil",i:"👤",l:"Perfil",t:"Mi Perfil"},
-];
+const NAV_J=[{k:"fechas",i:"📅",l:"Fechas",t:"Fechas"},{k:"tabla",i:"🏆",l:"Tabla",t:"Tabla de Posiciones"},{k:"grilla",i:"👥",l:"Los Otros",t:"Los Otros"},{k:"stats",i:"📊",l:"Estadísticas",t:"Hall of Fame"},{k:"perfil",i:"👤",l:"Perfil",t:"Mi Perfil"}];
+const NAV_A=[{k:"admin-dash",i:"📊",l:"Dashboard",t:"Dashboard"},{k:"admin-fechas",i:"📅",l:"Fechas",t:"Gestión de Fechas"},{k:"admin-importar",i:"🔗",l:"Importar",t:"Importar Partidos API"},{k:"admin-res",i:"⚽",l:"Resultados",t:"Resultados"},{k:"admin-users",i:"👥",l:"Jugadores",t:"Jugadores"},{k:"perfil",i:"👤",l:"Perfil",t:"Mi Perfil"}];
 function nav(){return App.user?.rol==="Admin"?NAV_A:NAV_J;}
 
 function go(k,ctx={}){
@@ -371,158 +367,107 @@ function renderNav(){
 
 function renderScreen(k,ctx){
   switch(k){
-    case"fechas":return rFechas();
-    case"fecha-det":return rFechaDet(ctx);
-    case"jugar":return rJugar(ctx);
-    case"tabla":return rTabla(ctx);
-    case"grilla":return rGrilla(ctx);
-    case"stats":return rStats();
-    case"perfil":return rPerfil();
-    case"admin-dash":return rAdminDash();
-    case"admin-fechas":return rAdminFechas();
-    case"admin-importar":return rAdminImportar();
-    case"admin-res":return rAdminRes();
-    case"admin-users":return rAdminUsers();
+    case"fechas":return rFechas();case"fecha-det":return rFechaDet(ctx);case"jugar":return rJugar(ctx);
+    case"tabla":return rTabla(ctx);case"grilla":return rGrilla(ctx);case"stats":return rStats();
+    case"perfil":return rPerfil();case"admin-dash":return rAdminDash();case"admin-fechas":return rAdminFechas();
+    case"admin-importar":return rAdminImportar();case"admin-res":return rAdminRes();case"admin-users":return rAdminUsers();
     default:return`<div class="es"><div class="ic">🔧</div><p>En construcción</p></div>`;
   }
 }
 
-/* ── LOGO SVG reutilizable ── */
-function logoSVG(size,color){
-  color=color||"var(--accent)";
-  return`<svg width="${size}" height="${size}" style="color:${color}"><use href="#logo"/></svg>`;
-}
-
-/* ── FECHAS ── */
 function rFechas(){return`<div class="fu"><div class="ph"><h2>FECHAS</h2><p>Seleccioná una fecha para jugar</p></div><div id="fl"><div class="sw"><div class="spinner"></div></div></div></div>`;}
 async function lFechas(){
-  const r=await api("getFechas"),el=document.getElementById("fl");
-  if(!el)return;
+  const r=await api("getFechas"),el=document.getElementById("fl");if(!el)return;
   if(!r.ok){el.innerHTML=`<div class="err">⚠ ${r.error}</div>`;return;}
   if(!r.fechas?.length){el.innerHTML=`<div class="es"><div class="ic">📅</div><p>No hay fechas disponibles</p></div>`;return;}
   el.innerHTML=r.fechas.map(f=>{
     const mins=f.minutosRestantes,urg=mins<120&&mins>0;
-    const pt=mins<=0?"Plazo vencido":mins<60?`⏱ ${mins}min`:mins<1440?`⏱ ${Math.floor(mins/60)}hs`:`📅 ${new Date(f.plazoLimite).toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"})}`;
+    const pt=mins<=0?"Plazo vencido":mins<60?`⏱ ${mins}min`:mins<1440?`⏱ ${Math.floor(mins/60)}hs`:`📅 ${new Date(f.plazoLimite).toLocaleDateString("es-AR",{day:"numeric",month:"long"})}`;
     return`<div class="fc" onclick="go('fecha-det',{fechaId:'${f.id}'})">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         <div class="nom">${f.nombre}</div>
         <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgray"}">${f.estado}</span>
       </div>
-      ${f.descripcion?`<p style="font-size:13px;color:var(--text2);margin-bottom:8px">${f.descripcion}</p>`:""}
       <div style="display:flex;gap:8px;font-size:12px;color:var(--text2);flex-wrap:wrap">
-        <span style="${urg?"color:var(--red);font-weight:600":""}">${pt}</span>
-        <span style="color:var(--text3)">·</span><span>${f.liga}</span>
+        <span style="${urg?"color:var(--red);font-weight:500":""}">${pt}</span>
+        <span style="color:var(--border2)">·</span><span>${f.liga}</span>
       </div>
       <div class="foot">
-        <span style="font-size:12px;color:var(--text2)">⚽ ${f.cantPartidos} partidos</span>
-        ${f.puedeJugar?`<span class="btn btn-p" style="padding:6px 13px;font-size:12px">JUGAR →</span>`:`<span style="font-size:12px;color:var(--text2)">Ver →</span>`}
-      </div>
-    </div>`;
+        <span style="font-size:12px;color:var(--text3)">⚽ ${f.cantPartidos} partidos</span>
+        ${f.puedeJugar?`<span class="btn btn-p" style="padding:5px 12px;font-size:12px">Jugar →</span>`:`<span style="font-size:12px;color:var(--text3)">Ver →</span>`}
+      </div></div>`;
   }).join("");
 }
 
-/* ── DETALLE FECHA ── */
-function rFechaDet(ctx){return`<div class="fu"><div class="bk" onclick="go('fechas')">← Volver</div><div id="fdc"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+function rFechaDet(ctx){return`<div class="fu"><div class="bk" onclick="go('fechas')">← Fechas</div><div id="fdc"><div class="sw"><div class="spinner"></div></div></div></div>`;}
 async function lFechaDet(ctx){
-  const r=await api("getFecha",{fechaId:ctx.fechaId}),el=document.getElementById("fdc");
-  if(!el)return;
+  const r=await api("getFecha",{fechaId:ctx.fechaId}),el=document.getElementById("fdc");if(!el)return;
   if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}
   const f=r.fecha,ps=r.partidos||[];
-  el.innerHTML=`
-    <div class="card" style="margin-bottom:18px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-        <div><h2 style="font-family:var(--fd);font-size:26px;font-weight:900">${f.nombre}</h2>
-        <p style="font-size:12px;color:var(--text2);margin-top:3px">${f.liga} · ${f.temporada}</p></div>
-        <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgray"}">${f.estado}</span>
-      </div>
-      <div style="display:flex;gap:16px;font-size:12px;color:var(--text2)">
-        <span>⚽ ${f.cantPartidos} partidos</span>
-        ${f.minutosRestantes>0?`<span>⏱ ${f.minutosRestantes<60?f.minutosRestantes+"min":Math.floor(f.minutosRestantes/60)+"hs"}</span>`:`<span style="color:var(--red)">🔒 Cerrada</span>`}
-      </div>
+  el.innerHTML=`<div class="card" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+      <div><h2 style="font-family:var(--fd);font-size:22px;font-weight:800;color:var(--text)">${f.nombre}</h2>
+      <p style="font-size:12px;color:var(--text2);margin-top:2px">${f.liga} · ${f.temporada}</p></div>
+      <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgray"}">${f.estado}</span>
     </div>
-    <p class="st">PARTIDOS</p>
-    ${ps.map(p=>`
-      <div class="card csm" style="margin-bottom:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="display:flex;align-items:center;gap:8px;flex:1">
-            <span style="font-size:11px;font-weight:700;color:var(--text3)">#${p.numero}</span>
-            <div style="flex:1">
-              <div style="font-family:var(--fd);font-size:16px;font-weight:700">${p.local} <span style="color:var(--text3);font-size:12px">vs</span> ${p.visita}</div>
-              <div style="font-size:11px;color:var(--text2)">${p.liga}${p.fechaHora?" · "+new Date(p.fechaHora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}):""}</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:6px;align-items:center">
-            ${p.tipo!=="Normal"?`<span class="bdg ${p.tipo==="Polla"?"bgold":"bgray"}">${p.tipo==="Polla"?"⭐":"×2"} ${p.tipo}</span>`:""}
-            ${p.esToleTole?`<span class="bdg btole">🔥 TOLE TOLE</span>`:""}
-            ${p.golesLocal!==null?`<span style="font-family:var(--fd);font-size:20px;font-weight:900">${p.golesLocal}-${p.golesVisita}</span>`:""}
-            ${p.estado==="En Vivo"?`<span class="bdg blive">● VIVO</span>`:""}
-          </div>
-        </div>
-      </div>`).join("")}
-    ${f.puedeJugar?`
-      <p class="st" style="margin-top:22px">ELEGÍ TU POZO</p>
-      <div id="pl2"><div class="sw"><div class="spinner"></div></div></div>
-      <div id="bjw" style="margin-top:18px;display:none"></div>
-    `:`
-      <div style="margin-top:22px;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r);text-align:center">
-        <p style="color:var(--text2);font-size:14px">🔒 Pronósticos cerrados para esta fecha</p>
-      </div>`}`;
+    <div style="display:flex;gap:14px;font-size:12px;color:var(--text2)">
+      <span>⚽ ${f.cantPartidos} partidos</span>
+      ${f.minutosRestantes>0?`<span>⏱ ${f.minutosRestantes<60?f.minutosRestantes+"min":Math.floor(f.minutosRestantes/60)+"hs"}</span>`:`<span style="color:var(--red)">🔒 Cerrada</span>`}
+    </div></div>
+  <p class="st">PARTIDOS</p>
+  ${ps.map(p=>`<div class="card csm" style="margin-bottom:6px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:7px;flex:1">
+        <span style="font-size:10px;font-weight:600;color:var(--text3);width:20px">#${p.numero}</span>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">${p.local} <span style="color:var(--text3)">vs</span> ${p.visita}</div>
+        <div style="font-size:11px;color:var(--text3)">${p.liga}${p.fechaHora?" · "+new Date(p.fechaHora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}):""}</div></div>
+      </div>
+      <div style="display:flex;gap:5px;align-items:center">
+        ${p.tipo!=="Normal"?`<span class="bdg ${p.tipo==="Polla"?"bgold":"bpurple"}">${p.tipo==="Polla"?"⭐":"×2"} ${p.tipo}</span>`:""}
+        ${p.esToleTole?`<span class="bdg btole">🔥 TOLE</span>`:""}
+        ${p.golesLocal!==null?`<span style="font-family:var(--fd);font-size:18px;font-weight:900;color:var(--text)">${p.golesLocal}-${p.golesVisita}</span>`:""}
+        ${p.estado==="En Vivo"?`<span class="bdg blive">● VIVO</span>`:""}
+      </div>
+    </div></div>`).join("")}
+  ${f.puedeJugar?`<p class="st" style="margin-top:18px">ELEGÍ TU POZO</p>
+  <div id="pl2"><div class="sw"><div class="spinner"></div></div></div>
+  <div id="bjw" style="margin-top:14px;display:none"></div>`:`
+  <div style="margin-top:16px;padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);text-align:center">
+    <p style="color:var(--text2);font-size:13px">🔒 Pronósticos cerrados para esta fecha</p></div>`}`;
   if(f.puedeJugar)lPozos(ctx.fechaId);
 }
 
 async function lPozos(fid){
-  const r=await api("getPozos",{fechaId:fid,userId:App.user?.id}),el=document.getElementById("pl2");
-  if(!el)return;
+  const r=await api("getPozos",{fechaId:fid,userId:App.user?.id}),el=document.getElementById("pl2");if(!el)return;
   if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}
   window._pozos=r.pozos;window._fid=fid;window._sp=null;
   if(!r.pozos?.length){el.innerHTML=`<div class="es"><div class="ic">💰</div><p>Sin pozos configurados</p></div>`;return;}
   el.innerHTML=`<div class="g2">${r.pozos.map(p=>`
-    <div class="pc${p.yaInscripto?" ya":""}" id="poz-${p.id}" onclick="${p.yaInscripto?"":"selP('"+p.id+"')"}">
-      ${p.yaInscripto?`<span class="bdg bg" style="margin-bottom:8px;display:inline-flex">✓ INSCRIPTO</span><br>`:""}
+    <div class="pc${p.yaInscripto?" ya":""}" id="poz-${p.id}" onclick="${p.yaInscripto?"":"selP('"+p.id+"')"}" >
+      ${p.yaInscripto?`<span class="bdg bg" style="margin-bottom:6px;display:inline-flex">✓ INSCRIPTO</span><br>`:""}
       <div class="pm">$${p.monto.toLocaleString("es-AR")}</div>
-      <div style="font-size:11px;color:var(--text2);margin-top:2px">${p.tipo==="Cerrado"?"🔒 Grupo":"Abierto"}</div>
-      <div class="dv" style="margin:8px 0"></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:1px">${p.tipo==="Cerrado"?"🔒 Grupo cerrado":"Pozo abierto"}</div>
+      <div class="dv"></div>
       <div class="pp">$${p.premioGanador.toLocaleString("es-AR")}</div>
-      <div style="font-size:11px;color:var(--text2)">Premio estimado</div>
-      <div style="font-size:12px;color:var(--text2);margin-top:8px">👥 ${p.inscriptos} inscripto${p.inscriptos!==1?"s":""}</div>
+      <div style="font-size:11px;color:var(--text3)">Premio estimado</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">👥 ${p.inscriptos} inscripto${p.inscriptos!==1?"s":""}</div>
     </div>`).join("")}</div>
-    <div style="text-align:center;padding:10px 0">
-      <span style="font-size:12px;color:var(--text2);cursor:pointer" onclick="togGrupo()">🔒 Tengo código de grupo cerrado →</span>
-    </div>
-    <div id="gf" style="display:none;margin-top:10px">
-      <div class="ig"><label class="il">CÓDIGO DE GRUPO</label>
-      <input class="inp" id="ic" placeholder="Ej: AB1234" maxlength="6" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')buscar()"/></div>
-      <button class="btn btn-s" style="margin-top:10px;width:100%" onclick="buscar()">BUSCAR</button>
-      <div id="gr"></div>
-    </div>`;
-  const ya=r.pozos.find(p=>p.yaInscripto);
-  if(ya){const bw=document.getElementById("bjw");if(bw){bw.style.display="block";bw.innerHTML=`<button class="btn btn-p btn-lg" onclick="go('jugar',{fechaId:'${fid}',pozoId:'${ya.id}'})">▶ JUGAR →</button>`;}}
-}
-
-window.selP=id=>{window._sp=id;document.querySelectorAll(".pc").forEach(c=>c.classList.remove("sel"));const e=document.getElementById("poz-"+id);if(e)e.classList.add("sel");const bw=document.getElementById("bjw");if(bw){bw.style.display="block";bw.innerHTML=`<button class="btn btn-p btn-lg" onclick="insc()">PAGAR Y JUGAR →</button>`;}};
-window.togGrupo=()=>{const e=document.getElementById("gf");if(e)e.style.display=e.style.display==="none"?"block":"none";};
-window.buscar=async()=>{
-  const c=document.getElementById("ic")?.value;if(!c||c.length<4){toast("Ingresá el código");return;}
-  const r=await api("getGrupoPorCodigo",{codigo:c}),el=document.getElementById("gr");if(!el)return;
-  if(!r.ok){el.innerHTML=`<div class="err" style="margin-top:10px">${r.error}</div>`;return;}
-  el.innerHTML=`<div class="card" style="margin-top:12px;border-color:rgba(0,224,144,.2)">
-    <p style="font-family:var(--fd);font-size:18px;font-weight:800">${r.grupo.nombre}</p>
-    <p style="font-size:12px;color:var(--text2)">👥 ${r.grupo.miembros} miembro${r.grupo.miembros!==1?"s":""}</p>
-    <p style="font-family:var(--fd);font-size:22px;font-weight:900;color:var(--gold);margin-top:8px">$${(r.pozo?.premioEstimado||0).toLocaleString("es-AR")} est.</p>
-    <button class="btn btn-p" style="margin-top:12px;width:100%" onclick="selP('${r.grupo.pozoId}');insc()">UNIRSE — $${(r.pozo?.monto||0).toLocaleString("es-AR")}</button>
+  <div style="text-align:center;padding:8px 0"><span style="font-size:11px;color:var(--text3);cursor:pointer" onclick="togGrupo()">🔒 Tengo código de grupo cerrado →</span></div>
+  <div id="gf" style="display:none;margin-top:8px">
+    <div class="ig"><label class="il">CÓDIGO</label><input class="inp" id="ic" placeholder="AB1234" maxlength="6" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')buscar()"/></div>
+    <button class="btn btn-s" style="margin-top:8px;width:100%" onclick="buscar()">BUSCAR GRUPO</button>
+    <div id="gr"></div>
   </div>`;
-};
-window.insc=async()=>{
-  if(!window._sp){toast("Seleccioná un pozo");return;}
-  const r=await api("inscribirse",{fechaId:window._fid,pozoId:window._sp});
-  if(!r.ok){toast("❌ "+r.error);return;}
-  if(r.habilitado){toast("✅ ¡Habilitado!");setTimeout(()=>go("jugar",{fechaId:window._fid,pozoId:window._sp}),900);}
-  else{toast("🔄 Procesando pago...");const mp=await api("crearPreferencia",{inscripcionId:r.inscripcionId});if(mp.ok&&mp.initPoint)window.location.href=mp.initPoint;else toast("💡 "+(mp.error||"MP no configurado aún"));}
-};
+  const ya=r.pozos.find(p=>p.yaInscripto);
+  if(ya){const bw=document.getElementById("bjw");if(bw){bw.style.display="block";bw.innerHTML=`<button class="btn btn-p btn-lg" onclick="go('jugar',{fechaId:'${fid}',pozoId:'${ya.id}'})">▶ Jugar fecha →</button>`;}}
+}
+window.selP=id=>{window._sp=id;document.querySelectorAll(".pc").forEach(c=>c.classList.remove("sel"));const e=document.getElementById("poz-"+id);if(e)e.classList.add("sel");const bw=document.getElementById("bjw");if(bw){bw.style.display="block";bw.innerHTML=`<button class="btn btn-p btn-lg" onclick="insc()">Pagar y jugar →</button>`;}};
+window.togGrupo=()=>{const e=document.getElementById("gf");if(e)e.style.display=e.style.display==="none"?"block":"none";};
+window.buscar=async()=>{const c=document.getElementById("ic")?.value;if(!c||c.length<4){toast("Ingresá el código");return;}const r=await api("getGrupoPorCodigo",{codigo:c}),el=document.getElementById("gr");if(!el)return;if(!r.ok){el.innerHTML=`<div class="err" style="margin-top:8px">${r.error}</div>`;return;}el.innerHTML=`<div class="card" style="margin-top:10px;border-color:var(--border2)"><p style="font-size:15px;font-weight:600;color:var(--text)">${r.grupo.nombre}</p><p style="font-size:11px;color:var(--text2)">👥 ${r.grupo.miembros} miembro${r.grupo.miembros!==1?"s":""}</p><p style="font-family:var(--fd);font-size:20px;font-weight:800;color:var(--gold);margin-top:6px">$${(r.pozo?.premioEstimado||0).toLocaleString("es-AR")} est.</p><button class="btn btn-p" style="margin-top:10px;width:100%" onclick="selP('${r.grupo.pozoId}');insc()">Unirse — $${(r.pozo?.monto||0).toLocaleString("es-AR")}</button></div>`;};
+window.insc=async()=>{if(!window._sp){toast("Seleccioná un pozo");return;}const r=await api("inscribirse",{fechaId:window._fid,pozoId:window._sp});if(!r.ok){toast("❌ "+r.error);return;}if(r.habilitado){toast("✅ ¡Habilitado!");setTimeout(()=>go("jugar",{fechaId:window._fid,pozoId:window._sp}),900);}else{toast("🔄 Procesando pago...");const mp=await api("crearPreferencia",{inscripcionId:r.inscripcionId});if(mp.ok&&mp.initPoint)window.location.href=mp.initPoint;else toast("💡 "+(mp.error||"MP no configurado aún"));}};
 
-/* ── JUGAR ── */
 window._pr={};window._re={};window._ct={};window._pa=[];
-function rJugar(ctx){return`<div class="fu"><div class="bk" onclick="go('fecha-det',{fechaId:'${ctx.fechaId}'})">← Volver</div><div class="prg"><div class="prgf" id="pb" style="width:0%"></div></div><div id="jc"><div class="sw"><div class="spinner"></div></div></div><div id="jf" style="margin-top:18px"></div></div>`;}
+function rJugar(ctx){return`<div class="fu"><div class="bk" onclick="go('fecha-det',{fechaId:'${ctx.fechaId}'})">← Volver</div><div class="prg"><div class="prgf" id="pb" style="width:0%"></div></div><div id="jc"><div class="sw"><div class="spinner"></div></div></div><div id="jf" style="margin-top:16px"></div></div>`;}
 async function lJugar(ctx){
   const[rf,rm]=await Promise.all([api("getFecha",{fechaId:ctx.fechaId}),api("getMiFecha",{fechaId:ctx.fechaId,pozoId:ctx.pozoId})]);
   if(!rf.ok){toast("Error cargando fecha");return;}
@@ -537,16 +482,18 @@ function rParts(parts,ctx,puede){
   el.innerHTML=parts.map(p=>{
     const pr=window._pr[p.id]||{},re=window._re[p.id];
     const sel=pr.v,cr=pr.cr!==undefined?pr.cr:3,bloq=!!re||cr===0||!puede||p.golesLocal!==null;
-    return`<div class="pcard${sel?" ok":""}" id="pc-${p.id}">
+    const tipoCls=p.tipo==="Polla"?" polla":p.tipo==="Doble"?" doble":"";
+    return`<div class="pcard${sel?" ok":""}${tipoCls}">
       <div class="ph2">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;font-weight:700;color:var(--text2)">#${p.numero}</span>
-          ${p.tipo!=="Normal"?`<span class="bdg ${p.tipo==="Polla"?"bgold":"bgray"}">${p.tipo==="Polla"?"⭐":"×2"} ${p.tipo}</span>`:`<span class="bdg bgray">NORMAL</span>`}
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:10px;font-weight:600;color:var(--text3)">#${p.numero}</span>
+          ${p.tipo!=="Normal"?`<span class="bdg ${p.tipo==="Polla"?"bgold":"bpurple"}">${p.tipo==="Polla"?"⭐":"×2"} ${p.tipo}</span>`:`<span class="bdg bgray">Normal</span>`}
+          ${p.esToleTole?`<span class="bdg btole">🔥 TOLE</span>`:""}
           ${p.estado==="En Vivo"?`<span class="bdg blive">● VIVO</span>`:""}
         </div>
-        <div style="display:flex;align-items:center;gap:6px">
+        <div style="display:flex;align-items:center;gap:5px">
           ${sel?`<span class="cb ${cr===3?"ok":cr>0?"warn":"ag"}">🔄 ${cr}</span>`:""}
-          ${sel?`<span class="rb${re?" ap":""}" onclick="openReg('${p.id}')">⭐ ${re?re.codigo:"REGLA"}</span>`:""}
+          ${sel?`<span class="rb${re?" ap":""}" onclick="openReg('${p.id}')">⭐ ${re?re.codigo:"Regla"}</span>`:""}
         </div>
       </div>
       <div class="pteams">
@@ -555,191 +502,57 @@ function rParts(parts,ctx,puede){
         <span class="pt r">${p.visita}</span>
       </div>
       ${!bloq?`<div class="lev">${["L","E","V"].map(v=>{const pc=v==="L"?p.pct?.pctL:v==="E"?p.pct?.pctE:p.pct?.pctV;return`<button class="lb2 ${v}${sel===v?" sel":""}" onclick="gP('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')"><span class="ll">${v}</span><span class="lp">${pc||"?"}%</span></button>`;}).join("")}</div>`
-      :sel?`<div style="padding:9px 12px;background:rgba(255,255,255,.04);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;color:var(--text2)">${re?"🔒 Regla":cr===0?"🚫 Sin cambios":"Tu pronóstico"}</span>
-        <span style="font-family:var(--fd);font-size:24px;font-weight:900;color:${sel==="L"?"var(--L)":sel==="E"?"var(--E)":"var(--V)"}">${sel}</span></div>`
-      :`<div style="padding:9px 12px;background:rgba(255,255,255,.03);border-radius:8px;text-align:center;font-size:12px;color:var(--text3)">Sin pronóstico</div>`}
+      :sel?`<div style="padding:8px 10px;background:var(--bg);border-radius:var(--rs);display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:var(--text2)">${re?"🔒 Regla aplicada":cr===0?"Sin cambios":"Tu pronóstico"}</span><span style="font-family:var(--fd);font-size:22px;font-weight:900;color:${sel==="L"?"var(--L)":sel==="E"?"var(--E)":"var(--V)"}">${sel}</span></div>`
+      :`<div style="padding:8px 10px;background:var(--bg);border-radius:var(--rs);text-align:center;font-size:11px;color:var(--text3)">Sin pronóstico</div>`}
       <div class="pbar"><div class="pl" style="width:${p.pct?.pctL||33}%"></div><div class="pe" style="width:${p.pct?.pctE||34}%"></div><div class="pv" style="width:${p.pct?.pctV||33}%"></div></div>
     </div>`;
   }).join("");
   const jf=document.getElementById("jf");
-  if(jf&&puede)jf.innerHTML=`<button class="btn btn-p btn-lg" onclick="ag()">💾 GUARDAR PRONÓSTICOS</button>`;
+  if(jf&&puede)jf.innerHTML=`<button class="btn btn-p btn-lg" onclick="ag()">💾 Guardar pronósticos</button>`;
 }
-window.gP=async(pid,v,fid,poid)=>{
-  const prev=window._pr[pid]?{...window._pr[pid]}:null;
-  if(!window._pr[pid])window._pr[pid]={v,cr:3,reg:false};
-  else{window._pr[pid].v=v;window._pr[pid].cr=Math.max(0,(prev?.cr||3)-1);}
-  rParts(window._pa,window._ct,true);
-  const r=await api("guardarPronostico",{fechaId:fid,pozoId:poid,partidoId:pid,pronostico:v});
-  if(!r.ok){toast("❌ "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];rParts(window._pa,window._ct,true);return;}
-  if(r.cambiosRestantes!==undefined){window._pr[pid].cr=r.cambiosRestantes;rParts(window._pa,window._ct,true);}
-  if(r.mensaje&&r.cambio)toast(r.mensaje);
-};
-window.ag=async()=>{
-  const ps=Object.entries(window._pr).map(([id,p])=>({partidoId:id,pronostico:p.v}));
-  const r=await api("autoguardar",{fechaId:window._ct.fechaId,pozoId:window._ct.pozoId,pronos:ps});
-  toast(r.ok?`✅ ${r.guardados} guardados`:"❌ "+r.error);
-};
-window.openReg=async(pid)=>{
-  const re=window._re[pid];if(re){toast(`🔒 "${re.nombre}" — definitiva`);return;}
-  const r=await api("getReglasDisponibles",{fechaId:window._ct.fechaId,pozoId:window._ct.pozoId,partidoId:pid});
-  if(!r.ok){toast("❌ "+r.error);return;}
-  const m=document.createElement("div");m.className="mo";m.onclick=e=>{if(e.target===m)m.remove();};
-  m.innerHTML=`<div class="mb">
-    <div class="mh2">
-      <div><div class="mt2">REGLAS ESPECIALES</div>
-      <p style="font-size:12px;color:var(--text2);margin-top:3px">Pronóstico: <strong style="color:${r.pronosticoActual==="L"?"var(--L)":r.pronosticoActual==="E"?"var(--E)":"var(--V)"}">${r.pronosticoActual}</strong></p></div>
-      <div class="mc2" onclick="this.closest('.mo').remove()">×</div>
-    </div>
-    <div style="background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.15);border-radius:8px;padding:10px 13px;margin-bottom:14px;font-size:12px;color:var(--gold)">
-      ⚠️ Las reglas son <strong>definitivas</strong>. No se pueden cambiar.
-    </div>
-    ${r.disponibles.map(x=>`
-      <div class="ro" onclick="apReg('${pid}','${x.codigo}')">
-        <div class="roh"><span class="rnm">${x.nombre}</span><span class="rpt">${x.pts}</span></div>
-        <p class="rds">${x.desc}</p>
-        ${x.codigo==="MK"?`<input class="inp" id="mk-${pid}" placeholder="Resultado exacto (ej: 2-1)" style="margin-top:8px;font-size:13px" onclick="event.stopPropagation()"/>`:""}
-      </div>`).join("")}
-    ${!r.disponibles.length?`<div class="es" style="padding:28px"><div class="ic">🚫</div><p>Sin reglas para pronóstico ${r.pronosticoActual}</p></div>`:""}
-  </div>`;
-  document.body.appendChild(m);
-};
-window.apReg=async(pid,cod)=>{
-  let det="";if(cod==="MK"){det=document.getElementById("mk-"+pid)?.value||"";if(!det){toast("Ingresá resultado exacto");return;}}
-  document.querySelector(".mo")?.remove();toast("Aplicando...");
-  const r=await api("guardarRegla",{fechaId:window._ct.fechaId,pozoId:window._ct.pozoId,partidoId:pid,codigoRegla:cod,detalle:det});
-  if(!r.ok){toast("❌ "+r.error);return;}
-  window._re[pid]={codigo:cod,nombre:r.regla?.nombre};
-  if(window._pr[pid])window._pr[pid].reg=true;
-  rParts(window._pa,window._ct,true);toast("✅ "+r.mensaje);
-};
+window.gP=async(pid,v,fid,poid)=>{const prev=window._pr[pid]?{...window._pr[pid]}:null;if(!window._pr[pid])window._pr[pid]={v,cr:3,reg:false};else{window._pr[pid].v=v;window._pr[pid].cr=Math.max(0,(prev?.cr||3)-1);}rParts(window._pa,window._ct,true);const r=await api("guardarPronostico",{fechaId:fid,pozoId:poid,partidoId:pid,pronostico:v});if(!r.ok){toast("❌ "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];rParts(window._pa,window._ct,true);return;}if(r.cambiosRestantes!==undefined){window._pr[pid].cr=r.cambiosRestantes;rParts(window._pa,window._ct,true);}if(r.mensaje&&r.cambio)toast(r.mensaje);};
+window.ag=async()=>{const ps=Object.entries(window._pr).map(([id,p])=>({partidoId:id,pronostico:p.v}));const r=await api("autoguardar",{fechaId:window._ct.fechaId,pozoId:window._ct.pozoId,pronos:ps});toast(r.ok?`✅ ${r.guardados} guardados`:"❌ "+r.error);};
+window.openReg=async(pid)=>{const re=window._re[pid];if(re){toast(`🔒 "${re.nombre}" — definitiva`);return;}const r=await api("getReglasDisponibles",{fechaId:window._ct.fechaId,pozoId:window._ct.pozoId,partidoId:pid});if(!r.ok){toast("❌ "+r.error);return;}const m=document.createElement("div");m.className="mo";m.onclick=e=>{if(e.target===m)m.remove();};m.innerHTML=`<div class="mb"><div class="mh2"><div><div class="mt2">Reglas especiales</div><p style="font-size:11px;color:var(--text2);margin-top:2px">Pronóstico: <strong style="color:${r.pronosticoActual==="L"?"var(--L)":r.pronosticoActual==="E"?"var(--E)":"var(--V)"}">${r.pronosticoActual}</strong></p></div><div class="mc2" onclick="this.closest('.mo').remove()">×</div></div><div style="background:#FFF8E1;border:1px solid #FFE082;border-radius:var(--rs);padding:8px 11px;margin-bottom:12px;font-size:11px;color:#E65100">⚠️ Las reglas son definitivas. No se pueden cambiar.</div>${r.disponibles.map(x=>`<div class="ro" onclick="apReg('${pid}','${x.codigo}')"><div class="roh"><span class="rnm">${x.nombre}</span><span class="rpt">+${x.pts}pts</span></div><p class="rds">${x.desc}</p>${x.codigo==="MK"?`<input class="inp" id="mk-${pid}" placeholder="Resultado exacto (ej: 2-1)" style="margin-top:7px;font-size:13px" onclick="event.stopPropagation()"/>`:""}`,`</div>`).join("")}${!r.disponibles.length?`<div class="es" style="padding:24px"><p>Sin reglas para pronóstico ${r.pronosticoActual}</p></div>`:""}</div>`;document.body.appendChild(m);};
+window.apReg=async(pid,cod)=>{let det="";if(cod==="MK"){det=document.getElementById("mk-"+pid)?.value||"";if(!det){toast("Ingresá resultado exacto");return;}}document.querySelector(".mo")?.remove();toast("Aplicando...");const r=await api("guardarRegla",{fechaId:window._ct.fechaId,pozoId:window._ct.pozoId,partidoId:pid,codigoRegla:cod,detalle:det});if(!r.ok){toast("❌ "+r.error);return;}window._re[pid]={codigo:cod,nombre:r.regla?.nombre};if(window._pr[pid])window._pr[pid].reg=true;rParts(window._pa,window._ct,true);toast("✅ "+r.mensaje);};
 
-/* ── TABLA ── */
-function rTabla(ctx){return`<div class="fu"><div class="ph"><h2>TABLA</h2><p>Posiciones</p></div><div id="tc"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+function rTabla(ctx){return`<div class="fu"><div class="ph"><h2>TABLA</h2></div><div id="tc"><div class="sw"><div class="spinner"></div></div></div></div>`;}
 async function lTabla(ctx){
   if(!ctx.fechaId||!ctx.pozoId){const e=document.getElementById("tc");if(e)e.innerHTML=`<div class="es"><div class="ic">🏆</div><p>Seleccioná una fecha para ver la tabla</p></div>`;return;}
-  const r=await api("getTabla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId}),el=document.getElementById("tc");
-  if(!el)return;if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}
-  const t=r.tabla||[],md=["🥇","🥈","🥉"];
-  const po=t.slice(0,3);
-  el.innerHTML=`
-    <p style="font-size:11px;color:var(--text2);margin-bottom:14px">Último partido calculado: #${r.ultimoPartidoCalculado||0} de ${r.totalPartidos}</p>
-    ${po.length>=3?`<div class="podio">${[po[1],po[0],po[2]].map((u,i)=>{const ri=i===0?1:i===1?0:2;return`<div class="pi${ri===0?" first":""}"><div class="med">${md[ri]}</div><div class="pn">${u.siglas}</div><div class="pb"><div class="ppts">${u.ptsTotal}</div><div style="font-size:9px;color:var(--text2)">pts</div></div></div>`;}).join("")}</div>`:""}
-    <div>${t.map((u,i)=>`<div class="tr${u.userId===App.user?.id?" me":""}">
-      <span class="tpos" style="color:${i===0?"var(--gold)":i===1?"#C0C0C0":i===2?"#CD7F32":"var(--text2)"}">${i<3?md[i]:u.posicion}</span>
-      <span class="tnm">${u.siglas}${u.userId===App.user?.id?` <span style="font-size:11px;color:var(--text2);font-weight:400">(vos)</span>`:""}</span>
-      <div><span class="tpts" style="color:${u.userId===App.user?.id?"var(--accent)":"var(--text)"}">${u.ptsTotal}</span><span style="font-size:11px;color:var(--text2);margin-left:3px">pts</span></div>
-    </div>`).join("")}</div>`;
+  const r=await api("getTabla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId}),el=document.getElementById("tc");if(!el)return;if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}
+  const t=r.tabla||[],md=["🥇","🥈","🥉"],po=t.slice(0,3);
+  el.innerHTML=`<p style="font-size:11px;color:var(--text3);margin-bottom:12px">Último calculado: #${r.ultimoPartidoCalculado||0} de ${r.totalPartidos}</p>
+  ${po.length>=3?`<div class="podio">${[po[1],po[0],po[2]].map((u,i)=>{const ri=i===0?1:i===1?0:2;return`<div class="pi${ri===0?" first":""}"><div class="med">${md[ri]}</div><div class="pn">${u.siglas}</div><div class="pb2"><div class="ppts">${u.ptsTotal}</div><div style="font-size:9px;color:var(--text3)">pts</div></div></div>`;}).join("")}</div>`:""}
+  <div>${t.map((u,i)=>`<div class="tr${u.userId===App.user?.id?" me":""}"><span class="tpos" style="color:${i===0?"#DAA520":i===1?"#888":i===2?"#CD7F32":"var(--text3)"}">${i<3?md[i]:u.posicion}</span><span class="tnm">${u.siglas}${u.userId===App.user?.id?` <span style="font-size:10px;color:var(--text3)">(vos)</span>`:""}</span><div><span class="tpts" style="color:${u.userId===App.user?.id?"var(--accent)":"var(--text)"}">${u.ptsTotal}</span><span style="font-size:10px;color:var(--text3);margin-left:2px">pts</span></div></div>`).join("")}</div>`;
 }
 
-/* ── GRILLA ── */
-function rGrilla(ctx){return`<div class="fu"><div class="ph"><h2>LOS OTROS</h2><p>Pronósticos de todos</p></div><div id="gc"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+function rGrilla(ctx){return`<div class="fu"><div class="ph"><h2>LOS OTROS</h2></div><div id="gc"><div class="sw"><div class="spinner"></div></div></div></div>`;}
 async function lGrilla(ctx){
   if(!ctx.fechaId||!ctx.pozoId){const e=document.getElementById("gc");if(e)e.innerHTML=`<div class="es"><div class="ic">🔒</div><p>La grilla se habilita cuando cierra la fecha</p></div>`;return;}
-  const r=await api("getGrilla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId}),el=document.getElementById("gc");
-  if(!el)return;if(!r.ok){el.innerHTML=`<div class="es"><div class="ic">🔒</div><p>${r.error}</p></div>`;return;}
+  const r=await api("getGrilla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId}),el=document.getElementById("gc");if(!el)return;if(!r.ok){el.innerHTML=`<div class="es"><div class="ic">🔒</div><p>${r.error}</p></div>`;return;}
   const pts=r.partidos||[],js=r.jugadores||[];
-  el.innerHTML=`<div class="gw"><table class="gt">
-    <thead><tr>
-      <th style="text-align:left;padding-left:8px">JUGADOR</th>
-      ${pts.map(p=>`<th title="${p.local} vs ${p.visita}">#${p.numero}<br><span style="color:${p.tipo==="Polla"?"var(--gold)":p.tipo==="Doble"?"var(--purple)":"var(--text3)"}">${p.tipo[0]}</span></th>`).join("")}
-      <th>PTS</th>
-    </tr></thead>
-    <tbody>${js.map(j=>`<tr>
-      <td class="uc${j.esTuFecha?" me":""}">${j.siglas}${j.esTuFecha?" 👈":""}</td>
-      ${j.pronosticos.map(pr=>{const v=pr.pronostico,ok=pr.acertado===true;return`<td>${v?`<div style="position:relative;display:inline-block"><span class="pc2 ${v}${ok?" ok":""}">${v}</span>${pr.hizoCambios?`<span class="cd"></span>`:""}${pr.tieneRegla?`<span style="position:absolute;top:-4px;right:-4px;font-size:8px">⭐</span>`:""}</div>`:`<span style="color:var(--text3);font-size:10px">—</span>`}</td>`;}).join("")}
-      <td style="font-family:var(--fd);font-size:16px;font-weight:800;color:${j.esTuFecha?"var(--accent)":"var(--text)"}">${j.puntosAcumulados}</td>
-    </tr>`).join("")}</tbody>
-  </table></div>
-  <div style="margin-top:10px;font-size:11px;color:var(--text2);display:flex;gap:14px;flex-wrap:wrap"><span>⭐ Regla</span><span><span class="cd"></span> Cambio</span></div>`;
+  el.innerHTML=`<div class="gw"><table class="gt"><thead><tr><th style="text-align:left;padding-left:10px">Jugador</th>${pts.map(p=>`<th title="${p.local} vs ${p.visita}">#${p.numero}</th>`).join("")}<th>Pts</th></tr></thead><tbody>${js.map(j=>`<tr><td class="uc${j.esTuFecha?" me":""}">${j.siglas}${j.esTuFecha?" 👈":""}</td>${j.pronosticos.map(pr=>{const v=pr.pronostico,ok=pr.acertado===true;return`<td>${v?`<span class="pc2 ${v}${ok?" ok":""}">${v}</span>`:"-"}</td>`;}).join("")}<td style="font-family:var(--fd);font-size:15px;font-weight:700;color:${j.esTuFecha?"var(--accent)":"var(--text)"}">${j.puntosAcumulados}</td></tr>`).join("")}</tbody></table></div>`;
 }
 
-/* ── STATS ── */
 window._sd=null;
-function rStats(){return`<div class="fu"><div class="ph"><h2>HALL OF FAME</h2></div><div style="display:flex;gap:4px;background:rgba(255,255,255,.04);border-radius:var(--rs);padding:4px;margin-bottom:16px"><div style="flex:1;padding:8px;text-align:center;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;background:var(--card2);color:var(--text)" onclick="stab('fechas',this)">Por fechas</div><div style="flex:1;padding:8px;text-align:center;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;color:var(--text2)" onclick="stab('dinero',this)">Por dinero</div></div><div id="sc"><div class="sw"><div class="spinner"></div></div></div></div>`;}
-window.stab=(t,el)=>{document.querySelectorAll("[onclick*=stab]").forEach(x=>{x.style.background="";x.style.color="var(--text2)"});el.style.background="var(--card2)";el.style.color="var(--text)";if(window._sd)rSD(window._sd,t);};
+function rStats(){return`<div class="fu"><div class="ph"><h2>HALL OF FAME</h2></div><div style="display:flex;background:var(--bg);border-radius:var(--rs);padding:3px;margin-bottom:14px;gap:3px"><div style="flex:1;padding:7px;text-align:center;font-size:12px;font-weight:500;border-radius:4px;cursor:pointer;background:white;color:var(--accent)" onclick="stab('fechas',this)">Por fechas</div><div style="flex:1;padding:7px;text-align:center;font-size:12px;font-weight:500;border-radius:4px;cursor:pointer;color:var(--text2)" onclick="stab('dinero',this)">Por dinero</div></div><div id="sc"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+window.stab=(t,el)=>{document.querySelectorAll("[onclick*=stab]").forEach(x=>{x.style.background="";x.style.color="var(--text2)"});el.style.background="white";el.style.color="var(--accent)";if(window._sd)rSD(window._sd,t);};
 async function lStats(){const r=await api("getEstadisticas"),el=document.getElementById("sc");if(!el)return;if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}window._sd=r;rSD(r,"fechas");}
-function rSD(r,t){
-  const el=document.getElementById("sc");if(!el)return;
-  const d=t==="fechas"?r.porFechas:r.porDinero;
-  if(!d?.length){el.innerHTML=`<div class="es"><div class="ic">🏆</div><p>Sin ganadores aún</p></div>`;return;}
-  el.innerHTML=d.map(g=>`<div class="gc"><div class="gav">${g.avatar||"👤"}</div><div style="flex:1"><div class="gn">${g.siglas} <span style="font-size:12px;color:var(--text2);font-weight:400">${g.nombre}</span></div><div class="gm">🏆 ${g.fechasGanadas} fecha${g.fechasGanadas!==1?"s":""} ganada${g.fechasGanadas!==1?"s":""}</div></div><div class="gmo">$${g.dineroTotal.toLocaleString("es-AR")}</div></div>`).join("");
-}
+function rSD(r,t){const el=document.getElementById("sc");if(!el)return;const d=t==="fechas"?r.porFechas:r.porDinero;if(!d?.length){el.innerHTML=`<div class="es"><div class="ic">🏆</div><p>Sin ganadores aún</p></div>`;return;}el.innerHTML=d.map(g=>`<div class="gc"><div class="gav">${g.avatar||"👤"}</div><div style="flex:1"><div class="gn">${g.siglas} <span style="font-size:11px;color:var(--text2)">${g.nombre}</span></div><div class="gm">🏆 ${g.fechasGanadas} fecha${g.fechasGanadas!==1?"s":""}</div></div><div class="gmo">$${g.dineroTotal.toLocaleString("es-AR")}</div></div>`).join("");}
 
-/* ── PERFIL ── */
-function rPerfil(){
-  const u=App.user||{};
-  return`<div class="fu">
-    <div class="card" style="margin-bottom:14px">
-      <div class="paw"><div class="pab">${u.avatar||"👤"}</div><div class="pu">${u.usuario||""}</div><div class="pnm">${u.nombre||""}</div>
-      ${u.cupones>0?`<span class="bdg bgold" style="margin-top:8px">🎟 ${u.cupones} cupón${u.cupones!==1?"es":""}</span>`:""}</div>
-      <div class="si"><span class="k">Alias MP</span><span class="v">${u.alias||`<span style="color:var(--red)">Sin alias</span>`}</span></div>
-      <div class="si"><span class="k">Teléfono</span><span class="v">${u.telefono||"—"}</span></div>
-      <div class="si"><span class="k">Email</span><span class="v">${u.email||"—"}</span></div>
-      <div class="si"><span class="k">Rol</span><span class="v">${u.rol||"Jugador"}</span></div>
-    </div>
-    <div class="card" style="margin-bottom:14px">
-      <p style="font-family:var(--fd);font-size:13px;font-weight:800;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;margin-bottom:14px">CONFIGURACIÓN</p>
-      <div class="si"><span class="k">Notificaciones PUSH</span><div class="tgl${u.push?" on":""}" onclick="this.classList.toggle('on');api('editarPerfil',{pushActivo:this.classList.contains('on')})"></div></div>
-      <div class="si"><span class="k">Auto-login biométrico</span><div class="tgl${u.biometrico?" on":""}" onclick="this.classList.toggle('on');api('editarPerfil',{biometrico:this.classList.contains('on')})"></div></div>
-    </div>
-    <div class="card" style="margin-bottom:14px">
-      <p style="font-family:var(--fd);font-size:13px;font-weight:800;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;margin-bottom:14px">EDITAR PERFIL</p>
-      <div class="fg">
-        <div class="ig"><label class="il">ALIAS MERCADOPAGO</label><input class="inp" id="pal" value="${u.alias||""}" placeholder="tu.alias.mp"/></div>
-        <div class="ig"><label class="il">EMAIL</label><input class="inp" id="pem" type="email" value="${u.email||""}" placeholder="tu@email.com"/></div>
-        <button class="btn btn-s" onclick="sP()">Guardar cambios</button>
-      </div>
-    </div>
-    <button class="btn btn-d" style="width:100%" onclick="if(confirm('¿Cerrar sesión?'))logout()">⎋ Cerrar sesión</button>
-  </div>`;
-}
-window.sP=async()=>{const r=await api("editarPerfil",{alias:document.getElementById("pal")?.value,email:document.getElementById("pem")?.value});toast(r.ok?"✅ Guardado":"❌ "+r.error);if(r.ok&&App.user){App.user.alias=document.getElementById("pal")?.value;localStorage.setItem(UK,JSON.stringify(App.user));}};
+function rPerfil(){const u=App.user||{};return`<div class="fu"><div class="card" style="margin-bottom:12px"><div class="paw"><div class="pab">${u.avatar||"👤"}</div><div class="pu">${u.usuario||""}</div><div class="pnm">${u.nombre||""}</div>${u.cupones>0?`<span class="bdg bgold" style="margin-top:7px">🎟 ${u.cupones} cupón${u.cupones!==1?"es":""}</span>`:""}</div><div class="si"><span class="k">Alias MP</span><span class="v">${u.alias||`<span style="color:var(--red)">Sin alias</span>`}</span></div><div class="si"><span class="k">Teléfono</span><span class="v">${u.telefono||"—"}</span></div><div class="si"><span class="k">Email</span><span class="v">${u.email||"—"}</span></div><div class="si"><span class="k">Rol</span><span class="v">${u.rol||"Jugador"}</span></div></div><div class="card" style="margin-bottom:12px"><p style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px">Configuración</p><div class="si"><span class="k">Notificaciones PUSH</span><div class="tgl${u.push?" on":""}" onclick="this.classList.toggle('on');api('editarPerfil',{pushActivo:this.classList.contains('on')})"></div></div></div><div class="card" style="margin-bottom:12px"><p style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px">Editar perfil</p><div class="fg"><div class="ig"><label class="il">Alias MercadoPago</label><input class="inp" id="pal" value="${u.alias||""}" placeholder="tu.alias.mp"/></div><div class="ig"><label class="il">Email</label><input class="inp" id="pem" type="email" value="${u.email||""}" placeholder="tu@email.com"/></div><button class="btn btn-s" onclick="sP()">Guardar cambios</button></div></div><button class="btn btn-d" style="width:100%" onclick="if(confirm('¿Cerrar sesión?'))logout()">⎋ Cerrar sesión</button></div>`;};
+window.sP=async()=>{const r=await api("editarPerfil",{alias:document.getElementById("pal")?.value,email:document.getElementById("pem")?.value});toast(r.ok?"✅ Guardado":"❌ "+r.error);};
 
-/* ── ADMIN DASH ── */
-function rAdminDash(){return`<div class="fu"><div class="ph"><h2>DASHBOARD</h2></div><div class="g4" id="ads"><div class="sw"><div class="spinner"></div></div></div><p class="st" style="margin-top:22px">ACCIONES RÁPIDAS</p><button class="aab" onclick="go('admin-fechas')"><div><div class="t">📅 Gestión de Fechas</div><div class="d">Crear fechas, partidos, cerrar</div></div><span style="font-size:20px;color:var(--text2)">›</span></button><button class="aab" onclick="go('admin-res')"><div><div class="t">⚽ Ingresar Resultados</div><div class="d">Cargar resultados de partidos</div></div><span style="font-size:20px;color:var(--text2)">›</span></button><button class="aab" onclick="go('admin-users')"><div><div class="t">👥 Gestión de Jugadores</div><div class="d">Ver, activar y suspender</div></div><span style="font-size:20px;color:var(--text2)">›</span></button></div>`;}
-async function lAdminDash(){
-  const r=await api("getFechas"),el=document.getElementById("ads");if(!el)return;
-  const ab=r.fechas?.filter(f=>f.estado==="Abierta").length||0;
-  el.innerHTML=[{v:r.fechas?.length||0,l:"Fechas",i:"📅",c:"var(--blue)"},{v:ab,l:"Abiertas",i:"🟢",c:"var(--accent)"},{v:"—",l:"Jugadores",i:"👥",c:"var(--purple)"},{v:"—",l:"Recaudado",i:"💰",c:"var(--gold)"}]
-    .map(s=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;text-align:center"><div style="font-size:26px;margin-bottom:6px">${s.i}</div><div style="font-family:var(--fd);font-size:32px;font-weight:900;color:${s.c};line-height:1">${s.v}</div><div style="font-size:11px;color:var(--text2);margin-top:4px">${s.l}</div></div>`).join("");
-}
+function rAdminDash(){return`<div class="fu"><div class="ph"><h2>DASHBOARD</h2></div><div class="g4" id="ads"><div class="sw"><div class="spinner"></div></div></div><p class="st" style="margin-top:18px">Acciones rápidas</p><button class="aab" onclick="go('admin-fechas')"><div><div class="t">📅 Gestión de Fechas</div><div class="d">Crear y gestionar fechas</div></div><span style="color:var(--accent)">›</span></button><button class="aab" onclick="go('admin-importar')"><div><div class="t">🔗 Importar desde API</div><div class="d">Traer partidos de API-Football</div></div><span style="color:var(--accent)">›</span></button><button class="aab" onclick="go('admin-users')"><div><div class="t">👥 Jugadores</div><div class="d">Ver, activar y suspender</div></div><span style="color:var(--accent)">›</span></button></div>`;}
+async function lAdminDash(){const r=await api("getFechas"),el=document.getElementById("ads");if(!el)return;const ab=r.fechas?.filter(f=>f.estado==="Abierta").length||0;el.innerHTML=[{v:r.fechas?.length||0,l:"Fechas",i:"📅",c:"var(--accent)"},{v:ab,l:"Abiertas",i:"🟢",c:"var(--accent)"},{v:"—",l:"Jugadores",i:"👥",c:"var(--blue)"},{v:"—",l:"Recaudado",i:"💰",c:"var(--gold)"}].map(s=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center"><div style="font-size:22px;margin-bottom:5px">${s.i}</div><div style="font-family:var(--fd);font-size:28px;font-weight:900;color:${s.c};line-height:1">${s.v}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">${s.l}</div></div>`).join("");}
 
-/* ── ADMIN FECHAS ── */
-function rAdminFechas(){return`<div class="fu"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px"><div class="ph" style="margin-bottom:0"><h2>FECHAS</h2></div><button class="btn btn-p" onclick="showCF()">+ NUEVA</button></div><div id="afl"><div class="sw"><div class="spinner"></div></div></div></div>`;}
-async function lAdminFechas(){
-  const r=await api("getFechas"),el=document.getElementById("afl");if(!el)return;
-  if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}
-  el.innerHTML=(r.fechas||[]).map(f=>`
-    <div class="card csm" style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-        <div><div style="font-family:var(--fd);font-size:18px;font-weight:800">${f.nombre}</div><div style="font-size:12px;color:var(--text2)">⚽ ${f.cantPartidos} partidos · ${f.liga}</div></div>
-        <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgray"}">${f.estado}</span>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-s" style="padding:6px 11px;font-size:12px" onclick="go('admin-res',{fechaId:'${f.id}'})">Ver partidos</button>
-        ${f.estado==="Abierta"?`<button class="btn btn-s" style="padding:6px 11px;font-size:12px" onclick="cF('${f.id}')">🔒 Cerrar</button>`:""}
-        ${f.estado==="Cerrada"?`<button class="btn btn-s" style="padding:6px 11px;font-size:12px" onclick="calc('${f.id}')">🏆 Calcular</button>`:""}
-      </div>
-    </div>`).join("")||`<div class="es"><div class="ic">📅</div><p>Sin fechas</p></div>`;
-}
-window.showCF=()=>{
-  const m=document.createElement("div");m.className="mo";m.onclick=e=>{if(e.target===m)m.remove();};
-  m.innerHTML=`<div class="mb"><div class="mh2"><div class="mt2">NUEVA FECHA</div><div class="mc2" onclick="this.closest('.mo').remove()">×</div></div>
-  <div class="fg">
-    <div class="ig"><label class="il">NOMBRE</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div>
-    <div class="ig"><label class="il">LIGA</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div>
-    <div class="ig"><label class="il">PLAZO LÍMITE</label><input class="inp" id="nfp" type="datetime-local"/></div>
-    <div class="ig"><label class="il">DESCRIPCIÓN</label><input class="inp" id="nfd" placeholder="Opcional"/></div>
-    <button class="btn btn-p btn-lg" onclick="crF()">CREAR FECHA</button>
-  </div></div>`;
-  document.body.appendChild(m);
-};
+function rAdminFechas(){return`<div class="fu"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div class="ph" style="margin-bottom:0"><h2>FECHAS</h2></div><button class="btn btn-p" onclick="showCF()">+ Nueva fecha</button></div><div id="afl"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+async function lAdminFechas(){const r=await api("getFechas"),el=document.getElementById("afl");if(!el)return;if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}el.innerHTML=(r.fechas||[]).map(f=>`<div class="card csm" style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div><div style="font-size:15px;font-weight:600;color:var(--text)">${f.nombre}</div><div style="font-size:11px;color:var(--text3)">⚽ ${f.cantPartidos} partidos · ${f.liga}</div></div><span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgray"}">${f.estado}</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-s" style="padding:5px 10px;font-size:11px" onclick="go('admin-importar',{fechaId:'${f.id}'})">🔗 Importar</button><button class="btn btn-s" style="padding:5px 10px;font-size:11px" onclick="go('admin-res',{fechaId:'${f.id}'})">⚽ Resultados</button>${f.estado==="Abierta"?`<button class="btn btn-s" style="padding:5px 10px;font-size:11px" onclick="cF('${f.id}')">🔒 Cerrar</button>`:""}${f.estado==="Cerrada"?`<button class="btn btn-s" style="padding:5px 10px;font-size:11px" onclick="calc('${f.id}')">🏆 Calcular</button>`:""}</div></div>`).join("")||`<div class="es"><div class="ic">📅</div><p>Sin fechas</p></div>`;}
+window.showCF=()=>{const m=document.createElement("div");m.className="mo";m.onclick=e=>{if(e.target===m)m.remove();};m.innerHTML=`<div class="mb"><div class="mh2"><div class="mt2">Nueva fecha</div><div class="mc2" onclick="this.closest('.mo').remove()">×</div></div><div class="fg"><div class="ig"><label class="il">Nombre</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div><div class="ig"><label class="il">Liga</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div><div class="ig"><label class="il">Plazo límite</label><input class="inp" id="nfp" type="datetime-local"/></div><div class="ig"><label class="il">Descripción</label><input class="inp" id="nfd" placeholder="Opcional"/></div><button class="btn btn-p btn-lg" onclick="crF()">Crear fecha</button></div></div>`;document.body.appendChild(m);};
 window.crF=async()=>{const r=await api("adminCrearFecha",{nombre:document.getElementById("nfn")?.value,liga:document.getElementById("nfl")?.value,plazoLimite:document.getElementById("nfp")?.value,descripcion:document.getElementById("nfd")?.value});document.querySelector(".mo")?.remove();if(r.ok){toast("✅ Fecha creada");lAdminFechas();}else toast("❌ "+r.error);};
 window.cF=async id=>{if(!confirm("¿Cerrar esta fecha?"))return;const r=await api("adminCerrarFecha",{fechaId:id});toast(r.ok?"✅ Cerrada":"❌ "+r.error);if(r.ok)lAdminFechas();};
-window.calc=async id=>{if(!confirm("¿Calcular puntajes y ganadores?"))return;toast("Calculando...");const r=await api("adminCerrarYCalcular",{fechaId:id});toast(r.ok?"✅ "+r.mensaje:"❌ "+r.error);};
+window.calc=async id=>{if(!confirm("¿Calcular puntajes?"))return;toast("Calculando...");const r=await api("adminCerrarYCalcular",{fechaId:id});toast(r.ok?"✅ "+r.mensaje:"❌ "+r.error);};
 
-/* ── ADMIN RESULTADOS ── */
+/* RESULTADOS — compacto */
 function rAdminRes(){return`<div class="fu"><div class="ph"><h2>RESULTADOS</h2><p>Ingresar resultados de partidos</p></div><div id="arf"><div class="sw"><div class="spinner"></div></div></div></div>`;}
 async function lAdminRes(ctx){
   const rf=await api("getFechas"),el=document.getElementById("arf");if(!el)return;
@@ -747,401 +560,96 @@ async function lAdminRes(ctx){
   const sf=ctx?.fechaId||fs[0]?.id;
   if(!sf){el.innerHTML=`<div class="es"><div class="ic">📅</div><p>Sin fechas disponibles</p></div>`;return;}
   const rp=await api("getFecha",{fechaId:sf});if(!rp.ok){el.innerHTML=`<div class="err">${rp.error}</div>`;return;}
-  el.innerHTML=`<div class="ig" style="margin-bottom:16px"><label class="il">FECHA</label>
+  el.innerHTML=`<div class="ig" style="margin-bottom:14px"><label class="il">Fecha</label>
     <select class="inp" onchange="lAR({fechaId:this.value})">${fs.map(f=>`<option value="${f.id}"${f.id===sf?" selected":""}>${f.nombre}</option>`).join("")}</select></div>
-    ${rp.partidos.map(p=>`<div class="card csm" style="margin-bottom:10px">
-      <div style="margin-bottom:12px">
-        <div style="font-family:var(--fd);font-size:17px;font-weight:800">#${p.numero} ${p.local} vs ${p.visita}</div>
-        <div style="display:flex;gap:8px;margin-top:4px">${p.tipo!=="Normal"?`<span class="bdg ${p.tipo==="Polla"?"bgold":"bgray"}">${p.tipo}</span>`:""}<span class="bdg ${p.estado==="Finalizado"?"bg":p.estado==="En Vivo"?"blive":"bgray"}">${p.estado}</span></div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:flex-end">
-        <div style="flex:1"><div style="font-size:10px;color:var(--text2);margin-bottom:4px">${p.local}</div><input class="si2" id="gL-${p.id}" type="number" min="0" max="20" value="${p.golesLocal??""}" placeholder="0"/></div>
-        <div style="font-family:var(--fd);font-size:26px;font-weight:900;color:var(--text2);padding-bottom:13px">-</div>
-        <div style="flex:1"><div style="font-size:10px;color:var(--text2);margin-bottom:4px">${p.visita}</div><input class="si2" id="gV-${p.id}" type="number" min="0" max="20" value="${p.golesVisita??""}" placeholder="0"/></div>
-        <div><div style="font-size:10px;color:var(--text2);margin-bottom:4px">🟥</div><input class="si2" id="tr-${p.id}" type="number" min="0" max="10" value="${p.tarjetasRojas||0}" style="width:50px"/></div>
-        <button class="btn btn-p" style="padding:13px 13px;align-self:flex-end" onclick="gR('${p.id}','${sf}')">${p.estado==="Finalizado"?"✓":"▶"}</button>
-      </div>
-    </div>`).join("")}`;
-}
-window.lAR=ctx=>lAdminRes(ctx);
-window.gR=async(pid,fid)=>{const gL=document.getElementById("gL-"+pid)?.value,gV=document.getElementById("gV-"+pid)?.value,tr=document.getElementById("tr-"+pid)?.value;if(gL===""||gV===""){toast("Ingresá ambos goles");return;}toast("Guardando...");const r=await api("adminIngresarResultado",{partidoId:pid,fechaId:fid,golesLocal:+gL,golesVisita:+gV,tarjetasRojas:+tr||0});toast(r.ok?`✅ ${r.resultado||""} — Puntajes calculados`:"❌ "+r.error);};
-
-/* ── ADMIN USUARIOS ── */
-function rAdminUsers(){return`<div class="fu"><div class="ph"><h2>JUGADORES</h2></div><div id="aul"><div class="sw"><div class="spinner"></div></div></div></div>`;}
-async function lAdminUsers(){
-  const r=await api("adminGetUsuarios"),el=document.getElementById("aul");if(!el)return;
-  if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}
-  el.innerHTML=(r.usuarios||[]).map(u=>`<div class="card csm" style="margin-bottom:8px;display:flex;align-items:center;gap:12px">
-    <div style="width:38px;height:38px;border-radius:10px;background:rgba(0,224,144,.1);border:1px solid rgba(0,224,144,.2);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">${u.avatar||"👤"}</div>
-    <div style="flex:1;min-width:0"><div style="font-family:var(--fd);font-size:16px;font-weight:800">${u.usuario} <span style="font-size:12px;color:var(--text2);font-weight:400">${u.nombre}</span></div><div style="font-size:11px;color:var(--text2)">${u.telefono}</div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
-      <span class="bdg ${u.estado==="Activo"?"bg":"bred"}">${u.estado}</span>
-      <button class="btn btn-s" style="padding:5px 10px;font-size:11px" onclick="chSt('${u.id}','${u.estado==="Activo"?"Suspendido":"Activo"}')">${u.estado==="Activo"?"Suspender":"Activar"}</button>
-    </div>
-  </div>`).join("")||`<div class="es"><div class="ic">👥</div><p>Sin jugadores</p></div>`;
-}
-window.chSt=async(id,est)=>{if(!confirm(`¿${est==="Suspendido"?"Suspender":"Activar"} este usuario?`))return;const r=await api("adminCambiarEstado",{targetUserId:id,estado:est});toast(r.ok?"✅ Actualizado":"❌ "+r.error);if(r.ok)lAdminUsers();};
-
-/* ── ADMIN IMPORTAR PARTIDOS ── */
-function rAdminImportar(){
-  return`<div class="fu">
-    <div class="ph"><h2>IMPORTAR PARTIDOS</h2><p>Traer partidos desde API-Football</p></div>
-
-    <!-- PASO 1: Elegir fecha destino -->
-    <div class="card" style="margin-bottom:14px">
-      <p style="font-family:var(--fd);font-size:13px;font-weight:800;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;margin-bottom:14px">PASO 1 — FECHA DESTINO</p>
-      <div class="ig">
-        <label class="il">FECHA DE POLLA PRODES</label>
-        <select class="inp" id="imp-fecha-id" onchange="onChangeFechaImp()">
-          <option value="">Cargando fechas...</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- PASO 2: Elegir liga y ronda -->
-    <div class="card" style="margin-bottom:14px">
-      <p style="font-family:var(--fd);font-size:13px;font-weight:800;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;margin-bottom:14px">PASO 2 — LIGA Y JORNADA</p>
-      <div class="fg">
-        <div class="ig">
-          <label class="il">LIGA</label>
-          <select class="inp" id="imp-liga" onchange="onChangeLiga()">
-            <option value="">Seleccioná una liga</option>
-            <option value="Liga Argentina">🇦🇷 Liga Argentina</option>
-            <option value="Premier League">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
-            <option value="La Liga">🇪🇸 La Liga</option>
-            <option value="Serie A">🇮🇹 Serie A</option>
-            <option value="Ligue 1">🇫🇷 Ligue 1</option>
-            <option value="Champions League">🏆 Champions League</option>
-            <option value="Copa Libertadores">🌎 Copa Libertadores</option>
-            <option value="Copa América">🌎 Copa América</option>
-            <option value="Mundial">🌍 Mundial</option>
-          </select>
-        </div>
-        <div class="ig">
-          <label class="il">JORNADA / RONDA</label>
-          <select class="inp" id="imp-ronda" disabled>
-            <option value="">Primero elegí una liga</option>
-          </select>
-        </div>
-        <button class="btn btn-s" id="btn-buscar-partidos" onclick="buscarPartidosAPI()" disabled>
-          🔍 BUSCAR PARTIDOS
-        </button>
-      </div>
-    </div>
-
-    <!-- PASO 3: Seleccionar partidos -->
-    <div id="imp-partidos-wrap" style="display:none">
-      <div class="card" style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-          <p style="font-family:var(--fd);font-size:13px;font-weight:800;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase">PASO 3 — SELECCIONAR PARTIDOS</p>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="selTodos(true)">Todos</button>
-            <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="selTodos(false)">Ninguno</button>
+    ${rp.partidos.map(p=>{
+      const tipoCls=p.tipo==="Polla"?" polla":p.tipo==="Doble"?" doble":"";
+      const done=p.estado==="Finalizado";
+      return`<div class="res-card${tipoCls}${done?" fin":""}">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+          <div style="flex:1;min-width:0">
+            <div class="res-info">
+              <div class="num-tipo">#${p.numero} · ${p.tipo}${p.tipo==="Polla"?" ⭐":p.tipo==="Doble"?" ×2":""} · <span class="bdg ${done?"bg":"bgray"}" style="padding:1px 6px;font-size:9px">${p.estado}</span></div>
+              <div class="teams" style="margin-top:2px">${p.local} <span style="color:var(--text3)">vs</span> ${p.visita}</div>
+            </div>
+          </div>
+          <div class="res-inputs">
+            <input class="score-inp" id="gL-${p.id}" type="number" min="0" max="20" value="${p.golesLocal??""}" placeholder="—"/>
+            <span class="score-sep">-</span>
+            <input class="score-inp" id="gV-${p.id}" type="number" min="0" max="20" value="${p.golesVisita??""}" placeholder="—"/>
+            <input class="rojas-inp" id="tr-${p.id}" type="number" min="0" max="10" value="${p.tarjetasRojas||0}" title="🟥 Rojas"/>
+            <button class="${done?"btn-res done":"btn-res"}" onclick="gR('${p.id}','${sf}')">${done?"✓":"▶"}</button>
           </div>
         </div>
-        <div style="background:rgba(0,224,144,.06);border:1px solid rgba(0,224,144,.15);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--accent)">
-          ℹ️ Los tipos se asignan automáticamente: <strong>#10 = Polla ⭐</strong> · <strong>Últimos 25% = Doble ×2</strong> · Resto = Normal
-        </div>
-        <div id="imp-lista"></div>
-      </div>
+      </div>`;
+    }).join("")}`;
+}
+window.lAR=ctx=>lAdminRes(ctx);
+window.gR=async(pid,fid)=>{const gL=document.getElementById("gL-"+pid)?.value,gV=document.getElementById("gV-"+pid)?.value,tr=document.getElementById("tr-"+pid)?.value;if(gL===""||gV===""){toast("Ingresá ambos goles");return;}toast("Guardando...");const r=await api("adminIngresarResultado",{partidoId:pid,fechaId:fid,golesLocal:+gL,golesVisita:+gV,tarjetasRojas:+tr||0});toast(r.ok?`✅ ${r.resultado||""} — calculado`:"❌ "+r.error);};
 
-      <!-- PASO 4: Importar -->
-      <div style="margin-bottom:32px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <span style="font-size:13px;color:var(--text2)" id="imp-contador">0 partidos seleccionados</span>
-          <span style="font-size:11px;color:var(--text2)" id="imp-tipos-resumen"></span>
-        </div>
-        <button class="btn btn-p btn-lg" id="btn-importar" onclick="importarPartidos()" disabled>
-          ✅ IMPORTAR PARTIDOS SELECCIONADOS
-        </button>
-      </div>
+function rAdminUsers(){return`<div class="fu"><div class="ph"><h2>JUGADORES</h2></div><div id="aul"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+async function lAdminUsers(){const r=await api("adminGetUsuarios"),el=document.getElementById("aul");if(!el)return;if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}el.innerHTML=(r.usuarios||[]).map(u=>`<div class="card csm" style="margin-bottom:7px;display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:9px;background:var(--accent-light);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${u.avatar||"👤"}</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:500;color:var(--text)">${u.usuario} <span style="font-size:11px;color:var(--text2)">${u.nombre}</span></div><div style="font-size:11px;color:var(--text3)">${u.telefono}</div></div><div style="display:flex;gap:7px;align-items:center;flex-shrink:0"><span class="bdg ${u.estado==="Activo"?"bg":"bred"}">${u.estado}</span><button class="btn btn-s" style="padding:4px 9px;font-size:11px" onclick="chSt('${u.id}','${u.estado==="Activo"?"Suspendido":"Activo"}')">${u.estado==="Activo"?"Suspender":"Activar"}</button></div></div>`).join("")||`<div class="es"><div class="ic">👥</div><p>Sin jugadores</p></div>`;}
+window.chSt=async(id,est)=>{if(!confirm(`¿${est==="Suspendido"?"Suspender":"Activar"} este usuario?`))return;const r=await api("adminCambiarEstado",{targetUserId:id,estado:est});toast(r.ok?"✅ Actualizado":"❌ "+r.error);if(r.ok)lAdminUsers();};
+
+/* IMPORTAR */
+function rAdminImportar(){return`<div class="fu"><div class="ph"><h2>IMPORTAR PARTIDOS</h2><p>Traer partidos desde API-Football</p></div>
+  <div class="card" style="margin-bottom:12px"><p class="st" style="margin-top:0">Paso 1 — Fecha destino</p><div class="ig"><label class="il">Fecha de Polla Prodes</label><select class="inp" id="imp-fecha-id"><option value="">Cargando...</option></select></div></div>
+  <div class="card" style="margin-bottom:12px"><p class="st" style="margin-top:0">Paso 2 — Liga y jornada</p><div class="fg">
+    <div class="ig"><label class="il">Liga</label><select class="inp" id="imp-liga" onchange="onChangeLiga()"><option value="">Seleccioná una liga</option><option value="Liga Argentina">🇦🇷 Liga Argentina</option><option value="Premier League">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option><option value="La Liga">🇪🇸 La Liga</option><option value="Serie A">🇮🇹 Serie A</option><option value="Ligue 1">🇫🇷 Ligue 1</option><option value="Champions League">🏆 Champions League</option><option value="Copa Libertadores">🌎 Copa Libertadores</option></select></div>
+    <div class="ig"><label class="il">Jornada / Ronda</label><select class="inp" id="imp-ronda" disabled><option value="">Primero elegí una liga</option></select></div>
+    <button class="btn btn-p" id="btn-buscar-partidos" onclick="buscarPartidosAPI()" disabled>🔍 Buscar partidos</button>
+  </div></div>
+  <div id="imp-partidos-wrap" style="display:none">
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><p class="st" style="margin:0">Paso 3 — Seleccionar</p><div style="display:flex;gap:6px"><button class="btn btn-s" style="padding:4px 10px;font-size:11px" onclick="selTodos(true)">Todos</button><button class="btn btn-s" style="padding:4px 10px;font-size:11px" onclick="selTodos(false)">Ninguno</button></div></div>
+      <div style="background:var(--accent-light);border:1px solid var(--border2);border-radius:var(--rs);padding:8px 11px;margin-bottom:10px;font-size:11px;color:var(--accent)">ℹ️ Tipos automáticos: <strong>#10 = Polla ⭐</strong> · <strong>Últimos 25% = Doble ×2</strong></div>
+      <div id="imp-lista"></div>
     </div>
-  </div>`;
-}
+    <div style="margin-bottom:24px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--text2)" id="imp-contador">0 seleccionados</span><span style="font-size:11px;color:var(--text3)" id="imp-tipos-resumen"></span></div>
+      <button class="btn btn-p btn-lg" id="btn-importar" onclick="importarPartidos()" disabled>✅ Importar partidos seleccionados</button>
+    </div>
+  </div></div>`;}
 
-window._impPartidos = [];
-window._impSel = new Set();
+window._impPartidos=[];window._impSel=new Set();
+async function lAdminImportar(ctx){const r=await api("getFechas");const sel=document.getElementById("imp-fecha-id");if(!sel)return;const fechas=(r.fechas||[]).filter(f=>["Borrador","Abierta"].includes(f.estado));if(!fechas.length){sel.innerHTML=`<option value="">Sin fechas abiertas</option>`;return;}sel.innerHTML=fechas.map(f=>`<option value="${f.id}"${ctx?.fechaId===f.id?" selected":""}>${f.nombre}</option>`).join("");}
+window.onChangeLiga=async()=>{const liga=document.getElementById("imp-liga")?.value,sr=document.getElementById("imp-ronda"),bb=document.getElementById("btn-buscar-partidos");if(!liga||!sr)return;sr.disabled=true;sr.innerHTML=`<option>Cargando...</option>`;bb.disabled=true;const r=await api("getRondas",{liga});if(!r.ok||!r.rondas?.length){sr.innerHTML=`<option value="">Sin rondas</option>`;return;}sr.innerHTML=r.rondas.map(rn=>`<option value="${rn}">${rn}</option>`).join("");sr.disabled=false;bb.disabled=false;};
+window.buscarPartidosAPI=async()=>{const liga=document.getElementById("imp-liga")?.value,ronda=document.getElementById("imp-ronda")?.value;if(!liga||!ronda){toast("Seleccioná liga y ronda");return;}const btn=document.getElementById("btn-buscar-partidos");if(btn){btn.textContent="Buscando...";btn.disabled=true;}const r=await api("buscarPorRonda",{liga,ronda});if(btn){btn.textContent="🔍 Buscar partidos";btn.disabled=false;}if(!r.ok){toast("❌ "+r.error);return;}window._impPartidos=r.partidos||[];window._impSel=new Set(window._impPartidos.map(p=>p.apiId));renderListaPartidos();const wrap=document.getElementById("imp-partidos-wrap");if(wrap)wrap.style.display="block";toast(`✅ ${r.partidos.length} partidos encontrados`);};
+function asignarTiposFront(total){const tipos={},cantDobles=Math.round(total*.25);for(let n=1;n<=total;n++)tipos[n]="Normal";if(total>=10)tipos[10]="Polla";let d=0;for(let n=total;n>=1&&d<cantDobles;n--){if(n===10)continue;tipos[n]="Doble";d++;}return tipos;}
+function renderListaPartidos(){const el=document.getElementById("imp-lista");if(!el)return;const ps=window._impPartidos,tipos=asignarTiposFront(ps.length);el.innerHTML=ps.map((p,i)=>{const n=i+1,tipo=tipos[n],sel=window._impSel.has(p.apiId),dt=new Date(p.fecha),hora=dt.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}),fecha=dt.toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"short"});return`<div class="imp-list-item"><input type="checkbox" id="chk-${p.apiId}" ${sel?"checked":""} onchange="togglePart('${p.apiId}')" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent)"/><div style="width:24px;text-align:center;font-size:11px;font-weight:600;color:var(--text3)">${n}</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.local} vs ${p.visita}</div><div style="font-size:10px;color:var(--text3)">${fecha} · ${hora}</div></div><span class="bdg ${tipo==="Polla"?"bgold":tipo==="Doble"?"bpurple":"bgray"}">${tipo==="Polla"?"⭐ POLLA":tipo==="Doble"?"×2 DOBLE":"Normal"}</span></div>`;}).join("");actualizarContador();}
+window.togglePart=id=>{if(window._impSel.has(id))window._impSel.delete(id);else window._impSel.add(id);actualizarContador();};
+window.selTodos=sel=>{if(sel)window._impPartidos.forEach(p=>window._impSel.add(p.apiId));else window._impSel.clear();window._impPartidos.forEach(p=>{const chk=document.getElementById("chk-"+p.apiId);if(chk)chk.checked=sel;});actualizarContador();};
+function actualizarContador(){const n=window._impSel.size,cnt=document.getElementById("imp-contador"),btn=document.getElementById("btn-importar"),res=document.getElementById("imp-tipos-resumen");if(cnt)cnt.textContent=`${n} partido${n!==1?"s":""} seleccionado${n!==1?"s":""}`;if(btn)btn.disabled=n===0;const selArr=window._impPartidos.filter(p=>window._impSel.has(p.apiId)),tipos=asignarTiposFront(selArr.length);const polla=Object.values(tipos).filter(t=>t==="Polla").length,doble=Object.values(tipos).filter(t=>t==="Doble").length,normal=Object.values(tipos).filter(t=>t==="Normal").length;if(res)res.textContent=`⭐${polla} · ×2 ${doble} · N ${normal}`;}
+window.importarPartidos=async()=>{const fechaId=document.getElementById("imp-fecha-id")?.value;if(!fechaId){toast("Seleccioná una fecha destino");return;}const selArr=window._impPartidos.filter(p=>window._impSel.has(p.apiId));if(!selArr.length){toast("Seleccioná al menos un partido");return;}if(selArr.length>20){toast("Máximo 20 partidos");return;}const btn=document.getElementById("btn-importar");if(btn){btn.textContent="Importando...";btn.disabled=true;}const r=await api("importarPartidos",{fechaId,partidosApi:selArr});if(btn){btn.textContent="✅ Importar partidos seleccionados";btn.disabled=false;}if(!r.ok){toast("❌ "+r.error);return;}toast(`✅ ${r.importados} partidos importados`);window._impPartidos=[];window._impSel=new Set();document.getElementById("imp-partidos-wrap").style.display="none";setTimeout(()=>go("admin-fechas"),1200);};
 
-async function lAdminImportar(ctx){
-  // Cargar fechas disponibles
-  const r = await api("getFechas");
-  const sel = document.getElementById("imp-fecha-id");
-  if(!sel) return;
-  const fechas = (r.fechas||[]).filter(f=>["Borrador","Abierta"].includes(f.estado));
-  if(!fechas.length){
-    sel.innerHTML=`<option value="">Sin fechas abiertas — creá una primero</option>`;
-    return;
-  }
-  sel.innerHTML = fechas.map(f=>`<option value="${f.id}">${f.nombre}</option>`).join("");
-}
+function afterRender(k,ctx){switch(k){case"fechas":lFechas();break;case"fecha-det":lFechaDet(ctx);break;case"jugar":lJugar(ctx);break;case"tabla":lTabla(ctx);break;case"grilla":lGrilla(ctx);break;case"stats":lStats();break;case"admin-dash":lAdminDash();break;case"admin-fechas":lAdminFechas();break;case"admin-importar":lAdminImportar(ctx);break;case"admin-res":lAdminRes(ctx);break;case"admin-users":lAdminUsers();break;}}
 
-window.onChangeFechaImp = ()=>{
-  // nada por ahora, la fecha se usa al importar
-};
-
-window.onChangeLiga = async()=>{
-  const liga = document.getElementById("imp-liga")?.value;
-  const selRonda = document.getElementById("imp-ronda");
-  const btnBuscar = document.getElementById("btn-buscar-partidos");
-  if(!liga||!selRonda){return;}
-
-  selRonda.disabled = true;
-  selRonda.innerHTML = `<option>Cargando rondas...</option>`;
-  btnBuscar.disabled = true;
-
-  const r = await api("getRondas", {liga});
-  if(!r.ok||!r.rondas?.length){
-    selRonda.innerHTML=`<option value="">Sin rondas disponibles</option>`;
-    return;
-  }
-
-  selRonda.innerHTML = r.rondas.map(rn=>`<option value="${rn}">${rn}</option>`).join("");
-  selRonda.disabled = false;
-  btnBuscar.disabled = false;
-};
-
-window.buscarPartidosAPI = async()=>{
-  const liga  = document.getElementById("imp-liga")?.value;
-  const ronda = document.getElementById("imp-ronda")?.value;
-  if(!liga||!ronda){toast("Seleccioná liga y ronda");return;}
-
-  const btn = document.getElementById("btn-buscar-partidos");
-  if(btn){btn.textContent="🔍 Buscando...";btn.disabled=true;}
-
-  const r = await api("buscarPorRonda",{liga,ronda});
-
-  if(btn){btn.textContent="🔍 BUSCAR PARTIDOS";btn.disabled=false;}
-  if(!r.ok){toast("❌ "+r.error);return;}
-
-  window._impPartidos = r.partidos||[];
-  window._impSel = new Set(window._impPartidos.map(p=>p.apiId));
-
-  renderListaPartidos();
-
-  const wrap = document.getElementById("imp-partidos-wrap");
-  if(wrap) wrap.style.display = "block";
-  toast(`✅ ${r.partidos.length} partidos encontrados`);
-};
-
-function asignarTiposFront(total){
-  const tipos={};
-  const cantDobles = Math.round(total*0.25);
-  for(let n=1;n<=total;n++) tipos[n]="Normal";
-  if(total>=10) tipos[10]="Polla";
-  let d=0;
-  for(let n=total;n>=1&&d<cantDobles;n--){
-    if(n===10)continue;
-    tipos[n]="Doble";d++;
-  }
-  return tipos;
-}
-
-function renderListaPartidos(){
-  const el = document.getElementById("imp-lista");
-  if(!el) return;
-  const ps = window._impPartidos;
-  const tipos = asignarTiposFront(ps.length);
-
-  el.innerHTML = ps.map((p,i)=>{
-    const n = i+1;
-    const tipo = tipos[n];
-    const sel = window._impSel.has(p.apiId);
-    const dt = new Date(p.fecha);
-    const hora = dt.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"});
-    const fecha = dt.toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"short"});
-    return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
-      <input type="checkbox" id="chk-${p.apiId}" ${sel?"checked":""} 
-             onchange="togglePart('${p.apiId}')"
-             style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent)"/>
-      <div style="width:28px;text-align:center">
-        <span style="font-family:var(--fd);font-size:13px;font-weight:800;color:var(--text2)">${n}</span>
-      </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-family:var(--fd);font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-          ${p.local} <span style="color:var(--text3);font-size:12px">vs</span> ${p.visita}
-        </div>
-        <div style="font-size:11px;color:var(--text2)">${fecha} · ${hora}</div>
-      </div>
-      <span class="bdg ${tipo==="Polla"?"bgold":tipo==="Doble"?"" :"bgray"}" 
-            style="${tipo==="Doble"?"background:rgba(155,109,255,.12);color:var(--purple);border:1px solid rgba(155,109,255,.2)":""}">
-        ${tipo==="Polla"?"⭐ POLLA":tipo==="Doble"?"×2 DOBLE":"NORMAL"}
-      </span>
-    </div>`;
-  }).join("");
-
-  actualizarContador();
-}
-
-window.togglePart = id=>{
-  if(window._impSel.has(id)) window._impSel.delete(id);
-  else window._impSel.add(id);
-  actualizarContador();
-};
-
-window.selTodos = sel=>{
-  if(sel) window._impPartidos.forEach(p=>window._impSel.add(p.apiId));
-  else window._impSel.clear();
-  // refrescar checkboxes
-  window._impPartidos.forEach(p=>{
-    const chk=document.getElementById("chk-"+p.apiId);
-    if(chk)chk.checked=sel;
-  });
-  actualizarContador();
-};
-
-function actualizarContador(){
-  const n = window._impSel.size;
-  const cnt = document.getElementById("imp-contador");
-  const btn = document.getElementById("btn-importar");
-  const res = document.getElementById("imp-tipos-resumen");
-  if(cnt) cnt.textContent=`${n} partido${n!==1?"s":""} seleccionado${n!==1?"s":""}`;
-  if(btn) btn.disabled = n===0;
-
-  // Calcular tipos de los seleccionados
-  const selArr = window._impPartidos.filter(p=>window._impSel.has(p.apiId));
-  const tipos = asignarTiposFront(selArr.length);
-  const polla  = Object.values(tipos).filter(t=>t==="Polla").length;
-  const doble  = Object.values(tipos).filter(t=>t==="Doble").length;
-  const normal = Object.values(tipos).filter(t=>t==="Normal").length;
-  if(res) res.textContent=`⭐${polla} · ×2 ${doble} · N ${normal}`;
-}
-
-window.importarPartidos = async()=>{
-  const fechaId = document.getElementById("imp-fecha-id")?.value;
-  if(!fechaId){toast("Seleccioná una fecha destino");return;}
-
-  const selArr = window._impPartidos.filter(p=>window._impSel.has(p.apiId));
-  if(!selArr.length){toast("Seleccioná al menos un partido");return;}
-  if(selArr.length>20){toast("Máximo 20 partidos por fecha");return;}
-
-  const btn = document.getElementById("btn-importar");
-  if(btn){btn.textContent="Importando...";btn.disabled=true;}
-
-  // Los tipos se asignan automáticamente en el backend
-  const r = await api("importarPartidos",{
-    fechaId,
-    partidosApi: selArr,
-    // Sin tiposPartido → backend asigna automáticamente
-  });
-
-  if(btn){btn.textContent="✅ IMPORTAR PARTIDOS SELECCIONADOS";btn.disabled=false;}
-
-  if(!r.ok){toast("❌ "+r.error);return;}
-
-  toast(`✅ ${r.importados} partidos importados correctamente`);
-
-  // Limpiar y volver a fechas admin
-  window._impPartidos=[];
-  window._impSel=new Set();
-  document.getElementById("imp-partidos-wrap").style.display="none";
-
-  setTimeout(()=>go("admin-fechas"),1200);
-};
-
-/* ── AFTER RENDER ── */
-function afterRender(k,ctx){
-  switch(k){
-    case"fechas":lFechas();break;
-    case"fecha-det":lFechaDet(ctx);break;
-    case"jugar":lJugar(ctx);break;
-    case"tabla":lTabla(ctx);break;
-    case"grilla":lGrilla(ctx);break;
-    case"stats":lStats();break;
-    case"admin-dash":lAdminDash();break;
-    case"admin-fechas":lAdminFechas();break;
-    case"admin-importar":lAdminImportar(ctx);break;
-    case"admin-res":lAdminRes(ctx);break;
-    case"admin-users":lAdminUsers();break;
-  }
-}
-
-/* ── LOGIN ── */
 function showLogin(){
   document.getElementById("app").style.display="none";
   ["mh","mc","bn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
   const el=document.getElementById("sl");el.style.display="flex";
-  el.innerHTML=`<div class="lb fu">
-    <div class="llo">
-      <div class="logo-wrap">
-        <div style="width:100px;height:100px;border-radius:24px;overflow:hidden;display:inline-block"><svg width="100" height="100"><use href="#logo"/></svg></div>
-      </div>
-      <h1>POLLA PRODES</h1>
-      <p>pollaprodes.com · El juego de pronósticos</p>
-    </div>
-    <div class="lcard">
-      <div class="ltabs"><div class="ltab active" onclick="ltab('l',this)">INGRESAR</div><div class="ltab" onclick="ltab('r',this)">REGISTRARSE</div></div>
-      <div id="lf">
-        <div class="fg">
-          <div class="ig"><label class="il">TELÉFONO</label><input class="inp" id="lt" type="tel" placeholder="+5493442xxxxxx" onkeydown="if(event.key==='Enter')doL()"/></div>
-          <div class="ig"><label class="il">PIN</label><input class="inp" id="lp" type="password" placeholder="4-8 dígitos" maxlength="8" onkeydown="if(event.key==='Enter')doL()"/></div>
-          <div id="le"></div>
-          <button class="btn btn-p btn-lg" id="blb" onclick="doL()">ENTRAR</button>
-        </div>
-      </div>
-      <div id="rf" style="display:none">
-        <div class="fg">
-          <div class="ig"><label class="il">NOMBRE COMPLETO</label><input class="inp" id="rn" placeholder="Nombre Apellido"/></div>
-          <div class="ig"><label class="il">TELÉFONO</label><input class="inp" id="rt" type="tel" placeholder="+5493442xxxxxx"/></div>
-          <div class="ig"><label class="il">PIN (4-8 dígitos)</label><input class="inp" id="rp" type="password" placeholder="Elegí tu PIN" maxlength="8"/></div>
-          <div class="ig"><label class="il">ALIAS MERCADOPAGO</label><input class="inp" id="ra" placeholder="tu.alias.mp"/></div>
-          <div class="ig"><label class="il">EMAIL (opcional)</label><input class="inp" id="re2" type="email" placeholder="tu@email.com"/></div>
-          <div id="re"></div>
-          <button class="btn btn-p btn-lg" onclick="doR()">CREAR CUENTA</button>
-        </div>
-      </div>
-    </div>
-  </div>`;
+  el.innerHTML=`<div class="lb fu"><div class="llo"><div class="logo-wrap"><div class="logo-box"><svg width="76" height="76"><use href="#logo"/></svg></div></div><h1>POLLA PRODES</h1><p>pollaprodes.com · El juego de pronósticos</p></div>
+  <div class="lcard"><div class="ltabs"><div class="ltab active" onclick="ltab('l',this)">Ingresar</div><div class="ltab" onclick="ltab('r',this)">Registrarse</div></div>
+  <div id="lf"><div class="fg"><div class="ig"><label class="il">Teléfono</label><input class="inp" id="lt" type="tel" placeholder="+5493442xxxxxx" onkeydown="if(event.key==='Enter')doL()"/></div><div class="ig"><label class="il">PIN</label><input class="inp" id="lp" type="password" placeholder="4-8 dígitos" maxlength="8" onkeydown="if(event.key==='Enter')doL()"/></div><div id="le"></div><button class="btn btn-p btn-lg" id="blb" onclick="doL()">Entrar</button></div></div>
+  <div id="rf" style="display:none"><div class="fg"><div class="ig"><label class="il">Nombre completo</label><input class="inp" id="rn" placeholder="Nombre Apellido"/></div><div class="ig"><label class="il">Teléfono</label><input class="inp" id="rt" type="tel" placeholder="+5493442xxxxxx"/></div><div class="ig"><label class="il">PIN (4-8 dígitos)</label><input class="inp" id="rp" type="password" placeholder="Elegí tu PIN" maxlength="8"/></div><div class="ig"><label class="il">Alias MercadoPago</label><input class="inp" id="ra" placeholder="tu.alias.mp"/></div><div class="ig"><label class="il">Email (opcional)</label><input class="inp" id="re2" type="email" placeholder="tu@email.com"/></div><div id="re"></div><button class="btn btn-p btn-lg" onclick="doR()">Crear cuenta</button></div></div>
+  </div></div>`;
 }
-
 window.ltab=(t,el)=>{document.querySelectorAll(".ltab").forEach(x=>x.classList.remove("active"));el.classList.add("active");document.getElementById("lf").style.display=t==="l"?"block":"none";document.getElementById("rf").style.display=t==="r"?"block":"none";};
-window.doL=async()=>{
-  const t=document.getElementById("lt")?.value,p=document.getElementById("lp")?.value,b=document.getElementById("blb"),er=document.getElementById("le");
-  if(!t||!p){if(er)er.innerHTML=`<div class="err">Completá todos los campos</div>`;return;}
-  if(b){b.textContent="INGRESANDO...";b.disabled=true;}
-  const r=await api("login",{telefono:t,pin:p});
-  if(b){b.textContent="ENTRAR";b.disabled=false;}
-  if(!r.ok){if(er)er.innerHTML=`<div class="err">⚠ ${r.error}</div>`;return;}
-  save(r.user,r.sessionToken);initApp();
-};
-window.doR=async()=>{
-  const n=document.getElementById("rn")?.value,t=document.getElementById("rt")?.value,p=document.getElementById("rp")?.value,a=document.getElementById("ra")?.value,e=document.getElementById("re2")?.value,er=document.getElementById("re");
-  if(!n||!t||!p){if(er)er.innerHTML=`<div class="err">Completá los campos obligatorios</div>`;return;}
-  const r=await api("registro",{nombre:n,telefono:t,pin:p,alias:a,email:e});
-  if(!r.ok){if(er)er.innerHTML=`<div class="err">⚠ ${r.error}</div>`;return;}
-  save(r.user,r.sessionToken);toast(`✅ Bienvenido, ${r.user.usuario}`);initApp();
-};
+window.doL=async()=>{const t=document.getElementById("lt")?.value,p=document.getElementById("lp")?.value,b=document.getElementById("blb"),er=document.getElementById("le");if(!t||!p){if(er)er.innerHTML=`<div class="err">Completá todos los campos</div>`;return;}if(b){b.textContent="Ingresando...";b.disabled=true;}const r=await api("login",{telefono:t,pin:p});if(b){b.textContent="Entrar";b.disabled=false;}if(!r.ok){if(er)er.innerHTML=`<div class="err">⚠ ${r.error}</div>`;return;}save(r.user,r.sessionToken);initApp();};
+window.doR=async()=>{const n=document.getElementById("rn")?.value,t=document.getElementById("rt")?.value,p=document.getElementById("rp")?.value,a=document.getElementById("ra")?.value,e=document.getElementById("re2")?.value,er=document.getElementById("re");if(!n||!t||!p){if(er)er.innerHTML=`<div class="err">Completá los campos obligatorios</div>`;return;}const r=await api("registro",{nombre:n,telefono:t,pin:p,alias:a,email:e});if(!r.ok){if(er)er.innerHTML=`<div class="err">⚠ ${r.error}</div>`;return;}save(r.user,r.sessionToken);toast(`✅ Bienvenido, ${r.user.usuario}`);initApp();};
 
-/* ── INIT APP ── */
 function initApp(){
   document.getElementById("sl").style.display="none";
   const mob=window.innerWidth<=768;
-  if(mob){
-    ["mh","mc","bn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=id==="mc"?"block":"flex";});
-    const ch=document.getElementById("mchip");if(ch)ch.textContent=App.user?.usuario||"";
-  }else{
-    document.getElementById("app").style.display="flex";
-    const sb=document.getElementById("sidebar"),mn=document.getElementById("main");
-    if(sb)sb.style.display="flex";if(mn)mn.style.display="flex";
-    const su=document.getElementById("sidebar-user");
-    if(su)su.innerHTML=`<div class="sav">${App.user?.avatar||"👤"}</div><div class="sui"><div class="nm">${App.user?.usuario||""}</div><div class="rl">${App.user?.rol||"Jugador"}</div></div><button class="btnlo" onclick="if(confirm('¿Cerrar sesión?'))logout()" title="Salir">⎋</button>`;
-  }
+  if(mob){["mh","mc","bn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=id==="mc"?"block":"flex";});const ch=document.getElementById("mchip");if(ch)ch.textContent=App.user?.usuario||"";}
+  else{document.getElementById("app").style.display="flex";const sb=document.getElementById("sidebar"),mn=document.getElementById("main");if(sb)sb.style.display="flex";if(mn)mn.style.display="flex";const su=document.getElementById("sidebar-user");if(su)su.innerHTML=`<div class="sav">${App.user?.avatar||"👤"}</div><div class="sui"><div class="nm">${App.user?.usuario||""}</div><div class="rl">${App.user?.rol||"Jugador"}</div></div><button class="btnlo" onclick="if(confirm('¿Cerrar sesión?'))logout()" title="Salir">⎋</button>`;}
   go(App.user?.rol==="Admin"?"admin-dash":"fechas");
 }
 
-/* ── TOAST ── */
 function toast(msg,ms=2800){document.querySelectorAll(".toast").forEach(t=>t.remove());const e=document.createElement("div");e.className="toast";e.textContent=msg;document.body.appendChild(e);setTimeout(()=>e.remove(),ms);}
+(()=>{const p=new URLSearchParams(location.search).get("pago");if(!p)return;history.replaceState({},"",location.pathname);if(p==="ok")toast("✅ ¡Pago aprobado!");else if(p==="error")toast("❌ Pago no procesado");else toast("⏳ Pago pendiente");})();
 
-/* ── RETORNO MP ── */
-(()=>{const p=new URLSearchParams(location.search).get("pago");if(!p)return;history.replaceState({},"",location.pathname);if(p==="ok")toast("✅ ¡Pago aprobado! Podés jugar");else if(p==="error")toast("❌ Pago no procesado");else toast("⏳ Pago pendiente de acreditación");})();
-
-/* ── BOOT ── */
-async function boot(){
-  if(load()){
-    const r=await api("loginConToken",{sessionToken:App.token});
-    if(r.ok){save(r.user,r.sessionToken);initApp();return;}
-  }
-  showLogin();
-}
+async function boot(){if(load()){const r=await api("loginConToken",{sessionToken:App.token});if(r.ok){save(r.user,r.sessionToken);initApp();return;}}showLogin();}
 boot();
 </script>
 </body>
