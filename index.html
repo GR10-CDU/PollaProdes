@@ -343,7 +343,7 @@ function load(){const t=localStorage.getItem(SK),u=localStorage.getItem(UK);if(t
 function logout(){api("logout");localStorage.removeItem(SK);localStorage.removeItem(UK);App.user=null;App.token=null;showLogin();}
 
 const NAV_J=[{k:"fechas",i:"📅",l:"Fechas",t:"Fechas"},{k:"tabla",i:"🏆",l:"Tabla",t:"Tabla de Posiciones"},{k:"grilla",i:"👥",l:"Los Otros",t:"Los Otros"},{k:"stats",i:"📊",l:"Estadísticas",t:"Hall of Fame"},{k:"perfil",i:"👤",l:"Perfil",t:"Mi Perfil"}];
-const NAV_A=[{k:"admin-dash",i:"📊",l:"Dashboard",t:"Dashboard"},{k:"admin-fechas",i:"📅",l:"Fechas",t:"Gestión de Fechas"},{k:"admin-importar",i:"🔗",l:"Importar",t:"Importar Partidos API"},{k:"admin-res",i:"⚽",l:"Resultados",t:"Resultados"},{k:"admin-users",i:"👥",l:"Jugadores",t:"Jugadores"},{k:"perfil",i:"👤",l:"Perfil",t:"Mi Perfil"}];
+const NAV_A=[{k:"admin-dash",i:"📊",l:"Dashboard",t:"Dashboard"},{k:"admin-fechas",i:"📅",l:"Fechas",t:"Gestión de Fechas"},{k:"admin-importar",i:"🔗",l:"Importar",t:"Importar Partidos API"},{k:"admin-res",i:"⚽",l:"Resultados",t:"Resultados"},{k:"admin-users",i:"👥",l:"Jugadores",t:"Jugadores"},{k:"admin-pagos",i:"💰",l:"Pagos",t:"Pagos Pendientes"},{k:"perfil",i:"👤",l:"Perfil",t:"Mi Perfil"}];
 function nav(){return App.user?.rol==="Admin"?NAV_A:NAV_J;}
 
 function go(k,ctx={}){
@@ -370,7 +370,7 @@ function renderScreen(k,ctx){
     case"fechas":return rFechas();case"fecha-det":return rFechaDet(ctx);case"jugar":return rJugar(ctx);
     case"tabla":return rTabla(ctx);case"grilla":return rGrilla(ctx);case"stats":return rStats();
     case"perfil":return rPerfil();case"admin-dash":return rAdminDash();case"admin-fechas":return rAdminFechas();
-    case"admin-importar":return rAdminImportar();case"admin-res":return rAdminRes();case"admin-users":return rAdminUsers();
+    case"admin-importar":return rAdminImportar();case"admin-res":return rAdminRes();case"admin-users":return rAdminUsers();case"admin-pagos":return rAdminPagos();
     default:return`<div class="es"><div class="ic">🔧</div><p>En construcción</p></div>`;
   }
 }
@@ -622,7 +622,7 @@ window.selTodos=sel=>{if(sel)window._impPartidos.forEach(p=>window._impSel.add(p
 function actualizarContador(){const n=window._impSel.size,cnt=document.getElementById("imp-contador"),btn=document.getElementById("btn-importar"),res=document.getElementById("imp-tipos-resumen");if(cnt)cnt.textContent=`${n} partido${n!==1?"s":""} seleccionado${n!==1?"s":""}`;if(btn)btn.disabled=n===0;const selArr=window._impPartidos.filter(p=>window._impSel.has(p.apiId)),tipos=asignarTiposFront(selArr.length);const polla=Object.values(tipos).filter(t=>t==="Polla").length,doble=Object.values(tipos).filter(t=>t==="Doble").length,normal=Object.values(tipos).filter(t=>t==="Normal").length;if(res)res.textContent=`⭐${polla} · ×2 ${doble} · N ${normal}`;}
 window.importarPartidos=async()=>{const fechaId=document.getElementById("imp-fecha-id")?.value;if(!fechaId){toast("Seleccioná una fecha destino");return;}const selArr=window._impPartidos.filter(p=>window._impSel.has(p.apiId));if(!selArr.length){toast("Seleccioná al menos un partido");return;}if(selArr.length>20){toast("Máximo 20 partidos");return;}const btn=document.getElementById("btn-importar");if(btn){btn.textContent="Importando...";btn.disabled=true;}const r=await api("importarPartidos",{fechaId,partidosApi:selArr});if(btn){btn.textContent="✅ Importar partidos seleccionados";btn.disabled=false;}if(!r.ok){toast("❌ "+r.error);return;}toast(`✅ ${r.importados} partidos importados`);window._impPartidos=[];window._impSel=new Set();document.getElementById("imp-partidos-wrap").style.display="none";setTimeout(()=>go("admin-fechas"),1200);};
 
-function afterRender(k,ctx){switch(k){case"fechas":lFechas();break;case"fecha-det":lFechaDet(ctx);break;case"jugar":lJugar(ctx);break;case"tabla":lTabla(ctx);break;case"grilla":lGrilla(ctx);break;case"stats":lStats();break;case"admin-dash":lAdminDash();break;case"admin-fechas":lAdminFechas();break;case"admin-importar":lAdminImportar(ctx);break;case"admin-res":lAdminRes(ctx);break;case"admin-users":lAdminUsers();break;}}
+function afterRender(k,ctx){switch(k){case"fechas":lFechas();break;case"fecha-det":lFechaDet(ctx);break;case"jugar":lJugar(ctx);break;case"tabla":lTabla(ctx);break;case"grilla":lGrilla(ctx);break;case"stats":lStats();break;case"admin-dash":lAdminDash();break;case"admin-fechas":lAdminFechas();break;case"admin-importar":lAdminImportar(ctx);break;case"admin-res":lAdminRes(ctx);break;case"admin-users":lAdminUsers();break;case"admin-pagos":lAdminPagos();break;}}}
 
 function showLogin(){
   document.getElementById("app").style.display="none";
@@ -645,6 +645,22 @@ function initApp(){
   else{document.getElementById("app").style.display="flex";const sb=document.getElementById("sidebar"),mn=document.getElementById("main");if(sb)sb.style.display="flex";if(mn)mn.style.display="flex";const su=document.getElementById("sidebar-user");if(su)su.innerHTML=`<div class="sav">${App.user?.avatar||"👤"}</div><div class="sui"><div class="nm">${App.user?.usuario||""}</div><div class="rl">${App.user?.rol||"Jugador"}</div></div><button class="btnlo" onclick="if(confirm('¿Cerrar sesión?'))logout()" title="Salir">⎋</button>`;}
   go(App.user?.rol==="Admin"?"admin-dash":"fechas");
 }
+
+function rAdminPagos(){return`<div class="fu"><div class="ph"><h2>PAGOS PENDIENTES</h2><p>Inscripciones sin pago confirmado</p></div><div id="apl"><div class="sw"><div class="spinner"></div></div></div></div>`;}
+async function lAdminPagos(){
+  const r=await api("adminGetInscripcionesPendientes"),el=document.getElementById("apl");if(!el)return;
+  if(!r.ok){el.innerHTML=`<div class="err">${r.error}</div>`;return;}
+  if(!r.pendientes?.length){el.innerHTML=`<div class="es"><div class="ic">✅</div><p>Sin pagos pendientes</p></div>`;return;}
+  el.innerHTML=r.pendientes.map(p=>`<div class="card csm" style="margin-bottom:8px;display:flex;align-items:center;gap:10px">
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13px;font-weight:500;color:var(--text)">${p.userId}</div>
+      <div style="font-size:11px;color:var(--text3)">Pozo $${(p.monto||0).toLocaleString("es-AR")} · ${new Date(p.fechaInsc).toLocaleDateString("es-AR")}</div>
+    </div>
+    <span class="bdg bred">Pendiente</span>
+    <button class="btn btn-p" style="padding:5px 11px;font-size:11px" onclick="habilitarManual('${p.id}')">✓ Habilitar</button>
+  </div>`).join("");
+}
+window.habilitarManual=async id=>{if(!confirm("¿Habilitar esta inscripción manualmente?"))return;const r=await api("adminHabilitarManual",{inscripcionId:id});toast(r.ok?"✅ "+r.mensaje:"❌ "+r.error);if(r.ok)lAdminPagos();};
 
 function toast(msg,ms=2800){document.querySelectorAll(".toast").forEach(t=>t.remove());const e=document.createElement("div");e.className="toast";e.textContent=msg;document.body.appendChild(e);setTimeout(()=>e.remove(),ms);}
 (()=>{const p=new URLSearchParams(location.search).get("pago");if(!p)return;history.replaceState({},"",location.pathname);if(p==="ok")toast("✅ ¡Pago aprobado!");else if(p==="error")toast("❌ Pago no procesado");else toast("⏳ Pago pendiente");})();
