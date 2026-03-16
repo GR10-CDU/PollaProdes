@@ -528,6 +528,10 @@ input:focus,select:focus{outline:none}
 .prono-letra.L{color:var(--L)}.prono-letra.E{color:var(--E)}.prono-letra.V{color:var(--V)}
 .prono-lbl{font-size:9px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px}
 .fecha-badge{display:inline-flex;align-items:center;padding:3px 10px;border:1.5px solid var(--gold);border-radius:20px;font-size:11px;font-weight:700;color:var(--gold);background:rgba(255,179,0,.1)}
+
+/* Cursor fixes */
+.team-name-big,.team-escudo,.team-box,.vs-center,.partido-card,.bdg,.cambios,.pc-meta{cursor:default}
+.lev-btn,.regla-btn,.btn,.nav-item,.fecha-card,.back,.pozo-card,.bn-item{cursor:pointer}
 </style>
 </head>
 <body>
@@ -810,8 +814,8 @@ function renderPartidos(parts,ctx,puede){
           ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:12px;padding:4px 11px">● VIVO</span>`:""}
         </div>
         <div class="pc-acts">
-          ${sel?`<span class="cambios ${cr===3?"ok":cr>0?"warn":"none"}">🔄 ${cr}</span>`:""}
-          ${sel?`<span class="regla-btn${re?" ap":""}" onclick="openRegla('${p.id}')">⭐ ${re?re.nombre||re.codigo:"Regla"}</span>`:""}
+          ${(sel&&!puede)?`<span class="cambios ${cr===3?"ok":cr>0?"warn":"none"}">🔄 ${cr}</span>`:""}
+          ${sel?`<span class="regla-btn${re?" ap":""}" onclick="openRegla('${p.id}')" style="cursor:pointer">📏 ${re?re.nombre||re.codigo:"Agregar regla"}</span>`:""}
         </div>
       </div>
       <!-- EQUIPOS -->
@@ -861,21 +865,91 @@ window.pronosticar=async(pid,v,fid,poid)=>{
   if(r.mensaje&&r.cambio)toast(r.mensaje);
 };
 window.guardarTodos=async()=>{const ps=Object.entries(window._pr).map(([id,p])=>({partidoId:id,pronostico:p.v}));const r=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});toast(r.ok?`✅ ${r.guardados} guardados`:"❌ "+r.error);};
-window.openRegla=async pid=>{
-  const re=window._re[pid];if(re){toast(`🔒 "${re.nombre||re.codigo}" — definitiva`);return;}
-  const r=await api("getReglasDisponibles",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,partidoId:pid});if(!r.ok){toast("❌ "+r.error);return;}
-  const m=mkModal("Reglas especiales",`
-    <div style="padding:10px 13px;background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);margin-bottom:14px;font-size:12px;color:var(--gold)">⚠️ Las reglas son <strong>definitivas</strong> y no se pueden cambiar.</div>
-    ${r.disponibles.map(x=>`<div class="regla-opcion" onclick="aplicarRegla('${pid}','${x.codigo}')">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span style="font-weight:700;font-size:14px">${x.nombre}</span>
-        <span style="font-family:var(--ff);font-size:17px;font-weight:800;color:var(--g2)">+${x.pts}pts</span>
-      </div>
-      <p style="font-size:12px;color:var(--txt2)">${x.desc}</p>
-      ${x.codigo==="MK"?`<input class="inp" id="mk-${pid}" placeholder="Resultado exacto (ej: 2-1)" style="margin-top:8px" onclick="event.stopPropagation()"/>`:""}</div>`).join("")}
-    ${!r.disponibles.length?emptyBox("🚫","Sin reglas disponibles"):""}`);
+window.openRegla=async function(pid){
+  const re=window._re[pid];
+  if(re){
+    const m=mkModal("📏 "+(re.nombre||re.codigo),
+      '<div style="padding:12px;background:rgba(255,179,0,.08);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);margin-bottom:14px;font-size:13px;color:var(--gold)">'+
+      '\uD83D\uDD12 Regla definitiva aplicada.</div>'+
+      (re.esMovible
+        ?'<button class="btn btn-s" style="width:100%;margin-top:8px" id="btn-mover">Mover regla a otro partido \u2192</button>'
+        :'<p style="font-size:12px;color:var(--txt3);text-align:center">Esta regla no se puede mover</p>')
+    );
+    document.body.appendChild(m);
+    const btnMover=document.getElementById("btn-mover");
+    if(btnMover)btnMover.onclick=function(){moverRegla(pid);};
+    return;
+  }
+  const mload=document.createElement("div");
+  mload.className="modal-bg";mload.id="regla-loading";
+  mload.innerHTML='<div class="modal-box" style="text-align:center;padding:40px 22px">'+
+    '<div class="spinner" style="margin:0 auto 16px"></div>'+
+    '<p style="font-size:14px;color:var(--txt2)">Cargando reglas...</p></div>';
+  document.body.appendChild(mload);
+  const r=await api("getReglasDisponibles",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,partidoId:pid});
+  const ml=document.getElementById("regla-loading");if(ml)ml.remove();
+  if(!r.ok){toast("\u274C "+r.error);return;}
+  const reglasUsadas=Object.values(window._re).map(function(x){return x.codigo;});
+  const disponibles=r.disponibles.filter(function(x){
+    return!(x.esUnica&&reglasUsadas.includes(x.codigo));
+  });
+  if(!disponibles.length){toast("No hay reglas disponibles");return;}
+  let body='<div style="padding:10px 13px;background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);margin-bottom:14px;font-size:12px;color:var(--gold)">';
+  body+='\u26A0\uFE0F Las reglas son <strong>definitivas</strong>.</div>';
+  body+='<div id="reglas-lista">';
+  disponibles.forEach(function(x){
+    body+='<div class="regla-opcion" data-pid="'+pid+'" data-cod="'+x.codigo+'">';
+    body+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+    body+='<span style="font-weight:700;font-size:14px">'+x.nombre+'</span>';
+    body+='<span style="font-family:var(--ff);font-size:17px;font-weight:800;color:var(--green)">+'+x.pts+'pts</span></div>';
+    body+='<p style="font-size:12px;color:var(--txt2)">'+x.desc+'</p>';
+    if(!x.esUnica)body+='<span style="font-size:10px;color:var(--blue)">\u2713 Se puede elegir en varios partidos</span>';
+    if(x.codigo==="MK")body+='<input class="inp" id="mk-'+pid+'" placeholder="Resultado exacto (ej: 2-1)" style="margin-top:8px"/>';
+    body+='</div>';
+  });
+  body+='</div>';
+  const m=mkModal("\uD83D\uDCD0 Reglas especiales",body);
   document.body.appendChild(m);
+  document.querySelectorAll("#reglas-lista .regla-opcion").forEach(function(el){
+    el.onclick=function(e){
+      if(e.target.tagName==="INPUT")return;
+      aplicarRegla(el.dataset.pid,el.dataset.cod);
+    };
+  });
 };
+
+window.moverRegla=function(pid){
+  document.querySelector(".modal-bg")&&document.querySelector(".modal-bg").remove();
+  const re=window._re[pid];if(!re)return;
+  const parts=window._parts.filter(function(p){return p.id!==pid&&!window._re[p.id];});
+  if(!parts.length){toast("No hay partidos sin regla para mover");return;}
+  let body='<p style="font-size:13px;color:var(--txt2);margin-bottom:14px">Mover <strong>'+(re.nombre||re.codigo)+'</strong> a:</p>';
+  body+='<div id="mover-lista">';
+  parts.forEach(function(p){
+    body+='<div class="regla-opcion" data-origen="'+pid+'" data-destino="'+p.id+'">';
+    body+='<div style="font-size:13px;font-weight:600">#'+p.numero+' '+p.local+' vs '+p.visita+'</div>';
+    body+='</div>';
+  });
+  body+='</div>';
+  const m=mkModal("Mover regla",body);
+  document.body.appendChild(m);
+  document.querySelectorAll("#mover-lista .regla-opcion").forEach(function(el){
+    el.onclick=function(){confirmarMoverRegla(el.dataset.origen,el.dataset.destino);};
+  });
+};
+
+window.confirmarMoverRegla=async function(pidOrigen,pidDestino){
+  document.querySelector(".modal-bg")&&document.querySelector(".modal-bg").remove();
+  toast("Moviendo regla...");
+  const re=window._re[pidOrigen];
+  const r=await api("moverRegla",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pidOrigen:pidOrigen,pidDestino:pidDestino,codigoRegla:re.codigo});
+  if(!r.ok){toast("\u274C "+r.error);return;}
+  window._re[pidDestino]=window._re[pidOrigen];
+  delete window._re[pidOrigen];
+  renderPartidos(window._parts,window._ctx,true);
+  toast("\u2705 Regla movida");
+};
+
 window.aplicarRegla=async(pid,cod)=>{let det="";if(cod==="MK"){det=document.getElementById("mk-"+pid)?.value||"";if(!det){toast("Ingresá resultado exacto");return;}}document.querySelector(".modal-bg")?.remove();toast("Aplicando...");const r=await api("guardarRegla",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,partidoId:pid,codigoRegla:cod,detalle:det});if(!r.ok){toast("❌ "+r.error);return;}window._re[pid]={codigo:cod,nombre:r.regla?.nombre||cod};if(window._pr[pid])window._pr[pid].reg=true;renderPartidos(window._parts,window._ctx,true);toast("✅ "+r.mensaje);};
 
 /* ══ TABLA ═══════════════════════════════════════════════════ */
