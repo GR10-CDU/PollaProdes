@@ -510,6 +510,23 @@ input:focus,select:focus{outline:none}
 /* TOAST */
 .toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:var(--d2);color:var(--white);border-radius:24px;padding:10px 20px;font-size:13px;font-weight:600;z-index:9999;animation:su .2s ease;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08)}
 @media(min-width:769px){.toast{bottom:20px}}
+
+.pc-body{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;gap:10px}
+.team-side{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;max-width:40%}
+.team-circle{width:54px;height:54px;border-radius:50%;border:2px solid var(--bdr);background:var(--off);display:flex;align-items:center;justify-content:center;font-family:var(--ff);font-size:22px;font-weight:900;color:var(--dark2)}
+.team-label{font-size:9px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px}
+.team-name{font-family:var(--ff);font-size:17px;font-weight:800;text-align:center;line-height:1.1}
+.pc-center{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0;min-width:130px}
+.lev-trio{display:flex;gap:6px;width:100%}
+.score-boxes{display:flex;align-items:center;gap:6px}
+.score-box{width:46px;height:46px;border-radius:var(--rs);background:var(--off);border:1.5px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-family:var(--ff);font-size:28px;font-weight:900}
+.score-box.filled{background:var(--dark);color:#fff}
+.score-dash{font-family:var(--ff);font-size:20px;font-weight:700;color:var(--txt3)}
+.prono-display{display:flex;flex-direction:column;align-items:center;gap:2px}
+.prono-letra{font-family:var(--ff);font-size:48px;font-weight:900;line-height:1}
+.prono-letra.L{color:var(--L)}.prono-letra.E{color:var(--E)}.prono-letra.V{color:var(--V)}
+.prono-lbl{font-size:9px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px}
+.fecha-badge{display:inline-flex;align-items:center;padding:3px 10px;border:1.5px solid var(--gold);border-radius:20px;font-size:11px;font-weight:700;color:var(--gold);background:rgba(255,179,0,.1)}
 </style>
 </head>
 <body>
@@ -546,7 +563,7 @@ input:focus,select:focus{outline:none}
 <div id="sl" style="display:none"></div>
 
 <script>
-const SCRIPT_URL="https://script.google.com/macros/s/AKfycbyA5t2APMR97Z9PZNNTMWiZpozoO4i2bHJ2rdpikAx8JSMOhf8r1zXfg4S6pIhj7vX_/exec";
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxJCewWO7hdi4L9LNgMLFS7JgorXXIppgB7hOuSxdJfolje8jrOmCkcwC1GSj53BmK2/exec";
 const API_SECRET="PP2026-xK9mQ7vL2nR4wT8yU3pA5cE1hG6jF0bD";
 const SK="pp_tok",UK="pp_usr";
 const App={user:null,token:null,screen:null,ctx:{}};
@@ -633,9 +650,9 @@ async function loadFechas(){
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
   if(!r.fechas?.length){el.innerHTML=emptyBox("📅","No hay fechas disponibles");return;}
   const ICONS={"Liga Argentina":"🇦🇷","Premier League":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","La Liga":"🇪🇸","Serie A":"🇮🇹","Champions League":"🏆","Copa Libertadores":"🌎","Ligue 1":"🇫🇷"};
-  const fechasVisibles = App.user?.rol==="Admin" ? r.fechas : r.fechas.filter(f=>f.estado==="Abierta");
-  if(!fechasVisibles.length){el.innerHTML=emptyBox("📅","No hay fechas disponibles");return;}
-  el.innerHTML=fechasVisibles.map(f=>{
+  var fechasVis=App.user&&App.user.rol==="Admin"?r.fechas:r.fechas.filter(function(f){return f.estado==="Abierta";});
+  if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas disponibles");return;}
+  el.innerHTML=fechasVis.map(f=>{
     const mins=f.minutosRestantes,urg=mins<120&&mins>0;
     const pt=mins<=0?"🔒 Plazo vencido":mins<60?`⏱ ${mins}min`:mins<1440?`⏱ ${Math.floor(mins/60)}hs`:`📅 ${new Date(f.plazoLimite).toLocaleDateString("es-AR",{day:"numeric",month:"long"})}`;
     const ic=ICONS[f.liga]||"⚽";
@@ -748,95 +765,77 @@ window.inscribirse=async()=>{if(!window._selPozo){toast("Seleccioná un pozo");r
 window._pr={};window._re={};window._ctx={};window._parts=[];
 
 async function loadJugar(ctx){
+  const jel=document.getElementById("jc");
   const rf=await api("getFecha",{fechaId:ctx.fechaId});
-  if(!rf.ok){const el=document.getElementById("jc");if(el)el.innerHTML=errBox(rf.error);return;}
+  if(!rf.ok){if(jel)jel.innerHTML=errBox(rf.error);return;}
   window._ctx=ctx;window._parts=rf.partidos||[];window._pr={};window._re={};
+  if(!window._parts.length){if(jel)jel.innerHTML=emptyBox("&#9917;","Sin partidos en esta fecha");return;}
   const puede=rf.fecha.estado==="Abierta";
   renderPartidos(window._parts,ctx,puede);
   try{
     const rm=await api("getMiFecha",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
     if(rm.ok){
-      rm.pronos?.forEach(p=>{window._pr[p.partidoId]={v:p.pronostico,cr:p.cambiosRestantes};});
-      rm.reglas?.forEach(r=>{window._re[r.partidoId]=r;});
+      (rm.pronos||[]).forEach(p=>{window._pr[p.partidoId]={v:p.pronostico,cr:p.cambiosRestantes};});
+      (rm.reglas||[]).forEach(r=>{window._re[r.partidoId]=r;});
       renderPartidos(window._parts,ctx,puede);
     }
   }catch(e){}
 }
-
-
-function renderPartidos(parts, ctx, puede) {
-  const el = document.getElementById("jc");
-  if (!el) return;
-  const comp = Object.keys(window._pr).filter(k => window._pr[k]?.v).length;
-  const tot = parts.length;
-  const pb = document.getElementById("prog");
-  if (pb) pb.style.width = `${tot ? Math.round(comp/tot*100) : 0}%`;
-  const pt = document.getElementById("prog-txt");
-  if (pt) pt.textContent = `${comp} de ${tot} pronósticos`;
-  const pp = document.getElementById("prog-pct");
-  if (pp) pp.textContent = tot ? Math.round(comp/tot*100)+"%" : "";
-
-  el.innerHTML = parts.map(p => {
-    const pr = window._pr[p.id] || {}, re = window._re[p.id];
-    const sel = pr.v, cr = pr.cr !== undefined ? pr.cr : 3;
-    const sinGoles = p.golesLocal === null || p.golesLocal === undefined || p.golesLocal === "";
-    const bloq = !!re || cr === 0 || !puede || !sinGoles;
-    const tipoCls = p.tipo === "Polla" ? " polla" : p.tipo === "Doble" ? " doble" : "";
-    const li = (p.local || "L")[0].toUpperCase();
-    const vi = (p.visita || "V")[0].toUpperCase();
-    const fechaStr = p.fechaHora ? new Date(p.fechaHora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}) : "";
-
-    return `<div class="partido-card${sel ? " pronosticado" : ""}${tipoCls}" id="pc-${p.id}">
-      <div class="pc-header">
-        <div class="pc-header-left">
-          <span style="font-size:11px;font-weight:700;color:var(--txt3)">#${p.numero}</span>
-          ${fechaStr ? `<span class="fecha-badge">${fechaStr}</span>` : ""}
-          ${p.tipo==="Polla" ? `<span class="bdg bgold">⭐ POLLA</span>` : p.tipo==="Doble" ? `<span class="bdg bpur">×2 DOBLE</span>` : `<span class="bdg bgr">Normal</span>`}
-          ${p.esToleTole ? `<span class="bdg btole">🔥 TOLE</span>` : ""}
-          ${p.estado==="En Vivo" ? `<span class="bdg blive">● VIVO</span>` : ""}
-        </div>
-        <div class="pc-header-right">
-          ${sel ? `<span class="cambios ${cr===3?"ok":cr>0?"warn":"none"}">🔄 ${cr}</span>` : ""}
-          ${sel ? `<span class="regla-btn${re?" ap":""}" onclick="openRegla('${p.id}')">⭐ ${re ? re.nombre||re.codigo : "Regla"}</span>` : ""}
-        </div>
-      </div>
-      <div class="pc-body">
-        <div class="team-side">
-          <div class="team-label">Local</div>
-          <div class="team-circle">${li}</div>
-          <div class="team-name">${p.local}</div>
-        </div>
-        <div class="pc-center">
-          ${!sinGoles ?
-            `<div class="score-boxes"><div class="score-box filled">${p.golesLocal}</div><span class="score-dash">-</span><div class="score-box filled">${p.golesVisita}</div></div>` :
-          !bloq ?
-            `<div class="lev-trio">
-              ${["L","E","V"].map(v => {
-                const label = v==="L"?"Local":v==="E"?"Empate":"Visit.";
-                return `<button class="lev-btn ${v}${sel===v?" sel":""}" onclick="pronosticar('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')">
-                  <span class="lev-letra">${v}</span>
-                  <span class="lev-sub">${label}</span>
-                </button>`;
-              }).join("")}
-            </div>` :
-          sel ?
-            `<div class="prono-display"><div class="prono-letra ${sel}">${sel}</div><div class="prono-lbl">tu pronóstico</div></div>` :
-            `<div style="text-align:center;font-size:11px;color:var(--txt3)">${cr===0?"Sin cambios":re?"🔒 Regla":"Sin pronóstico"}</div>`
-          }
-        </div>
-        <div class="team-side">
-          <div class="team-label">Visitante</div>
-          <div class="team-circle">${vi}</div>
-          <div class="team-name">${p.visita}</div>
-        </div>
-      </div>
-    </div>`;
-  }).join("");
-
-  const jf = document.getElementById("jf");
-  if (jf && puede) jf.innerHTML = `<button class="btn btn-p btn-lg" onclick="guardarTodos()">💾 Guardar pronósticos</button>`;
+function renderPartidos(parts,ctx,puede){
+  const el=document.getElementById("jc");
+  if(!el)return;
+  const comp=Object.values(window._pr).filter(p=>p&&p.v).length;
+  const tot=parts.length;
+  const pb=document.getElementById("prog");if(pb)pb.style.width=(tot?Math.round(comp/tot*100):0)+"%";
+  const pt=document.getElementById("prog-txt");if(pt)pt.textContent=comp+" de "+tot+" pronosticos";
+  let html="";
+  for(let i=0;i<parts.length;i++){
+    const p=parts[i];
+    const pr=window._pr[p.id]||{},re=window._re[p.id];
+    const sel=pr.v;
+    const sinGoles=p.golesLocal===null||p.golesLocal===undefined||p.golesLocal==="";
+    const bloq=!!re||!puede||!sinGoles;
+    const tipoCls=p.tipo==="Polla"?" polla":p.tipo==="Doble"?" doble":"";
+    const li=(p.local||"L")[0].toUpperCase(),vi=(p.visita||"V")[0].toUpperCase();
+    const hora=p.fechaHora?new Date(p.fechaHora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}):"";
+    let hdr="<span style='font-size:11px;font-weight:700;color:var(--txt3)'>#"+p.numero+"</span>";
+    if(hora)hdr+="<span class='fecha-badge'>"+hora+"</span>";
+    if(p.tipo==="Polla")hdr+="<span class='bdg bgold'>&#11088; POLLA</span>";
+    else if(p.tipo==="Doble")hdr+="<span class='bdg bpur'>x2 DOBLE</span>";
+    else hdr+="<span class='bdg bgr'>Normal</span>";
+    if(p.esToleTole)hdr+="<span class='bdg btole'>&#128293; TOLE</span>";
+    if(p.estado==="En Vivo")hdr+="<span class='bdg blive'>&#9679; VIVO</span>";
+    let hdrR="";
+    if(sel){
+      if(!re)hdrR+="<span class='bdg bg' style='font-size:11px'>&#10003;</span>";
+      hdrR+="<span class='regla-btn"+(re?" ap":"")+"' onclick='openRegla(""+p.id+"")'>"+(re?"&#128210; "+(re.nombre||re.codigo):"&#128210; Regla")+"</span>";
+    }
+    let centro="";
+    if(!sinGoles){
+      centro="<div class='score-boxes'><div class='score-box filled'>"+p.golesLocal+"</div><span class='score-dash'>-</span><div class='score-box filled'>"+p.golesVisita+"</div></div>";
+    } else if(!bloq){
+      centro="<div class='lev-trio'>"
+        +"<button class='lev-btn L"+(sel==="L"?" sel":"")+"' onclick='pronosticar(""+p.id+"","L",""+ctx.fechaId+"",""+ctx.pozoId+"")'><span class='lev-letra'>L</span><span class='lev-sub'>Local</span></button>"
+        +"<button class='lev-btn E"+(sel==="E"?" sel":"")+"' onclick='pronosticar(""+p.id+"","E",""+ctx.fechaId+"",""+ctx.pozoId+"")'><span class='lev-letra'>E</span><span class='lev-sub'>Empate</span></button>"
+        +"<button class='lev-btn V"+(sel==="V"?" sel":"")+"' onclick='pronosticar(""+p.id+"","V",""+ctx.fechaId+"",""+ctx.pozoId+"")'><span class='lev-letra'>V</span><span class='lev-sub'>Visit.</span></button>"
+        +"</div>";
+    } else if(sel){
+      centro="<div class='prono-display'><div class='prono-letra "+sel+"'>"+sel+"</div><div class='prono-lbl'>"+(re?"&#128274; Regla":"tu pronostico")+"</div></div>";
+    } else {
+      centro="<div style='text-align:center;font-size:11px;color:var(--txt3)'>Sin pronostico</div>";
+    }
+    html+="<div class='partido-card"+(sel?" pronosticado":"")+tipoCls+"' id='pc-"+p.id+"'>"
+      +"<div class='pc-header'><div class='pc-header-left'>"+hdr+"</div><div class='pc-header-right'>"+hdrR+"</div></div>"
+      +"<div class='pc-body'>"
+      +"<div class='team-side'><div class='team-label'>Local</div><div class='team-circle'>"+li+"</div><div class='team-name'>"+p.local+"</div></div>"
+      +"<div class='pc-center'>"+centro+"</div>"
+      +"<div class='team-side'><div class='team-label'>Visitante</div><div class='team-circle'>"+vi+"</div><div class='team-name'>"+p.visita+"</div></div>"
+      +"</div></div>";
+  }
+  el.innerHTML=html;
+  const jf=document.getElementById("jf");
+  if(jf&&puede)jf.innerHTML="<button class='btn btn-p btn-lg' onclick='guardarTodos()'>&#128190; Guardar pronosticos</button>";
 }
-
 
 window.pronosticar=async(pid,v,fid,poid)=>{
   const prev=window._pr[pid]?{...window._pr[pid]}:null;
