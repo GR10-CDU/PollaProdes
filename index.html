@@ -218,29 +218,18 @@ input:focus,select:focus{outline:none}
     radial-gradient(ellipse at 100% 50%,rgba(0,150,80,.08) 0%,transparent 50%),
     linear-gradient(160deg,#020810 0%,#050D1A 40%,#071220 70%,#030A16 100%);
 }
-/* Campo de fútbol CSS */
+/* Líneas del campo */
 #sl::after{
   content:"";position:absolute;inset:0;
   background:
-    /* Líneas horizontales del campo */
-    repeating-linear-gradient(0deg,
-      transparent 0px,transparent 58px,
-      rgba(255,255,255,.04) 58px,rgba(255,255,255,.04) 60px
-    ),
-    /* Líneas verticales */
-    repeating-linear-gradient(90deg,
-      transparent 0px,transparent 118px,
-      rgba(255,255,255,.025) 118px,rgba(255,255,255,.025) 120px
-    ),
-    /* Círculo central */
-    radial-gradient(circle at 50% 50%,transparent 58px,rgba(255,255,255,.03) 59px,transparent 60px),
-    radial-gradient(circle at 50% 50%,transparent 118px,rgba(255,255,255,.02) 119px,transparent 120px);
+    repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(255,255,255,.012) 60px,rgba(255,255,255,.012) 61px),
+    repeating-linear-gradient(90deg,transparent,transparent 80px,rgba(255,255,255,.008) 80px,rgba(255,255,255,.008) 81px);
   pointer-events:none
 }
 .lb{width:100%;max-width:400px;position:relative;z-index:1}
 .ll-head{text-align:center;margin-bottom:28px}
 .ll-logo{
-  width:110px;height:110px;border-radius:26px;overflow:hidden;
+  width:96px;height:96px;border-radius:24px;overflow:hidden;
   margin:0 auto 18px;border:1px solid rgba(255,255,255,.12);
   box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 40px rgba(0,200,83,.15)
 }
@@ -557,7 +546,7 @@ input:focus,select:focus{outline:none}
 <div id="sl" style="display:none"></div>
 
 <script>
-const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxJCewWO7hdi4L9LNgMLFS7JgorXXIppgB7hOuSxdJfolje8jrOmCkcwC1GSj53BmK2/exec";
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbyA5t2APMR97Z9PZNNTMWiZpozoO4i2bHJ2rdpikAx8JSMOhf8r1zXfg4S6pIhj7vX_/exec";
 const API_SECRET="PP2026-xK9mQ7vL2nR4wT8yU3pA5cE1hG6jF0bD";
 const SK="pp_tok",UK="pp_usr";
 const App={user:null,token:null,screen:null,ctx:{}};
@@ -572,13 +561,11 @@ function clearSession(){api("logout");localStorage.removeItem(SK);localStorage.r
 
 const NAV_J=[{k:"fechas",i:"📅",l:"Fechas",t:"Fechas"},{k:"tabla",i:"🏆",l:"Tabla",t:"Tabla"},{k:"grilla",i:"👥",l:"Los Otros",t:"Los Otros"},{k:"stats",i:"📊",l:"Estadísticas",t:"Hall of Fame"},{k:"perfil",i:"👤",l:"Perfil",t:"Perfil"}];
 const NAV_A=[{k:"admin-dash",i:"📊",l:"Dashboard",t:"Dashboard"},{k:"admin-fechas",i:"📅",l:"Fechas",t:"Fechas"},{k:"admin-importar",i:"🔗",l:"Importar",t:"Importar Partidos"},{k:"admin-res",i:"⚽",l:"Resultados",t:"Resultados"},{k:"admin-users",i:"👥",l:"Jugadores",t:"Jugadores"},{k:"admin-pagos",i:"💰",l:"Pagos",t:"Pagos Pendientes"},{k:"perfil",i:"👤",l:"Perfil",t:"Perfil"}];
-const NAV_EXTRA=[{k:"fecha-det",t:"Fecha"},{k:"jugar",t:"Jugar"}];
 function getNav(){return App.user?.rol==="Admin"?NAV_A:NAV_J;}
 
 function go(k,ctx={}){
   App.screen=k;App.ctx=ctx;
-  const allNav=[...getNav(),...NAV_EXTRA];
-  const item=allNav.find(n=>n.k===k)||{t:k};
+  const item=getNav().find(n=>n.k===k)||{t:k};
   renderNav();
   const tt=document.getElementById("topbar-title");if(tt)tt.textContent=item.t;
   const html=renderScreen(k,ctx);
@@ -761,10 +748,7 @@ window._pr={};window._re={};window._ctx={};window._parts=[];
 async function loadJugar(ctx){
   const rf=await api("getFecha",{fechaId:ctx.fechaId});
   if(!rf.ok){const el=document.getElementById("jc");if(el)el.innerHTML=errBox(rf.error);return;}
-  window._ctx=ctx;
-  window._parts=rf.partidos||[];
-  window._pr={};
-  window._re={};
+  window._ctx=ctx;window._parts=rf.partidos||[];window._pr={};window._re={};
   const puede=rf.fecha.estado==="Abierta";
   renderPartidos(window._parts,ctx,puede);
   try{
