@@ -759,84 +759,24 @@ window.inscribirse=async()=>{if(!window._selPozo){toast("Seleccioná un pozo");r
 window._pr={};window._re={};window._ctx={};window._parts=[];
 
 async function loadJugar(ctx){
-  const[rf,rm]=await Promise.all([api("getFecha",{fechaId:ctx.fechaId}),api("getMiFecha",{fechaId:ctx.fechaId,pozoId:ctx.pozoId})]);
-  if(!rf.ok){toast("Error cargando");return;}
-  window._ctx=ctx;window._parts=rf.partidos||[];window._pr={};window._re={};
-  if(rm.ok){
-    rm.pronos?.forEach(p=>{window._pr[p.partidoId]={v:p.pronostico,cr:p.cambiosRestantes,reg:p.tieneRegla};});
-    rm.reglas?.forEach(r=>{window._re[r.partidoId]=r;});
-  }
-  const puede=rf.fecha.estado==="Abierta"&&rf.fecha.minutosRestantes>0;
+  const rf=await api("getFecha",{fechaId:ctx.fechaId});
+  if(!rf.ok){const el=document.getElementById("jc");if(el)el.innerHTML=errBox(rf.error);return;}
+  window._ctx=ctx;
+  window._parts=rf.partidos||[];
+  window._pr={};
+  window._re={};
+  const puede=rf.fecha.estado==="Abierta";
   renderPartidos(window._parts,ctx,puede);
+  try{
+    const rm=await api("getMiFecha",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
+    if(rm.ok){
+      rm.pronos?.forEach(p=>{window._pr[p.partidoId]={v:p.pronostico,cr:p.cambiosRestantes};});
+      rm.reglas?.forEach(r=>{window._re[r.partidoId]=r;});
+      renderPartidos(window._parts,ctx,puede);
+    }
+  }catch(e){}
 }
 
-function renderPartidos(parts,ctx,puede){
-  const el=document.getElementById("jc");if(!el)return;
-  const comp=Object.keys(window._pr).filter(k=>window._pr[k]?.v).length,tot=parts.length;
-  const pb=document.getElementById("prog");if(pb)pb.style.width=`${tot?Math.round(comp/tot*100):0}%`;
-  const pt=document.getElementById("prog-txt");if(pt)pt.textContent=`${comp} de ${tot} pronósticos`;
-  const pp=document.getElementById("prog-pct");if(pp)pp.textContent=tot?Math.round(comp/tot*100)+"%":"";
-
-  el.innerHTML=parts.map(p=>{
-    const pr=window._pr[p.id]||{},re=window._re[p.id];
-    const sel=pr.v,cr=pr.cr!==undefined?pr.cr:3;
-    const sinGoles=p.golesLocal===null||p.golesLocal===undefined||p.golesLocal==="";
-    const bloq=!!re||cr===0||!puede||!sinGoles;
-    const tipoCls=p.tipo==="Polla"?" polla":p.tipo==="Doble"?" doble":"";
-    // Inicial del equipo para "escudo"
-    const li=p.local?p.local[0].toUpperCase():"L",vi=p.visita?p.visita[0].toUpperCase():"V";
-
-    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}" id="pc-${p.id}">
-      <!-- META -->
-      <div class="pc-meta">
-        <div class="pc-bdgs">
-          <span style="font-size:11px;font-weight:700;color:var(--txt3)">#${p.numero}</span>
-          ${p.tipo==="Polla"?`<span class="bdg bgold" style="font-size:12px;padding:4px 11px">⭐ POLLA</span>`:
-            p.tipo==="Doble"?`<span class="bdg bpur" style="font-size:12px;padding:4px 11px">×2 DOBLE</span>`:
-            `<span class="bdg bgr" style="font-size:12px;padding:4px 11px">NORMAL</span>`}
-          ${p.esToleTole?`<span class="bdg btole" style="font-size:12px;padding:4px 11px">🔥 TOLE TOLE</span>`:""}
-          ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:12px;padding:4px 11px">● VIVO</span>`:""}
-        </div>
-        <div class="pc-acts">
-          ${sel?`<span class="cambios ${cr===3?"ok":cr>0?"warn":"none"}">🔄 ${cr}</span>`:""}
-          ${sel?`<span class="regla-btn${re?" ap":""}" onclick="openRegla('${p.id}')">⭐ ${re?re.nombre||re.codigo:"Regla"}</span>`:""}
-        </div>
-      </div>
-      <!-- EQUIPOS -->
-      <div class="teams-block">
-        <div class="team-box">
-          <div class="team-escudo">${li}</div>
-          <div class="team-name-big">${p.local}</div>
-        </div>
-        <div class="vs-center">
-          ${!sinGoles?`<div class="score-vivo">${p.golesLocal}-${p.golesVisita}</div>`:
-            sel?`<div class="prono-centro ${sel}">${sel}</div><div class="prono-lbl">tu pronóstico</div>`:
-            `<div class="vs-txt">VS</div>`}
-        </div>
-        <div class="team-box">
-          <div class="team-escudo">${vi}</div>
-          <div class="team-name-big">${p.visita}</div>
-        </div>
-      </div>
-      <!-- L/E/V -->
-      ${!bloq?`
-        <div class="lev-wrap">
-          ${["L","E","V"].map(v=>{
-            const label=v==="L"?"Local":v==="E"?"Empate":"Visitante";
-            return`<button class="lev-btn ${v}${sel===v?" sel":""}" onclick="pronosticar('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')">
-              <span class="lev-letra">${v}</span>
-              <span class="lev-sub">${label}</span>
-            </button>`;
-          }).join("")}
-        </div>`
-      :!sinGoles?""
-      :`<div class="partido-blocked">${cr===0?"🚫 Sin cambios restantes":re?"🔒 Regla aplicada":"Sin pronóstico aún"}</div>`}
-    </div>`;
-  }).join("");
-
-  const jf=document.getElementById("jf");
-  if(jf&&puede)jf.innerHTML=`<button class="btn btn-p btn-lg" onclick="guardarTodos()">💾 Guardar pronósticos</button>`;
-}
 
 window.pronosticar=async(pid,v,fid,poid)=>{
   const prev=window._pr[pid]?{...window._pr[pid]}:null;
