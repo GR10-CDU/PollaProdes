@@ -1217,8 +1217,13 @@ window._guardarTodasLasReglas=async function(){
     if(reg.cantReq>1)payload.partidosIds=reg.partidos;
     else payload.partidoId=reg.partidos[0];
     if(reg.codigo==="MK")payload.detalle=reg.detalleMK||"";
-    const r=await api("guardarRegla",payload);
-    if(!r.ok){toast("❌ "+reg.nombre+": "+r.error);return false;}
+    try{
+      const r=await api("guardarRegla",payload);
+      if(!r.ok){toast("❌ "+reg.nombre+": "+r.error);return false;}
+    }catch(e){
+      toast("❌ Error guardando "+reg.nombre);
+      return false;
+    }
   }
   return true;
 };
@@ -1240,22 +1245,29 @@ window.guardarProgreso=async function(){
 window.jugarFecha=async function(){
   const estado=_calcularEstado();
   if(!estado.completo){toast("⚠️ "+estado.msgs[0]);return;}
+  // Verificar que tenemos fechaId y pozoId
+  if(!window._ctx.fechaId||!window._ctx.pozoId){
+    toast("❌ Error: falta fechaId o pozoId. Volvé a entrar a la fecha.");
+    return;
+  }
   const btn=document.getElementById("btn-jugar-area");
   if(btn)btn.innerHTML=`<div style="text-align:center;padding:8px"><div class="spinner" style="margin:0 auto 8px"></div><p style="font-size:13px;color:var(--txt2)">Guardando fecha...</p></div>`;
   try{
+    // 1. Guardar pronósticos
     const ps=Object.entries(window._pr).map(function(e){return{partidoId:e[0],pronostico:e[1].v};});
     const rp=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});
-    if(!rp.ok){toast("❌ "+rp.error);renderReglasSection(true);return;}
-    // Solo guardar reglas si hay reglas configuradas para esta fecha
+    if(!rp.ok){toast("❌ Pronósticos: "+rp.error);renderReglasSection(true);return;}
+    // 2. Guardar reglas si hay
     if(window._reglasDisp.length){
       const ok=await window._guardarTodasLasReglas();
       if(!ok){renderReglasSection(true);return;}
     }
+    // 3. Todo OK — volver a fechas
     App._fechaJugada=window._ctx.fechaId;
-    toast("✅ ¡Fecha jugada! Pronósticos guardados.");
+    toast("✅ ¡Fecha jugada! Tus pronósticos quedaron guardados.");
     setTimeout(function(){go("fechas");},1500);
   }catch(e){
-    toast("❌ Error: "+e.message);
+    toast("❌ Error inesperado: "+e.message);
     renderReglasSection(true);
   }
 };
