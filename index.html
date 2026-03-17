@@ -761,7 +761,10 @@ async function loadFechas(){
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
   if(!r.fechas?.length){el.innerHTML=emptyBox("📅","No hay fechas disponibles");return;}
   const ICONS={"Liga Argentina":"🇦🇷","Premier League":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","La Liga":"🇪🇸","Serie A":"🇮🇹","Champions League":"🏆","Copa Libertadores":"🌎","Ligue 1":"🇫🇷"};
-  var fechasVis=App.user&&App.user.rol==="Admin"?r.fechas:r.fechas.filter(function(f){return f.estado==="Abierta";});
+  // Mostrar: abiertas + cerradas/jugadas en las que el usuario participó
+  var fechasVis=App.user&&App.user.rol==="Admin"?r.fechas:r.fechas.filter(function(f){
+    return f.estado==="Abierta"||f.estado==="Cerrada"||f.estado==="Finalizada";
+  });
   if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas disponibles");return;}
   el.innerHTML=fechasVis.map(function(f){
     const mins=f.minutosRestantes,urg=mins<120&&mins>0;
@@ -895,10 +898,38 @@ async function loadFechaDet(ctx){
       <p class="sec">Elegí tu pozo</p>
       <div id="plist"><div class="loading"><div class="spinner"></div></div></div>
       <div id="pjbtn" style="margin-top:14px;display:none"></div>`:`
-      <div style="padding:16px;background:rgba(255,82,52,.04);border:1px solid rgba(255,82,52,.15);border-radius:var(--r);text-align:center">
-        <p style="color:var(--txt2);font-size:13px">🔒 Pronósticos cerrados para esta fecha</p>
-      </div>`}`;
-  if(puedeJugar)loadPozos(ctx.fechaId);
+      <div id="plist-cerrada"></div>`}
+    <!-- Mis pronósticos (siempre visible si está cerrada/inscripto) -->
+    <div id="mis-pronos-det"></div>`;
+  if(puedeJugar){
+    loadPozos(ctx.fechaId);
+  } else {
+    // Fecha cerrada: mostrar mis pronósticos y botón a la tabla
+    loadMisPronoDet(ctx.fechaId,f);
+  }
+}
+
+async function loadMisPronoDet(fechaId,f){
+  const rp=await api("getPozos",{fechaId,userId:App.user?.id});
+  const el=document.getElementById("plist-cerrada");
+  const ep=document.getElementById("mis-pronos-det");
+  const yaInsc=rp.ok?rp.pozos?.find(function(p){return p.yaInscripto;}):null;
+
+  if(!yaInsc){
+    if(el)el.innerHTML=`<div style="padding:14px;background:rgba(255,82,52,.04);border:1px solid rgba(255,82,52,.15);border-radius:var(--r);text-align:center"><p style="color:var(--txt2);font-size:13px">🔒 Fecha cerrada</p></div>`;
+    return;
+  }
+
+  // Mostrar botones de acceso
+  if(el)el.innerHTML=`
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <button class="btn btn-p" onclick="go('jugar',{fechaId:'${fechaId}',pozoId:'${yaInsc.id}'})" style="flex:1">
+        👁 Ver mis pronósticos
+      </button>
+      <button class="btn btn-s" onclick="go('tabla',{fechaId:'${fechaId}',pozoId:'${yaInsc.id}'})" style="flex:1">
+        🏆 Ver tabla
+      </button>
+    </div>`;
 }
 
 /* ══ POZOS ═══════════════════════════════════════════════════ */
