@@ -993,7 +993,7 @@ function renderReglasSection(puede){
               <option value="">?</option>
               ${nums.map(function(n){return`<option value="${n}"${String(gV)===String(n)?" selected":""}>${n}</option>`;}).join("")}
             </select>
-            ${gL!==""&&gV!==""?`<span style="font-size:13px;font-weight:700;color:var(--g2)">${gL}-${gV} &#10003;</span>`:""}
+            <span id="mk-confirm" style="font-size:13px;font-weight:700;color:var(--g2)">${gL!==""&&gV!==""?gL+"-"+gV+" ✓":""}</span>
           </div>
         </div>`;
       }
@@ -1008,9 +1008,9 @@ function renderReglasSection(puede){
   if(!bloq){
     const estado=_calcularEstado();
     if(estado.completo){
-      html+=`<button class="btn btn-p btn-lg" style="margin-top:18px" onclick="jugarFecha()">&#9654; Jugar Fecha</button>`;
+      html+=`<div id="btn-jugar-area" style="margin-top:18px"><button class="btn btn-p btn-lg" onclick="jugarFecha()">&#9654; Jugar Fecha</button></div>`;
     } else {
-      html+=`<div style="margin-top:18px">
+      html+=`<div id="btn-jugar-area" style="margin-top:18px">
         <div style="padding:12px 14px;background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);margin-bottom:10px">
           <p style="font-size:12px;font-weight:600;color:var(--gold);margin-bottom:4px">&#9888;&#65039; Falta completar:</p>
           ${estado.msgs.map(function(m){return`<p style="font-size:12px;color:var(--txt2)">&#8226; ${m}</p>`;}).join("")}
@@ -1031,7 +1031,27 @@ window._actualizarMK=function(){
   const reg=window._reglasDisp.find(function(r){return r.codigo==="MK";});
   if(!reg)return;
   reg.detalleMK=(gl!==""&&gv!=="")?gl+"-"+gv:"";
-  renderReglasSection(true);
+  // Solo actualizar el label de confirmación sin re-renderizar todo
+  const conf=document.getElementById("mk-confirm");
+  if(conf)conf.textContent=(gl!==""&&gv!=="")?(gl+"-"+gv+" ✓"):"";
+  // Actualizar el botón principal para reflejar si La MK está completa
+  _actualizarBotonPrincipal();
+};
+
+window._actualizarBotonPrincipal=function(){
+  const div=document.getElementById("jf-reglas");if(!div)return;
+  const estado=_calcularEstado();
+  const btnArea=document.getElementById("btn-jugar-area");
+  if(!btnArea)return;
+  if(estado.completo){
+    btnArea.innerHTML=`<button class="btn btn-p btn-lg" onclick="jugarFecha()">&#9654; Jugar Fecha</button>`;
+  } else {
+    btnArea.innerHTML=`<div style="padding:12px 14px;background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);margin-bottom:10px">
+      <p style="font-size:12px;font-weight:600;color:var(--gold);margin-bottom:4px">&#9888;&#65039; Falta completar:</p>
+      ${estado.msgs.map(function(m){return`<p style="font-size:12px;color:var(--txt2)">&#8226; ${m}</p>`;}).join("")}
+    </div>
+    <button class="btn btn-s btn-lg" onclick="guardarProgreso()">&#128190; Guardar progreso</button>`;
+  }
 };
 
 window.agregarPartidoRegla=function(cod,pid){
@@ -1184,15 +1204,15 @@ async function loadAdminFechas(){
 }
 // Catálogo de todas las reglas disponibles (para el modal del admin)
 const TODAS_LAS_REGLAS=[
-  {codigo:"NPF",nombre:"No Puede Fallar",desc:"1 partido L/V que no puede fallar",pts:3},
-  {codigo:"LMR",nombre:"La Marea Roja",desc:"3 partidos donde habrá tarjeta roja (1pt c/roja)",pts:1},
-  {codigo:"LR",nombre:"La Rachita",desc:"5 consecutivos acertados (1pt c/consec.)",pts:1},
-  {codigo:"LLDG",nombre:"Lluvia de Goles",desc:"1 partido con 5 o más goles",pts:4},
-  {codigo:"DIEGO",nombre:"El Diego",desc:"3 partidos que terminarán en empate",pts:5},
-  {codigo:"GSA",nombre:"Goles Son Amores",desc:"1 partido L/V, ambos anotan (1pt c/gol)",pts:1},
-  {codigo:"ZPL",nombre:"La Zapali",desc:"1 partido L/V gana por 3+ goles",pts:4},
-  {codigo:"MK",nombre:"La MK",desc:"Resultado exacto de 1 partido L/V",pts:5},
-  {codigo:"EQS",nombre:"Empate Que Suma",desc:"1 partido terminará en empate",pts:3},
+  {codigo:"NPF",nombre:"No Puede Fallar",desc:"Elegí el partido más seguro de la fecha. Tenés que elegir al Ganador. Si acertás, sumás 3 puntos.",pts:3},
+  {codigo:"LMR",nombre:"La Marea Roja",desc:"Elegí 3 partidos en los que creas que habrá al menos una tarjeta roja. Sumás 1 punto por cada expulsión.",pts:1},
+  {codigo:"LR",nombre:"La Rachita",desc:"Elegí un partido como inicio de La Rachita. El objetivo es acertar 5 partidos consecutivos. Sumás 1 punto por cada acierto consecutivo.",pts:1},
+  {codigo:"LLDG",nombre:"Lluvia de Goles",desc:"Elegí un partido en el que creas que habrá 5 goles o más. Si acertás, sumás 4 puntos.",pts:4},
+  {codigo:"DIEGO",nombre:"El Diego",desc:"Elegí 3 partidos que creas terminarán en empate. Si acertás los 3, sumás 5 puntos.",pts:5},
+  {codigo:"GSA",nombre:"Goles Son Amores",desc:"Elegí un partido en el que ambos equipos conviertan goles. Sumás 1 punto por cada gol del partido.",pts:1},
+  {codigo:"ZPL",nombre:"La Zapali",desc:"Elegí un partido en el que haya un ganador por diferencia de 3 goles o más. Si acertás, sumás 4 puntos.",pts:4},
+  {codigo:"MK",nombre:"La MK",desc:"Elegí el resultado exacto de un partido. No se puede elegir Empate en 0. Si acertás, sumás 5 puntos.",pts:5},
+  {codigo:"EQS",nombre:"Empate Que Suma",desc:"Elegí un partido que finalice en empate. Si acertás, sumás 3 puntos.",pts:3},
 ];
 window._reglasSelAdmin=new Set();
 
