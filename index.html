@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- POLLA PRODES — index.html | 2026-03-16 11:15 ARG -->
+<!-- POLLA PRODES — index.html | 2026-03-16 20:00 ARG -->
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
@@ -614,8 +614,6 @@ const NAV_A=[{k:"admin-dash",i:"📊",l:"Dashboard",t:"Dashboard"},{k:"admin-fec
 function getNav(){return App.user?.rol==="Admin"?NAV_A:NAV_J;}
 
 function go(k,ctx={}){
-  // Ocultar badge si salimos de jugar
-  if(k!=="jugar"){const b=document.getElementById("reglas-badge");if(b)b.style.display="none";}
   App.screen=k;App.ctx=ctx;
   const item=getNav().find(n=>n.k===k)||{t:k};
   renderNav();
@@ -797,63 +795,74 @@ window.buscarGrupo=async()=>{const c=document.getElementById("gcod")?.value;if(!
 window.inscribirse=async()=>{if(!window._selPozo){toast("Seleccioná un pozo");return;}const r=await api("inscribirse",{fechaId:window._fid,pozoId:window._selPozo});if(!r.ok){toast("❌ "+r.error);return;}if(r.habilitado){toast("✅ ¡Habilitado!");setTimeout(()=>go("jugar",{fechaId:window._fid,pozoId:window._selPozo}),800);}else{const mp=await api("crearPreferencia",{inscripcionId:r.inscripcionId});if(mp.ok&&(mp.initPoint||mp.sandboxUrl))window.location.href=mp.initPoint||mp.sandboxUrl;else toast("💡 "+(mp.error||"Error MP"));}};
 
 /* ══ JUGAR ═══════════════════════════════════════════════════ */
-window._pr={};window._re={};window._ctx={};window._parts=[];
+// _pr: {partidoId -> {v, cr}}
+// _re: array de {codigo, nombre, pts, desc, cantReq, partidos:[ids]}
+// _reglasDisp: reglas habilitadas para la fecha (desde getFecha)
+window._pr={};window._re=[];window._ctx={};window._parts=[];window._reglasDisp=[];
 
 async function loadJugar(ctx){
   const jel=document.getElementById("jc");
   const rf=await api("getFecha",{fechaId:ctx.fechaId});
   if(!rf.ok){if(jel)jel.innerHTML=errBox(rf.error);return;}
-  window._ctx=ctx;window._parts=rf.partidos||[];window._pr={};window._re={};
+  window._ctx=ctx;
+  window._parts=rf.partidos||[];
+  window._pr={};window._reglasDisp=[];
+  // Guardar reglas habilitadas por el admin para esta fecha
+  (rf.fecha.reglasDetalle||[]).forEach(function(r){
+    window._reglasDisp.push({
+      codigo:r.codigo,nombre:r.nombre,pts:r.pts,desc:r.desc,
+      cantReq:r.cantPartidos||1,
+      partidos:[],
+      detalleMK:""
+    });
+  });
+
   if(!window._parts.length){if(jel)jel.innerHTML=emptyBox("&#9917;","Sin partidos en esta fecha");return;}
-  const puede=rf.fecha.estado==="Abierta";
+  const puede=rf.fecha.estado==="Abierta"&&rf.fecha.minutosRestantes>0;
   renderPartidos(window._parts,ctx,puede);
+
+  // Cargar pronos y reglas ya guardadas
   try{
     const rm=await api("getMiFecha",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
-    if(rm.ok){
-      (rm.pronos||[]).forEach(p=>{window._pr[p.partidoId]={v:p.pronostico,cr:p.cambiosRestantes};});
-      (rm.reglas||[]).forEach(r=>{
-        if(!window._re[r.partidoId])window._re[r.partidoId]=[];
-        window._re[r.partidoId].push(r);
-      });
-      renderPartidos(window._parts,ctx,puede);
-    }
-  }catch(e){}
+    if(rm.ok)(rm.pronos||[]).forEach(function(p){window._pr[p.partidoId]={v:p.pronostico,cr:p.cambiosRestantes};});
+    const rr=await api("getMisReglas",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
+    if(rr.ok)(rr.reglas||[]).forEach(function(rg){
+      const disp=window._reglasDisp.find(function(d){return d.codigo===rg.codigo;});
+      if(disp)disp.partidos=(rg.partidos||[]).map(function(p){return p.partidoId;});
+    });
+    renderPartidos(window._parts,ctx,puede);
+    renderReglasSection(puede);
+  }catch(e){renderReglasSection(puede);}
 }
+
 function renderPartidos(parts,ctx,puede){
   const el=document.getElementById("jc");if(!el)return;
-  const comp=Object.keys(window._pr).filter(k=>window._pr[k]?.v).length,tot=parts.length;
-  const pb=document.getElementById("prog");if(pb)pb.style.width=`${tot?Math.round(comp/tot*100):0}%`;
-  const pt=document.getElementById("prog-txt");if(pt)pt.textContent=`${comp} de ${tot} pronósticos`;
+  const comp=Object.keys(window._pr).filter(function(k){return window._pr[k]&&window._pr[k].v;}).length,tot=parts.length;
+  const pb=document.getElementById("prog");if(pb)pb.style.width=(tot?Math.round(comp/tot*100):0)+"%";
+  const pt=document.getElementById("prog-txt");if(pt)pt.textContent=comp+" de "+tot+" pronósticos";
   const pp=document.getElementById("prog-pct");if(pp)pp.textContent=tot?Math.round(comp/tot*100)+"%":"";
 
-  el.innerHTML=parts.map(p=>{
+  el.innerHTML=parts.map(function(p){
     const pr=window._pr[p.id]||{};
-    const reArr=window._re[p.id]||[];
-    const re=reArr[0]||null; // primera regla (para display)
     const sel=pr.v,cr=pr.cr!==undefined?pr.cr:3;
     const sinGoles=p.golesLocal===null||p.golesLocal===undefined||p.golesLocal==="";
-    const bloq=!puede||!sinGoles; // sin límite de cambios L/E/V durante juego
+    const bloq=!puede||!sinGoles;
     const tipoCls=p.tipo==="Polla"?" polla":p.tipo==="Doble"?" doble":"";
-    // Inicial del equipo para "escudo"
     const li=p.local?p.local[0].toUpperCase():"L",vi=p.visita?p.visita[0].toUpperCase():"V";
 
     return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}" id="pc-${p.id}">
-      <!-- META -->
       <div class="pc-meta">
         <div class="pc-bdgs">
           <span style="font-size:11px;font-weight:700;color:var(--txt3)">#${p.numero}</span>
-          ${p.tipo==="Polla"?`<span class="bdg bgold" style="font-size:12px;padding:4px 11px">⭐ POLLA</span>`:
-            p.tipo==="Doble"?`<span class="bdg bpur" style="font-size:12px;padding:4px 11px">×2 DOBLE</span>`:
+          ${p.tipo==="Polla"?`<span class="bdg bgold" style="font-size:12px;padding:4px 11px">&#11088; POLLA</span>`:
+            p.tipo==="Doble"?`<span class="bdg bpur" style="font-size:12px;padding:4px 11px">&#215;2 DOBLE</span>`:
             `<span class="bdg bgr" style="font-size:12px;padding:4px 11px">NORMAL</span>`}
-          ${p.esToleTole?`<span class="bdg btole" style="font-size:12px;padding:4px 11px">🔥 TOLE TOLE</span>`:""}
-          ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:12px;padding:4px 11px">● VIVO</span>`:""}
+          ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:12px;padding:4px 11px">&#9679; VIVO</span>`:""}
         </div>
         <div class="pc-acts">
-          ${(sel&&!puede)?`<span class="cambios ${cr===3?"ok":cr>0?"warn":"none"}">🔄 ${cr}</span>`:""}
-          ${sel?`<span class="regla-btn${reArr.length?" ap":""}" onclick="openRegla('${p.id}')" style="cursor:pointer">📏 ${reArr.length?reArr.length+"  regla"+(reArr.length>1?"s":""):"Agregar regla"}</span>`:""}
+          ${(sel&&puede)?`<span class="cambios ${cr===3?"ok":cr>0?"warn":"none"}">&#128260; ${cr}</span>`:""}
         </div>
       </div>
-      <!-- EQUIPOS -->
       <div class="teams-block">
         <div class="team-box">
           <div class="team-escudo">${li}</div>
@@ -861,7 +870,7 @@ function renderPartidos(parts,ctx,puede){
         </div>
         <div class="vs-center">
           ${!sinGoles?`<div class="score-vivo">${p.golesLocal}-${p.golesVisita}</div>`:
-            sel?`<div class="prono-centro ${sel}">${sel}</div><div class="prono-lbl">tu pronóstico</div>`:
+            sel?`<div class="prono-centro ${sel}">${sel}</div><div class="prono-lbl">tu pron&oacute;stico</div>`:
             `<div class="vs-txt">VS</div>`}
         </div>
         <div class="team-box">
@@ -869,268 +878,144 @@ function renderPartidos(parts,ctx,puede){
           <div class="team-name-big">${p.visita}</div>
         </div>
       </div>
-      <!-- L/E/V -->
       ${!bloq?`
         <div class="lev-wrap">
-          ${["L","E","V"].map(v=>{
+          ${["L","E","V"].map(function(v){
             const label=v==="L"?"Local":v==="E"?"Empate":"Visitante";
-            return`<button class="lev-btn ${v}${sel===v?" sel":""}" onclick="pronosticar('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')">
-              <span class="lev-letra">${v}</span>
-              <span class="lev-sub">${label}</span>
-            </button>`;
+            return`<button class="lev-btn ${v}${sel===v?" sel":""}" onclick="pronosticar('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')"><span class="lev-letra">${v}</span><span class="lev-sub">${label}</span></button>`;
           }).join("")}
         </div>`
       :!sinGoles?""
-      :`<div class="partido-blocked">${re?"🔒 Regla aplicada":"Sin pronóstico aún"}</div>`}
+      :`<div class="partido-blocked">Sin pron&oacute;stico a&uacute;n</div>`}
     </div>`;
   }).join("");
 
   const jf=document.getElementById("jf");
-  if(jf&&puede)jf.innerHTML=`<button class="btn btn-p btn-lg" onclick="guardarTodos()">💾 Guardar pronósticos</button>`;
-  renderReglasBadge();
+  if(jf&&puede)jf.innerHTML=`<button class="btn btn-p btn-lg" onclick="guardarTodos()">&#128190; Guardar pron&oacute;sticos</button>`;
 }
 
-// ── Definición de cuántos partidos necesita cada regla ──
-const REGLAS_META = {
-  NPF:  {nombre:"No Puede Fallar",  max:1, pronos:["L","V"]},
-  LMR:  {nombre:"La Marea Roja",    max:3, pronos:["L","E","V"]},
-  LR:   {nombre:"La Rachita",       max:5, pronos:["L","E","V"]},
-  LLDG: {nombre:"Lluvia de Goles",  max:1, pronos:["L","E","V"]},
-  DIEGO:{nombre:"El Diego",         max:1, pronos:["E"]},
-  GSA:  {nombre:"Goles Son Amores", max:1, pronos:["L","V"]},
-  ZPL:  {nombre:"La Zapali",        max:1, pronos:["L","V"]},
-  MK:   {nombre:"La MK",            max:1, pronos:["L","V"]},
-  EQS:  {nombre:"Empate Que Suma",  max:1, pronos:["E"]},
+/* ══ SECCIÓN REGLAS ESPECIALES ══════════════════════════════ */
+function renderReglasSection(puede){
+  if(!window._reglasDisp.length)return;
+  const jf=document.getElementById("jf");if(!jf)return;
+  const bloq=!puede;
+
+  let html=`<div style="margin-top:22px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <span style="font-family:var(--ff);font-size:22px;font-weight:900;letter-spacing:.5px">&#128208; REGLAS ESPECIALES</span>
+      ${bloq?`<span class="bdg bred">&#128274; Bloqueadas</span>`:`<span class="bdg bg">Abiertas</span>`}
+    </div>
+    <p style="font-size:12px;color:var(--txt3);margin-bottom:14px">Elegi a qu&eacute; partido aplicar cada regla. Son independientes de tus pron&oacute;sticos L/E/V.</p>`;
+
+  window._reglasDisp.forEach(function(reg){
+    const yaCompleta=reg.partidos.length>=reg.cantReq;
+    const esMultiple=reg.cantReq>1;
+    html+=`<div class="card" style="margin-bottom:10px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-family:var(--ff);font-size:18px;font-weight:800">${reg.nombre}</span>
+            <span style="font-family:var(--ff);font-size:16px;font-weight:700;color:var(--g2)">+${reg.pts}pts</span>
+            ${yaCompleta?`<span class="bdg bg">&#10003; Lista</span>`:`<span class="bdg bgold">${reg.partidos.length}/${reg.cantReq}</span>`}
+          </div>
+          <p style="font-size:12px;color:var(--txt2);margin-top:4px">${reg.desc}</p>
+          ${esMultiple?`<p style="font-size:11px;color:var(--blue);margin-top:2px">Eleg&iacute; ${reg.cantReq} partidos</p>`:""}
+        </div>
+      </div>`;
+
+    // Partidos ya elegidos
+    if(reg.partidos.length){
+      html+=`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">`;
+      reg.partidos.forEach(function(pid){
+        const part=window._parts.find(function(p){return p.id===pid;});
+        if(!part)return;
+        html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(0,200,83,.06);border:1px solid rgba(0,200,83,.2);border-radius:var(--rs)">
+          <span style="font-size:11px;font-weight:700;color:var(--txt3)">#${part.numero}</span>
+          <span style="font-size:13px;font-weight:500;flex:1">${part.local} vs ${part.visita}</span>
+          ${!bloq?`<button onclick="quitarPartidoRegla('${reg.codigo}','${pid}')" style="font-size:14px;color:var(--txt3);padding:2px 6px;border-radius:4px;background:var(--off)" title="Quitar">&#10005;</button>`:""}
+        </div>`;
+      });
+      html+=`</div>`;
+    }
+
+    // Selector de partido
+    if(!bloq&&!yaCompleta){
+      const disponibles=window._parts.filter(function(p){return !reg.partidos.includes(p.id);});
+      if(disponibles.length){
+        html+=`<select class="inp" onchange="agregarPartidoRegla('${reg.codigo}',this.value);this.value=''">
+          <option value="">+ Elegir partido${esMultiple?" ("+(reg.cantReq-reg.partidos.length)+" restante"+(reg.cantReq-reg.partidos.length!==1?"s":" ")+")":""}...</option>
+          ${disponibles.map(function(p){return`<option value="${p.id}">#${p.numero} ${p.local} vs ${p.visita}</option>`;}).join("")}
+        </select>`;
+      }
+    }
+
+    // Detalle para La MK
+    if(reg.codigo==="MK"&&!bloq&&reg.partidos.length){
+      html+=`<div style="margin-top:8px"><input class="inp" id="mk-det-${reg.codigo}" placeholder="Resultado exacto (ej: 2-1)" value="${reg.detalleMK||""}" oninput="window._reglasDisp.find(function(r){return r.codigo==='MK';}).detalleMK=this.value"/></div>`;
+    }
+
+    // Botón guardar
+    if(!bloq){
+      html+=`<button class="btn btn-p" style="margin-top:10px;width:100%;padding:11px" onclick="guardarRegla('${reg.codigo}')">&#128190; Guardar ${reg.nombre}</button>`;
+    }
+
+    html+=`</div>`;
+  });
+
+  html+=`</div>`;
+
+  let div=document.getElementById("jf-reglas");
+  if(!div){div=document.createElement("div");div.id="jf-reglas";jf.parentNode.insertBefore(div,jf.nextSibling);}
+  div.innerHTML=html;
+}
+
+window.agregarPartidoRegla=function(cod,pid){
+  if(!pid)return;
+  const reg=window._reglasDisp.find(function(r){return r.codigo===cod;});
+  if(!reg)return;
+  if(reg.partidos.includes(pid)){toast("Ya elegiste ese partido");return;}
+  if(reg.partidos.length>=reg.cantReq){toast("Ya elegiste los "+reg.cantReq+" partidos");return;}
+  reg.partidos.push(pid);
+  renderReglasSection(true);
 };
 
-function renderReglasBadge(){
-  // Construir resumen de reglas aplicadas
-  const usadas = {}; // codigo -> [{partido, local, visita}]
-  Object.entries(window._re).forEach(function([pid,arr]){
-    (arr||[]).forEach(function(r){
-      if(!usadas[r.codigo])usadas[r.codigo]=[];
-      const p=window._parts.find(function(x){return x.id===pid;});
-      usadas[r.codigo].push({pid:pid,local:p?p.local:"?",visita:p?p.visita:"?",numero:p?p.numero:"?"});
-    });
-  });
+window.quitarPartidoRegla=function(cod,pid){
+  const reg=window._reglasDisp.find(function(r){return r.codigo===cod;});
+  if(!reg)return;
+  reg.partidos=reg.partidos.filter(function(id){return id!==pid;});
+  renderReglasSection(true);
+};
 
-  const totalUsadas=Object.values(usadas).reduce(function(a,b){return a+b.length;},0);
+window.guardarRegla=async function(cod){
+  const reg=window._reglasDisp.find(function(r){return r.codigo===cod;});
+  if(!reg){toast("Regla no encontrada");return;}
+  if(!reg.partidos.length){toast("Elegi al menos un partido");return;}
+  if(reg.partidos.length<reg.cantReq){toast("Faltan "+(reg.cantReq-reg.partidos.length)+" partido(s)");return;}
+  if(cod==="MK"&&!reg.detalleMK){toast("Ingresa el resultado exacto para La MK");return;}
+  const payload={fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,codigoRegla:cod};
+  if(reg.cantReq>1)payload.partidosIds=reg.partidos;
+  else payload.partidoId=reg.partidos[0];
+  if(cod==="MK")payload.detalle=reg.detalleMK;
+  toast("Guardando...");
+  const r=await api("guardarRegla",payload);
+  if(!r.ok){toast("\u274C "+r.error);return;}
+  toast("\u2705 "+r.mensaje);
+};
 
-  // Calcular faltantes
-  const faltantes=[];
-  Object.entries(REGLAS_META).forEach(function([cod,meta]){
-    const cant=(usadas[cod]||[]).length;
-    if(cant>0 && cant<meta.max){
-      faltantes.push({cod:cod,nombre:meta.nombre,faltan:meta.max-cant,max:meta.max});
-    }
-  });
-
-  // Obtener o crear el badge
-  let badge=document.getElementById("reglas-badge");
-  if(!badge){
-    badge=document.createElement("div");
-    badge.id="reglas-badge";
-    badge.innerHTML='<div id="reglas-badge-head" onclick="document.getElementById(\'reglas-badge\').classList.toggle(\'open\')">'
-      +'<span class="rbt">📏 Mis Reglas</span>'
-      +'<span class="rbc" id="rb-count">—</span>'
-      +'</div><div id="reglas-badge-body"></div>';
-    document.body.appendChild(badge);
-  }
-
-  // Actualizar count
-  const countEl=document.getElementById("rb-count");
-  if(countEl)countEl.textContent=totalUsadas+" aplicada"+(totalUsadas!==1?"s":"");
-
-  // Actualizar body
-  const body=document.getElementById("reglas-badge-body");
-  if(!body)return;
-
-  let html="";
-
-  // Sección: faltantes
-  if(faltantes.length){
-    html+='<div class="rb-section">Pendientes</div>';
-    faltantes.forEach(function(f){
-      html+='<div class="rb-item">'
-        +'<div><div class="rb-nombre">'+f.nombre+'</div></div>'
-        +'<span class="rb-falta">Faltan '+f.faltan+'</span>'
-        +'</div>';
-    });
-  }
-
-  // Sección: aplicadas
-  if(totalUsadas>0){
-    html+='<div class="rb-section">Aplicadas</div>';
-    Object.entries(usadas).forEach(function([cod,parts]){
-      const meta=REGLAS_META[cod];
-      const nombre=meta?meta.nombre:cod;
-      parts.forEach(function(p){
-        html+='<div class="rb-item">'
-          +'<div><div class="rb-nombre">'+nombre+'</div>'
-          +'<div class="rb-partido">#'+p.numero+' '+p.local+' vs '+p.visita+'</div></div>'
-          +'<span class="rb-ok">✓</span>'
-          +'</div>';
-      });
-    });
-  }
-
-  if(!totalUsadas&&!faltantes.length){
-    html='<div style="text-align:center;padding:12px 0;font-size:12px;color:rgba(255,255,255,.35)">Sin reglas aplicadas aún</div>';
-  }
-
-  body.innerHTML=html;
-
-  // Mostrar/ocultar badge según si estamos en pantalla jugar
-  badge.style.display=window._parts.length?"flex":"none";
-  badge.style.flexDirection="column";
-}
-
-window.pronosticar=async(pid,v,fid,poid)=>{
-  const prev=window._pr[pid]?{...window._pr[pid]}:null;
-  if(!window._pr[pid])window._pr[pid]={v,cr:3};
-  else{window._pr[pid].v=v;window._pr[pid].cr=Math.max(0,(prev?.cr||3)-1);}
+window.pronosticar=async function(pid,v,fid,poid){
+  const prev=window._pr[pid]?Object.assign({},window._pr[pid]):null;
+  if(!window._pr[pid])window._pr[pid]={v:v,cr:3};
+  else{window._pr[pid].v=v;window._pr[pid].cr=Math.max(0,(prev&&prev.cr!==undefined?prev.cr:3)-1);}
   renderPartidos(window._parts,window._ctx,true);
   const r=await api("guardarPronostico",{fechaId:fid,pozoId:poid,partidoId:pid,pronostico:v});
-  if(!r.ok){toast("❌ "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];renderPartidos(window._parts,window._ctx,true);return;}
+  if(!r.ok){toast("\u274C "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];renderPartidos(window._parts,window._ctx,true);return;}
   if(r.cambiosRestantes!==undefined){window._pr[pid].cr=r.cambiosRestantes;renderPartidos(window._parts,window._ctx,true);}
   if(r.mensaje&&r.cambio)toast(r.mensaje);
 };
-window.guardarTodos=async()=>{const ps=Object.entries(window._pr).map(([id,p])=>({partidoId:id,pronostico:p.v}));const r=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});toast(r.ok?`✅ ${r.guardados} guardados`:"❌ "+r.error);};
-window.openRegla=async function(pid){
-  const reArr=window._re[pid]||[];
-  const sel=window._pr[pid]&&window._pr[pid].v;
-  if(!sel){toast("Primero elegí un pronóstico (L/E/V)");return;}
-
-  // Loading
-  const mload=document.createElement("div");
-  mload.className="modal-bg";mload.id="regla-loading";
-  mload.innerHTML='<div class="modal-box" style="text-align:center;padding:40px 22px">'
-    +'<div class="spinner" style="margin:0 auto 16px"></div>'
-    +'<p style="font-size:14px;color:var(--txt2)">Cargando reglas...</p></div>';
-  document.body.appendChild(mload);
-
-  const r=await api("getReglasDisponibles",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,partidoId:pid});
-  const ml=document.getElementById("regla-loading");if(ml)ml.remove();
-  if(!r.ok){toast("\u274C "+r.error);return;}
-
-  // Reglas ya usadas en OTROS partidos (para filtrar únicas)
-  const usadasOtros=[];
-  Object.entries(window._re).forEach(function([opid,arr]){
-    if(opid===pid)return;
-    (arr||[]).forEach(function(x){usadasOtros.push(x.codigo);});
-  });
-
-  // Reglas ya en ESTE partido
-  const enEste=reArr.map(function(x){return x.codigo;});
-
-  // Filtrar disponibles:
-  // - compatibles con pronóstico actual
-  // - únicas: no usadas en otros partidos
-  // - no ya aplicadas en este mismo partido
-  const disponibles=r.disponibles.filter(function(x){
-    if(enEste.includes(x.codigo))return false; // ya está en este partido
-    if(x.esUnica&&usadasOtros.includes(x.codigo))return false; // única ya en otro
-    return true;
-  });
-
-  let body="";
-
-  // Reglas ya aplicadas en este partido
-  if(reArr.length){
-    body+='<div class="rb-section" style="color:var(--gold);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">\u2705 Reglas en este partido</div>';
-    reArr.forEach(function(re){
-      body+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(0,200,83,.06);border:1px solid rgba(0,200,83,.2);border-radius:var(--rs);margin-bottom:6px">';
-      body+='<div><div style="font-size:13px;font-weight:600">'+( re.nombre||re.codigo)+'</div>';
-      if(re.esMovible)body+='<div style="font-size:11px;color:var(--txt3)">Podés moverla a otro partido</div>';
-      body+='</div>';
-      if(re.esMovible){
-        body+='<button class="btn btn-s" style="padding:4px 10px;font-size:11px" id="btn-mover-'+re.codigo+'">Mover</button>';
-      }
-      body+='</div>';
-    });
-    if(disponibles.length)body+='<div style="height:1px;background:var(--bdr);margin:10px 0"></div>';
-  }
-
-  if(disponibles.length){
-    body+='<div style="padding:9px 12px;background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);margin-bottom:12px;font-size:11px;color:var(--gold)">\u26A0\uFE0F Las reglas son definitivas. Se pueden mover mientras est\u00e9s jugando.</div>';
-    disponibles.forEach(function(x){
-      body+='<div class="regla-opcion" data-pid="'+pid+'" data-cod="'+x.codigo+'">';
-      body+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">';
-      body+='<span style="font-weight:700;font-size:14px">'+x.nombre+'</span>';
-      body+='<span style="font-family:var(--ff);font-size:16px;font-weight:800;color:var(--green)">+'+x.pts+'pts</span></div>';
-      body+='<p style="font-size:12px;color:var(--txt2)">'+x.desc+'</p>';
-      if(!x.esUnica)body+='<span style="font-size:10px;color:var(--blue)">\u2713 M\u00faltiples partidos</span>';
-      if(x.codigo==="MK")body+='<input class="inp" id="mk-'+pid+'" placeholder="Resultado exacto (ej: 2-1)" style="margin-top:8px"/>';
-      body+='</div>';
-    });
-  } else if(!reArr.length){
-    body+='<div class="empty" style="padding:20px"><p>No hay reglas disponibles para este partido</p></div>';
-  }
-
-  const p=window._parts.find(function(x){return x.id===pid;});
-  const titulo="\uD83D\uDCD0 "+(p?"#"+p.numero+" "+p.local+" vs "+p.visita:"Reglas");
-  const m=mkModal(titulo,body);
-  document.body.appendChild(m);
-
-  // Listeners para aplicar regla
-  document.querySelectorAll(".modal-box .regla-opcion").forEach(function(el){
-    el.onclick=function(e){
-      if(e.target.tagName==="INPUT")return;
-      aplicarRegla(el.dataset.pid,el.dataset.cod);
-    };
-  });
-
-  // Listeners para mover regla
-  reArr.forEach(function(re){
-    const btnMover=document.getElementById("btn-mover-"+re.codigo);
-    if(btnMover)btnMover.onclick=function(e){e.stopPropagation();moverRegla(pid,re.codigo);};
-  });
-};
-
-window.moverRegla=function(pid){
-  document.querySelector(".modal-bg")&&document.querySelector(".modal-bg").remove();
-  const re=window._re[pid];if(!re)return;
-  const parts=window._parts.filter(function(p){return p.id!==pid&&!window._re[p.id];});
-  if(!parts.length){toast("No hay partidos sin regla para mover");return;}
-  let body='<p style="font-size:13px;color:var(--txt2);margin-bottom:14px">Mover <strong>'+(re.nombre||re.codigo)+'</strong> a:</p>';
-  body+='<div id="mover-lista">';
-  parts.forEach(function(p){
-    body+='<div class="regla-opcion" data-origen="'+pid+'" data-destino="'+p.id+'">';
-    body+='<div style="font-size:13px;font-weight:600">#'+p.numero+' '+p.local+' vs '+p.visita+'</div>';
-    body+='</div>';
-  });
-  body+='</div>';
-  const m=mkModal("Mover regla",body);
-  document.body.appendChild(m);
-  document.querySelectorAll("#mover-lista .regla-opcion").forEach(function(el){
-    el.onclick=function(){confirmarMoverRegla(el.dataset.origen,el.dataset.destino);};
-  });
-};
-
-window.confirmarMoverRegla=async function(pidOrigen,pidDestino){
-  document.querySelector(".modal-bg")&&document.querySelector(".modal-bg").remove();
-  toast("Moviendo regla...");
-  const re=window._re[pidOrigen];
-  const r=await api("moverRegla",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pidOrigen:pidOrigen,pidDestino:pidDestino,codigoRegla:re.codigo});
-  if(!r.ok){toast("\u274C "+r.error);return;}
-  window._re[pidDestino]=window._re[pidOrigen];
-  delete window._re[pidOrigen];
-  renderPartidos(window._parts,window._ctx,true);
-  toast("\u2705 Regla movida");
-};
-
-window.aplicarRegla=async function(pid,cod){
-  let det="";
-  if(cod==="MK"){det=document.getElementById("mk-"+pid)?.value||"";if(!det){toast("Ingresá resultado exacto");return;}}
-  document.querySelector(".modal-bg")?.remove();
-  toast("Aplicando...");
-  const r=await api("guardarRegla",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,partidoId:pid,codigoRegla:cod,detalle:det});
-  if(!r.ok){toast("\u274C "+r.error);return;}
-  // Agregar al array de reglas del partido (soporta múltiples)
-  if(!window._re[pid])window._re[pid]=[];
-  window._re[pid].push({codigo:cod,nombre:r.regla?.nombre||cod,esMovible:true});
-  renderPartidos(window._parts,window._ctx,true);
-  toast("\u2705 "+r.mensaje);
+window.guardarTodos=async function(){
+  const ps=Object.entries(window._pr).map(function(e){return{partidoId:e[0],pronostico:e[1].v};});
+  const r=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});
+  toast(r.ok?"\u2705 "+r.guardados+" guardados":"\u274C "+r.error);
 };
 
 /* ══ TABLA ═══════════════════════════════════════════════════ */
@@ -1211,8 +1096,56 @@ async function loadAdminFechas(){
       ${f.estado==="Cerrada"?`<button class="btn btn-s" style="padding:5px 11px;font-size:12px" onclick="calcularFecha('${f.id}')">🏆 Calcular</button>`:""}
     </div></div>`).join("")||emptyBox("📅","Sin fechas");
 }
-window.showCrearFecha=()=>{const m=mkModal("Nueva fecha",`<div class="fg"><div class="ig"><label class="lbl">Nombre</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div><div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="nfp" type="datetime-local"/></div><div class="ig"><label class="lbl">Descripción</label><input class="inp" id="nfd"/></div><button class="btn btn-p btn-lg" onclick="crearFecha()">Crear fecha</button></div>`);document.body.appendChild(m);};
-window.crearFecha=async()=>{const r=await api("adminCrearFecha",{nombre:document.getElementById("nfn")?.value,liga:document.getElementById("nfl")?.value,plazoLimite:document.getElementById("nfp")?.value,descripcion:document.getElementById("nfd")?.value});document.querySelector(".modal-bg")?.remove();if(r.ok){toast("✅ Fecha creada");loadAdminFechas();}else toast("❌ "+r.error);};
+// Catálogo de todas las reglas disponibles (para el modal del admin)
+const TODAS_LAS_REGLAS=[
+  {codigo:"NPF",nombre:"No Puede Fallar",desc:"1 partido L/V que no puede fallar",pts:3},
+  {codigo:"LMR",nombre:"La Marea Roja",desc:"3 partidos donde habrá tarjeta roja (1pt c/roja)",pts:1},
+  {codigo:"LR",nombre:"La Rachita",desc:"5 consecutivos acertados (1pt c/consec.)",pts:1},
+  {codigo:"LLDG",nombre:"Lluvia de Goles",desc:"1 partido con 5 o más goles",pts:4},
+  {codigo:"DIEGO",nombre:"El Diego",desc:"3 partidos que terminarán en empate",pts:5},
+  {codigo:"GSA",nombre:"Goles Son Amores",desc:"1 partido L/V, ambos anotan (1pt c/gol)",pts:1},
+  {codigo:"ZPL",nombre:"La Zapali",desc:"1 partido L/V gana por 3+ goles",pts:4},
+  {codigo:"MK",nombre:"La MK",desc:"Resultado exacto de 1 partido L/V",pts:5},
+  {codigo:"EQS",nombre:"Empate Que Suma",desc:"1 partido terminará en empate",pts:3},
+];
+window._reglasSelAdmin=new Set();
+
+window.showCrearFecha=async function(){
+  const reglasHTML=TODAS_LAS_REGLAS.map(function(r){
+    return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer">
+      <input type="checkbox" value="${r.codigo}" style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/>
+      <div>
+        <div style="font-size:13px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:11px">+${r.pts}pts</span></div>
+        <div style="font-size:11px;color:var(--txt3)">${r.desc}</div>
+      </div>
+    </label>`;
+  }).join("");
+
+  window._reglasSelAdmin=new Set();
+  const m=mkModal("Nueva fecha",`<div class="fg">
+    <div class="ig"><label class="lbl">Nombre</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div>
+    <div class="ig"><label class="lbl">Liga</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div>
+    <div class="ig"><label class="lbl">Plazo l&iacute;mite</label><input class="inp" id="nfp" type="datetime-local"/></div>
+    <div class="ig"><label class="lbl">Descripci&oacute;n</label><input class="inp" id="nfd"/></div>
+    <div class="ig">
+      <label class="lbl">Reglas especiales habilitadas</label>
+      <div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div>
+    </div>
+    <button class="btn btn-p btn-lg" onclick="crearFecha()">Crear fecha</button>
+  </div>`);
+  document.body.appendChild(m);
+};
+window.crearFecha=async function(){
+  const r=await api("adminCrearFecha",{
+    nombre:document.getElementById("nfn")?.value,
+    liga:document.getElementById("nfl")?.value,
+    plazoLimite:document.getElementById("nfp")?.value,
+    descripcion:document.getElementById("nfd")?.value,
+    reglasHabilitadas:Array.from(window._reglasSelAdmin)
+  });
+  document.querySelector(".modal-bg")?.remove();
+  if(r.ok){toast("\u2705 Fecha creada");loadAdminFechas();}else toast("\u274C "+r.error);
+};
 window.cerrarFecha=async id=>{if(!confirm("¿Cerrar esta fecha?"))return;const r=await api("adminCerrarFecha",{fechaId:id});toast(r.ok?"✅ Cerrada":"❌ "+r.error);if(r.ok)loadAdminFechas();};
 window.calcularFecha=async id=>{if(!confirm("¿Calcular puntajes?"))return;toast("Calculando...");const r=await api("adminCerrarYCalcular",{fechaId:id});toast(r.ok?"✅ "+r.mensaje:"❌ "+r.error);};
 
