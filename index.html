@@ -819,8 +819,13 @@ async function loadJugar(ctx){
   window._pr={};window._reglasDisp=[];
   // Guardar reglas habilitadas por el admin para esta fecha
   (rf.fecha.reglasDetalle||[]).forEach(function(r){
+    // Usar descripción local (siempre actualizada) en lugar de la del backend
+    const local=TODAS_LAS_REGLAS.find(function(x){return x.codigo===r.codigo;});
     window._reglasDisp.push({
-      codigo:r.codigo,nombre:r.nombre,pts:r.pts,desc:r.desc,
+      codigo:r.codigo,
+      nombre:local?local.nombre:r.nombre,
+      pts:local?local.pts:r.pts,
+      desc:local?local.desc:r.desc,
       cantReq:r.cantPartidos||1,
       partidos:[],
       detalleMK:""
@@ -1030,11 +1035,16 @@ window._actualizarMK=function(){
   const gv=document.getElementById("mk-gv")?.value;
   const reg=window._reglasDisp.find(function(r){return r.codigo==="MK";});
   if(!reg)return;
-  reg.detalleMK=(gl!==""&&gv!=="")?gl+"-"+gv:"";
-  // Solo actualizar el label de confirmación sin re-renderizar todo
   const conf=document.getElementById("mk-confirm");
+  // Validar 0-0
+  if(gl==="0"&&gv==="0"){
+    reg.detalleMK="";
+    if(conf)conf.innerHTML=`<span style="color:var(--red);font-size:12px;font-weight:600">❌ No se puede elegir 0-0</span>`;
+    _actualizarBotonPrincipal();
+    return;
+  }
+  reg.detalleMK=(gl!==""&&gv!=="")?gl+"-"+gv:"";
   if(conf)conf.textContent=(gl!==""&&gv!=="")?(gl+"-"+gv+" ✓"):"";
-  // Actualizar el botón principal para reflejar si La MK está completa
   _actualizarBotonPrincipal();
 };
 
@@ -1204,7 +1214,6 @@ async function loadAdminFechas(){
 }
 // Catálogo de todas las reglas disponibles (para el modal del admin)
 const TODAS_LAS_REGLAS=[
-  {codigo:"NPF",nombre:"No Puede Fallar",desc:"Elegí el partido más seguro de la fecha. Tenés que elegir al Ganador. Si acertás, sumás 3 puntos.",pts:3},
   {codigo:"LMR",nombre:"La Marea Roja",desc:"Elegí 3 partidos en los que creas que habrá al menos una tarjeta roja. Sumás 1 punto por cada expulsión.",pts:1},
   {codigo:"LR",nombre:"La Rachita",desc:"Elegí un partido como inicio de La Rachita. El objetivo es acertar 5 partidos consecutivos. Sumás 1 punto por cada acierto consecutivo.",pts:1},
   {codigo:"LLDG",nombre:"Lluvia de Goles",desc:"Elegí un partido en el que creas que habrá 5 goles o más. Si acertás, sumás 4 puntos.",pts:4},
