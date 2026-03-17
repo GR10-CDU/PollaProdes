@@ -1698,6 +1698,22 @@ window.crearPozo=async function(fechaId){
 };
 
 
+window.showCrearFecha=async function(){
+  window._reglasSelAdmin=new Set();
+  const reglasHTML=TODAS_LAS_REGLAS.map(function(r){
+    return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer"><input type="checkbox" value="${r.codigo}" style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/><div><div style="font-size:13px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:11px">+${r.pts}pts</span></div><div style="font-size:11px;color:var(--txt3)">${r.desc}</div></div></label>`;
+  }).join("");
+  const m=mkModal("Nueva fecha",`<div class="fg"><div class="ig"><label class="lbl">Nombre</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div><div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="nfp" type="datetime-local"/></div><div class="ig"><label class="lbl">Descripción</label><input class="inp" id="nfd"/></div><div class="ig"><label class="lbl">Reglas especiales habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" onclick="crearFecha()">Crear fecha</button></div>`);
+  document.body.appendChild(m);
+};
+window.crearFecha=async function(){
+  const r=await api("adminCrearFecha",{nombre:document.getElementById("nfn")?.value,liga:document.getElementById("nfl")?.value,plazoLimite:document.getElementById("nfp")?.value,descripcion:document.getElementById("nfd")?.value,reglasHabilitadas:Array.from(window._reglasSelAdmin)});
+  document.querySelector(".modal-bg")?.remove();
+  if(r.ok){toast("✅ Fecha creada");loadAdminFechas();}else toast("❌ "+r.error);
+};
+window.cerrarFecha=async function(id){if(!confirm("¿Cerrar esta fecha?"))return;const r=await api("adminCerrarFecha",{fechaId:id});toast(r.ok?"✅ Cerrada":"❌ "+r.error);if(r.ok)loadAdminFechas();};
+window.calcularFecha=async function(id){if(!confirm("¿Calcular puntajes?"))return;toast("Calculando...");const r=await api("adminCerrarYCalcular",{fechaId:id});toast(r.ok?"✅ "+r.mensaje:"❌ "+r.error);if(r.ok)loadAdminFechas();};
+
 async function loadRes(ctx){
   const rf=await api("getFechas"),el=document.getElementById("arf");if(!el)return;
   const fs=(rf.fechas||[]).filter(f=>["Abierta","Cerrada","Jugada"].includes(f.estado));
