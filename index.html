@@ -948,11 +948,18 @@ async function loadPozos(fid){
       <div style="font-size:11px;color:var(--txt3)">Premio estimado</div>
       <div style="font-size:12px;color:var(--txt3);margin-top:8px">👥 ${p.inscriptos} inscripto${p.inscriptos!==1?"s":""}</div>
     </div>`).join("")}</div>
-  <div style="text-align:center;padding:6px 0"><span style="font-size:12px;color:var(--txt3);cursor:pointer" onclick="toggleGrupo()">🔒 Tengo código de grupo →</span></div>
-  <div id="gform" style="display:none;margin-top:10px">
-    <div class="ig"><label class="lbl">Código de grupo</label><input class="inp" id="gcod" placeholder="AB1234" maxlength="6" oninput="this.value=this.value.toUpperCase()"/></div>
-    <button class="btn btn-s" style="margin-top:8px;width:100%" onclick="buscarGrupo()">Buscar grupo</button>
-    <div id="gres"></div>
+  <div style="margin-top:10px">
+    <button class="btn btn-s" style="width:100%;padding:11px;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--bdr-l2)" onclick="toggleGrupo()">
+      🔒 <span style="font-size:13px;font-weight:600">Tengo código de grupo cerrado</span>
+    </button>
+    <div id="gform" style="display:none;margin-top:10px;background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--r);padding:16px">
+      <p style="font-size:13px;font-weight:600;margin-bottom:10px">Ingresá tu código de grupo</p>
+      <div style="display:flex;gap:8px">
+        <input class="inp" id="gcod" placeholder="AB1234" maxlength="6" oninput="this.value=this.value.toUpperCase()" style="flex:1;font-family:var(--ff);font-size:20px;font-weight:800;letter-spacing:4px;text-align:center"/>
+        <button class="btn btn-p" style="padding:10px 16px" onclick="buscarGrupo()">Buscar</button>
+      </div>
+      <div id="gres" style="margin-top:10px"></div>
+    </div>
   </div>`;
   const ya=r.pozos.find(p=>p.yaInscripto);
   if(ya){const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=`<button class="btn btn-p btn-lg" onclick="go('jugar',{fechaId:'${fid}',pozoId:'${ya.id}'})">▶ Jugar →</button>`;}}
@@ -994,31 +1001,43 @@ async function loadJugar(ctx){
   const puede=rf.fecha.estado==="Abierta"&&rf.fecha.minutosRestantes>0;
   renderPartidos(window._parts,ctx,puede);
 
-  // Mostrar loading mientras carga pronósticos guardados
-  const jel2=document.getElementById("jc");
-  if(jel2){
-    const loadDiv=document.createElement("div");
-    loadDiv.id="pronos-loading";
-    loadDiv.style.cssText="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--d2);color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.3)";
-    loadDiv.innerHTML=`<div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Cargando pronósticos...`;
-    document.body.appendChild(loadDiv);
-  }
+  // Toast loading
+  const loadDiv=document.createElement("div");
+  loadDiv.id="pronos-loading";
+  loadDiv.style.cssText="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--d2);color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.3)";
+  loadDiv.innerHTML=`<div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Cargando pronósticos...`;
+  document.body.appendChild(loadDiv);
 
-  // Cargar pronos y reglas ya guardadas
   try{
+    // UNA SOLA LLAMADA — getMiFecha ya devuelve pronos + reglas
     const rm=await api("getMiFecha",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
-    if(rm.ok)(rm.pronos||[]).forEach(function(p){window._pr[p.partidoId]={v:p.pronostico,cr:p.cambiosRestantes};});
-    const rr=await api("getMisReglas",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
-    if(rr.ok)(rr.reglas||[]).forEach(function(rg){
-      const disp=window._reglasDisp.find(function(d){return d.codigo===rg.codigo;});
-      if(disp)disp.partidos=(rg.partidos||[]).map(function(p){return p.partidoId;});
-    });
+    if(rm.ok){
+      // Cargar pronósticos
+      (rm.pronos||[]).forEach(function(p){
+        window._pr[p.partidoId]={v:p.pronostico,cr:p.cambiosRestantes};
+      });
+      // Cargar reglas — getMiFecha devuelve reglas por partidoId
+      // Necesitamos convertirlo al formato de _reglasDisp (por código de regla)
+      const reglasPorCodigo={};
+      (rm.reglas||[]).forEach(function(rg){
+        if(!reglasPorCodigo[rg.codigo])reglasPorCodigo[rg.codigo]=[];
+        reglasPorCodigo[rg.codigo].push(rg.partidoId);
+      });
+      // Actualizar _reglasDisp con los partidos guardados
+      window._reglasDisp.forEach(function(disp){
+        if(reglasPorCodigo[disp.codigo]){
+          disp.partidos=reglasPorCodigo[disp.codigo];
+          // Para MK, recuperar el detalle
+          const mkReg=(rm.reglas||[]).find(function(r){return r.codigo==="MK";});
+          if(disp.codigo==="MK"&&mkReg)disp.detalleMK=mkReg.detalle||"";
+        }
+      });
+    }
     renderPartidos(window._parts,ctx,puede);
     renderReglasSection(puede);
   }catch(e){
     renderReglasSection(puede);
   } finally {
-    // Quitar el loading siempre
     const ld=document.getElementById("pronos-loading");if(ld)ld.remove();
   }
 }
