@@ -704,9 +704,9 @@ async function loadFechas(){
   const ICONS={"Liga Argentina":"🇦🇷","Premier League":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","La Liga":"🇪🇸","Serie A":"🇮🇹","Champions League":"🏆","Copa Libertadores":"🌎","Ligue 1":"🇫🇷"};
   var fechasVis=App.user&&App.user.rol==="Admin"?r.fechas:r.fechas.filter(function(f){return f.estado==="Abierta";});
   if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas disponibles");return;}
-  el.innerHTML=fechasVis.map(f=>{
+  el.innerHTML=fechasVis.map(function(f){
     const mins=f.minutosRestantes,urg=mins<120&&mins>0;
-    const pt=mins<=0?"🔒 Plazo vencido":mins<60?`⏱ ${mins}min`:mins<1440?`⏱ ${Math.floor(mins/60)}hs`:`📅 ${new Date(f.plazoLimite).toLocaleDateString("es-AR",{day:"numeric",month:"long"})}`;
+    const pt=mins<=0?"🔒 Plazo vencido":mins<60?"⏱ "+mins+"min":mins<1440?"⏱ "+Math.floor(mins/60)+"hs":"📅 "+new Date(f.plazoLimite).toLocaleDateString("es-AR",{day:"numeric",month:"long"});
     const ic=ICONS[f.liga]||"⚽";
     const strip=f.estado==="Abierta"?"abierta":f.estado==="Cerrada"?"cerrada":"borrador";
     return`<div class="fecha-card" onclick="go('fecha-det',{fechaId:'${f.id}'})">
@@ -720,6 +720,8 @@ async function loadFechas(){
             <span style="color:var(--bdr-l2)">·</span>
             <span style="${urg?"color:var(--red);font-weight:600":""}">${pt}</span>
           </div>
+          <!-- Pozos y reglas se cargan async -->
+          <div id="fecha-extra-${f.id}" style="margin-top:6px"></div>
         </div>
       </div>
       <div class="fecha-right">
@@ -728,6 +730,32 @@ async function loadFechas(){
       </div>
     </div>`;
   }).join("");
+  // Cargar pozos de cada fecha en paralelo
+  fechasVis.forEach(function(f){cargarExtraFecha(f);});
+}
+
+async function cargarExtraFecha(f){
+  const el=document.getElementById("fecha-extra-"+f.id);if(!el)return;
+  const rp=await api("getPozos",{fechaId:f.id,userId:App.user?.id});
+  if(!rp.ok||!rp.pozos?.length){
+    // Sin pozos — mostrar solo reglas si las hay
+    if(f.reglasHabilitadas?.length){
+      el.innerHTML=`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:2px">${f.reglasHabilitadas.map(function(cod){return`<span class="bdg bgold" style="font-size:10px;padding:2px 6px">${cod}</span>`;}).join("")}</div>`;
+    }
+    return;
+  }
+  const pozos=rp.pozos;
+  const yaInsc=pozos.find(function(p){return p.yaInscripto;});
+  // Línea de pozos
+  const pozosHtml=pozos.map(function(p){
+    const color=p.yaInscripto?"bg":"bgr";
+    return`<span class="bdg ${color}" style="font-size:11px;padding:3px 8px">${p.yaInscripto?"✓ ":""}$${p.monto.toLocaleString("es-AR")}</span>`;
+  }).join("");
+  // Línea de reglas
+  const reglasHtml=f.reglasHabilitadas?.length
+    ?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${f.reglasHabilitadas.map(function(cod){return`<span class="bdg bgold" style="font-size:10px;padding:2px 6px">📏 ${cod}</span>`;}).join("")}</div>`
+    :"";
+  el.innerHTML=`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${pozosHtml}</div>${reglasHtml}`;
 }
 
 /* ══ DETALLE FECHA ═══════════════════════════════════════════ */
@@ -753,6 +781,13 @@ async function loadFechaDet(ctx){
         <span>⚽ <strong style="color:rgba(255,255,255,.85)">${f.cantPartidos||0}</strong> partidos</span>
         ${f.minutosRestantes>0?`<span>⏱ <strong style="color:rgba(255,255,255,.85)">${f.minutosRestantes<60?f.minutosRestantes+"min":Math.floor(f.minutosRestantes/60)+"hs"}</strong></span>`:`<span style="color:var(--red)">🔒 Cerrada</span>`}
       </div>
+      ${f.reglasDetalle?.length?`
+      <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">📏 Reglas especiales</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${f.reglasDetalle.map(function(r){return`<div style="padding:5px 10px;background:rgba(255,179,0,.15);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs)"><span style="font-size:12px;font-weight:700;color:var(--gold)">${r.nombre}</span><span style="font-size:11px;color:rgba(255,255,255,.5);margin-left:5px">+${r.pts}pts</span></div>`;}).join("")}
+        </div>
+      </div>`:""}
     </div>
 
     <p class="sec">Partidos</p>
