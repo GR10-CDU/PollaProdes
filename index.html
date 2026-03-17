@@ -683,9 +683,11 @@ function getNav(){return App.user?.rol==="Admin"?NAV_A:NAV_J;}
 
 function go(k,ctx={}){
   App.screen=k;App.ctx=ctx;
-  const item=getNav().find(n=>n.k===k)||{t:k};
+  const item=getNav().find(n=>n.k===k)||{t:""};
   renderNav();
-  const tt=document.getElementById("topbar-title");if(tt)tt.textContent=item.t;
+  // Solo actualizar topbar con título del nav — para sub-pantallas se actualiza en afterRender
+  const tt=document.getElementById("topbar-title");
+  if(tt&&item.t)tt.textContent=item.t;
   const html=renderScreen(k,ctx);
   const dc=document.getElementById("content");if(dc)dc.innerHTML=html;
   const mc=document.getElementById("mc");if(mc)mc.innerHTML=html;
@@ -941,6 +943,16 @@ async function loadJugar(ctx){
   const puede=rf.fecha.estado==="Abierta"&&rf.fecha.minutosRestantes>0;
   renderPartidos(window._parts,ctx,puede);
 
+  // Mostrar loading mientras carga pronósticos guardados
+  const jel2=document.getElementById("jc");
+  if(jel2){
+    const loadDiv=document.createElement("div");
+    loadDiv.id="pronos-loading";
+    loadDiv.style.cssText="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--d2);color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.3)";
+    loadDiv.innerHTML=`<div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Cargando pronósticos...`;
+    document.body.appendChild(loadDiv);
+  }
+
   // Cargar pronos y reglas ya guardadas
   try{
     const rm=await api("getMiFecha",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
@@ -952,7 +964,12 @@ async function loadJugar(ctx){
     });
     renderPartidos(window._parts,ctx,puede);
     renderReglasSection(puede);
-  }catch(e){renderReglasSection(puede);}
+  }catch(e){
+    renderReglasSection(puede);
+  } finally {
+    // Quitar el loading siempre
+    const ld=document.getElementById("pronos-loading");if(ld)ld.remove();
+  }
 }
 
 function renderPartidos(parts,ctx,puede){
@@ -1207,23 +1224,34 @@ window._guardarTodasLasReglas=async function(){
 };
 
 window.guardarProgreso=async function(){
+  const btn=document.getElementById("btn-jugar-area");
+  if(btn)btn.innerHTML=`<button class="btn btn-s btn-lg" disabled>💾 Guardando...</button>`;
   const ps=Object.entries(window._pr).map(function(e){return{partidoId:e[0],pronostico:e[1].v};});
-  if(ps.length){const r=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});if(!r.ok){toast("❌ "+r.error);return;}}
+  if(ps.length){
+    const r=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});
+    if(!r.ok){toast("❌ "+r.error);renderReglasSection(true);return;}
+  }
   await window._guardarTodasLasReglas();
   toast("✅ Progreso guardado. Podés volver antes del plazo.");
-  renderReglasSection(true);
+  // Volver a fechas después de 1.5s
+  setTimeout(function(){go("fechas");},1500);
 };
 
 window.jugarFecha=async function(){
   const estado=_calcularEstado();
   if(!estado.completo){toast("⚠️ "+estado.msgs[0]);return;}
+  const btn=document.getElementById("btn-jugar-area");
+  if(btn)btn.innerHTML=`<button class="btn btn-p btn-lg" disabled>⏳ Guardando fecha...</button>`;
   const ps=Object.entries(window._pr).map(function(e){return{partidoId:e[0],pronostico:e[1].v};});
   const rp=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});
-  if(!rp.ok){toast("❌ "+rp.error);return;}
+  if(!rp.ok){toast("❌ "+rp.error);renderReglasSection(true);return;}
   const ok=await window._guardarTodasLasReglas();
-  if(!ok)return;
+  if(!ok){renderReglasSection(true);return;}
+  // Marcar fecha como jugada localmente
+  App._fechaJugada=window._ctx.fechaId;
   toast("✅ ¡Fecha jugada! Pronósticos y reglas guardados.");
-  renderReglasSection(false);
+  // Volver a fechas mostrando badge de jugada
+  setTimeout(function(){go("fechas");},1500);
 };
 
 
@@ -1534,14 +1562,14 @@ window.crearPozo=async function(fechaId){
 };
 // Catálogo de todas las reglas disponibles (para el modal del admin)
 const TODAS_LAS_REGLAS=[
-  {codigo:"LMR",nombre:"La Marea Roja",desc:"Elegí 3 partidos en los que creas que habrá al menos una tarjeta roja. Sumás 1 punto por cada expulsión.",pts:1},
-  {codigo:"LR",nombre:"La Rachita",desc:"Elegí un partido como inicio de La Rachita. El objetivo es acertar 5 partidos consecutivos. Sumás 1 punto por cada acierto consecutivo.",pts:1},
-  {codigo:"LLDG",nombre:"Lluvia de Goles",desc:"Elegí un partido en el que creas que habrá 5 goles o más. Si acertás, sumás 4 puntos.",pts:4},
-  {codigo:"DIEGO",nombre:"El Diego",desc:"Elegí 3 partidos que creas terminarán en empate. Si acertás los 3, sumás 5 puntos.",pts:5},
-  {codigo:"GSA",nombre:"Goles Son Amores",desc:"Elegí un partido en el que ambos equipos conviertan goles. Sumás 1 punto por cada gol del partido.",pts:1},
-  {codigo:"ZPL",nombre:"La Zapali",desc:"Elegí un partido en el que haya un ganador por diferencia de 3 goles o más. Si acertás, sumás 4 puntos.",pts:4},
-  {codigo:"MK",nombre:"La MK",desc:"Elegí el resultado exacto de un partido. No se puede elegir Empate en 0. Si acertás, sumás 5 puntos.",pts:5},
-  {codigo:"EQS",nombre:"Empate Que Suma",desc:"Elegí un partido que finalice en empate. Si acertás, sumás 3 puntos.",pts:3},
+  {codigo:"LMR",nombre:"La Marea Roja",desc:"Elegí 3 partidos en los que creas que habrá al menos una tarjeta roja.<br>Sumás 1 punto por cada expulsión.",pts:1},
+  {codigo:"LR",nombre:"La Rachita",desc:"Elegí un partido como inicio de La Rachita.<br>El objetivo es acertar 5 partidos consecutivos.<br>Sumás 1 punto por cada acierto consecutivo.",pts:1},
+  {codigo:"LLDG",nombre:"Lluvia de Goles",desc:"Elegí un partido en el que creas que habrá 5 goles o más.<br>Si acertás, sumás 4 puntos.",pts:4},
+  {codigo:"DIEGO",nombre:"El Diego",desc:"Elegí 3 partidos que creas terminarán en empate.<br>Si acertás los 3, sumás 5 puntos.",pts:5},
+  {codigo:"GSA",nombre:"Goles Son Amores",desc:"Elegí un partido en el que ambos equipos conviertan goles.<br>Sumás 1 punto por cada gol del partido.",pts:1},
+  {codigo:"ZPL",nombre:"La Zapali",desc:"Elegí un partido en el que haya un ganador por diferencia de 3 goles o más.<br>Si acertás, sumás 4 puntos.",pts:4},
+  {codigo:"MK",nombre:"La MK",desc:"Elegí el resultado exacto de un partido.<br>No se puede elegir Empate en 0.<br>Si acertás, sumás 5 puntos.",pts:5},
+  {codigo:"EQS",nombre:"Empate Que Suma",desc:"Elegí un partido que finalice en empate.<br>Si acertás, sumás 3 puntos.",pts:3},
 ];
 window._reglasSelAdmin=new Set();
 
