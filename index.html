@@ -860,6 +860,9 @@ function renderPartidos(parts,ctx,puede){
     const tipoCls=p.tipo==="Polla"?" polla":p.tipo==="Doble"?" doble":"";
     const li=p.local?p.local[0].toUpperCase():"L",vi=p.visita?p.visita[0].toUpperCase():"V";
 
+    // Buscar si tiene regla asignada a este partido
+    const reglaEnPartido=window._reglasDisp.filter(function(r){return r.partidos.includes(p.id);});
+
     return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}" id="pc-${p.id}">
       <div class="pc-meta">
         <div class="pc-bdgs">
@@ -868,6 +871,7 @@ function renderPartidos(parts,ctx,puede){
             p.tipo==="Doble"?`<span class="bdg bpur" style="font-size:12px;padding:4px 11px">&#215;2 DOBLE</span>`:
             `<span class="bdg bgr" style="font-size:12px;padding:4px 11px">NORMAL</span>`}
           ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:12px;padding:4px 11px">&#9679; VIVO</span>`:""}
+          ${reglaEnPartido.map(function(r){return`<span class="bdg bgold" style="font-size:11px;padding:3px 8px">&#128208; ${r.codigo}</span>`;}).join("")}
         </div>
         <div class="pc-acts">
           ${(sel&&bloq&&!sinGoles)?`<span class="cambios ${cr===3?"ok":cr>0?"warn":"none"}">&#128260; ${cr}</span>`:""}
@@ -899,93 +903,145 @@ function renderPartidos(parts,ctx,puede){
       :`<div class="partido-blocked">Sin pron&oacute;stico a&uacute;n</div>`}
     </div>`;
   }).join("");
-
-  const jf=document.getElementById("jf");
-  if(jf&&puede)jf.innerHTML=`<button class="btn btn-p btn-lg" onclick="guardarTodos()">&#128190; Guardar pron&oacute;sticos</button>`;
 }
 
 /* ══ SECCIÓN REGLAS ESPECIALES ══════════════════════════════ */
+function _calcularEstado(){
+  const totParts=window._parts.length;
+  const pronosComp=Object.keys(window._pr).filter(function(k){return window._pr[k]&&window._pr[k].v;}).length;
+  const pronosFaltan=totParts-pronosComp;
+  const reglasFaltan=window._reglasDisp.filter(function(r){return r.partidos.length<r.cantReq;});
+  const mkFalta=window._reglasDisp.find(function(r){return r.codigo==="MK"&&r.partidos.length&&!r.detalleMK;});
+  const completo=pronosFaltan===0&&reglasFaltan.length===0&&!mkFalta;
+  const msgs=[];
+  if(pronosFaltan>0)msgs.push("Faltan "+pronosFaltan+" pronóstico"+(pronosFaltan===1?"":"s"));
+  reglasFaltan.forEach(function(r){
+    const f=r.cantReq-r.partidos.length;
+    msgs.push(r.nombre+": faltan "+f+" partido"+(f===1?"":"s"));
+  });
+  if(mkFalta)msgs.push("La MK: falta el resultado exacto");
+  return{completo,msgs};
+}
+
 function renderReglasSection(puede){
-  if(!window._reglasDisp.length)return;
   const jf=document.getElementById("jf");if(!jf)return;
   const bloq=!puede;
+  let html="";
 
-  let html=`<div style="margin-top:22px">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-      <span style="font-family:var(--ff);font-size:22px;font-weight:900;letter-spacing:.5px">&#128208; REGLAS ESPECIALES</span>
-      ${bloq?`<span class="bdg bred">&#128274; Bloqueadas</span>`:`<span class="bdg bg">Abiertas</span>`}
-    </div>
-    <p style="font-size:12px;color:var(--txt3);margin-bottom:14px">Elegi a qu&eacute; partido aplicar cada regla. Son independientes de tus pron&oacute;sticos L/E/V.</p>`;
+  if(window._reglasDisp.length){
+    html+=`<div style="margin-top:22px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-family:var(--ff);font-size:22px;font-weight:900;letter-spacing:.5px">&#128208; REGLAS ESPECIALES</span>
+        ${bloq?`<span class="bdg bred">&#128274; Bloqueadas</span>`:`<span class="bdg bg">Abiertas</span>`}
+      </div>
+      <p style="font-size:12px;color:var(--txt3);margin-bottom:14px">Elegí a qué partido aplicar cada regla. Son independientes de tus pronósticos L/E/V.</p>`;
 
-  window._reglasDisp.forEach(function(reg){
-    const yaCompleta=reg.partidos.length>=reg.cantReq;
-    const esMultiple=reg.cantReq>1;
-    html+=`<div class="card" style="margin-bottom:10px;padding:16px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-        <div style="flex:1;min-width:0">
+    window._reglasDisp.forEach(function(reg){
+      const yaCompleta=reg.partidos.length>=reg.cantReq;
+      const esMultiple=reg.cantReq>1;
+      html+=`<div class="card" style="margin-bottom:10px;padding:16px">
+        <div style="margin-bottom:8px">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span style="font-family:var(--ff);font-size:18px;font-weight:800">${reg.nombre}</span>
             <span style="font-family:var(--ff);font-size:16px;font-weight:700;color:var(--g2)">+${reg.pts}pts</span>
             ${yaCompleta?`<span class="bdg bg">&#10003; Lista</span>`:`<span class="bdg bgold">${reg.partidos.length}/${reg.cantReq}</span>`}
           </div>
-          <p style="font-size:12px;color:var(--txt2);margin-top:4px">${reg.desc}</p>
-          ${esMultiple?`<p style="font-size:11px;color:var(--blue);margin-top:2px">Eleg&iacute; ${reg.cantReq} partidos</p>`:""}
-        </div>
-      </div>`;
-
-    // Partidos ya elegidos
-    if(reg.partidos.length){
-      html+=`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">`;
-      reg.partidos.forEach(function(pid){
-        const part=window._parts.find(function(p){return p.id===pid;});
-        if(!part)return;
-        html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(0,200,83,.06);border:1px solid rgba(0,200,83,.2);border-radius:var(--rs)">
-          <span style="font-size:11px;font-weight:700;color:var(--txt3)">#${part.numero}</span>
-          <span style="font-size:13px;font-weight:500;flex:1">${part.local} vs ${part.visita}</span>
-          ${!bloq?`<button onclick="quitarPartidoRegla('${reg.codigo}','${pid}')" style="font-size:14px;color:var(--txt3);padding:2px 6px;border-radius:4px;background:var(--off)" title="Quitar">&#10005;</button>`:""}
+          <p style="font-size:12px;color:var(--txt2);margin-top:3px">${reg.desc}</p>
+          ${esMultiple?`<p style="font-size:11px;color:var(--blue);margin-top:2px">Elegí ${reg.cantReq} partidos</p>`:""}
         </div>`;
-      });
-      html+=`</div>`;
-    }
 
-    // Selector de partido
-    if(!bloq&&!yaCompleta){
-      const disponibles=window._parts.filter(function(p){return !reg.partidos.includes(p.id);});
-      if(disponibles.length){
-        html+=`<select class="inp" onchange="agregarPartidoRegla('${reg.codigo}',this.value);this.value=''">
-          <option value="">+ Elegir partido${esMultiple?" ("+(reg.cantReq-reg.partidos.length)+" restante"+(reg.cantReq-reg.partidos.length!==1?"s":" ")+")":""}...</option>
-          ${disponibles.map(function(p){return`<option value="${p.id}">#${p.numero} ${p.local} vs ${p.visita}</option>`;}).join("")}
-        </select>`;
+      if(reg.partidos.length){
+        html+=`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px">`;
+        reg.partidos.forEach(function(pid){
+          const part=window._parts.find(function(p){return p.id===pid;});
+          if(!part)return;
+          html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(0,200,83,.06);border:1px solid rgba(0,200,83,.2);border-radius:var(--rs)">
+            <span style="font-size:11px;font-weight:700;color:var(--txt3)">#${part.numero}</span>
+            <span style="font-size:13px;font-weight:500;flex:1">${part.local} vs ${part.visita}</span>
+            ${!bloq?`<button onclick="quitarPartidoRegla('${reg.codigo}','${pid}')" style="font-size:14px;color:var(--txt3);padding:2px 6px;border-radius:4px;background:var(--off)">&#10005;</button>`:""}
+          </div>`;
+        });
+        html+=`</div>`;
       }
-    }
 
-    // Detalle para La MK
-    if(reg.codigo==="MK"&&!bloq&&reg.partidos.length){
-      html+=`<div style="margin-top:8px"><input class="inp" id="mk-det-${reg.codigo}" placeholder="Resultado exacto (ej: 2-1)" value="${reg.detalleMK||""}" oninput="window._reglasDisp.find(function(r){return r.codigo==='MK';}).detalleMK=this.value"/></div>`;
-    }
+      if(!bloq&&!yaCompleta){
+        const disp=window._parts.filter(function(p){return !reg.partidos.includes(p.id);});
+        if(disp.length){
+          const restantes=reg.cantReq-reg.partidos.length;
+          html+=`<select class="inp" onchange="agregarPartidoRegla('${reg.codigo}',this.value);this.value=''">
+            <option value="">+ Elegir partido${esMultiple?" ("+restantes+" más)":""}...</option>
+            ${disp.map(function(p){return`<option value="${p.id}">#${p.numero} ${p.local} vs ${p.visita}</option>`;}).join("")}
+          </select>`;
+        }
+      }
 
-    // Botón guardar
-    if(!bloq){
-      html+=`<button class="btn btn-p" style="margin-top:10px;width:100%;padding:11px" onclick="guardarRegla('${reg.codigo}')">&#128190; Guardar ${reg.nombre}</button>`;
-    }
+      // La MK — dos dropdowns numéricos
+      if(reg.codigo==="MK"&&!bloq&&reg.partidos.length){
+        const mk=reg.detalleMK||"";
+        const partes=mk.split("-");
+        const gL=partes[0]||"";const gV=partes[1]||"";
+        const nums=Array.from({length:10},function(_,i){return i;});
+        html+=`<div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:600;color:var(--txt2)">Resultado exacto:</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <select id="mk-gl" style="width:72px;padding:8px 4px;font-family:var(--ff);font-size:24px;font-weight:900;text-align:center;background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);color:var(--txt)" onchange="window._actualizarMK()">
+              <option value="">?</option>
+              ${nums.map(function(n){return`<option value="${n}"${String(gL)===String(n)?" selected":""}>${n}</option>`;}).join("")}
+            </select>
+            <span style="font-family:var(--ff);font-size:24px;font-weight:700;color:var(--txt3)">-</span>
+            <select id="mk-gv" style="width:72px;padding:8px 4px;font-family:var(--ff);font-size:24px;font-weight:900;text-align:center;background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);color:var(--txt)" onchange="window._actualizarMK()">
+              <option value="">?</option>
+              ${nums.map(function(n){return`<option value="${n}"${String(gV)===String(n)?" selected":""}>${n}</option>`;}).join("")}
+            </select>
+            ${gL!==""&&gV!==""?`<span style="font-size:13px;font-weight:700;color:var(--g2)">${gL}-${gV} &#10003;</span>`:""}
+          </div>
+        </div>`;
+      }
+
+      html+=`</div>`;
+    });
 
     html+=`</div>`;
-  });
+  }
 
-  html+=`</div>`;
+  // Botón único al final
+  if(!bloq){
+    const estado=_calcularEstado();
+    if(estado.completo){
+      html+=`<button class="btn btn-p btn-lg" style="margin-top:18px" onclick="jugarFecha()">&#9654; Jugar Fecha</button>`;
+    } else {
+      html+=`<div style="margin-top:18px">
+        <div style="padding:12px 14px;background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);margin-bottom:10px">
+          <p style="font-size:12px;font-weight:600;color:var(--gold);margin-bottom:4px">&#9888;&#65039; Falta completar:</p>
+          ${estado.msgs.map(function(m){return`<p style="font-size:12px;color:var(--txt2)">&#8226; ${m}</p>`;}).join("")}
+        </div>
+        <button class="btn btn-s btn-lg" onclick="guardarProgreso()">&#128190; Guardar progreso</button>
+      </div>`;
+    }
+  }
 
   let div=document.getElementById("jf-reglas");
   if(!div){div=document.createElement("div");div.id="jf-reglas";jf.parentNode.insertBefore(div,jf.nextSibling);}
   div.innerHTML=html;
 }
 
+window._actualizarMK=function(){
+  const gl=document.getElementById("mk-gl")?.value;
+  const gv=document.getElementById("mk-gv")?.value;
+  const reg=window._reglasDisp.find(function(r){return r.codigo==="MK";});
+  if(!reg)return;
+  reg.detalleMK=(gl!==""&&gv!=="")?gl+"-"+gv:"";
+  renderReglasSection(true);
+};
+
 window.agregarPartidoRegla=function(cod,pid){
   if(!pid)return;
   const reg=window._reglasDisp.find(function(r){return r.codigo===cod;});
   if(!reg)return;
-  if(reg.partidos.includes(pid)){toast("Ya elegiste ese partido");return;}
-  if(reg.partidos.length>=reg.cantReq){toast("Ya elegiste los "+reg.cantReq+" partidos");return;}
+  if(reg.partidos.includes(pid)){toast("Ya elegíste ese partido");return;}
+  if(reg.partidos.length>=reg.cantReq){toast("Ya elegíste los "+reg.cantReq+" partidos");return;}
   reg.partidos.push(pid);
+  renderPartidos(window._parts,window._ctx,true);
   renderReglasSection(true);
 };
 
@@ -993,24 +1049,44 @@ window.quitarPartidoRegla=function(cod,pid){
   const reg=window._reglasDisp.find(function(r){return r.codigo===cod;});
   if(!reg)return;
   reg.partidos=reg.partidos.filter(function(id){return id!==pid;});
+  renderPartidos(window._parts,window._ctx,true);
   renderReglasSection(true);
 };
 
-window.guardarRegla=async function(cod){
-  const reg=window._reglasDisp.find(function(r){return r.codigo===cod;});
-  if(!reg){toast("Regla no encontrada");return;}
-  if(!reg.partidos.length){toast("Elegi al menos un partido");return;}
-  if(reg.partidos.length<reg.cantReq){toast("Faltan "+(reg.cantReq-reg.partidos.length)+" partido(s)");return;}
-  if(cod==="MK"&&!reg.detalleMK){toast("Ingresa el resultado exacto para La MK");return;}
-  const payload={fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,codigoRegla:cod};
-  if(reg.cantReq>1)payload.partidosIds=reg.partidos;
-  else payload.partidoId=reg.partidos[0];
-  if(cod==="MK")payload.detalle=reg.detalleMK;
-  toast("Guardando...");
-  const r=await api("guardarRegla",payload);
-  if(!r.ok){toast("\u274C "+r.error);return;}
-  toast("\u2705 "+r.mensaje);
+window._guardarTodasLasReglas=async function(){
+  for(var i=0;i<window._reglasDisp.length;i++){
+    const reg=window._reglasDisp[i];
+    if(!reg.partidos.length)continue;
+    const payload={fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,codigoRegla:reg.codigo};
+    if(reg.cantReq>1)payload.partidosIds=reg.partidos;
+    else payload.partidoId=reg.partidos[0];
+    if(reg.codigo==="MK")payload.detalle=reg.detalleMK||"";
+    const r=await api("guardarRegla",payload);
+    if(!r.ok){toast("❌ "+reg.nombre+": "+r.error);return false;}
+  }
+  return true;
 };
+
+window.guardarProgreso=async function(){
+  const ps=Object.entries(window._pr).map(function(e){return{partidoId:e[0],pronostico:e[1].v};});
+  if(ps.length){const r=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});if(!r.ok){toast("❌ "+r.error);return;}}
+  await window._guardarTodasLasReglas();
+  toast("✅ Progreso guardado. Podés volver antes del plazo.");
+  renderReglasSection(true);
+};
+
+window.jugarFecha=async function(){
+  const estado=_calcularEstado();
+  if(!estado.completo){toast("⚠️ "+estado.msgs[0]);return;}
+  const ps=Object.entries(window._pr).map(function(e){return{partidoId:e[0],pronostico:e[1].v};});
+  const rp=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});
+  if(!rp.ok){toast("❌ "+rp.error);return;}
+  const ok=await window._guardarTodasLasReglas();
+  if(!ok)return;
+  toast("✅ ¡Fecha jugada! Pronósticos y reglas guardados.");
+  renderReglasSection(false);
+};
+
 
 window.pronosticar=async function(pid,v,fid,poid){
   const prev=window._pr[pid]?Object.assign({},window._pr[pid]):null;
