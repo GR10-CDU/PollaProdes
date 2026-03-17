@@ -783,7 +783,7 @@ async function loadFechas(){
           <div id="fecha-extra-${f.id}" style="margin-top:6px"></div>
         </div>
       </div>
-      <div class="fecha-right">
+      <div class="fecha-right" id="fright-${f.id}">
         <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr"}">${f.estado}</span>
         <span style="font-size:12px;font-weight:600;color:${f.estado==="Abierta"?"var(--g2)":"var(--txt3)"}">${f.estado==="Abierta"?"Jugar →":"Ver →"}</span>
       </div>
@@ -797,24 +797,43 @@ async function cargarExtraFecha(f){
   const el=document.getElementById("fecha-extra-"+f.id);if(!el)return;
   const rp=await api("getPozos",{fechaId:f.id,userId:App.user?.id});
   if(!rp.ok||!rp.pozos?.length){
-    // Sin pozos — mostrar solo reglas si las hay
     if(f.reglasHabilitadas?.length){
       el.innerHTML=`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:2px">${f.reglasHabilitadas.map(function(cod){return`<span class="bdg bgold" style="font-size:10px;padding:2px 6px">${cod}</span>`;}).join("")}</div>`;
     }
     return;
   }
   const pozos=rp.pozos;
+  const yaJugo=pozos.find(function(p){return p.yaJugo;});
   const yaInsc=pozos.find(function(p){return p.yaInscripto;});
+  const pozoActivo=yaJugo||yaInsc;
+
+  // Badge estado
+  let estadoHtml="";
+  if(yaJugo){
+    estadoHtml=`<span class="bdg bg" style="font-size:11px;padding:3px 10px;font-weight:700">✅ JUGADA</span>`;
+    // Botón modificar si todavía hay tiempo
+    if(f.minutosRestantes>0){
+      estadoHtml+=` <span style="font-size:11px;color:var(--blue);font-weight:600;cursor:pointer" onclick="event.stopPropagation();go('jugar',{fechaId:'${f.id}',pozoId:'${yaJugo.id}'})">✏️ Modificar</span>`;
+    } else {
+      estadoHtml+=` <span class="bdg bred" style="font-size:11px;padding:3px 8px">🔒 En Curso</span>`;
+    }
+  }
+
   // Línea de pozos
   const pozosHtml=pozos.map(function(p){
-    const color=p.yaInscripto?"bg":"bgr";
-    return`<span class="bdg ${color}" style="font-size:11px;padding:3px 8px">${p.yaInscripto?"✓ ":""}$${p.monto.toLocaleString("es-AR")}</span>`;
+    const cls=p.yaJugo?"bg":p.yaInscripto?"bg":"bgr";
+    return`<span class="bdg ${cls}" style="font-size:11px;padding:3px 8px">${p.yaInscripto?"✓ ":""}$${p.monto.toLocaleString("es-AR")}</span>`;
   }).join("");
+
   // Línea de reglas
   const reglasHtml=f.reglasHabilitadas?.length
     ?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${f.reglasHabilitadas.map(function(cod){return`<span class="bdg bgold" style="font-size:10px;padding:2px 6px">📏 ${cod}</span>`;}).join("")}</div>`
     :"";
-  el.innerHTML=`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${pozosHtml}</div>${reglasHtml}`;
+
+  el.innerHTML=`
+    ${estadoHtml?`<div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap">${estadoHtml}</div>`:""}
+    <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${pozosHtml}</div>
+    ${reglasHtml}`;
 }
 
 /* ══ DETALLE FECHA ═══════════════════════════════════════════ */
