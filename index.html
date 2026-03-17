@@ -1202,40 +1202,150 @@ async function loadDash(){
 }
 
 /* ══ ADMIN FECHAS ════════════════════════════════════════════ */
+// Cache de fechas para editar sin problemas de quotes en onclick
+window._adminFechas={};
+
 async function loadAdminFechas(){
-  const r=await api("getFechas"),el=document.getElementById("afl");if(!el)return;
+  const el=document.getElementById("afl");if(!el)return;
+  el.innerHTML=`<div class="loading"><div class="spinner"></div></div>`;
+  const r=await api("getFechas");
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
-  // Admin ve todas las fechas incluyendo Cerrada/Finalizada
   const todas=r.fechas||[];
   if(!todas.length){el.innerHTML=emptyBox("📅","Sin fechas");return;}
-  el.innerHTML=todas.map(f=>{
-    const reglas=(f.reglasHabilitadas||[]);
-    return`<div class="card" style="margin-bottom:10px;padding:16px">
-      <!-- Encabezado -->
+  // Guardar en cache para acceso sin quotes
+  todas.forEach(function(f){window._adminFechas[f.id]=f;});
+  el.innerHTML=todas.map(function(f){
+    const reglas=f.reglasHabilitadas||[];
+    const estadoBdg=f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":f.estado==="Finalizada"?"bpur":"bgr";
+    const plazoStr=f.plazoLimite?new Date(f.plazoLimite).toLocaleString("es-AR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"";
+    return`<div class="card" style="margin-bottom:10px;padding:16px" id="fcard-${f.id}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div>
           <div style="font-family:var(--ff);font-size:20px;font-weight:800">${f.nombre}</div>
-          <div style="font-size:11px;color:var(--txt3);margin-top:2px">
-            ⚽ ${f.cantPartidos||0} partidos · ${f.liga||"Sin liga"}
-            ${f.plazoLimite?` · Plazo: ${new Date(f.plazoLimite).toLocaleString("es-AR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}`:""}
-          </div>
-          ${reglas.length?`<div style="margin-top:5px;display:flex;gap:4px;flex-wrap:wrap">${reglas.map(cod=>`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">${cod}</span>`).join("")}</div>`:""}
+          <div style="font-size:11px;color:var(--txt3);margin-top:2px">⚽ ${f.cantPartidos||0} partidos${f.liga?" · "+f.liga:""}${plazoStr?" · Plazo: "+plazoStr:""}</div>
+          ${reglas.length?`<div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">${reglas.map(function(cod){return`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">${cod}</span>`;}).join("")}</div>`:"<div style='margin-top:4px;font-size:11px;color:var(--txt3)'>Sin reglas configuradas</div>"}
         </div>
-        <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":f.estado==="Finalizada"?"bpur":"bgr"}">${f.estado}</span>
+        <span class="bdg ${estadoBdg}">${f.estado}</span>
       </div>
+      <!-- Pozos inline -->
+      <div id="pozos-${f.id}" style="margin-bottom:10px"></div>
       <!-- Botones -->
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="go('admin-importar',{fechaId:'${f.id}'})">🔗 Importar</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="go('admin-res',{fechaId:'${f.id}'})">⚽ Resultados</button>
-        <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="showEditarFecha('${f.id}','${f.nombre}','${f.liga||""}','${f.plazoLimite||""}',${JSON.stringify(reglas)})">✏️ Editar</button>
-        <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="showGestionPozos('${f.id}','${f.nombre}')">💰 Pozos</button>
+        <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="showEditarFecha('${f.id}')">✏️ Editar</button>
+        <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="showGestionPozos('${f.id}')">💰 Pozos</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="go('admin-pagos',{fechaId:'${f.id}'})">👥 Inscriptos</button>
-        ${f.estado==="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:12px" onclick="cerrarFecha('${f.id}')">🔒 Cerrar</button>`:""}
-        ${f.estado==="Cerrada"?`<button class="btn btn-p" style="padding:6px 12px;font-size:12px" onclick="calcularFecha('${f.id}')">🏆 Calcular</button>`:""}
+        ${f.estado==="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:12px" id="btn-cerrar-${f.id}" onclick="cerrarFecha('${f.id}')">🔒 Cerrar</button>`:""}
+        ${f.estado==="Cerrada"?`<button class="btn btn-p" style="padding:6px 12px;font-size:12px" id="btn-calc-${f.id}" onclick="calcularFecha('${f.id}')">🏆 Calcular</button>`:""}
       </div>
     </div>`;
   }).join("");
+  // Cargar pozos de cada fecha
+  todas.forEach(function(f){loadPozosInline(f.id);});
 }
+
+// Cargar pozos inline dentro de la card de la fecha
+async function loadPozosInline(fechaId){
+  const el=document.getElementById("pozos-"+fechaId);if(!el)return;
+  const r=await api("getPozos",{fechaId});
+  if(!r.ok||!r.pozos?.length){el.innerHTML="";return;}
+  el.innerHTML=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">`+
+    r.pozos.map(function(p){
+      return`<div style="padding:5px 10px;background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);font-size:12px">
+        <span style="font-family:var(--ff);font-weight:800">$${p.monto.toLocaleString("es-AR")}</span>
+        <span style="color:var(--txt3);margin-left:4px">· ${p.inscriptos} inscriptos</span>
+      </div>`;
+    }).join("")+`</div>`;
+}
+
+// Editar fecha — usa cache para evitar problemas de quotes
+window.showEditarFecha=function(fechaId){
+  const f=window._adminFechas[fechaId];if(!f){toast("Fecha no encontrada");return;}
+  const reglasActuales=f.reglasHabilitadas||[];
+  window._reglasSelAdmin=new Set(reglasActuales);
+  const reglasHTML=TODAS_LAS_REGLAS.map(function(r){
+    const checked=reglasActuales.includes(r.codigo)?"checked":"";
+    return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer">
+      <input type="checkbox" value="${r.codigo}" ${checked} style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/>
+      <div>
+        <div style="font-size:13px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:11px">+${r.pts}pts</span></div>
+        <div style="font-size:11px;color:var(--txt3)">${r.desc}</div>
+      </div>
+    </label>`;
+  }).join("");
+  let plazoFmt="";
+  if(f.plazoLimite){try{plazoFmt=new Date(f.plazoLimite).toISOString().slice(0,16);}catch(e){}}
+  const m=mkModal("✏️ Editar — "+f.nombre,`<div class="fg">
+    <div class="ig"><label class="lbl">Nombre</label><input class="inp" id="ef-nom" value="${f.nombre}"/></div>
+    <div class="ig"><label class="lbl">Liga</label><input class="inp" id="ef-lig" value="${f.liga||""}"/></div>
+    <div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="ef-pla" type="datetime-local" value="${plazoFmt}"/></div>
+    <div class="ig">
+      <label class="lbl">Reglas habilitadas</label>
+      <div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div>
+    </div>
+    <button class="btn btn-p btn-lg" id="btn-guardar-fecha" onclick="guardarEditarFecha('${fechaId}')">Guardar cambios</button>
+  </div>`);
+  document.body.appendChild(m);
+};
+
+window.guardarEditarFecha=async function(fechaId){
+  const btn=document.getElementById("btn-guardar-fecha");
+  if(btn){btn.textContent="Guardando...";btn.disabled=true;}
+  const r=await api("adminEditarFecha",{
+    fechaId,
+    nombre:document.getElementById("ef-nom")?.value,
+    liga:document.getElementById("ef-lig")?.value,
+    plazoLimite:document.getElementById("ef-pla")?.value,
+    reglasHabilitadas:Array.from(window._reglasSelAdmin)
+  });
+  document.querySelector(".modal-bg")?.remove();
+  if(r.ok){toast("✅ Fecha actualizada");loadAdminFechas();}
+  else toast("❌ "+r.error);
+};
+
+// Gestión de pozos
+window.showGestionPozos=async function(fechaId){
+  const f=window._adminFechas[fechaId];
+  const nombreFecha=f?f.nombre:"Fecha";
+  const btn=event?.target;if(btn){btn.textContent="⏳";btn.disabled=true;}
+  const rp=await api("getPozos",{fechaId});
+  if(btn){btn.textContent="💰 Pozos";btn.disabled=false;}
+  const pozosHTML=rp.ok&&rp.pozos?.length
+    ? rp.pozos.map(function(p){
+        return`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bdr-l)">
+          <div>
+            <span style="font-family:var(--ff);font-size:18px;font-weight:800">$${p.monto.toLocaleString("es-AR")}</span>
+            <span style="font-size:11px;color:var(--txt3);margin-left:8px">${p.tipo} · ${p.inscriptos} inscriptos · Premio est: $${p.premioGanador.toLocaleString("es-AR")}</span>
+          </div>
+          <span class="bdg ${p.estado==="Activo"?"bg":"bgr"}">${p.estado}</span>
+        </div>`;
+      }).join("")
+    :`<p style="font-size:13px;color:var(--txt3);padding:12px 0">Sin pozos aún</p>`;
+  const m=mkModal("💰 Pozos — "+nombreFecha,`<div>
+    ${pozosHTML}
+    <div style="margin-top:14px;border-top:1px solid var(--bdr-l);padding-top:14px">
+      <label class="lbl">Agregar pozo</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+        <input class="inp" id="np-monto" type="number" min="1" placeholder="Monto ($)" style="flex:1"/>
+        <button class="btn btn-p" id="btn-crear-pozo" style="padding:10px 16px" onclick="crearPozo('${fechaId}')">+ Crear</button>
+      </div>
+    </div>
+  </div>`);
+  document.body.appendChild(m);
+};
+
+window.crearPozo=async function(fechaId){
+  const monto=document.getElementById("np-monto")?.value;
+  if(!monto||isNaN(monto)||+monto<=0){toast("Ingresá un monto válido");return;}
+  const btn=document.getElementById("btn-crear-pozo");
+  if(btn){btn.textContent="Creando...";btn.disabled=true;}
+  const r=await api("adminCrearPozo",{fechaId,monto:+monto});
+  if(!r.ok){toast("❌ "+r.error);if(btn){btn.textContent="+ Crear";btn.disabled=false;}return;}
+  toast("✅ Pozo $"+Number(monto).toLocaleString("es-AR")+" creado");
+  document.querySelector(".modal-bg")?.remove();
+  loadAdminFechas(); // recargar para mostrar el pozo nuevo
+};
 
 // ── Editar fecha (nombre, liga, plazo, reglas) ──
 window.showEditarFecha=function(id,nombre,liga,plazo,reglasActuales){
