@@ -1210,21 +1210,24 @@ window.quitarPartidoRegla=function(cod,pid){
 };
 
 window._guardarTodasLasReglas=async function(){
-  for(var i=0;i<window._reglasDisp.length;i++){
-    const reg=window._reglasDisp[i];
-    if(!reg.partidos.length)continue;
-    const payload={fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,codigoRegla:reg.codigo};
-    if(reg.cantReq>1)payload.partidosIds=reg.partidos;
-    else payload.partidoId=reg.partidos[0];
-    if(reg.codigo==="MK")payload.detalle=reg.detalleMK||"";
-    try{
-      const r=await api("guardarRegla",payload);
-      if(!r.ok){toast("❌ "+reg.nombre+": "+r.error);return false;}
-    }catch(e){
-      toast("❌ Error guardando "+reg.nombre);
-      return false;
-    }
-  }
+  // Armar array de reglas con partidos asignados
+  const reglas=window._reglasDisp
+    .filter(function(reg){return reg.partidos.length>0;})
+    .map(function(reg){
+      return{
+        codigo:reg.codigo,
+        partidos:reg.partidos,
+        detalle:reg.codigo==="MK"?(reg.detalleMK||""):""
+      };
+    });
+  if(!reglas.length)return true;
+  // Una sola llamada para todas las reglas
+  const r=await api("guardarReglas",{
+    fechaId:window._ctx.fechaId,
+    pozoId:window._ctx.pozoId,
+    reglas:reglas
+  });
+  if(!r.ok){toast("❌ Reglas: "+r.error);return false;}
   return true;
 };
 
