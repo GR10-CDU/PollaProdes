@@ -1241,17 +1241,23 @@ window.jugarFecha=async function(){
   const estado=_calcularEstado();
   if(!estado.completo){toast("⚠️ "+estado.msgs[0]);return;}
   const btn=document.getElementById("btn-jugar-area");
-  if(btn)btn.innerHTML=`<button class="btn btn-p btn-lg" disabled>⏳ Guardando fecha...</button>`;
-  const ps=Object.entries(window._pr).map(function(e){return{partidoId:e[0],pronostico:e[1].v};});
-  const rp=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});
-  if(!rp.ok){toast("❌ "+rp.error);renderReglasSection(true);return;}
-  const ok=await window._guardarTodasLasReglas();
-  if(!ok){renderReglasSection(true);return;}
-  // Marcar fecha como jugada localmente
-  App._fechaJugada=window._ctx.fechaId;
-  toast("✅ ¡Fecha jugada! Pronósticos y reglas guardados.");
-  // Volver a fechas mostrando badge de jugada
-  setTimeout(function(){go("fechas");},1500);
+  if(btn)btn.innerHTML=`<div style="text-align:center;padding:8px"><div class="spinner" style="margin:0 auto 8px"></div><p style="font-size:13px;color:var(--txt2)">Guardando fecha...</p></div>`;
+  try{
+    const ps=Object.entries(window._pr).map(function(e){return{partidoId:e[0],pronostico:e[1].v};});
+    const rp=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});
+    if(!rp.ok){toast("❌ "+rp.error);renderReglasSection(true);return;}
+    // Solo guardar reglas si hay reglas configuradas para esta fecha
+    if(window._reglasDisp.length){
+      const ok=await window._guardarTodasLasReglas();
+      if(!ok){renderReglasSection(true);return;}
+    }
+    App._fechaJugada=window._ctx.fechaId;
+    toast("✅ ¡Fecha jugada! Pronósticos guardados.");
+    setTimeout(function(){go("fechas");},1500);
+  }catch(e){
+    toast("❌ Error: "+e.message);
+    renderReglasSection(true);
+  }
 };
 
 
