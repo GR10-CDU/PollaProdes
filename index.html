@@ -378,6 +378,16 @@ input:focus,select:focus{outline:none}
 .prono-centro.L{color:var(--L)}
 .prono-centro.E{color:var(--E)}
 .prono-centro.V{color:var(--V)}
+.prono-box{
+  font-family:var(--ff);font-size:42px;font-weight:900;line-height:1;
+  width:62px;height:62px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--d2);
+  text-shadow:0 0 18px rgba(255,255,255,.55),0 2px 6px rgba(0,0,0,.5)
+}
+.prono-box.L{color:var(--L)}
+.prono-box.E{color:var(--E)}
+.prono-box.V{color:var(--V)}
 .prono-lbl{font-size:9px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
 
 /* BOTONES L/E/V — el corazón */
@@ -860,7 +870,7 @@ function renderPartidos(parts,ctx,puede){
           ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:12px;padding:4px 11px">&#9679; VIVO</span>`:""}
         </div>
         <div class="pc-acts">
-          ${(sel&&puede)?`<span class="cambios ${cr===3?"ok":cr>0?"warn":"none"}">&#128260; ${cr}</span>`:""}
+          ${(sel&&bloq&&!sinGoles)?`<span class="cambios ${cr===3?"ok":cr>0?"warn":"none"}">&#128260; ${cr}</span>`:""}
         </div>
       </div>
       <div class="teams-block">
@@ -870,7 +880,7 @@ function renderPartidos(parts,ctx,puede){
         </div>
         <div class="vs-center">
           ${!sinGoles?`<div class="score-vivo">${p.golesLocal}-${p.golesVisita}</div>`:
-            sel?`<div class="prono-centro ${sel}">${sel}</div><div class="prono-lbl">tu pron&oacute;stico</div>`:
+            sel?`<div class="prono-box ${sel}">${sel}</div><div class="prono-lbl">tu pron&oacute;stico</div>`:
             `<div class="vs-txt">VS</div>`}
         </div>
         <div class="team-box">
