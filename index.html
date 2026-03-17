@@ -1205,18 +1205,119 @@ async function loadDash(){
 async function loadAdminFechas(){
   const r=await api("getFechas"),el=document.getElementById("afl");if(!el)return;
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
-  el.innerHTML=(r.fechas||[]).map(f=>`<div class="card" style="margin-bottom:8px;padding:14px 16px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-      <div><div style="font-family:var(--ff);font-size:19px;font-weight:800">${f.nombre}</div><div style="font-size:11px;color:var(--txt3)">⚽ ${f.cantPartidos||0} · ${f.liga||""}</div></div>
-      <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr"}">${f.estado}</span>
-    </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <button class="btn btn-s" style="padding:5px 11px;font-size:12px" onclick="go('admin-importar',{fechaId:'${f.id}'})">🔗 Importar</button>
-      <button class="btn btn-s" style="padding:5px 11px;font-size:12px" onclick="go('admin-res',{fechaId:'${f.id}'})">⚽ Resultados</button>
-      ${f.estado==="Abierta"?`<button class="btn btn-s" style="padding:5px 11px;font-size:12px" onclick="cerrarFecha('${f.id}')">🔒 Cerrar</button>`:""}
-      ${f.estado==="Cerrada"?`<button class="btn btn-s" style="padding:5px 11px;font-size:12px" onclick="calcularFecha('${f.id}')">🏆 Calcular</button>`:""}
-    </div></div>`).join("")||emptyBox("📅","Sin fechas");
+  // Admin ve todas las fechas incluyendo Cerrada/Finalizada
+  const todas=r.fechas||[];
+  if(!todas.length){el.innerHTML=emptyBox("📅","Sin fechas");return;}
+  el.innerHTML=todas.map(f=>{
+    const reglas=(f.reglasHabilitadas||[]);
+    return`<div class="card" style="margin-bottom:10px;padding:16px">
+      <!-- Encabezado -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div style="font-family:var(--ff);font-size:20px;font-weight:800">${f.nombre}</div>
+          <div style="font-size:11px;color:var(--txt3);margin-top:2px">
+            ⚽ ${f.cantPartidos||0} partidos · ${f.liga||"Sin liga"}
+            ${f.plazoLimite?` · Plazo: ${new Date(f.plazoLimite).toLocaleString("es-AR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}`:""}
+          </div>
+          ${reglas.length?`<div style="margin-top:5px;display:flex;gap:4px;flex-wrap:wrap">${reglas.map(cod=>`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">${cod}</span>`).join("")}</div>`:""}
+        </div>
+        <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":f.estado==="Finalizada"?"bpur":"bgr"}">${f.estado}</span>
+      </div>
+      <!-- Botones -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="go('admin-importar',{fechaId:'${f.id}'})">🔗 Importar</button>
+        <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="go('admin-res',{fechaId:'${f.id}'})">⚽ Resultados</button>
+        <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="showEditarFecha('${f.id}','${f.nombre}','${f.liga||""}','${f.plazoLimite||""}',${JSON.stringify(reglas)})">✏️ Editar</button>
+        <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="showGestionPozos('${f.id}','${f.nombre}')">💰 Pozos</button>
+        <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="go('admin-pagos',{fechaId:'${f.id}'})">👥 Inscriptos</button>
+        ${f.estado==="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:12px" onclick="cerrarFecha('${f.id}')">🔒 Cerrar</button>`:""}
+        ${f.estado==="Cerrada"?`<button class="btn btn-p" style="padding:6px 12px;font-size:12px" onclick="calcularFecha('${f.id}')">🏆 Calcular</button>`:""}
+      </div>
+    </div>`;
+  }).join("");
 }
+
+// ── Editar fecha (nombre, liga, plazo, reglas) ──
+window.showEditarFecha=function(id,nombre,liga,plazo,reglasActuales){
+  window._reglasSelAdmin=new Set(reglasActuales||[]);
+  const reglasHTML=TODAS_LAS_REGLAS.map(function(r){
+    const checked=(reglasActuales||[]).includes(r.codigo)?"checked":"";
+    return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer">
+      <input type="checkbox" value="${r.codigo}" ${checked} style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/>
+      <div>
+        <div style="font-size:13px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:11px">+${r.pts}pts</span></div>
+        <div style="font-size:11px;color:var(--txt3)">${r.desc}</div>
+      </div>
+    </label>`;
+  }).join("");
+  // Formatear plazo para datetime-local
+  let plazoFmt="";
+  if(plazo){try{const d=new Date(plazo);plazoFmt=d.toISOString().slice(0,16);}catch(e){}}
+  const m=mkModal("Editar fecha",`<div class="fg">
+    <input type="hidden" id="ef-id" value="${id}"/>
+    <div class="ig"><label class="lbl">Nombre</label><input class="inp" id="ef-nom" value="${nombre}"/></div>
+    <div class="ig"><label class="lbl">Liga</label><input class="inp" id="ef-lig" value="${liga}"/></div>
+    <div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="ef-pla" type="datetime-local" value="${plazoFmt}"/></div>
+    <div class="ig">
+      <label class="lbl">Reglas habilitadas</label>
+      <div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div>
+    </div>
+    <button class="btn btn-p btn-lg" onclick="guardarEditarFecha()">Guardar cambios</button>
+  </div>`);
+  document.body.appendChild(m);
+};
+
+window.guardarEditarFecha=async function(){
+  const id=document.getElementById("ef-id")?.value;
+  const r=await api("adminEditarFecha",{
+    fechaId:id,
+    nombre:document.getElementById("ef-nom")?.value,
+    liga:document.getElementById("ef-lig")?.value,
+    plazoLimite:document.getElementById("ef-pla")?.value,
+    reglasHabilitadas:Array.from(window._reglasSelAdmin)
+  });
+  document.querySelector(".modal-bg")?.remove();
+  if(r.ok){toast("✅ Fecha actualizada");loadAdminFechas();}else toast("❌ "+r.error);
+};
+
+// ── Gestión de pozos de una fecha ──
+window.showGestionPozos=async function(fechaId,nombreFecha){
+  const rp=await api("getPozos",{fechaId});
+  const pozosHTML=rp.ok&&rp.pozos?.length
+    ? rp.pozos.map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bdr-l)">
+        <div>
+          <div style="font-size:14px;font-weight:600">$${p.monto.toLocaleString("es-AR")}</div>
+          <div style="font-size:11px;color:var(--txt3)">${p.tipo} · ${p.inscriptos} inscriptos · Premio: $${p.premioGanador.toLocaleString("es-AR")}</div>
+        </div>
+        <span class="bdg ${p.estado==="Activo"?"bg":"bgr"}">${p.estado}</span>
+      </div>`).join("")
+    : `<p style="font-size:13px;color:var(--txt3);padding:12px 0">Sin pozos creados aún</p>`;
+
+  const m=mkModal("💰 Pozos — "+nombreFecha,`<div>
+    ${pozosHTML}
+    <div style="margin-top:14px;border-top:1px solid var(--bdr-l);padding-top:14px">
+      <p class="lbl">Agregar pozo</p>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input class="inp" id="np-monto" type="number" placeholder="Monto ($)" style="flex:1"/>
+        <button class="btn btn-p" style="padding:10px 16px" onclick="crearPozo('${fechaId}')">+ Crear</button>
+      </div>
+    </div>
+  </div>`);
+  document.body.appendChild(m);
+};
+
+window.crearPozo=async function(fechaId){
+  const monto=document.getElementById("np-monto")?.value;
+  if(!monto||isNaN(monto)||monto<=0){toast("Ingresá un monto válido");return;}
+  const r=await api("adminCrearPozo",{fechaId,monto:+monto});
+  if(!r.ok){toast("❌ "+r.error);return;}
+  toast("✅ Pozo creado");
+  document.querySelector(".modal-bg")?.remove();
+  // Reabrir el modal de pozos actualizado
+  const card=document.querySelector(`[onclick*="showGestionPozos('${fechaId}"]`);
+  const nombre=card?card.closest(".card").querySelector(".font-family").textContent:"";
+  showGestionPozos(fechaId,nombre);
+};
 // Catálogo de todas las reglas disponibles (para el modal del admin)
 const TODAS_LAS_REGLAS=[
   {codigo:"LMR",nombre:"La Marea Roja",desc:"Elegí 3 partidos en los que creas que habrá al menos una tarjeta roja. Sumás 1 punto por cada expulsión.",pts:1},
@@ -1354,7 +1455,27 @@ function renderImportar(){return`<div class="su">
   </div></div>`;}
 window._impParts=[];window._impSel=new Set();
 async function loadImportar(ctx){const r=await api("getFechas");const sel=document.getElementById("imp-fecha");if(!sel)return;const fechas=(r.fechas||[]).filter(f=>["Borrador","Abierta"].includes(f.estado));sel.innerHTML=fechas.length?fechas.map(f=>`<option value="${f.id}"${ctx?.fechaId===f.id?" selected":""}>${f.nombre}</option>`).join(""):`<option value="">Sin fechas abiertas</option>`;}
-window.onLigaChange=async()=>{const liga=document.getElementById("imp-liga")?.value,sr=document.getElementById("imp-ronda"),bb=document.getElementById("btn-buscar");if(!liga||!sr)return;sr.disabled=true;sr.innerHTML=`<option>Cargando...</option>`;bb.disabled=true;const r=await api("getRondas",{liga});if(!r.ok||!r.rondas?.length){sr.innerHTML=`<option value="">Sin rondas</option>`;return;}sr.innerHTML=r.rondas.map(rn=>`<option value="${rn}">${rn}</option>`).join("");sr.disabled=false;bb.disabled=false;};
+window.onLigaChange=async()=>{
+  const liga=document.getElementById("imp-liga")?.value,sr=document.getElementById("imp-ronda"),bb=document.getElementById("btn-buscar");
+  if(!liga||!sr)return;
+  sr.disabled=true;sr.innerHTML=`<option>Cargando...</option>`;bb.disabled=true;
+  const r=await api("getRondas",{liga,temporada:2024});
+  console.log("getRondas respuesta:",JSON.stringify(r));
+  if(!r.ok){
+    sr.innerHTML=`<option value="">Error: ${r.error||"desconocido"}</option>`;
+    bb.disabled=true;
+    toast("\u274C Rondas: "+(r.error||"sin respuesta"));
+    return;
+  }
+  if(!r.rondas?.length){
+    sr.innerHTML=`<option value="">Sin rondas para esta liga/temporada</option>`;
+    bb.disabled=true;
+    toast("Sin rondas — revisá la temporada en el backend");
+    return;
+  }
+  sr.innerHTML=r.rondas.map(rn=>`<option value="${rn}">${rn}</option>`).join("");
+  sr.disabled=false;bb.disabled=false;
+};
 window.buscarPartidos=async()=>{const liga=document.getElementById("imp-liga")?.value,ronda=document.getElementById("imp-ronda")?.value;if(!liga||!ronda){toast("Seleccioná liga y ronda");return;}const btn=document.getElementById("btn-buscar");if(btn){btn.textContent="Buscando...";btn.disabled=true;}const r=await api("buscarPorRonda",{liga,ronda});if(btn){btn.textContent="🔍 Buscar";btn.disabled=false;}if(!r.ok){toast("❌ "+r.error);return;}window._impParts=r.partidos||[];window._impSel=new Set(window._impParts.map(p=>p.apiId));renderImpLista();document.getElementById("imp-res").style.display="block";toast(`✅ ${r.partidos.length} partidos`);};
 function tiposAuto(t){const r={},c=Math.round(t*.25);for(let n=1;n<=t;n++)r[n]="Normal";if(t>=10)r[10]="Polla";let d=0;for(let n=t;n>=1&&d<c;n--){if(n===10)continue;r[n]="Doble";d++;}return r;}
 function renderImpLista(){const el=document.getElementById("imp-lista");if(!el)return;const ps=window._impParts,tipos=tiposAuto(ps.length);el.innerHTML=ps.map((p,i)=>{const n=i+1,tipo=tipos[n],sel=window._impSel.has(p.apiId),dt=new Date(p.fecha),hora=dt.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}),fecha=dt.toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"short"});return`<div class="imp-item"><input type="checkbox" id="chk-${p.apiId}" ${sel?"checked":""} onchange="toggleImp('${p.apiId}')" style="width:15px;height:15px;cursor:pointer;accent-color:var(--g2)"/><div style="width:22px;text-align:center;font-size:11px;font-weight:700;color:var(--txt3)">${n}</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.local} vs ${p.visita}</div><div style="font-size:11px;color:var(--txt3)">${fecha} · ${hora}</div></div><span class="bdg ${tipo==="Polla"?"bgold":tipo==="Doble"?"bpur":"bgr"}">${tipo==="Polla"?"⭐ Polla":tipo==="Doble"?"×2 Doble":"Normal"}</span></div>`;}).join("");updateImpCount();}
