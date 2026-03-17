@@ -714,6 +714,7 @@ function renderScreen(k,ctx){
     case"fecha-det":return`<div class="su"><div class="back" id="bk">← Volver a fechas</div><div id="fdc"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"jugar":return`<div class="su"><div class="back" id="bk">← Volver</div>
       <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div><div class="prog-info"><span id="prog-txt">0 pronósticos</span><span id="prog-pct"></span></div></div>
+      <div id="prog-cambios" style="display:none;margin-top:6px;padding:8px 14px;background:var(--bluel);border:1px solid rgba(68,138,255,.2);border-radius:var(--rs)"></div>
       <div id="jc"><div class="loading"><div class="spinner"></div></div></div>
       <div id="jf" style="margin-top:14px"></div></div>`;
     case"tabla":return`<div class="su"><div id="tc"><div class="loading"><div class="spinner"></div></div></div></div>`;
@@ -912,23 +913,59 @@ async function loadFechaDet(ctx){
 async function loadMisPronoDet(fechaId,f){
   const rp=await api("getPozos",{fechaId,userId:App.user?.id});
   const el=document.getElementById("plist-cerrada");
-  const ep=document.getElementById("mis-pronos-det");
   const yaInsc=rp.ok?rp.pozos?.find(function(p){return p.yaInscripto;}):null;
 
   if(!yaInsc){
-    if(el)el.innerHTML=`<div style="padding:14px;background:rgba(255,82,52,.04);border:1px solid rgba(255,82,52,.15);border-radius:var(--r);text-align:center"><p style="color:var(--txt2);font-size:13px">🔒 Fecha cerrada</p></div>`;
+    if(el)el.innerHTML=`<div style="padding:14px;background:rgba(255,82,52,.04);border:1px solid rgba(255,82,52,.15);border-radius:var(--r);text-align:center"><p style="color:var(--txt2);font-size:13px">🔒 Fecha cerrada — no estás inscripto</p></div>`;
     return;
   }
 
-  // Mostrar botones de acceso
+  // Cargar pronósticos y reglas del usuario
+  const rm=await api("getMiFecha",{fechaId,pozoId:yaInsc.id});
+  if(!rm.ok){if(el)el.innerHTML=errBox(rm.error);return;}
+
+  const pronos=rm.pronos||[];
+  const reglas=rm.reglas||[];
+  const ahora=new Date();
+
+  // Resumen de cambios restantes
+  const cambiosTotales=pronos.reduce(function(a,p){return a+(p.cambiosRestantes||0);},0);
+  const pronosConCambios=pronos.filter(function(p){return (p.cambiosRestantes||0)>0;}).length;
+
+  // Construir mapa de reglas por partido
+  const reglaMap={};
+  reglas.forEach(function(r){reglaMap[r.partidoId]={codigo:r.codigo,nombre:r.nombre};});
+
   if(el)el.innerHTML=`
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-      <button class="btn btn-p" onclick="go('jugar',{fechaId:'${fechaId}',pozoId:'${yaInsc.id}'})" style="flex:1">
-        👁 Ver mis pronósticos
-      </button>
-      <button class="btn btn-s" onclick="go('tabla',{fechaId:'${fechaId}',pozoId:'${yaInsc.id}'})" style="flex:1">
-        🏆 Ver tabla
-      </button>
+    <div style="margin-bottom:14px">
+      <!-- Resumen cambios -->
+      <div style="display:flex;gap:8px;align-items:center;padding:12px 14px;background:var(--bluel);border:1px solid rgba(68,138,255,.2);border-radius:var(--rs);margin-bottom:12px">
+        <span style="font-size:20px">🔄</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--blue)">${pronosConCambios} partido${pronosConCambios!==1?"s":""} con cambios disponibles</div>
+          <div style="font-size:11px;color:var(--txt3)">Podés cambiar L/E/V hasta 30 min antes del inicio de cada partido</div>
+        </div>
+      </div>
+      <!-- Botones -->
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="btn btn-p" onclick="go('jugar',{fechaId:'${fechaId}',pozoId:'${yaInsc.id}'})" style="flex:1">✏️ Ver y modificar</button>
+        <button class="btn btn-s" onclick="go('tabla',{fechaId:'${fechaId}',pozoId:'${yaInsc.id}'})" style="flex:1">🏆 Tabla</button>
+      </div>
+      <!-- Lista pronósticos -->
+      <p class="sec">Mis pronósticos</p>
+      ${pronos.map(function(p){
+        const regla=reglaMap[p.partidoId];
+        const cr=p.cambiosRestantes||0;
+        return`<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--bdr-l)">
+          <span style="font-size:11px;font-weight:700;color:var(--txt3);width:22px">#${p.numero}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:500">${p.local} vs ${p.visita}</div>
+            ${regla?`<div style="font-size:10px;color:var(--gold)">📏 ${regla.nombre}</div>`:""}
+          </div>
+          <span class="prono-box ${p.pronostico}" style="width:36px;height:36px;font-size:20px;border-radius:8px">${p.pronostico}</span>
+          <span style="font-size:11px;font-weight:600;color:${cr>0?"var(--blue)":"var(--txt3)"};min-width:28px;text-align:center">${cr>0?cr+"🔄":"🔒"}</span>
+        </div>`;
+      }).join("")}
     </div>`;
 }
 
@@ -973,7 +1010,7 @@ window.inscribirse=async()=>{if(!window._selPozo){toast("Seleccioná un pozo");r
 // _pr: {partidoId -> {v, cr}}
 // _re: array de {codigo, nombre, pts, desc, cantReq, partidos:[ids]}
 // _reglasDisp: reglas habilitadas para la fecha (desde getFecha)
-window._pr={};window._re=[];window._ctx={};window._parts=[];window._reglasDisp=[];
+window._pr={};window._re=[];window._ctx={};window._parts=[];window._reglasDisp=[];window._cambiosFecha=3;
 
 async function loadJugar(ctx){
   const jel=document.getElementById("jc");
@@ -1012,6 +1049,8 @@ async function loadJugar(ctx){
     // UNA SOLA LLAMADA — getMiFecha ya devuelve pronos + reglas
     const rm=await api("getMiFecha",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
     if(rm.ok){
+      // Cambios restantes por FECHA (total)
+      window._cambiosFecha=rm.cambiosRestantesFecha!==undefined?rm.cambiosRestantesFecha:3;
       // Cargar pronósticos
       (rm.pronos||[]).forEach(function(p){
         window._pr[p.partidoId]={v:p.pronostico,cr:p.cambiosRestantes};
@@ -1035,11 +1074,36 @@ async function loadJugar(ctx){
     }
     renderPartidos(window._parts,ctx,puede);
     renderReglasSection(puede);
+    renderResumenCambios();
   }catch(e){
     renderReglasSection(puede);
   } finally {
     const ld=document.getElementById("pronos-loading");if(ld)ld.remove();
   }
+}
+
+function renderResumenCambios(){
+  // Mostrar cuántos partidos tienen cambios restantes
+  const el=document.getElementById("prog-cambios");if(!el)return;
+  const ahora=new Date();
+  const cf=window._cambiosFecha!==undefined?window._cambiosFecha:3;
+  if(cf<=0){
+    el.style.display="block";el.innerHTML=`<div style="padding:10px 14px;background:rgba(255,82,52,.06);border:1px solid rgba(255,82,52,.15);border-radius:var(--rs);font-size:13px;font-weight:600;color:var(--red)">🔒 Sin cambios disponibles para esta fecha</div>`;
+    return;
+  }
+  // Solo mostrar si la fecha está en curso (no abierta para jugar)
+  const hayPartidosPorEmpezar=window._parts.some(function(p){
+    const inicio=p.fechaHora?new Date(p.fechaHora):null;
+    return inicio&&(inicio-ahora)/60000>30;
+  });
+  if(!hayPartidosPorEmpezar)return;
+  el.style.display="block";el.innerHTML=`<div style="padding:10px 14px;background:var(--bluel);border:1px solid rgba(68,138,255,.2);border-radius:var(--rs);display:flex;align-items:center;gap:10px">
+    <span style="font-family:var(--ff);font-size:32px;font-weight:900;color:var(--blue)">${cf}</span>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:var(--blue)">cambio${cf!==1?"s":""} disponible${cf!==1?"s":""} en esta fecha</div>
+      <div style="font-size:11px;color:var(--txt3)">Podés cambiar L/E/V hasta 30 min antes del inicio de cada partido</div>
+    </div>
+  </div>`;
 }
 
 function renderPartidos(parts,ctx,puede){
@@ -1048,12 +1112,31 @@ function renderPartidos(parts,ctx,puede){
   const pb=document.getElementById("prog");if(pb)pb.style.width=(tot?Math.round(comp/tot*100):0)+"%";
   const pt=document.getElementById("prog-txt");if(pt)pt.textContent=comp+" de "+tot+" pronósticos";
   const pp=document.getElementById("prog-pct");if(pp)pp.textContent=tot?Math.round(comp/tot*100)+"%":"";
+  // Mostrar cambios disponibles si ya jugó
+  const conCambios=Object.values(window._pr).filter(function(p){return p.v&&(p.cr||0)>0;}).length;
+  const pcr=document.getElementById("prog-cambios");
+  if(pcr){
+    if(conCambios>0&&!puede){
+      pcr.innerHTML=`<span style="font-size:12px;color:var(--blue);font-weight:600">🔄 ${conCambios} partido${conCambios!==1?"s":""} con cambios disponibles</span>`;
+      pcr.style.display="block";
+    } else {
+      pcr.style.display="none";
+    }
+  }
 
   el.innerHTML=parts.map(function(p){
     const pr=window._pr[p.id]||{};
     const sel=pr.v,cr=pr.cr!==undefined?pr.cr:3;
     const sinGoles=p.golesLocal===null||p.golesLocal===undefined||p.golesLocal==="";
-    const bloq=!puede||!sinGoles;
+    // Bloqueo por partido: 30 min antes del inicio O si ya tiene resultado
+    const ahora=new Date();
+    const inicioPartido=p.fechaHora?new Date(p.fechaHora):null;
+    const minRestPartido=inicioPartido?(inicioPartido-ahora)/60000:9999;
+    const partidoEmpezado=!sinGoles||(inicioPartido&&minRestPartido<=30);
+    // 3 cambios POR FECHA — no por partido
+    const cambiosFechaDisp=window._cambiosFecha!==undefined?window._cambiosFecha:3;
+    const puedeModificar=!partidoEmpezado&&(cambiosFechaDisp>0)&&sel;
+    const bloq=!puedeModificar&&!(!sel&&puede);
     const tipoCls=p.tipo==="Polla"?" polla":p.tipo==="Doble"?" doble":"";
     const li=p.local?p.local[0].toUpperCase():"L",vi=p.visita?p.visita[0].toUpperCase():"V";
     const escL=p.localLogo?`<img src="${p.localLogo}" style="width:36px;height:36px;object-fit:contain" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:"";
@@ -1100,8 +1183,26 @@ function renderPartidos(parts,ctx,puede){
             return`<button class="lev-btn ${v}${sel===v?" sel":""}" onclick="pronosticar('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')"><span class="lev-letra">${v}</span><span class="lev-sub">${label}</span></button>`;
           }).join("")}
         </div>`
-      :!sinGoles?""
-      :`<div class="partido-blocked">Sin pron&oacute;stico a&uacute;n</div>`}
+      :sinGoles&&sel?`
+        <div class="lev-wrap" style="opacity:.7">
+          ${["L","E","V"].map(function(v){
+            const label=v==="L"?"Local":v==="E"?"Empate":"Visitante";
+            const esSel=sel===v;
+            const sinCambios=cr<=0;
+            const disabled=sinCambios?"disabled":"";
+            return`<button class="lev-btn ${v}${esSel?" sel":""}" ${disabled}
+              onclick="${sinCambios?"":"pronosticar('"+p.id+"','"+v+"','"+ctx.fechaId+"','"+ctx.pozoId+"')"}"
+              style="${sinCambios?"opacity:.4;cursor:not-allowed":""}">
+              <span class="lev-letra">${v}</span>
+              <span class="lev-sub">${label}</span>
+            </button>`;
+          }).join("")}
+        </div>
+        <div style="text-align:center;margin-top:4px;font-size:11px;color:${cr>0?"var(--txt3)":"var(--red)"}">
+          ${cr>0?`🔄 ${cr} cambio${cr!==1?"s":""} restante${cr!==1?"s":""}`:"🔒 Sin cambios disponibles"}
+        </div>`
+      :sinGoles&&!sel?`<div class="partido-blocked">Sin pron&oacute;stico a&uacute;n</div>`
+      :""}
     </div>`;
   }).join("");
 }
@@ -1354,6 +1455,7 @@ window.pronosticar=async function(pid,v,fid,poid){
   const r=await api("guardarPronostico",{fechaId:fid,pozoId:poid,partidoId:pid,pronostico:v});
   if(!r.ok){toast("\u274C "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];renderPartidos(window._parts,window._ctx,true);return;}
   if(r.cambiosRestantes!==undefined){window._pr[pid].cr=r.cambiosRestantes;renderPartidos(window._parts,window._ctx,true);}
+  if(r.cambiosRestantesFecha!==undefined){window._cambiosFecha=r.cambiosRestantesFecha;}
   if(r.mensaje&&r.cambio)toast(r.mensaje);
 };
 window.guardarTodos=async function(){
@@ -1595,61 +1697,9 @@ window.crearPozo=async function(fechaId){
   loadAdminFechas(); // recargar para mostrar el pozo nuevo
 };
 
-// ── Editar fecha (nombre, liga, plazo, reglas) ──
-window.showEditarFecha=function(id,nombre,liga,plazo,reglasActuales){
-  window._reglasSelAdmin=new Set(reglasActuales||[]);
-  const reglasHTML=TODAS_LAS_REGLAS.map(function(r){
-    const checked=(reglasActuales||[]).includes(r.codigo)?"checked":"";
-    return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer">
-      <input type="checkbox" value="${r.codigo}" ${checked} style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/>
-      <div>
-        <div style="font-size:13px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:11px">+${r.pts}pts</span></div>
-        <div style="font-size:11px;color:var(--txt3)">${r.desc}</div>
-      </div>
-    </label>`;
-  }).join("");
-  // Formatear plazo para datetime-local
-  let plazoFmt="";
-  if(plazo){try{const d=new Date(plazo);plazoFmt=d.toISOString().slice(0,16);}catch(e){}}
-  const m=mkModal("Editar fecha",`<div class="fg">
-    <input type="hidden" id="ef-id" value="${id}"/>
-    <div class="ig"><label class="lbl">Nombre</label><input class="inp" id="ef-nom" value="${nombre}"/></div>
-    <div class="ig"><label class="lbl">Liga</label><input class="inp" id="ef-lig" value="${liga}"/></div>
-    <div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="ef-pla" type="datetime-local" value="${plazoFmt}"/></div>
-    <div class="ig">
-      <label class="lbl">Reglas habilitadas</label>
-      <div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div>
-    </div>
-    <button class="btn btn-p btn-lg" onclick="guardarEditarFecha()">Guardar cambios</button>
-  </div>`);
-  document.body.appendChild(m);
-};
-
-window.guardarEditarFecha=async function(){
-  const id=document.getElementById("ef-id")?.value;
-  const r=await api("adminEditarFecha",{
-    fechaId:id,
-    nombre:document.getElementById("ef-nom")?.value,
-    liga:document.getElementById("ef-lig")?.value,
-    plazoLimite:document.getElementById("ef-pla")?.value,
-    reglasHabilitadas:Array.from(window._reglasSelAdmin)
-  });
-  document.querySelector(".modal-bg")?.remove();
-  if(r.ok){toast("✅ Fecha actualizada");loadAdminFechas();}else toast("❌ "+r.error);
-};
-
-// ── Gestión de pozos de una fecha ──
-window.showGestionPozos=async function(fechaId,nombreFecha){
-  const rp=await api("getPozos",{fechaId});
-  const pozosHTML=rp.ok&&rp.pozos?.length
-    ? rp.pozos.map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bdr-l)">
-        <div>
-          <div style="font-size:14px;font-weight:600">$${p.monto.toLocaleString("es-AR")}</div>
-          <div style="font-size:11px;color:var(--txt3)">${p.tipo} · ${p.inscriptos} inscriptos · Premio: $${p.premioGanador.toLocaleString("es-AR")}</div>
-        </div>
-        <span class="bdg ${p.estado==="Activo"?"bg":"bgr"}">${p.estado}</span>
-      </div>`).join("")
-    : `<p style="font-size:13px;color:var(--txt3);padding:12px 0">Sin pozos creados aún</p>`;
+// ── Gestión de pozos de una fecha (versión unificada arriba) ──
+window.showGestionPozos=window.showGestionPozos||function(){};
+/*
 
   const m=mkModal("💰 Pozos — "+nombreFecha,`<div>
     ${pozosHTML}
@@ -1857,11 +1907,12 @@ async function loadSRFechas(){
   const abiertas=r.fechas.filter(function(f){return f.estado==="Abierta";});
   if(!abiertas.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">Sin fechas abiertas</div>`;return;}
   el.innerHTML=abiertas.map(function(f){
-    const mins=f.minutosRestantes;
+    const mins=f.minutosRestantes||0;
     const pt=mins<60?mins+"min":Math.floor(mins/60)+"hs";
+    const nombre=f.nombre||f.id||"Sin nombre";
     return`<div class="sr-fecha-link" onclick="go('fecha-det',{fechaId:'${f.id}'})">
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.nombre}</div>
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nombre}</div>
         <div style="font-size:11px;color:var(--txt3)">⚽ ${f.cantPartidos||0} · ⏱ ${pt}</div>
       </div>
       <span style="font-size:13px;color:var(--g2);font-weight:700">→</span>
