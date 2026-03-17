@@ -795,7 +795,8 @@ async function loadFechas(){
 
 async function cargarExtraFecha(f){
   const el=document.getElementById("fecha-extra-"+f.id);if(!el)return;
-  const rp=await api("getPozos",{fechaId:f.id,userId:App.user?.id});
+  const uid=App.user?.id||App.user?.userId||"";
+  const rp=await api("getPozos",{fechaId:f.id,userId:uid});
   if(!rp.ok||!rp.pozos?.length){
     if(f.reglasHabilitadas?.length){
       el.innerHTML=`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:2px">${f.reglasHabilitadas.map(function(cod){return`<span class="bdg bgold" style="font-size:10px;padding:2px 6px">${cod}</span>`;}).join("")}</div>`;
@@ -1314,7 +1315,32 @@ window.guardarTodos=async function(){
 /* ══ TABLA ═══════════════════════════════════════════════════ */
 async function loadTabla(ctx){
   const el=document.getElementById("tc");if(!el)return;
-  if(!ctx.fechaId||!ctx.pozoId){el.innerHTML=emptyBox("🏆","Seleccioná una fecha para ver la tabla");return;}
+
+  // Si no hay fecha/pozo, mostrar selector con las fechas del usuario
+  if(!ctx.fechaId||!ctx.pozoId){
+    el.innerHTML=`<div class="loading"><div class="spinner"></div></div>`;
+    const rf=await api("getFechas");
+    const ri=await api("getMisInscripciones");
+    const inscripciones=ri.ok?(ri.inscripciones||[]):[];
+    if(!inscripciones.length){el.innerHTML=emptyBox("🏆","No estás inscripto en ninguna fecha");return;}
+    const fechas=rf.ok?(rf.fechas||[]):[];
+    el.innerHTML=`<div>
+      <p class="sec">Seleccioná fecha y pozo</p>
+      ${inscripciones.map(function(i){
+        const f=fechas.find(function(x){return x.id===i.fechaId;});
+        return`<div class="card" style="margin-bottom:8px;padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center"
+          onclick="go('tabla',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})">
+          <div>
+            <div style="font-size:15px;font-weight:600">${f?f.nombre:i.fechaId}</div>
+            <div style="font-size:12px;color:var(--txt3)">Pozo $${(i.monto||0).toLocaleString("es-AR")} · ${f?f.liga||"":""}</div>
+          </div>
+          <span style="color:var(--g2);font-size:18px">→</span>
+        </div>`;
+      }).join("")}
+    </div>`;
+    return;
+  }
+
   const r=await api("getTabla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});if(!r.ok){el.innerHTML=errBox(r.error);return;}
   const t=r.tabla||[],md=["🥇","🥈","🥉"],po=t.slice(0,3);
   el.innerHTML=`<p style="font-size:11px;color:var(--txt3);margin-bottom:14px">Calculado hasta partido #${r.ultimoPartidoCalculado||0} de ${r.totalPartidos||0}</p>
