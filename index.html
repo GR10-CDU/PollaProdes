@@ -1047,17 +1047,14 @@ function renderResumenCambios(){
   if(!hayModif)return;
   // Calcular total de puntos acumulados
   // Total = suma de ptsTotal por partido + puntos de reglas postFecha (LR, DIEGO) de _reglasDisp
-  const totalPtsPartidos=Object.values(window._pr).reduce(function(t,p){return t+(p.ptsTotal||0);},0);
-  const totalPtsReglas=window._reglasDisp.reduce(function(t,r){
-    // Solo LR y DIEGO se calculan postFecha — los demás ya están en ptsTotal
-    if(r.codigo==="LR"||r.codigo==="DIEGO"){
-      // Sus puntos vienen en las reglas del primer partido
-      const pts=Object.values(window._pr).reduce(function(s,p){
-        return s+(p.reglas||[]).filter(function(rg){return rg.codigo===r.codigo;}).reduce(function(x,rg){return x+(rg.puntos||0);},0);
-      },0);
-      return t+pts;
-    }
-    return t;
+  // Total = suma de ptsTotal de cada partido + puntos de LR/DIEGO calculados como 1pt por acierto
+  const totalPtsPartidos=Object.values(window._pr).reduce(function(t,p){
+    const ptsBase=(p.ptsGrilla||0)+(p.esToleTole&&p.ptsToleTole>0?p.ptsToleTole:0);
+    const ptsReglas=(p.reglas||[]).reduce(function(s,r){
+      const esPostFecha=r.codigo==="LR"||r.codigo==="DIEGO";
+      return s+(esPostFecha?(p.acertado?1:0):(r.puntos||0));
+    },0);
+    return t+ptsBase+ptsReglas;
   },0);
   const totalPts=totalPtsPartidos;
   const ptsBadge=totalPts>0?`<span style="font-family:var(--ff);font-size:20px;font-weight:900;color:var(--g2);margin-left:12px">🏆 ${totalPts} pts</span>`:"";
@@ -1125,8 +1122,11 @@ function renderPartidos(parts,ctx,puede){
             if(prd.calculado){
               if(acerto&&prd.esToleTole&&prd.ptsToleTole>0)badges.push(`<span class="bdg bpur" style="font-size:10px;padding:2px 7px">+${prd.ptsToleTole} TOLE</span>`);
               (prd.reglas||[]).forEach(function(r){
-                if(r.puntos>0)badges.push(`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">+${r.puntos} ${r.codigo}</span>`);
-                else if(r.puntos===0)badges.push(`<span class="bdg bgr" style="font-size:10px;padding:2px 7px">0 ${r.codigo}</span>`);
+                // LR y DIEGO: mostrar 1pt por partido acertado (no el total acumulado)
+                const esPostFecha=r.codigo==="LR"||r.codigo==="DIEGO";
+                const pts=esPostFecha?(acerto?1:0):r.puntos;
+                if(pts>0)badges.push(`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">+${pts} ${r.codigo}</span>`);
+                else if(prd.calculado)badges.push(`<span class="bdg bgr" style="font-size:10px;padding:2px 7px">0 ${r.codigo}</span>`);
               });
             }
             return`<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
@@ -1136,7 +1136,7 @@ function renderPartidos(parts,ctx,puede){
               </div>
               ${sel?`<div style="font-family:var(--ff);font-size:28px;font-weight:900;padding:2px 10px;border-radius:10px;background:${acerto?"rgba(34,197,94,.15)":prd.calculado?"rgba(239,68,68,.12)":"rgba(0,0,0,.06)"};color:${acerto?"var(--g2)":prd.calculado?"var(--red)":"var(--txt)"};display:flex;align-items:center;gap:6px">${sel}${acerto&&prd.ptsGrilla?`<span style="font-size:13px;font-weight:700">+${prd.ptsGrilla}</span>`:""}${prd.calculado&&!acerto?`<span style="font-size:13px;font-weight:700">✗</span>`:""}</div>`:""}
               ${badges.length?`<div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center">${badges.join("")}</div>`:""}
-              ${(()=>{const tot=(prd.ptsGrilla||0)+(prd.esToleTole&&prd.ptsToleTole>0?prd.ptsToleTole:0)+(prd.reglas||[]).reduce(function(s,r){return s+(r.puntos||0);},0);return prd.calculado&&tot>0?`<div style="font-family:var(--ff);font-size:13px;font-weight:800;color:var(--g2);border-top:1px solid rgba(0,200,83,.2);padding-top:3px;margin-top:2px">TOTAL +${tot}pts</div>`:"";})()}
+              ${(()=>{const tot=(prd.ptsGrilla||0)+(prd.esToleTole&&prd.ptsToleTole>0?prd.ptsToleTole:0)+(prd.reglas||[]).reduce(function(s,r){const esPostFecha=r.codigo==="LR"||r.codigo==="DIEGO";return s+(esPostFecha?(prd.acertado?1:0):(r.puntos||0));},0);return prd.calculado&&tot>0?`<div style="font-family:var(--ff);font-size:13px;font-weight:800;color:var(--g2);border-top:1px solid rgba(0,200,83,.2);padding-top:3px;margin-top:2px">TOTAL +${tot}pts</div>`:"";})()}
             </div>`;
           })()}
         </div>
