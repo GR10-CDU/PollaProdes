@@ -645,7 +645,7 @@ function hideLoader(){const el=document.getElementById("page-loader");if(el)el.c
 async function api(action,p={}){
   const MSGS={jugarFecha:"Guardando fecha...",autoguardar:"Guardando pronósticos...",guardarReglas:"Guardando reglas...",getMiFecha:"Cargando pronósticos...",getFecha:"Cargando fecha...",getFechas:"Cargando fechas...",getTabla:"Cargando tabla...",adminCrearFecha:"Creando fecha...",adminEditarFecha:"Guardando cambios...",adminCerrarFecha:"Cerrando fecha...",adminCerrarYCalcular:"Calculando puntajes...",adminCrearPozo:"Creando pozo...",importarPartidos:"Importando...",buscarPartidos:"Buscando partidos...",buscarPorRonda:"Buscando partidos...",getRondas:"Cargando rondas...",inscribirse:"Inscribiendo..."};
   if(MSGS[action])showLoader(MSGS[action]);
-  try{const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action,apiSecret:API_SECRET,sessionToken:App.token||undefined,...p})});const j=await r.json();return j;}
+  try{const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action,apiSecret:API_SECRET,sessionToken:App.token,...p})});const j=await r.json();return j;}
   catch(e){return{ok:false,error:"Sin conexión"};}
   finally{hideLoader();}
 }
