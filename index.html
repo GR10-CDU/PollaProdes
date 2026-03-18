@@ -198,6 +198,9 @@ input:focus,select:focus{outline:none}
 .back:hover{color:var(--g2)}
 
 .bdg{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.2px}
+@keyframes pulse-red{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.75;transform:scale(1.1)}}
+@keyframes scaleIn{from{transform:scale(.75);opacity:0}to{transform:scale(1);opacity:1}}
+.bdg-urgent{animation:pulse-red 1s ease-in-out infinite!important;font-size:13px!important;padding:5px 13px!important;font-weight:800!important}
 .bg{background:rgba(0,200,83,.1);color:var(--g2);border:1px solid rgba(0,200,83,.25)}
 .bgold{background:var(--goldl);color:var(--gold);border:1px solid rgba(255,179,0,.3)}
 .bred{background:var(--redl);color:var(--red);border:1px solid rgba(255,82,82,.3)}
@@ -748,6 +751,7 @@ async function loadFechas(){
   if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas disponibles");return;}
   el.innerHTML=fechasVis.map(function(f){
     const mins=f.minutosRestantes,urg=mins<120&&mins>0;
+    const urgente=mins>0&&mins<=30;
     const pt=mins<=0?"🔒 Plazo vencido":mins<60?"⏱ "+mins+"min":mins<1440?"⏱ "+Math.floor(mins/60)+"hs":"📅 "+new Date(f.plazoLimite).toLocaleDateString("es-AR",{day:"numeric",month:"long",timeZone:"America/Argentina/Buenos_Aires"});
     const ic=ICONS[f.liga]||"⚽";
     const strip=f.estado==="Abierta"?"abierta":f.estado==="Cerrada"?"cerrada":"borrador";
@@ -760,7 +764,7 @@ async function loadFechas(){
           <div class="fecha-meta">
             <span>⚽ ${f.cantPartidos||0} partidos</span>
             <span style="color:var(--bdr-l2)">·</span>
-            <span style="${urg?"color:var(--red);font-weight:600":""}">${pt}</span>
+            <span class="${urgente?"bdg bred bdg-urgent":""}" style="${urgente?"":""}${!urgente&&urg?"color:var(--red);font-weight:600":""}">${pt}</span>
           </div>
           <div id="fecha-extra-${f.id}" style="margin-top:5px"></div>
         </div>
@@ -1183,8 +1187,18 @@ window.jugarFecha=async function(){
     if(!rp.ok){toast("❌ Pronósticos: "+rp.error);renderReglasSection(true);return;}
     if(window._reglasDisp.length){const ok=await window._guardarTodasLasReglas();if(!ok){renderReglasSection(true);return;}}
     App._fechaJugada=window._ctx.fechaId;
-    toast("✅ ¡Fecha jugada! Tus pronósticos quedaron guardados.");
-    setTimeout(function(){go("fechas");},1500);
+    // Popup grande FECHA JUGADA
+    const popup=document.createElement("div");
+    popup.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)";
+    popup.innerHTML=`<div style="background:var(--white);border-radius:24px;padding:48px 40px;text-align:center;max-width:360px;width:90%;animation:scaleIn .3s ease">
+      <div style="font-size:72px;margin-bottom:16px">🏆</div>
+      <div style="font-family:var(--ff);font-size:36px;font-weight:900;color:var(--g2);letter-spacing:1px;margin-bottom:8px">¡FECHA JUGADA!</div>
+      <div style="font-size:15px;color:var(--txt2);margin-bottom:28px">Tus pronósticos quedaron guardados.<br>¡Buena suerte!</div>
+      <button class="btn btn-p btn-lg" style="width:100%" onclick="document.getElementById('pp-jugada')?.remove();go('fechas')">Ver fechas →</button>
+    </div>`;
+    popup.id="pp-jugada";
+    document.body.appendChild(popup);
+    setTimeout(function(){go("fechas");document.getElementById("pp-jugada")?.remove();},4000);
   }catch(e){toast("❌ Error: "+e.message);renderReglasSection(true);}
 };
 window.pronosticar=async function(pid,v,fid,poid){
