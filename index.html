@@ -670,6 +670,9 @@ function go(k,ctx={}){
   // Ocultar badge si salimos de jugar
   if(k!=="jugar"){const b=document.getElementById("reglas-badge");if(b)b.style.display="none";}
   App.screen=k;App.ctx=ctx;
+  // Auto-refresh solo en pantallas de juego
+  if(["jugar","tabla","grilla","los-otros"].includes(k)){startAutoRefresh();}
+  else{stopAutoRefresh();}
   const item=getNav().find(n=>n.k===k)||{t:k};
   renderNav();
   const tt=document.getElementById("topbar-title");if(tt)tt.textContent=item.t;
@@ -1012,7 +1015,16 @@ async function loadJugar(ctx){
     const rm=await api("getMiFecha",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
     if(rm.ok){
       window._cambiosFecha=rm.cambiosRestantesFecha!==undefined?rm.cambiosRestantesFecha:3;
-      (rm.pronos||[]).forEach(function(p){window._pr[p.partidoId]={v:p.pronostico,cr:p.cambiosRestantes};});
+      (rm.pronos||[]).forEach(function(p){
+        window._pr[p.partidoId]={
+          v:p.pronostico,cr:p.cambiosRestantes,
+          acertado:p.acertado,
+          ptsGrilla:p.ptsGrilla,ptsToleTole:p.ptsToleTole,
+          ptsReglas:p.ptsReglas,ptsTotal:p.ptsTotal,
+          esToleTole:p.esToleTole,calculado:p.calculado,
+          reglas:p.reglas||[]
+        };
+      });
       const reglasPorCodigo={};
       (rm.reglas||[]).forEach(function(rg){if(!reglasPorCodigo[rg.codigo])reglasPorCodigo[rg.codigo]=[];reglasPorCodigo[rg.codigo].push(rg.partidoId);});
       window._reglasDisp.forEach(function(disp){
@@ -1033,9 +1045,12 @@ function renderResumenCambios(){
   const cf=window._cambiosFecha!==undefined?window._cambiosFecha:3;
   const hayModif=window._parts.some(function(p){const i=p.fechaHora?new Date(p.fechaHora):null;return i&&(i-ahora)/60000>30;});
   if(!hayModif)return;
+  // Calcular total de puntos acumulados
+  const totalPts=Object.values(window._pr).reduce(function(t,p){return t+(p.ptsTotal||0);},0);
+  const ptsBadge=totalPts>0?`<span style="font-family:var(--ff);font-size:20px;font-weight:900;color:var(--g2);margin-left:12px">🏆 ${totalPts} pts</span>`:"";
   el.style.display="block";
-  if(cf<=0){el.innerHTML=`<span style="font-size:13px;font-weight:600;color:var(--red)">🔒 Sin cambios disponibles para esta fecha</span>`;return;}
-  el.innerHTML=`<span style="font-family:var(--ff);font-size:28px;font-weight:900;color:var(--blue)">${cf}</span><div style="margin-left:8px"><div style="font-size:13px;font-weight:700;color:var(--blue)">cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</div><div style="font-size:11px;color:var(--txt3)">Podés cambiar hasta 30 min antes de cada partido</div></div>`;
+  if(cf<=0){el.innerHTML=`<span style="font-size:13px;font-weight:600;color:var(--red)">🔒 Sin cambios disponibles para esta fecha</span>${ptsBadge}`;return;}
+  el.innerHTML=`<span style="font-family:var(--ff);font-size:28px;font-weight:900;color:var(--blue)">${cf}</span><div style="margin-left:8px"><div style="font-size:13px;font-weight:700;color:var(--blue)">cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</div><div style="font-size:11px;color:var(--txt3)">Podés cambiar hasta 30 min antes de cada partido</div></div>${ptsBadge}`;
 }
 
 function renderPartidos(parts,ctx,puede){
@@ -1083,6 +1098,20 @@ function renderPartidos(parts,ctx,puede){
         </div>
         <div class="vs-center">
           ${!sinGoles?`<div class="score-vivo">${p.golesLocal}-${p.golesVisita}</div>`:sel?`<div class="prono-box ${sel}">${sel}</div><div class="prono-lbl">tu pronóstico</div>`:`<div class="vs-txt">VS</div>`}
+          ${(()=>{
+            const prd=window._pr[p.id];
+            if(!prd||!prd.calculado)return"";
+            const badges=[];
+            if(prd.acertado){
+              if(prd.ptsGrilla)badges.push(`<span class="bdg bg" style="font-size:10px;padding:2px 7px">+${prd.ptsGrilla} Grilla</span>`);
+              if(prd.esToleTole)badges.push(`<span class="bdg bpur" style="font-size:10px;padding:2px 7px">+${prd.ptsToleTole} TOLE TOLE</span>`);
+            }
+            // Reglas del partido
+            const regs=prd.reglas||[];
+            regs.forEach(function(r){if(r.puntos)badges.push(`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">+${r.puntos} ${r.codigo}</span>`);});
+            if(!badges.length)return"";
+            return`<div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center;margin-top:4px">${badges.join("")}</div>`;
+          })()}
         </div>
         <div class="team-box">
           <div class="team-escudo">${p.visitaLogo?escV:vi}</div>
@@ -1639,6 +1668,41 @@ window.doReg=async()=>{
 window.logout=()=>{clearSession();showLogin();};
 
 /* ══ INIT ════════════════════════════════════════════════════ */
+// ── Auto-refresh silencioso cada 60s ──
+let _refreshTimer=null;
+function startAutoRefresh(){
+  stopAutoRefresh();
+  _refreshTimer=setInterval(function(){
+    const s=App.screen;
+    if(s==="jugar"){
+      // Recargar pronósticos silenciosamente sin mostrar loader
+      api("getMiFecha",{fechaId:App.ctx?.fechaId,pozoId:App.ctx?.pozoId}).then(function(rm){
+        if(!rm.ok)return;
+        window._cambiosFecha=rm.cambiosRestantesFecha!==undefined?rm.cambiosRestantesFecha:3;
+        (rm.pronos||[]).forEach(function(p){
+          if(!window._pr[p.partidoId])window._pr[p.partidoId]={};
+          window._pr[p.partidoId].v=p.pronostico;
+          window._pr[p.partidoId].cr=p.cambiosRestantes;
+        });
+        // Actualizar resultados en las cards
+        api("getFecha",{fechaId:App.ctx?.fechaId}).then(function(rf){
+          if(!rf.ok)return;
+          window._parts=rf.partidos||[];
+          renderPartidos(window._parts,App.ctx,rf.fecha.estado==="Abierta"&&rf.fecha.minutosRestantes>0);
+          renderResumenCambios();
+        });
+      });
+    } else if(s==="tabla"){
+      loadTabla(App.ctx);
+    } else if(s==="grilla"||s==="los-otros"){
+      const el=document.getElementById("gc")||document.getElementById("lc");
+      if(el)el.innerHTML=`<div class="loading"><div class="spinner"></div></div>`;
+      if(s==="grilla")loadGrilla&&loadGrilla(App.ctx);
+    }
+  },60000);
+}
+function stopAutoRefresh(){if(_refreshTimer){clearInterval(_refreshTimer);_refreshTimer=null;}}
+
 function initApp(){
   document.getElementById("sl").style.display="none";
   const mob=window.innerWidth<=768;
