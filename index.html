@@ -1076,19 +1076,33 @@ function renderResumenCambios(){
   // Calcular total de puntos acumulados
   // Total = suma de ptsTotal por partido + puntos de reglas postFecha (LR, DIEGO) de _reglasDisp
   // Total = suma de ptsTotal de cada partido + puntos de LR/DIEGO calculados como 1pt por acierto
-  const totalPtsPartidos=Object.values(window._pr).reduce(function(t,p){
+  const lrInfoGen=_getLRInfo();
+  const totalPts=Object.entries(window._pr).reduce(function(t,kv){
+    const pid=kv[0];const p=kv[1];
     const ptsBase=(p.ptsGrilla||0)+(p.esToleTole&&p.ptsToleTole>0?p.ptsToleTole:0);
-    const ptsReglas=(p.reglas||[]).reduce(function(s,r){
-      const esPostFecha=r.codigo==="LR"||r.codigo==="DIEGO";
-      return s+(esPostFecha?(p.acertado?1:0):(r.puntos||0));
-    },0);
-    return t+ptsBase+ptsReglas;
+    const lrD=lrInfoGen[pid];
+    const lrPts=lrD?(p.acertado?lrD.mult:0):0;
+    const ptsReglas=(p.reglas||[]).filter(function(r){return r.codigo!=="LR"&&r.codigo!=="DIEGO";}).reduce(function(s,r){return s+(r.puntos||0);},0);
+    return t+ptsBase+lrPts+ptsReglas;
   },0);
-  const totalPts=totalPtsPartidos;
   const ptsBadge=totalPts>0?`<span style="font-family:var(--ff);font-size:20px;font-weight:900;color:var(--g2);margin-left:12px">🏆 ${totalPts} pts</span> <button onclick="actualizarPuntajes()" style="font-size:11px;padding:3px 10px;background:var(--off);border:1px solid var(--bdr-l2);border-radius:var(--rs);cursor:pointer;font-weight:600;color:var(--txt2);margin-left:6px" id="btn-actualizar-pts">🔄 Actualizar</button>`:"";
   el.style.display="block";
   if(cf<=0){el.innerHTML=`<span style="font-size:13px;font-weight:600;color:var(--red)">🔒 Sin cambios disponibles para esta fecha</span>${ptsBadge}`;return;}
   el.innerHTML=`<span style="font-family:var(--ff);font-size:28px;font-weight:900;color:var(--blue)">${cf}</span><div style="margin-left:8px"><div style="font-size:13px;font-weight:700;color:var(--blue)">cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</div><div style="font-size:11px;color:var(--txt3)">Podés cambiar hasta 30 min antes de cada partido</div></div>${ptsBadge}`;
+}
+
+// Calcular qué partidos son parte de la racha LR y sus multiplicadores
+function _getLRInfo(){
+  const lrDisp=window._reglasDisp?window._reglasDisp.find(function(r){return r.codigo==="LR";}):null;
+  if(!lrDisp||!lrDisp.partidos||!lrDisp.partidos.length)return{};
+  const partidoInicio=lrDisp.partidos[0];
+  const prdInicio=window._parts?window._parts.find(function(p){return p.id===partidoInicio;}):null;
+  if(!prdInicio)return{};
+  const numInicio=prdInicio.numero||0;
+  const result={};
+  const parts3=(window._parts||[]).filter(function(p){return p.numero>=numInicio&&p.numero<numInicio+3;}).sort(function(a,b){return a.numero-b.numero;});
+  [1,2,4].forEach(function(m,i){if(parts3[i])result[parts3[i].id]={mult:m,pos:i+1};});
+  return result;
 }
 
 function renderPartidos(parts,ctx,puede){
@@ -1149,11 +1163,19 @@ function renderPartidos(parts,ctx,puede){
             const badges=[];
             if(prd.calculado){
               if(acerto&&prd.esToleTole&&prd.ptsToleTole>0)badges.push(`<span class="bdg bpur" style="font-size:10px;padding:2px 7px">+${prd.ptsToleTole} TOLE</span>`);
+              // LR: badge en el partido elegido y los 2 siguientes si acertaron
+              const lrInfo=_getLRInfo();
+              const lrDat=lrInfo[p.id];
+              if(lrDat){
+                const lrPts=acerto?lrDat.mult:0;
+                if(lrPts>0)badges.push(`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">+${lrPts} LR×${lrDat.mult}</span>`);
+                else if(prd.calculado)badges.push(`<span class="bdg bgr" style="font-size:10px;padding:2px 7px">0 LR×${lrDat.mult}</span>`);
+              }
+              // Otras reglas (excluir LR que ya está arriba)
               (prd.reglas||[]).forEach(function(r){
-                // LR y DIEGO: mostrar 1pt por partido acertado (no el total acumulado)
-                const esPostFecha=r.codigo==="LR"||r.codigo==="DIEGO";
-                const pts=esPostFecha?(acerto?1:0):r.puntos;
-                if(pts>0)badges.push(`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">+${pts} ${r.codigo}</span>`);
+                if(r.codigo==="LR")return;
+                if(r.codigo==="DIEGO")return; // DIEGO se muestra al final
+                if(r.puntos>0)badges.push(`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">+${r.puntos} ${r.codigo}</span>`);
                 else if(prd.calculado)badges.push(`<span class="bdg bgr" style="font-size:10px;padding:2px 7px">0 ${r.codigo}</span>`);
               });
             }
@@ -1164,7 +1186,8 @@ function renderPartidos(parts,ctx,puede){
               </div>
               ${sel?`<div style="font-family:var(--ff);font-size:28px;font-weight:900;padding:2px 10px;border-radius:10px;background:${acerto?"rgba(34,197,94,.15)":prd.calculado?"rgba(239,68,68,.12)":"rgba(0,0,0,.06)"};color:${acerto?"var(--g2)":prd.calculado?"var(--red)":"var(--txt)"};display:flex;align-items:center;gap:6px">${sel}${acerto&&prd.ptsGrilla?`<span style="font-size:13px;font-weight:700">+${prd.ptsGrilla}</span>`:""}${prd.calculado&&!acerto?`<span style="font-size:13px;font-weight:700">✗</span>`:""}</div>`:""}
               ${badges.length?`<div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center">${badges.join("")}</div>`:""}
-              ${(()=>{const tot=(prd.ptsGrilla||0)+(prd.esToleTole&&prd.ptsToleTole>0?prd.ptsToleTole:0)+(prd.reglas||[]).reduce(function(s,r){const esPostFecha=r.codigo==="LR"||r.codigo==="DIEGO";return s+(esPostFecha?(prd.acertado?1:0):(r.puntos||0));},0);return prd.calculado&&tot>0?`<div style="font-family:var(--ff);font-size:13px;font-weight:800;color:var(--g2);border-top:1px solid rgba(0,200,83,.2);padding-top:3px;margin-top:2px">TOTAL +${tot}pts</div>`:"";})()}
+              ${(()=>{const lrInfoTot=_getLRInfo();const lrDatTot=lrInfoTot[p.id];const lrPtsTot=lrDatTot?(prd.acertado?lrDatTot.mult:0):0;
+              const tot=(prd.ptsGrilla||0)+(prd.esToleTole&&prd.ptsToleTole>0?prd.ptsToleTole:0)+lrPtsTot+(prd.reglas||[]).filter(function(r){return r.codigo!=="LR"&&r.codigo!=="DIEGO";}).reduce(function(s,r){return s+(r.puntos||0);},0);return prd.calculado&&tot>0?`<div style="font-family:var(--ff);font-size:13px;font-weight:800;color:var(--g2);border-top:1px solid rgba(0,200,83,.2);padding-top:3px;margin-top:2px">TOTAL +${tot}pts</div>`:"";})()}
             </div>`;
           })()}
         </div>
