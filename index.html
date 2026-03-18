@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- POLLA PRODES — index.html | 2026-03-16 20:00 ARG -->
+<!-- POLLA PRODES — index.html | 2026-03-18 00:00 ARG -->
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
@@ -47,11 +47,10 @@ input:focus,select:focus{outline:none}
 .su{animation:su .22s ease forwards}
 
 /* ═══════════════════════════════════
-   LAYOUT TRES COLUMNAS
+   SIDEBAR DARK PREMIUM
 ═══════════════════════════════════ */
 #app{display:flex;height:100vh;overflow:hidden}
 
-/* ── SIDEBAR IZQUIERDO ── */
 #sidebar{
   width:300px;
   background:linear-gradient(180deg,var(--d2) 0%,var(--d3) 100%);
@@ -59,16 +58,17 @@ input:focus,select:focus{outline:none}
   display:flex;flex-direction:column;flex-shrink:0;z-index:10;
   position:relative;overflow:hidden
 }
+/* Stadium light effect */
 #sidebar::before{
   content:"";position:absolute;
-  top:-60px;left:-60px;width:220px;height:220px;
+  top:-60px;left:-60px;width:200px;height:200px;
   background:radial-gradient(circle,rgba(0,200,83,.12) 0%,transparent 70%);
   pointer-events:none
 }
 .sb-head{
-  padding:24px 20px 20px;
+  padding:20px 16px 18px;
   border-bottom:1px solid var(--bdr);
-  display:flex;align-items:center;gap:14px;position:relative
+  display:flex;align-items:center;gap:12px;position:relative
 }
 .sb-logo{
   width:54px;height:54px;border-radius:15px;overflow:hidden;flex-shrink:0;
@@ -79,9 +79,9 @@ input:focus,select:focus{outline:none}
   font-family:var(--ff);font-size:22px;font-weight:900;
   letter-spacing:2px;color:var(--white);line-height:1
 }
-.sb-brand .sub{font-size:11px;color:rgba(255,255,255,.35);margin-top:3px}
+.sb-brand .sub{font-size:10px;color:rgba(255,255,255,.35);margin-top:2px}
 
-#sb-nav{flex:1;overflow-y:auto;padding:10px 12px}
+#sb-nav{flex:1;overflow-y:auto;padding:8px 10px}
 .nav-item{
   display:flex;align-items:center;gap:13px;padding:13px 14px;
   font-size:15px;font-weight:500;color:rgba(255,255,255,.5);
@@ -95,25 +95,25 @@ input:focus,select:focus{outline:none}
 .nav-item .ni{font-size:20px;width:26px;text-align:center;flex-shrink:0}
 
 .sb-foot{
-  padding:14px 16px;border-top:1px solid var(--bdr);
-  display:flex;align-items:center;gap:12px
+  padding:12px 14px;border-top:1px solid var(--bdr);
+  display:flex;align-items:center;gap:10px
 }
 .sb-av{
-  width:42px;height:42px;border-radius:12px;
+  width:36px;height:36px;border-radius:10px;
   background:rgba(0,200,83,.12);border:1px solid rgba(0,200,83,.25);
-  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0
+  display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0
 }
 .sb-ui{flex:1;min-width:0}
-.sb-ui .nm{font-size:14px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sb-ui .rl{font-size:11px;color:rgba(255,255,255,.35)}
+.sb-ui .nm{font-size:13px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-ui .rl{font-size:10px;color:rgba(255,255,255,.35)}
 .sb-logout{
-  width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.05);
-  color:rgba(255,255,255,.35);font-size:16px;
+  width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.05);
+  color:rgba(255,255,255,.35);font-size:14px;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s
 }
 .sb-logout:hover{background:rgba(255,82,82,.15);color:var(--red)}
 
-/* ── MAIN CENTER ── */
+/* MAIN */
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 #topbar{
   height:58px;background:var(--white);
@@ -124,46 +124,20 @@ input:focus,select:focus{outline:none}
 #topbar h2{font-family:var(--ff);font-size:24px;font-weight:800;letter-spacing:.5px;flex:1}
 #content{flex:1;overflow-y:auto;padding:22px 24px;background:var(--off)}
 
-/* ── SIDEBAR DERECHO ── */
-#sidebar-right{
-  width:300px;flex-shrink:0;
-  background:var(--white);
-  border-left:1px solid var(--bdr-l);
-  display:flex;flex-direction:column;
-  overflow-y:auto;
-  gap:0
-}
-.sr-section{padding:18px 18px 14px;border-bottom:1px solid var(--bdr-l)}
-.sr-title{
-  font-family:var(--ff);font-size:14px;font-weight:800;
-  letter-spacing:1.5px;text-transform:uppercase;
-  color:var(--txt3);margin-bottom:12px;
-  display:flex;align-items:center;gap:6px
-}
-/* Noticia card */
-.noticia-item{
-  padding:10px 0;border-bottom:1px solid var(--bdr-l);
-  font-size:13px;line-height:1.5;color:var(--txt)
-}
+/* SIDEBAR DERECHO */
+#sidebar-right{width:300px;flex-shrink:0;background:var(--white);border-left:1px solid var(--bdr-l);display:flex;flex-direction:column;overflow-y:auto}
+.sr-section{padding:16px 18px;border-bottom:1px solid var(--bdr-l)}
+.sr-title{font-family:var(--ff);font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt3);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.noticia-item{padding:8px 0;border-bottom:1px solid var(--bdr-l);font-size:13px;line-height:1.5;color:var(--txt)}
 .noticia-item:last-child{border-bottom:none}
-.noticia-fecha{font-size:10px;color:var(--txt3);font-weight:600;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
-/* Fecha link card */
-.sr-fecha-link{
-  display:flex;align-items:center;gap:10px;padding:9px 10px;
-  background:var(--off);border-radius:var(--rs);margin-bottom:6px;
-  cursor:pointer;transition:all .14s;border:1px solid transparent
-}
+.noticia-fecha{font-size:10px;color:var(--txt3);font-weight:600;margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px}
+.sr-fecha-link{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--off);border-radius:var(--rs);margin-bottom:6px;cursor:pointer;transition:all .14s;border:1px solid transparent}
 .sr-fecha-link:hover{border-color:var(--g2);background:rgba(0,200,83,.04)}
-.sr-fecha-link:last-child{margin-bottom:0}
-/* Hall of fame */
-.sr-hof-item{
-  display:flex;align-items:center;gap:10px;padding:8px 0;
-  border-bottom:1px solid var(--bdr-l)
-}
+.sr-hof-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bdr-l)}
 .sr-hof-item:last-child{border-bottom:none}
-.sr-hof-medal{font-size:22px;width:28px;text-align:center;flex-shrink:0}
+.sr-hof-medal{font-size:20px;width:26px;text-align:center;flex-shrink:0}
 .sr-hof-name{font-size:13px;font-weight:600;flex:1}
-.sr-hof-wins{font-family:var(--ff);font-size:18px;font-weight:800;color:var(--gold)}
+.sr-hof-wins{font-family:var(--ff);font-size:17px;font-weight:800;color:var(--gold)}
 
 /* ═══════════════════════════════════
    MOBILE
@@ -406,7 +380,6 @@ input:focus,select:focus{outline:none}
 }
 .team-escudo:has(img){background:transparent;border-color:transparent}
 .team-escudo img{width:100%;height:100%;object-fit:contain;padding:4px}
-.mini-logo{width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:4px;flex-shrink:0}
 .team-name-big{
   font-family:var(--ff);font-size:20px;font-weight:800;
   text-align:center;line-height:1.1;color:var(--txt);
@@ -422,13 +395,7 @@ input:focus,select:focus{outline:none}
 .prono-centro.L{color:var(--L)}
 .prono-centro.E{color:var(--E)}
 .prono-centro.V{color:var(--V)}
-.prono-box{
-  font-family:var(--ff);font-size:42px;font-weight:900;line-height:1;
-  width:62px;height:62px;border-radius:14px;
-  display:flex;align-items:center;justify-content:center;
-  background:var(--d2);
-  text-shadow:0 0 18px rgba(255,255,255,.55),0 2px 6px rgba(0,0,0,.5)
-}
+.prono-box{font-family:var(--ff);font-size:42px;font-weight:900;line-height:1;width:62px;height:62px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:var(--d2);text-shadow:0 0 18px rgba(255,255,255,.55),0 2px 6px rgba(0,0,0,.5)}
 .prono-box.L{color:var(--L)}
 .prono-box.E{color:var(--E)}
 .prono-box.V{color:var(--V)}
@@ -638,15 +605,15 @@ input:focus,select:focus{outline:none}
     <div id="content"></div>
   </div>
   <aside id="sidebar-right" style="display:none">
-    <div class="sr-section" id="sr-fechas">
+    <div class="sr-section">
       <div class="sr-title">📅 Fechas abiertas</div>
       <div id="sr-fechas-list"><div style="font-size:12px;color:var(--txt3)">Cargando...</div></div>
     </div>
-    <div class="sr-section" id="sr-noticias">
+    <div class="sr-section">
       <div class="sr-title">📣 Noticias</div>
       <div id="sr-noticias-list"><div style="font-size:12px;color:var(--txt3)">Cargando...</div></div>
     </div>
-    <div class="sr-section" id="sr-hof">
+    <div class="sr-section">
       <div class="sr-title">🏆 Hall of Fame</div>
       <div id="sr-hof-list"><div style="font-size:12px;color:var(--txt3)">Cargando...</div></div>
     </div>
@@ -682,12 +649,12 @@ const NAV_A=[{k:"admin-dash",i:"📊",l:"Dashboard",t:"Dashboard"},{k:"admin-fec
 function getNav(){return App.user?.rol==="Admin"?NAV_A:NAV_J;}
 
 function go(k,ctx={}){
+  // Ocultar badge si salimos de jugar
+  if(k!=="jugar"){const b=document.getElementById("reglas-badge");if(b)b.style.display="none";}
   App.screen=k;App.ctx=ctx;
-  const item=getNav().find(n=>n.k===k)||{t:""};
+  const item=getNav().find(n=>n.k===k)||{t:k};
   renderNav();
-  // Solo actualizar topbar con título del nav — para sub-pantallas se actualiza en afterRender
-  const tt=document.getElementById("topbar-title");
-  if(tt&&item.t)tt.textContent=item.t;
+  const tt=document.getElementById("topbar-title");if(tt)tt.textContent=item.t;
   const html=renderScreen(k,ctx);
   const dc=document.getElementById("content");if(dc)dc.innerHTML=html;
   const mc=document.getElementById("mc");if(mc)mc.innerHTML=html;
@@ -702,7 +669,7 @@ function renderNav(){
   if(bn)bn.innerHTML=n.slice(0,5).map(x=>`<div class="bn-item${App.screen===x.k?" active":""}" onclick="go('${x.k}')"><span class="ni">${x.i}</span><span class="nl">${x.l}</span></div>`).join("");
 }
 
-// Helper: logo pequeño sin reborde, con fallback a texto
+// Helper logo pequeño sin reborde
 function logoHtml(url,nombre){
   if(!url)return nombre;
   return`<img class="mini-logo" src="${url}" alt="${nombre}" onerror="this.style.display='none'">${nombre}`;
@@ -762,10 +729,7 @@ async function loadFechas(){
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
   if(!r.fechas?.length){el.innerHTML=emptyBox("📅","No hay fechas disponibles");return;}
   const ICONS={"Liga Argentina":"🇦🇷","Premier League":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","La Liga":"🇪🇸","Serie A":"🇮🇹","Champions League":"🏆","Copa Libertadores":"🌎","Ligue 1":"🇫🇷"};
-  // Mostrar: abiertas + cerradas/jugadas en las que el usuario participó
-  var fechasVis=App.user&&App.user.rol==="Admin"?r.fechas:r.fechas.filter(function(f){
-    return f.estado==="Abierta"||f.estado==="Cerrada"||f.estado==="Finalizada";
-  });
+  var fechasVis=App.user&&App.user.rol==="Admin"?r.fechas:r.fechas.filter(function(f){return["Abierta","Cerrada","Finalizada"].includes(f.estado);});
   if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas disponibles");return;}
   el.innerHTML=fechasVis.map(function(f){
     const mins=f.minutosRestantes,urg=mins<120&&mins>0;
@@ -783,62 +747,40 @@ async function loadFechas(){
             <span style="color:var(--bdr-l2)">·</span>
             <span style="${urg?"color:var(--red);font-weight:600":""}">${pt}</span>
           </div>
-          <!-- Pozos y reglas se cargan async -->
-          <div id="fecha-extra-${f.id}" style="margin-top:6px"></div>
+          <div id="fecha-extra-${f.id}" style="margin-top:5px"></div>
         </div>
       </div>
-      <div class="fecha-right" id="fright-${f.id}">
+      <div class="fecha-right">
         <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr"}">${f.estado}</span>
         <span style="font-size:12px;font-weight:600;color:${f.estado==="Abierta"?"var(--g2)":"var(--txt3)"}">${f.estado==="Abierta"?"Jugar →":"Ver →"}</span>
       </div>
     </div>`;
   }).join("");
-  // Cargar pozos de cada fecha en paralelo
   fechasVis.forEach(function(f){cargarExtraFecha(f);});
 }
 
 async function cargarExtraFecha(f){
   const el=document.getElementById("fecha-extra-"+f.id);if(!el)return;
-  const uid=App.user?.id||App.user?.userId||"";
+  const uid=App.user?.id||"";
   const rp=await api("getPozos",{fechaId:f.id,userId:uid});
   if(!rp.ok||!rp.pozos?.length){
-    if(f.reglasHabilitadas?.length){
-      el.innerHTML=`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:2px">${f.reglasHabilitadas.map(function(cod){return`<span class="bdg bgold" style="font-size:10px;padding:2px 6px">${cod}</span>`;}).join("")}</div>`;
-    }
+    if(f.reglasHabilitadas?.length)el.innerHTML=`<div style="display:flex;gap:3px;flex-wrap:wrap">${f.reglasHabilitadas.map(function(cod){return`<span class="bdg bgold" style="font-size:10px;padding:2px 6px">${cod}</span>`;}).join("")}</div>`;
     return;
   }
   const pozos=rp.pozos;
   const yaJugo=pozos.find(function(p){return p.yaJugo;});
-  const yaInsc=pozos.find(function(p){return p.yaInscripto;});
-  const pozoActivo=yaJugo||yaInsc;
-
-  // Badge estado
+  const pozosHtml=pozos.map(function(p){
+    return`<span class="bdg ${p.yaJugo?"bg":p.yaInscripto?"bg":"bgr"}" style="font-size:11px;padding:3px 8px">${p.yaInscripto?"✓ ":""}$${p.monto.toLocaleString("es-AR")}</span>`;
+  }).join("");
+  const reglasHtml=f.reglasHabilitadas?.length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${f.reglasHabilitadas.map(function(cod){return`<span class="bdg bgold" style="font-size:10px;padding:2px 6px">📏 ${cod}</span>`;}).join("")}</div>`:"";
   let estadoHtml="";
   if(yaJugo){
     estadoHtml=`<span class="bdg bg" style="font-size:11px;padding:3px 10px;font-weight:700">✅ JUGADA</span>`;
-    // Botón modificar si todavía hay tiempo
-    if(f.minutosRestantes>0){
-      estadoHtml+=` <span style="font-size:11px;color:var(--blue);font-weight:600;cursor:pointer" onclick="event.stopPropagation();go('jugar',{fechaId:'${f.id}',pozoId:'${yaJugo.id}'})">✏️ Modificar</span>`;
-    } else {
-      estadoHtml+=` <span class="bdg bred" style="font-size:11px;padding:3px 8px">🔒 En Curso</span>`;
-    }
+    if(f.minutosRestantes>0)estadoHtml+=` <span style="font-size:11px;color:var(--blue);font-weight:600;cursor:pointer" onclick="event.stopPropagation();go('jugar',{fechaId:'${f.id}',pozoId:'${yaJugo.id}'})">✏️ Modificar</span>`;
+    else estadoHtml+=` <span class="bdg bred" style="font-size:11px;padding:3px 8px">🔒 En Curso</span>`;
   }
-
-  // Línea de pozos
-  const pozosHtml=pozos.map(function(p){
-    const cls=p.yaJugo?"bg":p.yaInscripto?"bg":"bgr";
-    return`<span class="bdg ${cls}" style="font-size:11px;padding:3px 8px">${p.yaInscripto?"✓ ":""}$${p.monto.toLocaleString("es-AR")}</span>`;
-  }).join("");
-
-  // Línea de reglas
-  const reglasHtml=f.reglasHabilitadas?.length
-    ?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${f.reglasHabilitadas.map(function(cod){return`<span class="bdg bgold" style="font-size:10px;padding:2px 6px">📏 ${cod}</span>`;}).join("")}</div>`
-    :"";
-
-  el.innerHTML=`
-    ${estadoHtml?`<div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap">${estadoHtml}</div>`:""}
-    <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${pozosHtml}</div>
-    ${reglasHtml}`;
+  el.innerHTML=(estadoHtml?`<div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">${estadoHtml}</div>`:"")
+    +`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${pozosHtml}</div>${reglasHtml}`;
 }
 
 /* ══ DETALLE FECHA ═══════════════════════════════════════════ */
@@ -864,13 +806,7 @@ async function loadFechaDet(ctx){
         <span>⚽ <strong style="color:rgba(255,255,255,.85)">${f.cantPartidos||0}</strong> partidos</span>
         ${f.minutosRestantes>0?`<span>⏱ <strong style="color:rgba(255,255,255,.85)">${f.minutosRestantes<60?f.minutosRestantes+"min":Math.floor(f.minutosRestantes/60)+"hs"}</strong></span>`:`<span style="color:var(--red)">🔒 Cerrada</span>`}
       </div>
-      ${f.reglasDetalle?.length?`
-      <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px">
-        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">📏 Reglas especiales</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${f.reglasDetalle.map(function(r){return`<div style="padding:5px 10px;background:rgba(255,179,0,.15);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs)"><span style="font-size:12px;font-weight:700;color:var(--gold)">${r.nombre}</span><span style="font-size:11px;color:rgba(255,255,255,.5);margin-left:5px">+${r.pts}pts</span></div>`;}).join("")}
-        </div>
-      </div>`:""}
+      ${f.reglasDetalle?.length?`<div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px"><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">📏 Reglas especiales</div><div style="display:flex;gap:6px;flex-wrap:wrap">${f.reglasDetalle.map(function(r){return`<div style="padding:5px 10px;background:rgba(255,179,0,.15);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs)"><span style="font-size:12px;font-weight:700;color:var(--gold)">${r.nombre}</span><span style="font-size:11px;color:rgba(255,255,255,.5);margin-left:5px">+${r.pts}pts</span></div>`;}).join("")}</div></div>`:""}
     </div>
 
     <p class="sec">Partidos</p>
@@ -879,11 +815,7 @@ async function loadFechaDet(ctx){
         <div class="partido-det">
           <span style="font-size:11px;font-weight:700;color:var(--txt3);width:24px;flex-shrink:0;text-align:center">#${p.numero}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-size:14px;font-weight:600;display:flex;align-items:center;flex-wrap:wrap;gap:4px">
-              <span style="display:inline-flex;align-items:center">${logoHtml(p.localLogo,p.local)}</span>
-              <span style="color:var(--txt3);font-weight:400;font-size:12px">vs</span>
-              <span style="display:inline-flex;align-items:center">${logoHtml(p.visitaLogo,p.visita)}</span>
-            </div>
+            <div style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:4px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center">${logoHtml(p.localLogo,p.local)}</span><span style="color:var(--txt3);font-weight:400;font-size:12px">vs</span><span style="display:inline-flex;align-items:center">${logoHtml(p.visitaLogo,p.visita)}</span></div>
             <div style="font-size:11px;color:var(--txt3)">${p.liga||""}${p.fechaHora?" · "+new Date(p.fechaHora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}):""}</div>
           </div>
           <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
@@ -900,12 +832,10 @@ async function loadFechaDet(ctx){
       <div id="plist"><div class="loading"><div class="spinner"></div></div></div>
       <div id="pjbtn" style="margin-top:14px;display:none"></div>`:`
       <div id="plist-cerrada"></div>`}
-    <!-- Mis pronósticos (siempre visible si está cerrada/inscripto) -->
     <div id="mis-pronos-det"></div>`;
   if(puedeJugar){
     loadPozos(ctx.fechaId);
   } else {
-    // Fecha cerrada: mostrar mis pronósticos y botón a la tabla
     loadMisPronoDet(ctx.fechaId,f);
   }
 }
@@ -914,48 +844,38 @@ async function loadMisPronoDet(fechaId,f){
   const rp=await api("getPozos",{fechaId,userId:App.user?.id});
   const el=document.getElementById("plist-cerrada");
   const yaInsc=rp.ok?rp.pozos?.find(function(p){return p.yaInscripto;}):null;
-
   if(!yaInsc){
-    if(el)el.innerHTML=`<div style="padding:14px;background:rgba(255,82,52,.04);border:1px solid rgba(255,82,52,.15);border-radius:var(--r);text-align:center"><p style="color:var(--txt2);font-size:13px">🔒 Fecha cerrada — no estás inscripto</p></div>`;
+    if(el)el.innerHTML=`<div style="padding:14px;background:rgba(255,82,52,.04);border:1px solid rgba(255,82,52,.15);border-radius:var(--r);text-align:center"><p style="color:var(--txt2);font-size:13px">🔒 Fecha cerrada</p></div>`;
     return;
   }
-
-  // Cargar pronósticos y reglas del usuario
+  // Cargar pronósticos
   const rm=await api("getMiFecha",{fechaId,pozoId:yaInsc.id});
   if(!rm.ok){if(el)el.innerHTML=errBox(rm.error);return;}
-
   const pronos=rm.pronos||[];
   const reglas=rm.reglas||[];
-  const ahora=new Date();
-
-  // Resumen de cambios restantes
-  const cambiosTotales=pronos.reduce(function(a,p){return a+(p.cambiosRestantes||0);},0);
-  const pronosConCambios=pronos.filter(function(p){return (p.cambiosRestantes||0)>0;}).length;
-
-  // Construir mapa de reglas por partido
   const reglaMap={};
   reglas.forEach(function(r){reglaMap[r.partidoId]={codigo:r.codigo,nombre:r.nombre};});
-
+  const ahora=new Date();
+  const pronosModif=pronos.filter(function(p){
+    const inicio=p.fechaHora?new Date(p.fechaHora):null;
+    return inicio&&(inicio-ahora)/60000>30;
+  });
+  const cf=rm.cambiosRestantesFecha!==undefined?rm.cambiosRestantesFecha:3;
   if(el)el.innerHTML=`
-    <div style="margin-bottom:14px">
-      <!-- Resumen cambios -->
-      <div style="display:flex;gap:8px;align-items:center;padding:12px 14px;background:var(--bluel);border:1px solid rgba(68,138,255,.2);border-radius:var(--rs);margin-bottom:12px">
-        <span style="font-size:20px">🔄</span>
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--blue)">${pronosConCambios} partido${pronosConCambios!==1?"s":""} con cambios disponibles</div>
-          <div style="font-size:11px;color:var(--txt3)">Podés cambiar L/E/V hasta 30 min antes del inicio de cada partido</div>
-        </div>
+    <div style="margin-bottom:12px">
+      ${cf>0&&pronosModif.length?`<div style="padding:10px 14px;background:var(--bluel);border:1px solid rgba(68,138,255,.2);border-radius:var(--rs);display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-family:var(--ff);font-size:32px;font-weight:900;color:var(--blue)">${cf}</span>
+        <div><div style="font-size:13px;font-weight:700;color:var(--blue)">cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</div><div style="font-size:11px;color:var(--txt3)">Hasta 30 min antes del inicio de cada partido</div></div>
+      </div>`:""}
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button class="btn btn-p" onclick="go('jugar',{fechaId:'${fechaId}',pozoId:'${yaInsc.id}'})" style="flex:1;padding:12px">✏️ Ver y modificar pronósticos</button>
+        <button class="btn btn-s" onclick="go('tabla',{fechaId:'${fechaId}',pozoId:'${yaInsc.id}'})" style="flex:1;padding:12px">🏆 Ver tabla</button>
       </div>
-      <!-- Botones -->
-      <div style="display:flex;gap:8px;margin-bottom:14px">
-        <button class="btn btn-p" onclick="go('jugar',{fechaId:'${fechaId}',pozoId:'${yaInsc.id}'})" style="flex:1">✏️ Ver y modificar</button>
-        <button class="btn btn-s" onclick="go('tabla',{fechaId:'${fechaId}',pozoId:'${yaInsc.id}'})" style="flex:1">🏆 Tabla</button>
-      </div>
-      <!-- Lista pronósticos -->
       <p class="sec">Mis pronósticos</p>
       ${pronos.map(function(p){
         const regla=reglaMap[p.partidoId];
-        const cr=p.cambiosRestantes||0;
+        const inicio=p.fechaHora?new Date(p.fechaHora):null;
+        const puedeM=inicio&&(inicio-ahora)/60000>30&&cf>0;
         return`<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--bdr-l)">
           <span style="font-size:11px;font-weight:700;color:var(--txt3);width:22px">#${p.numero}</span>
           <div style="flex:1;min-width:0">
@@ -963,7 +883,7 @@ async function loadMisPronoDet(fechaId,f){
             ${regla?`<div style="font-size:10px;color:var(--gold)">📏 ${regla.nombre}</div>`:""}
           </div>
           <span class="prono-box ${p.pronostico}" style="width:36px;height:36px;font-size:20px;border-radius:8px">${p.pronostico}</span>
-          <span style="font-size:11px;font-weight:600;color:${cr>0?"var(--blue)":"var(--txt3)"};min-width:28px;text-align:center">${cr>0?cr+"🔄":"🔒"}</span>
+          <span style="font-size:11px;color:${puedeM?"var(--blue)":"var(--txt3)"};min-width:28px;text-align:right">${puedeM?"🔄":"🔒"}</span>
         </div>`;
       }).join("")}
     </div>`;
@@ -985,19 +905,7 @@ async function loadPozos(fid){
       <div style="font-size:11px;color:var(--txt3)">Premio estimado</div>
       <div style="font-size:12px;color:var(--txt3);margin-top:8px">👥 ${p.inscriptos} inscripto${p.inscriptos!==1?"s":""}</div>
     </div>`).join("")}</div>
-  <div style="margin-top:10px">
-    <button class="btn btn-s" style="width:100%;padding:11px;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--bdr-l2)" onclick="toggleGrupo()">
-      🔒 <span style="font-size:13px;font-weight:600">Tengo código de grupo cerrado</span>
-    </button>
-    <div id="gform" style="display:none;margin-top:10px;background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--r);padding:16px">
-      <p style="font-size:13px;font-weight:600;margin-bottom:10px">Ingresá tu código de grupo</p>
-      <div style="display:flex;gap:8px">
-        <input class="inp" id="gcod" placeholder="AB1234" maxlength="6" oninput="this.value=this.value.toUpperCase()" style="flex:1;font-family:var(--ff);font-size:20px;font-weight:800;letter-spacing:4px;text-align:center"/>
-        <button class="btn btn-p" style="padding:10px 16px" onclick="buscarGrupo()">Buscar</button>
-      </div>
-      <div id="gres" style="margin-top:10px"></div>
-    </div>
-  </div>`;
+  <div style="margin-top:10px"><button class="btn btn-s" style="width:100%;padding:11px;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--bdr-l2)" onclick="toggleGrupo()">🔒 <span style="font-size:13px;font-weight:600">Tengo código de grupo cerrado</span></button><div id="gform" style="display:none;margin-top:10px;background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--r);padding:16px"><p style="font-size:13px;font-weight:600;margin-bottom:10px">Ingresá tu código</p><div style="display:flex;gap:8px"><input class="inp" id="gcod" placeholder="AB1234" maxlength="6" oninput="this.value=this.value.toUpperCase()" style="flex:1;font-family:var(--ff);font-size:20px;font-weight:800;letter-spacing:4px;text-align:center"/><button class="btn btn-p" style="padding:10px 16px" onclick="buscarGrupo()">Buscar</button></div><div id="gres" style="margin-top:10px"></div></div></div>`;
   const ya=r.pozos.find(p=>p.yaInscripto);
   if(ya){const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=`<button class="btn btn-p btn-lg" onclick="go('jugar',{fechaId:'${fid}',pozoId:'${ya.id}'})">▶ Jugar →</button>`;}}
 }
@@ -1006,104 +914,96 @@ window.toggleGrupo=()=>{const e=document.getElementById("gform");if(e)e.style.di
 window.buscarGrupo=async()=>{const c=document.getElementById("gcod")?.value;if(!c||c.length<4){toast("Ingresá el código");return;}const r=await api("getGrupoPorCodigo",{codigo:c}),el=document.getElementById("gres");if(!el)return;if(!r.ok){el.innerHTML=`<div class="err-box" style="margin-top:8px">${r.error}</div>`;return;}el.innerHTML=`<div class="card" style="margin-top:10px"><p style="font-size:15px;font-weight:600">${r.grupo.nombre}</p><button class="btn btn-p" style="margin-top:10px;width:100%" onclick="selPozo('${r.grupo.pozoId}');inscribirse()">Unirse — $${(r.pozo?.monto||0).toLocaleString("es-AR")}</button></div>`;};
 window.inscribirse=async()=>{if(!window._selPozo){toast("Seleccioná un pozo");return;}const r=await api("inscribirse",{fechaId:window._fid,pozoId:window._selPozo});if(!r.ok){toast("❌ "+r.error);return;}if(r.habilitado){toast("✅ ¡Habilitado!");setTimeout(()=>go("jugar",{fechaId:window._fid,pozoId:window._selPozo}),800);}else{const mp=await api("crearPreferencia",{inscripcionId:r.inscripcionId});if(mp.ok&&(mp.initPoint||mp.sandboxUrl))window.location.href=mp.initPoint||mp.sandboxUrl;else toast("💡 "+(mp.error||"Error MP"));}};
 
+
+// ── Catálogo de reglas (sin NPF) ──
+const TODAS_LAS_REGLAS=[
+  {codigo:"LMR",nombre:"La Marea Roja",desc:"Elegí 3 partidos en los que creas que habrá al menos una tarjeta roja.<br>Sumás 1 punto por cada expulsión.",pts:1},
+  {codigo:"LR",nombre:"La Rachita",desc:"Elegí un partido como inicio de La Rachita.<br>El objetivo es acertar 5 partidos consecutivos.<br>Sumás 1 punto por cada acierto consecutivo.",pts:1},
+  {codigo:"LLDG",nombre:"Lluvia de Goles",desc:"Elegí un partido en el que creas que habrá 5 goles o más.<br>Si acertás, sumás 4 puntos.",pts:4},
+  {codigo:"DIEGO",nombre:"El Diego",desc:"Elegí 3 partidos que creas terminarán en empate.<br>Si acertás los 3, sumás 5 puntos.",pts:5},
+  {codigo:"GSA",nombre:"Goles Son Amores",desc:"Elegí un partido en el que ambos equipos conviertan goles.<br>Sumás 1 punto por cada gol del partido.",pts:1},
+  {codigo:"ZPL",nombre:"La Zapali",desc:"Elegí un partido en el que haya un ganador por diferencia de 3 goles o más.<br>Si acertás, sumás 4 puntos.",pts:4},
+  {codigo:"MK",nombre:"La MK",desc:"Elegí el resultado exacto de un partido.<br>No se puede elegir Empate en 0.<br>Si acertás, sumás 5 puntos.",pts:5},
+  {codigo:"EQS",nombre:"Empate Que Suma",desc:"Elegí un partido que finalice en empate.<br>Si acertás, sumás 3 puntos.",pts:3},
+];
+window._reglasSelAdmin=new Set();
+
+/* ══ SIDEBAR DERECHO ════════════════════════════════════════ */
+async function loadSidebarRight(){loadSRFechas();loadSRNoticias();loadSRHoF();}
+async function loadSRFechas(){
+  const el=document.getElementById("sr-fechas-list");if(!el)return;
+  const r=await api("getFechas");
+  if(!r.ok||!r.fechas?.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">Sin fechas abiertas</div>`;return;}
+  const abiertas=r.fechas.filter(function(f){return f.estado==="Abierta";});
+  if(!abiertas.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">Sin fechas abiertas</div>`;return;}
+  el.innerHTML=abiertas.map(function(f){
+    const mins=f.minutosRestantes;
+    return`<div class="sr-fecha-link" onclick="go('fecha-det',{fechaId:'${f.id}'})"><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.nombre}</div><div style="font-size:11px;color:var(--txt3)">⚽ ${f.cantPartidos||0} · ⏱ ${mins<60?mins+"min":Math.floor(mins/60)+"hs"}</div></div><span style="font-size:13px;color:var(--g2);font-weight:700">→</span></div>`;
+  }).join("");
+}
+async function loadSRNoticias(){
+  const el=document.getElementById("sr-noticias-list");if(!el)return;
+  const r=await api("getNoticias");
+  if(!r.ok||!r.noticias?.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">Sin novedades</div>`;return;}
+  el.innerHTML=r.noticias.map(function(n){return`<div class="noticia-item">${n.fecha?`<div class="noticia-fecha">${n.fecha}</div>`:""}${n.texto}</div>`;}).join("");
+}
+async function loadSRHoF(){
+  const el=document.getElementById("sr-hof-list");if(!el)return;
+  const r=await api("getEstadisticas");
+  if(!r.ok||!r.porFechas?.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">Sin ganadores aún</div>`;return;}
+  const medals=["🥇","🥈","🥉"];
+  el.innerHTML=r.porFechas.slice(0,5).map(function(u,i){return`<div class="sr-hof-item"><span class="sr-hof-medal">${medals[i]||"🏅"}</span><div class="sr-hof-name">${u.siglas}<span style="font-size:11px;color:var(--txt3);margin-left:5px">${u.nombre||""}</span></div><span class="sr-hof-wins">${u.fechasGanadas}🏆</span></div>`;}).join("");
+}
+
 /* ══ JUGAR ═══════════════════════════════════════════════════ */
-// _pr: {partidoId -> {v, cr}}
-// _re: array de {codigo, nombre, pts, desc, cantReq, partidos:[ids]}
-// _reglasDisp: reglas habilitadas para la fecha (desde getFecha)
 window._pr={};window._re=[];window._ctx={};window._parts=[];window._reglasDisp=[];window._cambiosFecha=3;
 
 async function loadJugar(ctx){
   const jel=document.getElementById("jc");
   const rf=await api("getFecha",{fechaId:ctx.fechaId});
   if(!rf.ok){if(jel)jel.innerHTML=errBox(rf.error);return;}
-  window._ctx=ctx;
-  window._parts=rf.partidos||[];
-  window._pr={};window._reglasDisp=[];
-  // Guardar reglas habilitadas por el admin para esta fecha
+  window._ctx=ctx;window._parts=rf.partidos||[];window._pr={};window._reglasDisp=[];window._cambiosFecha=3;
   (rf.fecha.reglasDetalle||[]).forEach(function(r){
-    // Usar descripción local (siempre actualizada) en lugar de la del backend
     const local=TODAS_LAS_REGLAS.find(function(x){return x.codigo===r.codigo;});
-    window._reglasDisp.push({
-      codigo:r.codigo,
-      nombre:local?local.nombre:r.nombre,
-      pts:local?local.pts:r.pts,
-      desc:local?local.desc:r.desc,
-      cantReq:r.cantPartidos||1,
-      partidos:[],
-      detalleMK:""
-    });
+    window._reglasDisp.push({codigo:r.codigo,nombre:local?local.nombre:r.nombre,pts:local?local.pts:r.pts,desc:local?local.desc:r.desc,cantReq:r.cantPartidos||1,partidos:[],detalleMK:""});
   });
-
   if(!window._parts.length){if(jel)jel.innerHTML=emptyBox("&#9917;","Sin partidos en esta fecha");return;}
   const puede=rf.fecha.estado==="Abierta"&&rf.fecha.minutosRestantes>0;
   renderPartidos(window._parts,ctx,puede);
-
   // Toast loading
   const loadDiv=document.createElement("div");
   loadDiv.id="pronos-loading";
   loadDiv.style.cssText="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--d2);color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.3)";
   loadDiv.innerHTML=`<div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Cargando pronósticos...`;
   document.body.appendChild(loadDiv);
-
   try{
-    // UNA SOLA LLAMADA — getMiFecha ya devuelve pronos + reglas
     const rm=await api("getMiFecha",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
     if(rm.ok){
-      // Cambios restantes por FECHA (total)
       window._cambiosFecha=rm.cambiosRestantesFecha!==undefined?rm.cambiosRestantesFecha:3;
-      // Cargar pronósticos
-      (rm.pronos||[]).forEach(function(p){
-        window._pr[p.partidoId]={v:p.pronostico,cr:p.cambiosRestantes};
-      });
-      // Cargar reglas — getMiFecha devuelve reglas por partidoId
-      // Necesitamos convertirlo al formato de _reglasDisp (por código de regla)
+      (rm.pronos||[]).forEach(function(p){window._pr[p.partidoId]={v:p.pronostico,cr:p.cambiosRestantes};});
       const reglasPorCodigo={};
-      (rm.reglas||[]).forEach(function(rg){
-        if(!reglasPorCodigo[rg.codigo])reglasPorCodigo[rg.codigo]=[];
-        reglasPorCodigo[rg.codigo].push(rg.partidoId);
-      });
-      // Actualizar _reglasDisp con los partidos guardados
+      (rm.reglas||[]).forEach(function(rg){if(!reglasPorCodigo[rg.codigo])reglasPorCodigo[rg.codigo]=[];reglasPorCodigo[rg.codigo].push(rg.partidoId);});
       window._reglasDisp.forEach(function(disp){
-        if(reglasPorCodigo[disp.codigo]){
-          disp.partidos=reglasPorCodigo[disp.codigo];
-          // Para MK, recuperar el detalle
-          const mkReg=(rm.reglas||[]).find(function(r){return r.codigo==="MK";});
-          if(disp.codigo==="MK"&&mkReg)disp.detalleMK=mkReg.detalle||"";
-        }
+        if(reglasPorCodigo[disp.codigo])disp.partidos=reglasPorCodigo[disp.codigo];
+        if(disp.codigo==="MK"){const mkReg=(rm.reglas||[]).find(function(r){return r.codigo==="MK";});if(mkReg)disp.detalleMK=mkReg.detalle||"";}
       });
     }
     renderPartidos(window._parts,ctx,puede);
     renderReglasSection(puede);
     renderResumenCambios();
-  }catch(e){
-    renderReglasSection(puede);
-  } finally {
-    const ld=document.getElementById("pronos-loading");if(ld)ld.remove();
-  }
+  }catch(e){renderReglasSection(puede);}
+  finally{const ld=document.getElementById("pronos-loading");if(ld)ld.remove();}
 }
 
 function renderResumenCambios(){
-  // Mostrar cuántos partidos tienen cambios restantes
   const el=document.getElementById("prog-cambios");if(!el)return;
   const ahora=new Date();
   const cf=window._cambiosFecha!==undefined?window._cambiosFecha:3;
-  if(cf<=0){
-    el.style.display="block";el.innerHTML=`<div style="padding:10px 14px;background:rgba(255,82,52,.06);border:1px solid rgba(255,82,52,.15);border-radius:var(--rs);font-size:13px;font-weight:600;color:var(--red)">🔒 Sin cambios disponibles para esta fecha</div>`;
-    return;
-  }
-  // Solo mostrar si la fecha está en curso (no abierta para jugar)
-  const hayPartidosPorEmpezar=window._parts.some(function(p){
-    const inicio=p.fechaHora?new Date(p.fechaHora):null;
-    return inicio&&(inicio-ahora)/60000>30;
-  });
-  if(!hayPartidosPorEmpezar)return;
-  el.style.display="block";el.innerHTML=`<div style="padding:10px 14px;background:var(--bluel);border:1px solid rgba(68,138,255,.2);border-radius:var(--rs);display:flex;align-items:center;gap:10px">
-    <span style="font-family:var(--ff);font-size:32px;font-weight:900;color:var(--blue)">${cf}</span>
-    <div>
-      <div style="font-size:13px;font-weight:700;color:var(--blue)">cambio${cf!==1?"s":""} disponible${cf!==1?"s":""} en esta fecha</div>
-      <div style="font-size:11px;color:var(--txt3)">Podés cambiar L/E/V hasta 30 min antes del inicio de cada partido</div>
-    </div>
-  </div>`;
+  const hayModif=window._parts.some(function(p){const i=p.fechaHora?new Date(p.fechaHora):null;return i&&(i-ahora)/60000>30;});
+  if(!hayModif)return;
+  el.style.display="block";
+  if(cf<=0){el.innerHTML=`<span style="font-size:13px;font-weight:600;color:var(--red)">🔒 Sin cambios disponibles para esta fecha</span>`;return;}
+  el.innerHTML=`<span style="font-family:var(--ff);font-size:28px;font-weight:900;color:var(--blue)">${cf}</span><div style="margin-left:8px"><div style="font-size:13px;font-weight:700;color:var(--blue)">cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</div><div style="font-size:11px;color:var(--txt3)">Podés cambiar hasta 30 min antes de cada partido</div></div>`;
 }
 
 function renderPartidos(parts,ctx,puede){
@@ -1112,102 +1012,57 @@ function renderPartidos(parts,ctx,puede){
   const pb=document.getElementById("prog");if(pb)pb.style.width=(tot?Math.round(comp/tot*100):0)+"%";
   const pt=document.getElementById("prog-txt");if(pt)pt.textContent=comp+" de "+tot+" pronósticos";
   const pp=document.getElementById("prog-pct");if(pp)pp.textContent=tot?Math.round(comp/tot*100)+"%":"";
-  // Mostrar cambios disponibles si ya jugó
-  const conCambios=Object.values(window._pr).filter(function(p){return p.v&&(p.cr||0)>0;}).length;
-  const pcr=document.getElementById("prog-cambios");
-  if(pcr){
-    if(conCambios>0&&!puede){
-      pcr.innerHTML=`<span style="font-size:12px;color:var(--blue);font-weight:600">🔄 ${conCambios} partido${conCambios!==1?"s":""} con cambios disponibles</span>`;
-      pcr.style.display="block";
-    } else {
-      pcr.style.display="none";
-    }
-  }
+  const ahora=new Date();
+  const cf=window._cambiosFecha!==undefined?window._cambiosFecha:3;
 
   el.innerHTML=parts.map(function(p){
     const pr=window._pr[p.id]||{};
-    const sel=pr.v,cr=pr.cr!==undefined?pr.cr:3;
+    const sel=pr.v;
     const sinGoles=p.golesLocal===null||p.golesLocal===undefined||p.golesLocal==="";
-    // Bloqueo por partido: 30 min antes del inicio O si ya tiene resultado
-    const ahora=new Date();
-    const inicioPartido=p.fechaHora?new Date(p.fechaHora):null;
-    const minRestPartido=inicioPartido?(inicioPartido-ahora)/60000:9999;
-    const partidoEmpezado=!sinGoles||(inicioPartido&&minRestPartido<=30);
-    // 3 cambios POR FECHA — no por partido
-    const cambiosFechaDisp=window._cambiosFecha!==undefined?window._cambiosFecha:3;
-    const puedeModificar=!partidoEmpezado&&(cambiosFechaDisp>0)&&sel;
-    const bloq=!puedeModificar&&!(!sel&&puede);
     const tipoCls=p.tipo==="Polla"?" polla":p.tipo==="Doble"?" doble":"";
     const li=p.local?p.local[0].toUpperCase():"L",vi=p.visita?p.visita[0].toUpperCase():"V";
-    const escL=p.localLogo?`<img src="${p.localLogo}" style="width:36px;height:36px;object-fit:contain" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:"";
-    const escV=p.visitaLogo?`<img src="${p.visitaLogo}" style="width:36px;height:36px;object-fit:contain" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:"";
-    const inicialL=p.localLogo?`<span style="display:none;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--d3),var(--d4));border:2px solid rgba(255,255,255,.1);align-items:center;justify-content:center;font-family:var(--ff);font-size:22px;font-weight:900;color:rgba(255,255,255,.7)">${li}</span>`:``;
-    const inicialV=p.visitaLogo?`<span style="display:none;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--d3),var(--d4));border:2px solid rgba(255,255,255,.1);align-items:center;justify-content:center;font-family:var(--ff);font-size:22px;font-weight:900;color:rgba(255,255,255,.7)">${vi}</span>`:``;
-
-    // Buscar si tiene regla asignada a este partido
+    const escL=p.localLogo?`<img src="${p.localLogo}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'">`:"";
+    const escV=p.visitaLogo?`<img src="${p.visitaLogo}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'">`:"";
+    // Bloqueo por partido: 30min antes del inicio O sin goles
+    const inicioP=p.fechaHora?new Date(p.fechaHora):null;
+    const minRest=inicioP?(inicioP-ahora)/60000:9999;
+    const partidoEmpezado=!sinGoles||(inicioP&&minRest<=30);
+    const puedeModificar=!partidoEmpezado&&(cf>0)&&sel;
+    const bloq=!puedeModificar&&!(!sel&&puede&&!partidoEmpezado);
+    // Reglas aplicadas a este partido
     const reglaEnPartido=window._reglasDisp.filter(function(r){return r.partidos.includes(p.id);});
 
     return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}" id="pc-${p.id}">
       <div class="pc-meta">
         <div class="pc-bdgs">
           <span style="font-size:11px;font-weight:700;color:var(--txt3)">#${p.numero}</span>
-          ${p.tipo==="Polla"?`<span class="bdg bgold" style="font-size:12px;padding:4px 11px">&#11088; POLLA</span>`:
-            p.tipo==="Doble"?`<span class="bdg bpur" style="font-size:12px;padding:4px 11px">&#215;2 DOBLE</span>`:
-            `<span class="bdg bgr" style="font-size:12px;padding:4px 11px">NORMAL</span>`}
-          ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:12px;padding:4px 11px">&#9679; VIVO</span>`:""}
-          ${reglaEnPartido.map(function(r){return`<span class="bdg bgold" style="font-size:11px;padding:3px 8px">&#128208; ${r.codigo}</span>`;}).join("")}
-        </div>
-        <div class="pc-acts">
-          ${(sel&&bloq&&!sinGoles)?`<span class="cambios ${cr===3?"ok":cr>0?"warn":"none"}">&#128260; ${cr}</span>`:""}
+          ${p.tipo==="Polla"?`<span class="bdg bgold" style="font-size:12px;padding:4px 11px">⭐ POLLA</span>`:p.tipo==="Doble"?`<span class="bdg bpur" style="font-size:12px;padding:4px 11px">×2 DOBLE</span>`:`<span class="bdg bgr" style="font-size:12px;padding:4px 11px">NORMAL</span>`}
+          ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:12px;padding:4px 11px">● VIVO</span>`:""}
+          ${reglaEnPartido.map(function(r){return`<span class="bdg bgold" style="font-size:11px;padding:3px 8px">📏 ${r.codigo}</span>`;}).join("")}
         </div>
       </div>
       <div class="teams-block">
         <div class="team-box">
-          <div class="team-escudo">${p.localLogo?escL+inicialL:li}</div>
+          <div class="team-escudo">${p.localLogo?escL:li}</div>
           <div class="team-name-big">${p.local}</div>
         </div>
         <div class="vs-center">
-          ${!sinGoles?`<div class="score-vivo">${p.golesLocal}-${p.golesVisita}</div>`:
-            sel?`<div class="prono-box ${sel}">${sel}</div><div class="prono-lbl">tu pron&oacute;stico</div>`:
-            `<div class="vs-txt">VS</div>`}
+          ${!sinGoles?`<div class="score-vivo">${p.golesLocal}-${p.golesVisita}</div>`:sel?`<div class="prono-box ${sel}">${sel}</div><div class="prono-lbl">tu pronóstico</div>`:`<div class="vs-txt">VS</div>`}
         </div>
         <div class="team-box">
-          <div class="team-escudo">${p.visitaLogo?escV+inicialV:vi}</div>
+          <div class="team-escudo">${p.visitaLogo?escV:vi}</div>
           <div class="team-name-big">${p.visita}</div>
         </div>
       </div>
-      ${!bloq?`
-        <div class="lev-wrap">
-          ${["L","E","V"].map(function(v){
-            const label=v==="L"?"Local":v==="E"?"Empate":"Visitante";
-            return`<button class="lev-btn ${v}${sel===v?" sel":""}" onclick="pronosticar('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')"><span class="lev-letra">${v}</span><span class="lev-sub">${label}</span></button>`;
-          }).join("")}
-        </div>`
-      :sinGoles&&sel?`
-        <div class="lev-wrap" style="opacity:.7">
-          ${["L","E","V"].map(function(v){
-            const label=v==="L"?"Local":v==="E"?"Empate":"Visitante";
-            const esSel=sel===v;
-            const sinCambios=cr<=0;
-            const disabled=sinCambios?"disabled":"";
-            return`<button class="lev-btn ${v}${esSel?" sel":""}" ${disabled}
-              onclick="${sinCambios?"":"pronosticar('"+p.id+"','"+v+"','"+ctx.fechaId+"','"+ctx.pozoId+"')"}"
-              style="${sinCambios?"opacity:.4;cursor:not-allowed":""}">
-              <span class="lev-letra">${v}</span>
-              <span class="lev-sub">${label}</span>
-            </button>`;
-          }).join("")}
-        </div>
-        <div style="text-align:center;margin-top:4px;font-size:11px;color:${cr>0?"var(--txt3)":"var(--red)"}">
-          ${cr>0?`🔄 ${cr} cambio${cr!==1?"s":""} restante${cr!==1?"s":""}`:"🔒 Sin cambios disponibles"}
-        </div>`
-      :sinGoles&&!sel?`<div class="partido-blocked">Sin pron&oacute;stico a&uacute;n</div>`
-      :""}
+      ${!bloq?`<div class="lev-wrap">${["L","E","V"].map(function(v){const label=v==="L"?"Local":v==="E"?"Empate":"Visitante";return`<button class="lev-btn ${v}${sel===v?" sel":""}" onclick="pronosticar('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')"><span class="lev-letra">${v}</span><span class="lev-sub">${label}</span></button>`;}).join("")}</div>`:!sinGoles?"":`<div class="partido-blocked">Sin pronóstico aún</div>`}
     </div>`;
   }).join("");
+
+  const jf=document.getElementById("jf");
+  if(jf&&puede)jf.innerHTML=`<button class="btn btn-p btn-lg" onclick="guardarTodos()">💾 Guardar pronósticos</button>`;
 }
 
-/* ══ SECCIÓN REGLAS ESPECIALES ══════════════════════════════ */
+// ══ SECCIÓN REGLAS ESPECIALES ══
 function _calcularEstado(){
   const totParts=window._parts.length;
   const pronosComp=Object.keys(window._pr).filter(function(k){return window._pr[k]&&window._pr[k].v;}).length;
@@ -1217,111 +1072,36 @@ function _calcularEstado(){
   const completo=pronosFaltan===0&&reglasFaltan.length===0&&!mkFalta;
   const msgs=[];
   if(pronosFaltan>0)msgs.push("Faltan "+pronosFaltan+" pronóstico"+(pronosFaltan===1?"":"s"));
-  reglasFaltan.forEach(function(r){
-    const f=r.cantReq-r.partidos.length;
-    msgs.push(r.nombre+": faltan "+f+" partido"+(f===1?"":"s"));
-  });
+  reglasFaltan.forEach(function(r){const f=r.cantReq-r.partidos.length;msgs.push(r.nombre+": faltan "+f+" partido"+(f===1?"":"s"));});
   if(mkFalta)msgs.push("La MK: falta el resultado exacto");
   return{completo,msgs};
 }
 
 function renderReglasSection(puede){
   const jf=document.getElementById("jf");if(!jf)return;
-  const bloq=!puede;
-  let html="";
-
+  const bloq=!puede;let html="";
   if(window._reglasDisp.length){
-    html+=`<div style="margin-top:22px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <span style="font-family:var(--ff);font-size:22px;font-weight:900;letter-spacing:.5px">&#128208; REGLAS ESPECIALES</span>
-        ${bloq?`<span class="bdg bred">&#128274; Bloqueadas</span>`:`<span class="bdg bg">Abiertas</span>`}
-      </div>
-      <p style="font-size:12px;color:var(--txt3);margin-bottom:14px">Elegí a qué partido aplicar cada regla. Son independientes de tus pronósticos L/E/V.</p>`;
-
+    html+=`<div style="margin-top:22px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-family:var(--ff);font-size:22px;font-weight:900;letter-spacing:.5px">📏 REGLAS ESPECIALES</span>${bloq?`<span class="bdg bred">🔒 Bloqueadas</span>`:`<span class="bdg bg">Abiertas</span>`}</div><p style="font-size:12px;color:var(--txt3);margin-bottom:14px">Elegí a qué partido aplicar cada regla.</p>`;
     window._reglasDisp.forEach(function(reg){
       const yaCompleta=reg.partidos.length>=reg.cantReq;
       const esMultiple=reg.cantReq>1;
-      html+=`<div class="card" style="margin-bottom:10px;padding:16px">
-        <div style="margin-bottom:8px">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <span style="font-family:var(--ff);font-size:18px;font-weight:800">${reg.nombre}</span>
-            <span style="font-family:var(--ff);font-size:16px;font-weight:700;color:var(--g2)">+${reg.pts}pts</span>
-            ${yaCompleta?`<span class="bdg bg">&#10003; Lista</span>`:`<span class="bdg bgold">${reg.partidos.length}/${reg.cantReq}</span>`}
-          </div>
-          <p style="font-size:12px;color:var(--txt2);margin-top:3px">${reg.desc}</p>
-          ${esMultiple?`<p style="font-size:11px;color:var(--blue);margin-top:2px">Elegí ${reg.cantReq} partidos</p>`:""}
-        </div>`;
-
-      if(reg.partidos.length){
-        html+=`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px">`;
-        reg.partidos.forEach(function(pid){
-          const part=window._parts.find(function(p){return p.id===pid;});
-          if(!part)return;
-          html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(0,200,83,.06);border:1px solid rgba(0,200,83,.2);border-radius:var(--rs)">
-            <span style="font-size:11px;font-weight:700;color:var(--txt3)">#${part.numero}</span>
-            <span style="font-size:13px;font-weight:500;flex:1">${part.local} vs ${part.visita}</span>
-            ${!bloq?`<button onclick="quitarPartidoRegla('${reg.codigo}','${pid}')" style="font-size:14px;color:var(--txt3);padding:2px 6px;border-radius:4px;background:var(--off)">&#10005;</button>`:""}
-          </div>`;
-        });
-        html+=`</div>`;
-      }
-
-      if(!bloq&&!yaCompleta){
-        const disp=window._parts.filter(function(p){return !reg.partidos.includes(p.id);});
-        if(disp.length){
-          const restantes=reg.cantReq-reg.partidos.length;
-          html+=`<select class="inp" onchange="agregarPartidoRegla('${reg.codigo}',this.value);this.value=''">
-            <option value="">+ Elegir partido${esMultiple?" ("+restantes+" más)":""}...</option>
-            ${disp.map(function(p){return`<option value="${p.id}">#${p.numero} ${p.local} vs ${p.visita}</option>`;}).join("")}
-          </select>`;
-        }
-      }
-
-      // La MK — dos dropdowns numéricos
+      html+=`<div class="card" style="margin-bottom:10px;padding:16px"><div style="margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-family:var(--ff);font-size:18px;font-weight:800">${reg.nombre}</span><span style="font-family:var(--ff);font-size:16px;font-weight:700;color:var(--g2)">+${reg.pts}pts</span>${yaCompleta?`<span class="bdg bg">✓ Lista</span>`:`<span class="bdg bgold">${reg.partidos.length}/${reg.cantReq}</span>`}</div><p style="font-size:12px;color:var(--txt2);margin-top:3px">${reg.desc}</p>${esMultiple?`<p style="font-size:11px;color:var(--blue);margin-top:2px">Elegí ${reg.cantReq} partidos</p>`:""}</div>`;
+      if(reg.partidos.length){html+=`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px">`;reg.partidos.forEach(function(pid){const part=window._parts.find(function(p){return p.id===pid;});if(!part)return;html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(0,200,83,.06);border:1px solid rgba(0,200,83,.2);border-radius:var(--rs)"><span style="font-size:11px;font-weight:700;color:var(--txt3)">#${part.numero}</span><span style="font-size:13px;font-weight:500;flex:1">${part.local} vs ${part.visita}</span>${!bloq?`<button onclick="quitarPartidoRegla('${reg.codigo}','${pid}')" style="font-size:14px;color:var(--txt3);padding:2px 6px;border-radius:4px;background:var(--off)">✕</button>`:""}</div>`;});html+=`</div>`;}
+      if(!bloq&&!yaCompleta){const disp=window._parts.filter(function(p){return !reg.partidos.includes(p.id);});if(disp.length){const restantes=reg.cantReq-reg.partidos.length;html+=`<select class="inp" onchange="agregarPartidoRegla('${reg.codigo}',this.value);this.value=''"><option value="">+ Elegir partido${esMultiple?" ("+restantes+" más)":""}...</option>${disp.map(function(p){return`<option value="${p.id}">#${p.numero} ${p.local} vs ${p.visita}</option>`;}).join("")}</select>`;}}
       if(reg.codigo==="MK"&&!bloq&&reg.partidos.length){
-        const mk=reg.detalleMK||"";
-        const partes=mk.split("-");
-        const gL=partes[0]||"";const gV=partes[1]||"";
+        const mk=reg.detalleMK||"";const partes=mk.split("-");const gL=partes[0]||"";const gV=partes[1]||"";
         const nums=Array.from({length:10},function(_,i){return i;});
-        html+=`<div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <span style="font-size:12px;font-weight:600;color:var(--txt2)">Resultado exacto:</span>
-          <div style="display:flex;align-items:center;gap:8px">
-            <select id="mk-gl" style="width:72px;padding:8px 4px;font-family:var(--ff);font-size:24px;font-weight:900;text-align:center;background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);color:var(--txt)" onchange="window._actualizarMK()">
-              <option value="">?</option>
-              ${nums.map(function(n){return`<option value="${n}"${String(gL)===String(n)?" selected":""}>${n}</option>`;}).join("")}
-            </select>
-            <span style="font-family:var(--ff);font-size:24px;font-weight:700;color:var(--txt3)">-</span>
-            <select id="mk-gv" style="width:72px;padding:8px 4px;font-family:var(--ff);font-size:24px;font-weight:900;text-align:center;background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);color:var(--txt)" onchange="window._actualizarMK()">
-              <option value="">?</option>
-              ${nums.map(function(n){return`<option value="${n}"${String(gV)===String(n)?" selected":""}>${n}</option>`;}).join("")}
-            </select>
-            <span id="mk-confirm" style="font-size:13px;font-weight:700;color:var(--g2)">${gL!==""&&gV!==""?gL+"-"+gV+" ✓":""}</span>
-          </div>
-        </div>`;
+        html+=`<div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:var(--txt2)">Resultado exacto:</span><div style="display:flex;align-items:center;gap:8px"><select id="mk-gl" style="width:72px;padding:8px 4px;font-family:var(--ff);font-size:24px;font-weight:900;text-align:center;background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);color:var(--txt)" onchange="window._actualizarMK()"><option value="">?</option>${nums.map(function(n){return`<option value="${n}"${String(gL)===String(n)?" selected":""}>${n}</option>`;}).join("")}</select><span style="font-family:var(--ff);font-size:24px;font-weight:700;color:var(--txt3)">-</span><select id="mk-gv" style="width:72px;padding:8px 4px;font-family:var(--ff);font-size:24px;font-weight:900;text-align:center;background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);color:var(--txt)" onchange="window._actualizarMK()"><option value="">?</option>${nums.map(function(n){return`<option value="${n}"${String(gV)===String(n)?" selected":""}>${n}</option>`;}).join("")}</select><span id="mk-confirm" style="font-size:13px;font-weight:700;color:var(--g2)">${gL!==""&&gV!==""?gL+"-"+gV+" ✓":""}</span></div></div>`;
       }
-
       html+=`</div>`;
     });
-
     html+=`</div>`;
   }
-
-  // Botón único al final
   if(!bloq){
     const estado=_calcularEstado();
-    if(estado.completo){
-      html+=`<div id="btn-jugar-area" style="margin-top:18px"><button class="btn btn-p btn-lg" onclick="jugarFecha()">&#9654; Jugar Fecha</button></div>`;
-    } else {
-      html+=`<div id="btn-jugar-area" style="margin-top:18px">
-        <div style="padding:12px 14px;background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);margin-bottom:10px">
-          <p style="font-size:12px;font-weight:600;color:var(--gold);margin-bottom:4px">&#9888;&#65039; Falta completar:</p>
-          ${estado.msgs.map(function(m){return`<p style="font-size:12px;color:var(--txt2)">&#8226; ${m}</p>`;}).join("")}
-        </div>
-        <button class="btn btn-s btn-lg" onclick="guardarProgreso()">&#128190; Guardar progreso</button>
-      </div>`;
-    }
+    if(estado.completo){html+=`<div id="btn-jugar-area" style="margin-top:18px"><button class="btn btn-p btn-lg" onclick="jugarFecha()">▶ Jugar Fecha</button></div>`;}
+    else{html+=`<div id="btn-jugar-area" style="margin-top:18px"><div style="padding:12px 14px;background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);margin-bottom:10px"><p style="font-size:12px;font-weight:600;color:var(--gold);margin-bottom:4px">⚠️ Falta completar:</p>${estado.msgs.map(function(m){return`<p style="font-size:12px;color:var(--txt2)">• ${m}</p>`;}).join("")}</div><button class="btn btn-s btn-lg" onclick="guardarProgreso()">💾 Guardar progreso</button></div>`;}
   }
-
   let div=document.getElementById("jf-reglas");
   if(!div){div=document.createElement("div");div.id="jf-reglas";jf.parentNode.insertBefore(div,jf.nextSibling);}
   div.innerHTML=html;
@@ -1333,142 +1113,82 @@ window._actualizarMK=function(){
   const reg=window._reglasDisp.find(function(r){return r.codigo==="MK";});
   if(!reg)return;
   const conf=document.getElementById("mk-confirm");
-  // Validar 0-0
-  if(gl==="0"&&gv==="0"){
-    reg.detalleMK="";
-    if(conf)conf.innerHTML=`<span style="color:var(--red);font-size:12px;font-weight:600">❌ No se puede elegir 0-0</span>`;
-    _actualizarBotonPrincipal();
-    return;
-  }
+  if(gl==="0"&&gv==="0"){reg.detalleMK="";if(conf)conf.innerHTML=`<span style="color:var(--red);font-size:12px;font-weight:600">❌ No se puede elegir 0-0</span>`;_actualizarBotonPrincipal();return;}
   reg.detalleMK=(gl!==""&&gv!=="")?gl+"-"+gv:"";
   if(conf)conf.textContent=(gl!==""&&gv!=="")?(gl+"-"+gv+" ✓"):"";
   _actualizarBotonPrincipal();
 };
-
 window._actualizarBotonPrincipal=function(){
-  const div=document.getElementById("jf-reglas");if(!div)return;
+  const div=document.getElementById("btn-jugar-area");if(!div)return;
   const estado=_calcularEstado();
-  const btnArea=document.getElementById("btn-jugar-area");
-  if(!btnArea)return;
-  if(estado.completo){
-    btnArea.innerHTML=`<button class="btn btn-p btn-lg" onclick="jugarFecha()">&#9654; Jugar Fecha</button>`;
-  } else {
-    btnArea.innerHTML=`<div style="padding:12px 14px;background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);margin-bottom:10px">
-      <p style="font-size:12px;font-weight:600;color:var(--gold);margin-bottom:4px">&#9888;&#65039; Falta completar:</p>
-      ${estado.msgs.map(function(m){return`<p style="font-size:12px;color:var(--txt2)">&#8226; ${m}</p>`;}).join("")}
-    </div>
-    <button class="btn btn-s btn-lg" onclick="guardarProgreso()">&#128190; Guardar progreso</button>`;
-  }
+  if(estado.completo)div.innerHTML=`<button class="btn btn-p btn-lg" onclick="jugarFecha()">▶ Jugar Fecha</button>`;
+  else div.innerHTML=`<div style="padding:12px 14px;background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);margin-bottom:10px"><p style="font-size:12px;font-weight:600;color:var(--gold);margin-bottom:4px">⚠️ Falta completar:</p>${estado.msgs.map(function(m){return`<p style="font-size:12px;color:var(--txt2)">• ${m}</p>`;}).join("")}</div><button class="btn btn-s btn-lg" onclick="guardarProgreso()">💾 Guardar progreso</button>`;
 };
-
 window.agregarPartidoRegla=function(cod,pid){
   if(!pid)return;
   const reg=window._reglasDisp.find(function(r){return r.codigo===cod;});
   if(!reg)return;
-  if(reg.partidos.includes(pid)){toast("Ya elegíste ese partido");return;}
-  if(reg.partidos.length>=reg.cantReq){toast("Ya elegíste los "+reg.cantReq+" partidos");return;}
-  reg.partidos.push(pid);
-  renderPartidos(window._parts,window._ctx,true);
-  renderReglasSection(true);
+  if(reg.partidos.includes(pid)){toast("Ya elegiste ese partido");return;}
+  if(reg.partidos.length>=reg.cantReq){toast("Ya elegiste los "+reg.cantReq+" partidos");return;}
+  reg.partidos.push(pid);renderPartidos(window._parts,window._ctx,true);renderReglasSection(true);
 };
-
 window.quitarPartidoRegla=function(cod,pid){
   const reg=window._reglasDisp.find(function(r){return r.codigo===cod;});
   if(!reg)return;
   reg.partidos=reg.partidos.filter(function(id){return id!==pid;});
-  renderPartidos(window._parts,window._ctx,true);
-  renderReglasSection(true);
+  renderPartidos(window._parts,window._ctx,true);renderReglasSection(true);
 };
-
 window._guardarTodasLasReglas=async function(){
-  // Armar array de reglas con partidos asignados
-  const reglas=window._reglasDisp
-    .filter(function(reg){return reg.partidos.length>0;})
-    .map(function(reg){
-      return{
-        codigo:reg.codigo,
-        partidos:reg.partidos,
-        detalle:reg.codigo==="MK"?(reg.detalleMK||""):""
-      };
-    });
+  const reglas=window._reglasDisp.filter(function(reg){return reg.partidos.length>0;}).map(function(reg){return{codigo:reg.codigo,partidos:reg.partidos,detalle:reg.codigo==="MK"?(reg.detalleMK||""):""};});
   if(!reglas.length)return true;
-  // Una sola llamada para todas las reglas
-  const r=await api("guardarReglas",{
-    fechaId:window._ctx.fechaId,
-    pozoId:window._ctx.pozoId,
-    reglas:reglas
-  });
+  const r=await api("guardarReglas",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,reglas:reglas});
   if(!r.ok){toast("❌ Reglas: "+r.error);return false;}
   return true;
 };
-
 window.guardarProgreso=async function(){
   const btn=document.getElementById("btn-jugar-area");
   if(btn)btn.innerHTML=`<button class="btn btn-s btn-lg" disabled>💾 Guardando...</button>`;
   const ps=Object.entries(window._pr).map(function(e){return{partidoId:e[0],pronostico:e[1].v};});
-  if(ps.length){
-    const r=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});
-    if(!r.ok){toast("❌ "+r.error);renderReglasSection(true);return;}
-  }
+  if(ps.length){const r=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});if(!r.ok){toast("❌ "+r.error);renderReglasSection(true);return;}}
   await window._guardarTodasLasReglas();
-  toast("✅ Progreso guardado. Podés volver antes del plazo.");
-  // Volver a fechas después de 1.5s
+  toast("✅ Progreso guardado.");
   setTimeout(function(){go("fechas");},1500);
 };
-
 window.jugarFecha=async function(){
   const estado=_calcularEstado();
   if(!estado.completo){toast("⚠️ "+estado.msgs[0]);return;}
-  // Verificar que tenemos fechaId y pozoId
-  if(!window._ctx.fechaId||!window._ctx.pozoId){
-    toast("❌ Error: falta fechaId o pozoId. Volvé a entrar a la fecha.");
-    return;
-  }
+  if(!window._ctx.fechaId||!window._ctx.pozoId){toast("❌ Error: falta contexto. Volvé a entrar a la fecha.");return;}
   const btn=document.getElementById("btn-jugar-area");
   if(btn)btn.innerHTML=`<div style="text-align:center;padding:8px"><div class="spinner" style="margin:0 auto 8px"></div><p style="font-size:13px;color:var(--txt2)">Guardando fecha...</p></div>`;
   try{
-    // 1. Guardar pronósticos
     const ps=Object.entries(window._pr).map(function(e){return{partidoId:e[0],pronostico:e[1].v};});
     const rp=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});
     if(!rp.ok){toast("❌ Pronósticos: "+rp.error);renderReglasSection(true);return;}
-    // 2. Guardar reglas si hay
-    if(window._reglasDisp.length){
-      const ok=await window._guardarTodasLasReglas();
-      if(!ok){renderReglasSection(true);return;}
-    }
-    // 3. Todo OK — volver a fechas
+    if(window._reglasDisp.length){const ok=await window._guardarTodasLasReglas();if(!ok){renderReglasSection(true);return;}}
     App._fechaJugada=window._ctx.fechaId;
     toast("✅ ¡Fecha jugada! Tus pronósticos quedaron guardados.");
     setTimeout(function(){go("fechas");},1500);
-  }catch(e){
-    toast("❌ Error inesperado: "+e.message);
-    renderReglasSection(true);
-  }
+  }catch(e){toast("❌ Error: "+e.message);renderReglasSection(true);}
 };
-
-
 window.pronosticar=async function(pid,v,fid,poid){
   const prev=window._pr[pid]?Object.assign({},window._pr[pid]):null;
   if(!window._pr[pid])window._pr[pid]={v:v,cr:3};
-  else{window._pr[pid].v=v;window._pr[pid].cr=Math.max(0,(prev&&prev.cr!==undefined?prev.cr:3)-1);}
+  else window._pr[pid].v=v;
   renderPartidos(window._parts,window._ctx,true);
   const r=await api("guardarPronostico",{fechaId:fid,pozoId:poid,partidoId:pid,pronostico:v});
-  if(!r.ok){toast("\u274C "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];renderPartidos(window._parts,window._ctx,true);return;}
-  if(r.cambiosRestantes!==undefined){window._pr[pid].cr=r.cambiosRestantes;renderPartidos(window._parts,window._ctx,true);}
-  if(r.cambiosRestantesFecha!==undefined){window._cambiosFecha=r.cambiosRestantesFecha;}
+  if(!r.ok){toast("❌ "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];renderPartidos(window._parts,window._ctx,true);return;}
+  if(r.cambiosRestantesFecha!==undefined){window._cambiosFecha=r.cambiosRestantesFecha;renderResumenCambios();}
   if(r.mensaje&&r.cambio)toast(r.mensaje);
 };
 window.guardarTodos=async function(){
   const ps=Object.entries(window._pr).map(function(e){return{partidoId:e[0],pronostico:e[1].v};});
   const r=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});
-  toast(r.ok?"\u2705 "+r.guardados+" guardados":"\u274C "+r.error);
+  toast(r.ok?"✅ "+r.guardados+" guardados":"❌ "+r.error);
 };
 
 /* ══ TABLA ═══════════════════════════════════════════════════ */
 async function loadTabla(ctx){
   const el=document.getElementById("tc");if(!el)return;
-
-  // Si no hay fecha/pozo, mostrar selector con las fechas del usuario
   if(!ctx.fechaId||!ctx.pozoId){
     el.innerHTML=`<div class="loading"><div class="spinner"></div></div>`;
     const rf=await api("getFechas");
@@ -1476,23 +1196,9 @@ async function loadTabla(ctx){
     const inscripciones=ri.ok?(ri.inscripciones||[]):[];
     if(!inscripciones.length){el.innerHTML=emptyBox("🏆","No estás inscripto en ninguna fecha");return;}
     const fechas=rf.ok?(rf.fechas||[]):[];
-    el.innerHTML=`<div>
-      <p class="sec">Seleccioná fecha y pozo</p>
-      ${inscripciones.map(function(i){
-        const f=fechas.find(function(x){return x.id===i.fechaId;});
-        return`<div class="card" style="margin-bottom:8px;padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center"
-          onclick="go('tabla',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})">
-          <div>
-            <div style="font-size:15px;font-weight:600">${f?f.nombre:i.fechaId}</div>
-            <div style="font-size:12px;color:var(--txt3)">Pozo $${(i.monto||0).toLocaleString("es-AR")} · ${f?f.liga||"":""}</div>
-          </div>
-          <span style="color:var(--g2);font-size:18px">→</span>
-        </div>`;
-      }).join("")}
-    </div>`;
+    el.innerHTML=`<div><p class="sec">Seleccioná fecha y pozo</p>${inscripciones.map(function(i){const f=fechas.find(function(x){return x.id===i.fechaId;});return`<div class="card" style="margin-bottom:8px;padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="go('tabla',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})"><div><div style="font-size:15px;font-weight:600">${f?f.nombre:i.fechaId}</div><div style="font-size:12px;color:var(--txt3)">Pozo $${(i.monto||0).toLocaleString("es-AR")} · ${f?f.liga||"":""}</div></div><span style="color:var(--g2);font-size:18px">→</span></div>`;}).join("")}</div>`;
     return;
   }
-
   const r=await api("getTabla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});if(!r.ok){el.innerHTML=errBox(r.error);return;}
   const t=r.tabla||[],md=["🥇","🥈","🥉"],po=t.slice(0,3);
   el.innerHTML=`<p style="font-size:11px;color:var(--txt3);margin-bottom:14px">Calculado hasta partido #${r.ultimoPartidoCalculado||0} de ${r.totalPartidos||0}</p>
@@ -1552,7 +1258,6 @@ async function loadDash(){
 }
 
 /* ══ ADMIN FECHAS ════════════════════════════════════════════ */
-// Cache de fechas para editar sin problemas de quotes en onclick
 window._adminFechas={};
 
 async function loadAdminFechas(){
@@ -1562,148 +1267,46 @@ async function loadAdminFechas(){
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
   const todas=r.fechas||[];
   if(!todas.length){el.innerHTML=emptyBox("📅","Sin fechas");return;}
-  // Guardar en cache para acceso sin quotes
   todas.forEach(function(f){window._adminFechas[f.id]=f;});
   el.innerHTML=todas.map(function(f){
     const reglas=f.reglasHabilitadas||[];
-    const estadoBdg=f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":f.estado==="Finalizada"?"bpur":"bgr";
+    const estadoBdg=f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr";
     const plazoStr=f.plazoLimite?new Date(f.plazoLimite).toLocaleString("es-AR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"";
     return`<div class="card" style="margin-bottom:10px;padding:16px" id="fcard-${f.id}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div>
-          <div style="font-family:var(--ff);font-size:20px;font-weight:800">${f.nombre}</div>
-          <div style="font-size:11px;color:var(--txt3);margin-top:2px">⚽ ${f.cantPartidos||0} partidos${f.liga?" · "+f.liga:""}${plazoStr?" · Plazo: "+plazoStr:""}</div>
-          ${reglas.length?`<div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">${reglas.map(function(cod){return`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">${cod}</span>`;}).join("")}</div>`:"<div style='margin-top:4px;font-size:11px;color:var(--txt3)'>Sin reglas configuradas</div>"}
+          <div style="font-family:var(--ff);font-size:20px;font-weight:800">${f.nombre||"Sin nombre"}</div>
+          <div style="font-size:11px;color:var(--txt3);margin-top:2px">⚽ ${f.cantPartidos||0}${f.liga?" · "+f.liga:""}${plazoStr?" · Plazo: "+plazoStr:""}</div>
+          ${reglas.length?`<div style="margin-top:5px;display:flex;gap:3px;flex-wrap:wrap">${reglas.map(function(cod){return`<span class="bdg bgold" style="font-size:10px;padding:2px 6px">${cod}</span>`;}).join("")}</div>`:""}
         </div>
         <span class="bdg ${estadoBdg}">${f.estado}</span>
       </div>
-      <!-- Pozos inline -->
-      <div id="pozos-${f.id}" style="margin-bottom:10px"></div>
-      <!-- Botones -->
+      <div id="pozos-${f.id}" style="margin-bottom:8px"></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="go('admin-importar',{fechaId:'${f.id}'})">🔗 Importar</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="go('admin-res',{fechaId:'${f.id}'})">⚽ Resultados</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="showEditarFecha('${f.id}')">✏️ Editar</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="showGestionPozos('${f.id}')">💰 Pozos</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:12px" onclick="go('admin-pagos',{fechaId:'${f.id}'})">👥 Inscriptos</button>
-        ${f.estado==="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:12px" id="btn-cerrar-${f.id}" onclick="cerrarFecha('${f.id}')">🔒 Cerrar</button>`:""}
-        ${f.estado==="Cerrada"?`<button class="btn btn-p" style="padding:6px 12px;font-size:12px" id="btn-calc-${f.id}" onclick="calcularFecha('${f.id}')">🏆 Calcular</button>`:""}
+        ${f.estado==="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:12px" onclick="cerrarFecha('${f.id}')">🔒 Cerrar</button>`:""}
+        ${f.estado==="Cerrada"?`<button class="btn btn-p" style="padding:6px 12px;font-size:12px" onclick="calcularFecha('${f.id}')">🏆 Calcular</button>`:""}
       </div>
     </div>`;
   }).join("");
-  // Cargar pozos de cada fecha
   todas.forEach(function(f){loadPozosInline(f.id);});
 }
 
-// Cargar pozos inline dentro de la card de la fecha
 async function loadPozosInline(fechaId){
   const el=document.getElementById("pozos-"+fechaId);if(!el)return;
   const r=await api("getPozos",{fechaId});
-  if(!r.ok||!r.pozos?.length){el.innerHTML="";return;}
-  el.innerHTML=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">`+
-    r.pozos.map(function(p){
-      return`<div style="padding:5px 10px;background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);font-size:12px">
-        <span style="font-family:var(--ff);font-weight:800">$${p.monto.toLocaleString("es-AR")}</span>
-        <span style="color:var(--txt3);margin-left:4px">· ${p.inscriptos} inscriptos</span>
-      </div>`;
-    }).join("")+`</div>`;
+  if(!r.ok||!r.pozos?.length){return;}
+  el.innerHTML=`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">${r.pozos.map(function(p){return`<span style="padding:3px 8px;background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);font-size:11px"><span style="font-family:var(--ff);font-weight:800">$${p.monto.toLocaleString("es-AR")}</span><span style="color:var(--txt3);margin-left:3px">· ${p.inscriptos}</span></span>`;}).join("")}</div>`;
 }
-
-// Editar fecha — usa cache para evitar problemas de quotes
-window.showEditarFecha=function(fechaId){
-  const f=window._adminFechas[fechaId];if(!f){toast("Fecha no encontrada");return;}
-  const reglasActuales=f.reglasHabilitadas||[];
-  window._reglasSelAdmin=new Set(reglasActuales);
-  const reglasHTML=TODAS_LAS_REGLAS.map(function(r){
-    const checked=reglasActuales.includes(r.codigo)?"checked":"";
-    return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer">
-      <input type="checkbox" value="${r.codigo}" ${checked} style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/>
-      <div>
-        <div style="font-size:13px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:11px">+${r.pts}pts</span></div>
-        <div style="font-size:11px;color:var(--txt3)">${r.desc}</div>
-      </div>
-    </label>`;
-  }).join("");
-  let plazoFmt="";
-  if(f.plazoLimite){try{plazoFmt=new Date(f.plazoLimite).toISOString().slice(0,16);}catch(e){}}
-  const m=mkModal("✏️ Editar — "+f.nombre,`<div class="fg">
-    <div class="ig"><label class="lbl">Nombre</label><input class="inp" id="ef-nom" value="${f.nombre}"/></div>
-    <div class="ig"><label class="lbl">Liga</label><input class="inp" id="ef-lig" value="${f.liga||""}"/></div>
-    <div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="ef-pla" type="datetime-local" value="${plazoFmt}"/></div>
-    <div class="ig">
-      <label class="lbl">Reglas habilitadas</label>
-      <div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div>
-    </div>
-    <button class="btn btn-p btn-lg" id="btn-guardar-fecha" onclick="guardarEditarFecha('${fechaId}')">Guardar cambios</button>
-  </div>`);
-  document.body.appendChild(m);
-};
-
-window.guardarEditarFecha=async function(fechaId){
-  const btn=document.getElementById("btn-guardar-fecha");
-  if(btn){btn.textContent="Guardando...";btn.disabled=true;}
-  const r=await api("adminEditarFecha",{
-    fechaId,
-    nombre:document.getElementById("ef-nom")?.value,
-    liga:document.getElementById("ef-lig")?.value,
-    plazoLimite:document.getElementById("ef-pla")?.value,
-    reglasHabilitadas:Array.from(window._reglasSelAdmin)
-  });
-  document.querySelector(".modal-bg")?.remove();
-  if(r.ok){toast("✅ Fecha actualizada");loadAdminFechas();}
-  else toast("❌ "+r.error);
-};
-
-// Gestión de pozos
-window.showGestionPozos=async function(fechaId){
-  const f=window._adminFechas[fechaId];
-  const nombreFecha=f?f.nombre:"Fecha";
-  const btn=event?.target;if(btn){btn.textContent="⏳";btn.disabled=true;}
-  const rp=await api("getPozos",{fechaId});
-  if(btn){btn.textContent="💰 Pozos";btn.disabled=false;}
-  const pozosHTML=rp.ok&&rp.pozos?.length
-    ? rp.pozos.map(function(p){
-        return`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bdr-l)">
-          <div>
-            <span style="font-family:var(--ff);font-size:18px;font-weight:800">$${p.monto.toLocaleString("es-AR")}</span>
-            <span style="font-size:11px;color:var(--txt3);margin-left:8px">${p.tipo} · ${p.inscriptos} inscriptos · Premio est: $${p.premioGanador.toLocaleString("es-AR")}</span>
-          </div>
-          <span class="bdg ${p.estado==="Activo"?"bg":"bgr"}">${p.estado}</span>
-        </div>`;
-      }).join("")
-    :`<p style="font-size:13px;color:var(--txt3);padding:12px 0">Sin pozos aún</p>`;
-  const m=mkModal("💰 Pozos — "+nombreFecha,`<div>
-    ${pozosHTML}
-    <div style="margin-top:14px;border-top:1px solid var(--bdr-l);padding-top:14px">
-      <label class="lbl">Agregar pozo</label>
-      <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
-        <input class="inp" id="np-monto" type="number" min="1" placeholder="Monto ($)" style="flex:1"/>
-        <button class="btn btn-p" id="btn-crear-pozo" style="padding:10px 16px" onclick="crearPozo('${fechaId}')">+ Crear</button>
-      </div>
-    </div>
-  </div>`);
-  document.body.appendChild(m);
-};
-
-window.crearPozo=async function(fechaId){
-  const monto=document.getElementById("np-monto")?.value;
-  if(!monto||isNaN(monto)||+monto<=0){toast("Ingresá un monto válido");return;}
-  const btn=document.getElementById("btn-crear-pozo");
-  if(btn){btn.textContent="Creando...";btn.disabled=true;}
-  const r=await api("adminCrearPozo",{fechaId,monto:+monto});
-  if(!r.ok){toast("❌ "+r.error);if(btn){btn.textContent="+ Crear";btn.disabled=false;}return;}
-  toast("✅ Pozo $"+Number(monto).toLocaleString("es-AR")+" creado");
-  document.querySelector(".modal-bg")?.remove();
-  loadAdminFechas(); // recargar para mostrar el pozo nuevo
-};
-
 
 window.showCrearFecha=async function(){
   window._reglasSelAdmin=new Set();
-  const reglasHTML=TODAS_LAS_REGLAS.map(function(r){
-    return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer"><input type="checkbox" value="${r.codigo}" style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/><div><div style="font-size:13px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:11px">+${r.pts}pts</span></div><div style="font-size:11px;color:var(--txt3)">${r.desc}</div></div></label>`;
-  }).join("");
-  const m=mkModal("Nueva fecha",`<div class="fg"><div class="ig"><label class="lbl">Nombre</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div><div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="nfp" type="datetime-local"/></div><div class="ig"><label class="lbl">Descripción</label><input class="inp" id="nfd"/></div><div class="ig"><label class="lbl">Reglas especiales habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" onclick="crearFecha()">Crear fecha</button></div>`);
+  const reglasHTML=TODAS_LAS_REGLAS.map(function(r){return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer"><input type="checkbox" value="${r.codigo}" style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/><div><div style="font-size:13px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:11px">+${r.pts}pts</span></div></div></label>`;}).join("");
+  const m=mkModal("Nueva fecha",`<div class="fg"><div class="ig"><label class="lbl">Nombre</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div><div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="nfp" type="datetime-local"/></div><div class="ig"><label class="lbl">Descripción</label><input class="inp" id="nfd"/></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" onclick="crearFecha()">Crear fecha</button></div>`);
   document.body.appendChild(m);
 };
 window.crearFecha=async function(){
@@ -1711,9 +1314,72 @@ window.crearFecha=async function(){
   document.querySelector(".modal-bg")?.remove();
   if(r.ok){toast("✅ Fecha creada");loadAdminFechas();}else toast("❌ "+r.error);
 };
+window.showEditarFecha=function(fechaId){
+  const f=window._adminFechas[fechaId];if(!f){toast("Fecha no encontrada");return;}
+  const reglasActuales=f.reglasHabilitadas||[];
+  window._reglasSelAdmin=new Set(reglasActuales);
+  const reglasHTML=TODAS_LAS_REGLAS.map(function(r){const checked=reglasActuales.includes(r.codigo)?"checked":"";return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer"><input type="checkbox" value="${r.codigo}" ${checked} style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/><div><div style="font-size:13px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:11px">+${r.pts}pts</span></div></div></label>`;}).join("");
+  let plazoFmt="";if(f.plazoLimite){try{plazoFmt=new Date(f.plazoLimite).toISOString().slice(0,16);}catch(e){}}
+  const m=mkModal("✏️ Editar — "+(f.nombre||"Fecha"),`<div class="fg"><div class="ig"><label class="lbl">Nombre</label><input class="inp" id="ef-nom" value="${f.nombre||""}"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="ef-lig" value="${f.liga||""}"/></div><div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="ef-pla" type="datetime-local" value="${plazoFmt}"/></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" id="btn-guardar-fecha" onclick="guardarEditarFecha('${fechaId}')">Guardar cambios</button></div>`);
+  document.body.appendChild(m);
+};
+window.guardarEditarFecha=async function(fechaId){
+  const btn=document.getElementById("btn-guardar-fecha");if(btn){btn.textContent="Guardando...";btn.disabled=true;}
+  const r=await api("adminEditarFecha",{fechaId,nombre:document.getElementById("ef-nom")?.value,liga:document.getElementById("ef-lig")?.value,plazoLimite:document.getElementById("ef-pla")?.value,reglasHabilitadas:Array.from(window._reglasSelAdmin)});
+  document.querySelector(".modal-bg")?.remove();
+  if(r.ok){toast("✅ Fecha actualizada");loadAdminFechas();}else toast("❌ "+r.error);
+};
+window.showGestionPozos=async function(fechaId){
+  const f=window._adminFechas[fechaId];
+  const rp=await api("getPozos",{fechaId});
+  const pozosHTML=rp.ok&&rp.pozos?.length?rp.pozos.map(function(p){return`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bdr-l)"><div><span style="font-family:var(--ff);font-size:18px;font-weight:800">$${p.monto.toLocaleString("es-AR")}</span><span style="font-size:11px;color:var(--txt3);margin-left:8px">${p.tipo} · ${p.inscriptos} inscriptos · Premio: $${p.premioGanador.toLocaleString("es-AR")}</span></div><span class="bdg ${p.estado==="Activo"?"bg":"bgr"}">${p.estado}</span></div>`;}).join(""):`<p style="font-size:13px;color:var(--txt3);padding:12px 0">Sin pozos aún</p>`;
+  const m=mkModal("💰 Pozos — "+(f?f.nombre:""),`<div>${pozosHTML}<div style="margin-top:14px;border-top:1px solid var(--bdr-l);padding-top:14px"><label class="lbl">Agregar pozo</label><div style="display:flex;gap:8px;align-items:center;margin-top:6px"><input class="inp" id="np-monto" type="number" min="1" placeholder="Monto ($)" style="flex:1"/><button class="btn btn-p" id="btn-crear-pozo" style="padding:10px 16px" onclick="crearPozo('${fechaId}')">+ Crear</button></div></div></div>`);
+  document.body.appendChild(m);
+};
+window.crearPozo=async function(fechaId){
+  const monto=document.getElementById("np-monto")?.value;
+  if(!monto||isNaN(monto)||+monto<=0){toast("Ingresá un monto válido");return;}
+  const btn=document.getElementById("btn-crear-pozo");if(btn){btn.textContent="Creando...";btn.disabled=true;}
+  const r=await api("adminCrearPozo",{fechaId,monto:+monto});
+  if(!r.ok){toast("❌ "+r.error);if(btn){btn.textContent="+ Crear";btn.disabled=false;}return;}
+  toast("✅ Pozo creado");document.querySelector(".modal-bg")?.remove();loadAdminFechas();
+};
 window.cerrarFecha=async function(id){if(!confirm("¿Cerrar esta fecha?"))return;const r=await api("adminCerrarFecha",{fechaId:id});toast(r.ok?"✅ Cerrada":"❌ "+r.error);if(r.ok)loadAdminFechas();};
 window.calcularFecha=async function(id){if(!confirm("¿Calcular puntajes?"))return;toast("Calculando...");const r=await api("adminCerrarYCalcular",{fechaId:id});toast(r.ok?"✅ "+r.mensaje:"❌ "+r.error);if(r.ok)loadAdminFechas();};
 
+
+/* ══ ADMIN NOTICIAS ══════════════════════════════════════════ */
+async function loadAdminNoticias(){
+  const el=document.getElementById("anl");if(!el)return;
+  const r=await api("getNoticias");
+  const noticias=r.ok?r.noticias||[]:[];
+  el.innerHTML=`<div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-family:var(--ff);font-size:24px;font-weight:900">NOTICIAS</div>
+      <button class="btn btn-p" onclick="showAgregarNoticia()">+ Nueva noticia</button>
+    </div>
+    ${noticias.length?noticias.map(function(n,i){return`<div class="card" style="margin-bottom:8px;padding:14px 16px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div>${n.fecha?`<div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${n.fecha}</div>`:""}<div style="font-size:14px;line-height:1.5">${n.texto}</div></div><button class="btn btn-d" style="padding:4px 10px;font-size:12px;flex-shrink:0" onclick="eliminarNoticia(${i})">✕</button></div></div>`;}).join(""):emptyBox("📣","Sin noticias. Creá la primera.")}
+  </div>`;
+}
+window.showAgregarNoticia=function(){
+  const m=mkModal("📣 Nueva noticia",`<div class="fg"><div class="ig"><label class="lbl">Fecha (opcional, ej: 17 mar)</label><input class="inp" id="nn-fecha" placeholder="17 mar"/></div><div class="ig"><label class="lbl">Texto</label><textarea class="inp" id="nn-texto" rows="4" placeholder="Escribí el aviso..." style="resize:vertical"></textarea></div><button class="btn btn-p btn-lg" id="btn-nn" onclick="guardarNoticia()">Publicar</button></div>`);
+  document.body.appendChild(m);
+};
+window.guardarNoticia=async function(){
+  const texto=document.getElementById("nn-texto")?.value?.trim();
+  const fecha=document.getElementById("nn-fecha")?.value?.trim();
+  if(!texto){toast("Escribí el texto");return;}
+  const btn=document.getElementById("btn-nn");if(btn){btn.textContent="Guardando...";btn.disabled=true;}
+  const r=await api("agregarNoticia",{texto,fecha});
+  document.querySelector(".modal-bg")?.remove();
+  if(r.ok){toast("✅ Noticia publicada");loadAdminNoticias();loadSRNoticias();}else toast("❌ "+r.error);
+};
+window.eliminarNoticia=async function(idx){
+  if(!confirm("¿Eliminar esta noticia?"))return;
+  const r=await api("eliminarNoticia",{indice:idx});
+  if(r.ok){toast("✅ Eliminada");loadAdminNoticias();loadSRNoticias();}else toast("❌ "+r.error);
+};
+/* ══ ADMIN RESULTADOS ════════════════════════════════════════ */
 async function loadRes(ctx){
   const rf=await api("getFechas"),el=document.getElementById("arf");if(!el)return;
   const fs=(rf.fechas||[]).filter(f=>["Abierta","Cerrada","Jugada"].includes(f.estado));
@@ -1798,27 +1464,7 @@ function renderImportar(){return`<div class="su">
   </div></div>`;}
 window._impParts=[];window._impSel=new Set();
 async function loadImportar(ctx){const r=await api("getFechas");const sel=document.getElementById("imp-fecha");if(!sel)return;const fechas=(r.fechas||[]).filter(f=>["Borrador","Abierta"].includes(f.estado));sel.innerHTML=fechas.length?fechas.map(f=>`<option value="${f.id}"${ctx?.fechaId===f.id?" selected":""}>${f.nombre}</option>`).join(""):`<option value="">Sin fechas abiertas</option>`;}
-window.onLigaChange=async()=>{
-  const liga=document.getElementById("imp-liga")?.value,sr=document.getElementById("imp-ronda"),bb=document.getElementById("btn-buscar");
-  if(!liga||!sr)return;
-  sr.disabled=true;sr.innerHTML=`<option>Cargando...</option>`;bb.disabled=true;
-  const r=await api("getRondas",{liga,temporada:2024});
-  console.log("getRondas respuesta:",JSON.stringify(r));
-  if(!r.ok){
-    sr.innerHTML=`<option value="">Error: ${r.error||"desconocido"}</option>`;
-    bb.disabled=true;
-    toast("\u274C Rondas: "+(r.error||"sin respuesta"));
-    return;
-  }
-  if(!r.rondas?.length){
-    sr.innerHTML=`<option value="">Sin rondas para esta liga/temporada</option>`;
-    bb.disabled=true;
-    toast("Sin rondas — revisá la temporada en el backend");
-    return;
-  }
-  sr.innerHTML=r.rondas.map(rn=>`<option value="${rn}">${rn}</option>`).join("");
-  sr.disabled=false;bb.disabled=false;
-};
+window.onLigaChange=async()=>{const liga=document.getElementById("imp-liga")?.value,sr=document.getElementById("imp-ronda"),bb=document.getElementById("btn-buscar");if(!liga||!sr)return;sr.disabled=true;sr.innerHTML=`<option>Cargando...</option>`;bb.disabled=true;const r=await api("getRondas",{liga,temporada:2024});if(!r.ok||!r.rondas?.length){sr.innerHTML=`<option value="">Sin rondas</option>`;return;}sr.innerHTML=r.rondas.map(rn=>`<option value="${rn}">${rn}</option>`).join("");sr.disabled=false;bb.disabled=false;};
 window.buscarPartidos=async()=>{const liga=document.getElementById("imp-liga")?.value,ronda=document.getElementById("imp-ronda")?.value;if(!liga||!ronda){toast("Seleccioná liga y ronda");return;}const btn=document.getElementById("btn-buscar");if(btn){btn.textContent="Buscando...";btn.disabled=true;}const r=await api("buscarPorRonda",{liga,ronda});if(btn){btn.textContent="🔍 Buscar";btn.disabled=false;}if(!r.ok){toast("❌ "+r.error);return;}window._impParts=r.partidos||[];window._impSel=new Set(window._impParts.map(p=>p.apiId));renderImpLista();document.getElementById("imp-res").style.display="block";toast(`✅ ${r.partidos.length} partidos`);};
 function tiposAuto(t){const r={},c=Math.round(t*.25);for(let n=1;n<=t;n++)r[n]="Normal";if(t>=10)r[10]="Polla";let d=0;for(let n=t;n>=1&&d<c;n--){if(n===10)continue;r[n]="Doble";d++;}return r;}
 function renderImpLista(){const el=document.getElementById("imp-lista");if(!el)return;const ps=window._impParts,tipos=tiposAuto(ps.length);el.innerHTML=ps.map((p,i)=>{const n=i+1,tipo=tipos[n],sel=window._impSel.has(p.apiId),dt=new Date(p.fecha),hora=dt.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}),fecha=dt.toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"short"});return`<div class="imp-item"><input type="checkbox" id="chk-${p.apiId}" ${sel?"checked":""} onchange="toggleImp('${p.apiId}')" style="width:15px;height:15px;cursor:pointer;accent-color:var(--g2)"/><div style="width:22px;text-align:center;font-size:11px;font-weight:700;color:var(--txt3)">${n}</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.local} vs ${p.visita}</div><div style="font-size:11px;color:var(--txt3)">${fecha} · ${hora}</div></div><span class="bdg ${tipo==="Polla"?"bgold":tipo==="Doble"?"bpur":"bgr"}">${tipo==="Polla"?"⭐ Polla":tipo==="Doble"?"×2 Doble":"Normal"}</span></div>`;}).join("");updateImpCount();}
@@ -1826,112 +1472,6 @@ window.toggleImp=id=>{if(window._impSel.has(id))window._impSel.delete(id);else w
 window.selAll=sel=>{if(sel)window._impParts.forEach(p=>window._impSel.add(p.apiId));else window._impSel.clear();window._impParts.forEach(p=>{const c=document.getElementById("chk-"+p.apiId);if(c)c.checked=sel;});updateImpCount();};
 function updateImpCount(){const n=window._impSel.size,cnt=document.getElementById("imp-cnt"),btn=document.getElementById("btn-importar"),res=document.getElementById("imp-tipos");if(cnt)cnt.textContent=`${n} partido${n!==1?"s":""} seleccionado${n!==1?"s":""}`;if(btn)btn.disabled=n===0;const selArr=window._impParts.filter(p=>window._impSel.has(p.apiId)),tipos=tiposAuto(selArr.length);const po=Object.values(tipos).filter(t=>t==="Polla").length,do2=Object.values(tipos).filter(t=>t==="Doble").length,no=Object.values(tipos).filter(t=>t==="Normal").length;if(res)res.textContent=`⭐${po} · ×2${do2} · N${no}`;}
 window.importar=async()=>{const fechaId=document.getElementById("imp-fecha")?.value;if(!fechaId){toast("Seleccioná fecha");return;}const selArr=window._impParts.filter(p=>window._impSel.has(p.apiId));if(!selArr.length){toast("Seleccioná partidos");return;}if(selArr.length>20){toast("Máximo 20");return;}const btn=document.getElementById("btn-importar");if(btn){btn.textContent="Importando...";btn.disabled=true;}const r=await api("importarPartidos",{fechaId,partidosApi:selArr});if(btn){btn.textContent="✅ Importar seleccionados";btn.disabled=false;}if(!r.ok){toast("❌ "+r.error);return;}toast(`✅ ${r.importados} partidos importados`);window._impParts=[];window._impSel=new Set();document.getElementById("imp-res").style.display="none";setTimeout(()=>go("admin-fechas"),1200);};
-
-
-/* ══ SIDEBAR DERECHO ════════════════════════════════════════ */
-async function loadSidebarRight(){
-  loadSRFechas();
-  loadSRNoticias();
-  loadSRHoF();
-}
-
-async function loadSRFechas(){
-  const el=document.getElementById("sr-fechas-list");if(!el)return;
-  const r=await api("getFechas");
-  if(!r.ok||!r.fechas?.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">Sin fechas abiertas</div>`;return;}
-  const abiertas=r.fechas.filter(function(f){return f.estado==="Abierta";});
-  if(!abiertas.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">Sin fechas abiertas</div>`;return;}
-  el.innerHTML=abiertas.map(function(f){
-    const mins=f.minutosRestantes||0;
-    const pt=mins<60?mins+"min":Math.floor(mins/60)+"hs";
-    const nombre=f.nombre||f.id||"Sin nombre";
-    return`<div class="sr-fecha-link" onclick="go('fecha-det',{fechaId:'${f.id}'})">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nombre}</div>
-        <div style="font-size:11px;color:var(--txt3)">⚽ ${f.cantPartidos||0} · ⏱ ${pt}</div>
-      </div>
-      <span style="font-size:13px;color:var(--g2);font-weight:700">→</span>
-    </div>`;
-  }).join("");
-}
-
-async function loadSRNoticias(){
-  const el=document.getElementById("sr-noticias-list");if(!el)return;
-  const r=await api("getNoticias");
-  if(!r.ok||!r.noticias?.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">Sin novedades</div>`;return;}
-  el.innerHTML=r.noticias.map(function(n){
-    return`<div class="noticia-item">
-      ${n.fecha?`<div class="noticia-fecha">${n.fecha}</div>`:""}
-      <div>${n.texto}</div>
-    </div>`;
-  }).join("");
-}
-
-async function loadSRHoF(){
-  const el=document.getElementById("sr-hof-list");if(!el)return;
-  const r=await api("getEstadisticas");
-  if(!r.ok||!r.porFechas?.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">Sin ganadores aún</div>`;return;}
-  const medals=["🥇","🥈","🥉"];
-  el.innerHTML=r.porFechas.slice(0,5).map(function(u,i){
-    return`<div class="sr-hof-item">
-      <span class="sr-hof-medal">${medals[i]||"🏅"}</span>
-      <div class="sr-hof-name">${u.siglas}<span style="font-size:11px;color:var(--txt3);margin-left:5px">${u.nombre||""}</span></div>
-      <span class="sr-hof-wins">${u.fechasGanadas}🏆</span>
-    </div>`;
-  }).join("");
-}
-
-
-/* ══ ADMIN NOTICIAS ══════════════════════════════════════════ */
-async function loadAdminNoticias(){
-  const el=document.getElementById("anl");if(!el)return;
-  const r=await api("getNoticias");
-  const noticias=r.ok?r.noticias||[]:[];
-
-  el.innerHTML=`<div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="font-family:var(--ff);font-size:24px;font-weight:900">NOTICIAS</div>
-      <button class="btn btn-p" onclick="showAgregarNoticia()">+ Nueva noticia</button>
-    </div>
-    ${noticias.length?noticias.map(function(n,i){return`<div class="card" style="margin-bottom:8px;padding:14px 16px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-        <div>
-          ${n.fecha?`<div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${n.fecha}</div>`:""}
-          <div style="font-size:14px;line-height:1.5">${n.texto}</div>
-        </div>
-        <button class="btn btn-d" style="padding:4px 10px;font-size:12px;flex-shrink:0" onclick="eliminarNoticia(${i})">✕</button>
-      </div>
-    </div>`;}).join(""):`<div class="empty" style="padding:32px 0"><div class="ei">📣</div><p>Sin noticias. Creá la primera.</p></div>`}
-  </div>`;
-}
-
-window.showAgregarNoticia=function(){
-  const m=mkModal("📣 Nueva noticia",`<div class="fg">
-    <div class="ig"><label class="lbl">Fecha (opcional, ej: 17 mar)</label><input class="inp" id="nn-fecha" placeholder="17 mar"/></div>
-    <div class="ig"><label class="lbl">Texto</label><textarea class="inp" id="nn-texto" rows="4" placeholder="Escribí el aviso..." style="resize:vertical"></textarea></div>
-    <button class="btn btn-p btn-lg" id="btn-nn" onclick="guardarNoticia()">Publicar</button>
-  </div>`);
-  document.body.appendChild(m);
-};
-
-window.guardarNoticia=async function(){
-  const texto=document.getElementById("nn-texto")?.value?.trim();
-  const fecha=document.getElementById("nn-fecha")?.value?.trim();
-  if(!texto){toast("Escribí el texto de la noticia");return;}
-  const btn=document.getElementById("btn-nn");
-  if(btn){btn.textContent="Guardando...";btn.disabled=true;}
-  const r=await api("agregarNoticia",{texto,fecha});
-  document.querySelector(".modal-bg")?.remove();
-  if(r.ok){toast("✅ Noticia publicada");loadAdminNoticias();loadSRNoticias();}
-  else toast("❌ "+r.error);
-};
-
-window.eliminarNoticia=async function(idx){
-  if(!confirm("¿Eliminar esta noticia?"))return;
-  const r=await api("eliminarNoticia",{indice:idx});
-  if(r.ok){toast("✅ Eliminada");loadAdminNoticias();loadSRNoticias();}
-  else toast("❌ "+r.error);
-};
 
 /* ══ LOGIN ═══════════════════════════════════════════════════ */
 function showLogin(){
@@ -1995,16 +1535,7 @@ function initApp(){
   document.getElementById("sl").style.display="none";
   const mob=window.innerWidth<=768;
   if(mob){["mh","mc","bn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=id==="mc"?"block":"flex";});const ch=document.getElementById("mh-chip");if(ch)ch.textContent=App.user?.usuario||"";}
-  else{
-    document.getElementById("app").style.display="flex";
-    const sb=document.getElementById("sidebar"),mn=document.getElementById("main"),sr=document.getElementById("sidebar-right");
-    if(sb)sb.style.display="flex";
-    if(mn)mn.style.display="flex";
-    if(sr)sr.style.display="flex";
-    const sf=document.getElementById("sb-foot");
-    if(sf)sf.innerHTML=`<div class="sb-av">${App.user?.avatar||"👤"}</div><div class="sb-ui"><div class="nm">${App.user?.usuario||""}</div><div class="rl">${App.user?.rol||"Jugador"}</div></div><button class="sb-logout" onclick="logout()" title="Salir">⎋</button>`;
-    loadSidebarRight();
-  }
+  else{document.getElementById("app").style.display="flex";const sb=document.getElementById("sidebar"),mn=document.getElementById("main"),sr=document.getElementById("sidebar-right");if(sb)sb.style.display="flex";if(mn)mn.style.display="flex";if(sr)sr.style.display="flex";const sf=document.getElementById("sb-foot");if(sf)sf.innerHTML=`<div class="sb-av">${App.user?.avatar||"👤"}</div><div class="sb-ui"><div class="nm">${App.user?.usuario||""}</div><div class="rl">${App.user?.rol||"Jugador"}</div></div><button class="sb-logout" onclick="logout()" title="Salir">⎋</button>`;loadSidebarRight();}
   go(App.user?.rol==="Admin"?"admin-dash":"fechas");
 }
 
