@@ -209,6 +209,8 @@ input:focus,select:focus{outline:none}
 
 .spinner{width:30px;height:30px;border:3px solid var(--bdr-l);border-top-color:var(--g2);border-radius:50%;animation:spin .6s linear infinite}
 .loading{display:flex;justify-content:center;align-items:center;padding:52px}
+#page-loader{position:fixed;bottom:20px;right:20px;background:var(--d2);color:#fff;padding:9px 16px;border-radius:20px;font-size:12px;font-weight:600;z-index:9999;display:none;align-items:center;gap:8px;box-shadow:0 4px 18px rgba(0,0,0,.3)}
+#page-loader.show{display:flex}
 .empty{text-align:center;padding:52px 20px;color:var(--txt3)}
 .empty .ei{font-size:40px;margin-bottom:12px}
 .err-box{color:var(--red);font-size:12px;padding:10px 14px;background:var(--redl);border:1px solid rgba(255,82,52,.3);border-radius:var(--rs)}
@@ -637,9 +639,15 @@ const API_SECRET="PP2026-xK9mQ7vL2nR4wT8yU3pA5cE1hG6jF0bD";
 const SK="pp_tok",UK="pp_usr";
 const App={user:null,token:null,screen:null,ctx:{}};
 
+function showLoader(txt){const el=document.getElementById("page-loader");if(el){el.classList.add("show");const t=document.getElementById("page-loader-txt");if(t)t.textContent=txt||"Cargando...";}}
+function hideLoader(){const el=document.getElementById("page-loader");if(el)el.classList.remove("show");}
+
 async function api(action,p={}){
-  try{const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action,apiSecret:API_SECRET,sessionToken:App.token||undefined,...p}),redirect:"follow"});return await r.json();}
-  catch(e){return{ok:false,error:"Sin conexión: "+e.message};}
+  const MSGS={jugarFecha:"Guardando fecha...",autoguardar:"Guardando pronósticos...",guardarReglas:"Guardando reglas...",getMiFecha:"Cargando pronósticos...",getFecha:"Cargando fecha...",getFechas:"Cargando fechas...",getTabla:"Cargando tabla...",adminCrearFecha:"Creando fecha...",adminEditarFecha:"Guardando cambios...",adminCerrarFecha:"Cerrando fecha...",adminCerrarYCalcular:"Calculando puntajes...",adminCrearPozo:"Creando pozo...",importarPartidos:"Importando...",buscarPartidos:"Buscando partidos...",buscarPorRonda:"Buscando partidos...",getRondas:"Cargando rondas...",inscribirse:"Inscribiendo..."};
+  if(MSGS[action])showLoader(MSGS[action]);
+  try{const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action,apiSecret:API_SECRET,sessionToken:App.token||undefined,...p})});const j=await r.json();return j;}
+  catch(e){return{ok:false,error:"Sin conexión"};}
+  finally{hideLoader();}
 }
 function saveSession(u,t){App.user=u;App.token=t;localStorage.setItem(SK,t);localStorage.setItem(UK,JSON.stringify(u));}
 function loadSession(){const t=localStorage.getItem(SK),u=localStorage.getItem(UK);if(t&&u){App.token=t;App.user=JSON.parse(u);return true;}return false;}
@@ -1024,12 +1032,13 @@ function renderPartidos(parts,ctx,puede){
     const li=p.local?p.local[0].toUpperCase():"L",vi=p.visita?p.visita[0].toUpperCase():"V";
     const escL=p.localLogo?`<img src="${p.localLogo}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'">`:"";
     const escV=p.visitaLogo?`<img src="${p.visitaLogo}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'">`:"";
-    // Bloqueo por partido: 30min antes del inicio O sin goles
+    // Bloqueo por partido: 30min antes del inicio O ya tiene goles
     const inicioP=p.fechaHora?new Date(p.fechaHora):null;
     const minRest=inicioP?(inicioP-ahora)/60000:9999;
     const partidoEmpezado=!sinGoles||(inicioP&&minRest<=30);
-    const puedeModificar=!partidoEmpezado&&(cf>0)&&sel;
-    const bloq=!puedeModificar&&!(!sel&&puede&&!partidoEmpezado);
+    // Puede poner pronóstico si: partido no empezó Y (sin prono aún O tiene cambios en la fecha)
+    const puedePonerProno=!partidoEmpezado&&(!sel||cf>0);
+    const bloq=!puedePonerProno;
     // Reglas aplicadas a este partido
     const reglaEnPartido=window._reglasDisp.filter(function(r){return r.partidos.includes(p.id);});
 
@@ -1334,16 +1343,31 @@ window.showGestionPozos=async function(fechaId){
   const f=window._adminFechas[fechaId];
   const rp=await api("getPozos",{fechaId});
   const pozosHTML=rp.ok&&rp.pozos?.length?rp.pozos.map(function(p){return`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bdr-l)"><div><span style="font-family:var(--ff);font-size:18px;font-weight:800">$${p.monto.toLocaleString("es-AR")}</span><span style="font-size:11px;color:var(--txt3);margin-left:8px">${p.tipo} · ${p.inscriptos} inscriptos · Premio: $${p.premioGanador.toLocaleString("es-AR")}</span></div><span class="bdg ${p.estado==="Activo"?"bg":"bgr"}">${p.estado}</span></div>`;}).join(""):`<p style="font-size:13px;color:var(--txt3);padding:12px 0">Sin pozos aún</p>`;
-  const m=mkModal("💰 Pozos — "+(f?f.nombre:""),`<div>${pozosHTML}<div style="margin-top:14px;border-top:1px solid var(--bdr-l);padding-top:14px"><label class="lbl">Agregar pozo</label><div style="display:flex;gap:8px;align-items:center;margin-top:6px"><input class="inp" id="np-monto" type="number" min="1" placeholder="Monto ($)" style="flex:1"/><button class="btn btn-p" id="btn-crear-pozo" style="padding:10px 16px" onclick="crearPozo('${fechaId}')">+ Crear</button></div></div></div>`);
+  const m=mkModal("💰 Pozos — "+(f?f.nombre:""),`<div>${pozosHTML}<div style="margin-top:14px;border-top:1px solid var(--bdr-l);padding-top:14px"><label class="lbl" style="margin-bottom:8px;display:block">Agregar pozos</label><div id="np-lista" style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;gap:8px;align-items:center"><input class="inp" placeholder="Monto ($)" type="number" min="1" style="flex:1" oninput="window._npMontos[0]=this.value"/><span style="font-size:12px;color:var(--txt3);width:60px">pozo 1</span></div></div><button class="btn btn-s" style="margin-top:8px;width:100%;padding:8px" onclick="agregarCampoPozo()">+ Agregar otro monto</button><button class="btn btn-p" id="btn-crear-pozo" style="margin-top:8px;width:100%;padding:11px" onclick="crearPozos('${fechaId}')">💰 Crear pozos</button></div></div>`);
+  window._npMontos=[""];
   document.body.appendChild(m);
 };
-window.crearPozo=async function(fechaId){
-  const monto=document.getElementById("np-monto")?.value;
-  if(!monto||isNaN(monto)||+monto<=0){toast("Ingresá un monto válido");return;}
+window.agregarCampoPozo=function(){
+  const lista=document.getElementById("np-lista");if(!lista)return;
+  const idx=window._npMontos.length;
+  window._npMontos.push("");
+  const div=document.createElement("div");
+  div.style.cssText="display:flex;gap:8px;align-items:center";
+  div.innerHTML=`<input class="inp" placeholder="Monto ($)" type="number" min="1" style="flex:1" oninput="window._npMontos[${idx}]=this.value"/><span style="font-size:12px;color:var(--txt3);width:60px">pozo ${idx+1}</span>`;
+  lista.appendChild(div);
+};
+window.crearPozos=async function(fechaId){
+  const montos=(window._npMontos||[]).map(m=>+m).filter(m=>m>0);
+  if(!montos.length){toast("Ingresá al menos un monto");return;}
   const btn=document.getElementById("btn-crear-pozo");if(btn){btn.textContent="Creando...";btn.disabled=true;}
-  const r=await api("adminCrearPozo",{fechaId,monto:+monto});
-  if(!r.ok){toast("❌ "+r.error);if(btn){btn.textContent="+ Crear";btn.disabled=false;}return;}
-  toast("✅ Pozo creado");document.querySelector(".modal-bg")?.remove();loadAdminFechas();
+  let creados=0;
+  for(const monto of montos){
+    const r=await api("adminCrearPozo",{fechaId,monto});
+    if(r.ok)creados++;else toast("❌ Error en $"+monto.toLocaleString("es-AR")+": "+r.error);
+  }
+  document.querySelector(".modal-bg")?.remove();
+  toast("✅ "+creados+" pozo"+(creados!==1?"s":"")+" creado"+(creados!==1?"s":""));
+  loadAdminFechas();
 };
 window.cerrarFecha=async function(id){if(!confirm("¿Cerrar esta fecha?"))return;const r=await api("adminCerrarFecha",{fechaId:id});toast(r.ok?"✅ Cerrada":"❌ "+r.error);if(r.ok)loadAdminFechas();};
 window.calcularFecha=async function(id){if(!confirm("¿Calcular puntajes?"))return;toast("Calculando...");const r=await api("adminCerrarYCalcular",{fechaId:id});toast(r.ok?"✅ "+r.mensaje:"❌ "+r.error);if(r.ok)loadAdminFechas();};
