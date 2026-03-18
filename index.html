@@ -742,7 +742,7 @@ async function loadFechas(){
   if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas disponibles");return;}
   el.innerHTML=fechasVis.map(function(f){
     const mins=f.minutosRestantes,urg=mins<120&&mins>0;
-    const pt=mins<=0?"🔒 Plazo vencido":mins<60?"⏱ "+mins+"min":mins<1440?"⏱ "+Math.floor(mins/60)+"hs":"📅 "+new Date(f.plazoLimite).toLocaleDateString("es-AR",{day:"numeric",month:"long"});
+    const pt=mins<=0?"🔒 Plazo vencido":mins<60?"⏱ "+mins+"min":mins<1440?"⏱ "+Math.floor(mins/60)+"hs":"📅 "+new Date(f.plazoLimite).toLocaleDateString("es-AR",{day:"numeric",month:"long",timeZone:"America/Argentina/Buenos_Aires"});
     const ic=ICONS[f.liga]||"⚽";
     const strip=f.estado==="Abierta"?"abierta":f.estado==="Cerrada"?"cerrada":"borrador";
     return`<div class="fecha-card" onclick="go('fecha-det',{fechaId:'${f.id}'})">
@@ -1034,8 +1034,9 @@ function renderPartidos(parts,ctx,puede){
     const escV=p.visitaLogo?`<img src="${p.visitaLogo}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'">`:"";
     // Bloqueo por partido: 30min antes del inicio O ya tiene goles
     const inicioP=p.fechaHora?new Date(p.fechaHora):null;
-    const minRest=inicioP?(inicioP-ahora)/60000:9999;
-    const partidoEmpezado=!sinGoles||(inicioP&&minRest<=30);
+    const inicioOk=inicioP&&!isNaN(inicioP.getTime());
+    const minRest=inicioOk?(inicioP-ahora)/60000:9999;
+    const partidoEmpezado=!sinGoles||(inicioOk&&minRest<=30);
     // Puede poner pronóstico si: partido no empezó Y (sin prono aún O tiene cambios en la fecha)
     const puedePonerProno=!partidoEmpezado&&(!sel||cf>0);
     const bloq=!puedePonerProno;
@@ -1281,7 +1282,7 @@ async function loadAdminFechas(){
   el.innerHTML=todas.map(function(f){
     const reglas=f.reglasHabilitadas||[];
     const estadoBdg=f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr";
-    const plazoStr=f.plazoLimite?new Date(f.plazoLimite).toLocaleString("es-AR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"";
+    const plazoStr=f.plazoLimite?new Date(f.plazoLimite).toLocaleString("es-AR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"America/Argentina/Buenos_Aires"}):"";
     return`<div class="card" style="margin-bottom:10px;padding:16px" id="fcard-${f.id}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div>
