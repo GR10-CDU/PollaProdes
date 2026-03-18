@@ -1039,6 +1039,34 @@ async function loadJugar(ctx){
   finally{const ld=document.getElementById("pronos-loading");if(ld)ld.remove();}
 }
 
+window.actualizarPuntajes=async function(){
+  const btn=document.getElementById("btn-actualizar-pts");
+  if(btn){btn.textContent="⏳ Actualizando...";btn.disabled=true;}
+  const rm=await api("getMiFecha",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId});
+  if(rm.ok){
+    window._cambiosFecha=rm.cambiosRestantesFecha!==undefined?rm.cambiosRestantesFecha:3;
+    (rm.pronos||[]).forEach(function(p){
+      if(!window._pr[p.partidoId])window._pr[p.partidoId]={};
+      window._pr[p.partidoId].acertado=p.acertado;
+      window._pr[p.partidoId].ptsGrilla=p.ptsGrilla;
+      window._pr[p.partidoId].ptsToleTole=p.ptsToleTole;
+      window._pr[p.partidoId].ptsReglas=p.ptsReglas;
+      window._pr[p.partidoId].ptsTotal=p.ptsTotal;
+      window._pr[p.partidoId].esToleTole=p.esToleTole;
+      window._pr[p.partidoId].calculado=p.calculado;
+      window._pr[p.partidoId].reglas=p.reglas||[];
+    });
+    const rf=await api("getFecha",{fechaId:window._ctx.fechaId});
+    if(rf.ok){
+      window._parts=rf.partidos||[];
+      renderPartidos(window._parts,window._ctx,false);
+      renderReglasSection(false);
+      renderResumenCambios();
+    }
+  }
+  if(btn){btn.textContent="🔄 Actualizar";btn.disabled=false;}
+};
+
 function renderResumenCambios(){
   const el=document.getElementById("prog-cambios");if(!el)return;
   const ahora=new Date();
@@ -1057,7 +1085,7 @@ function renderResumenCambios(){
     return t+ptsBase+ptsReglas;
   },0);
   const totalPts=totalPtsPartidos;
-  const ptsBadge=totalPts>0?`<span style="font-family:var(--ff);font-size:20px;font-weight:900;color:var(--g2);margin-left:12px">🏆 ${totalPts} pts</span>`:"";
+  const ptsBadge=totalPts>0?`<span style="font-family:var(--ff);font-size:20px;font-weight:900;color:var(--g2);margin-left:12px">🏆 ${totalPts} pts</span> <button onclick="actualizarPuntajes()" style="font-size:11px;padding:3px 10px;background:var(--off);border:1px solid var(--bdr-l2);border-radius:var(--rs);cursor:pointer;font-weight:600;color:var(--txt2);margin-left:6px" id="btn-actualizar-pts">🔄 Actualizar</button>`:"";
   el.style.display="block";
   if(cf<=0){el.innerHTML=`<span style="font-size:13px;font-weight:600;color:var(--red)">🔒 Sin cambios disponibles para esta fecha</span>${ptsBadge}`;return;}
   el.innerHTML=`<span style="font-family:var(--ff);font-size:28px;font-weight:900;color:var(--blue)">${cf}</span><div style="margin-left:8px"><div style="font-size:13px;font-weight:700;color:var(--blue)">cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</div><div style="font-size:11px;color:var(--txt3)">Podés cambiar hasta 30 min antes de cada partido</div></div>${ptsBadge}`;
