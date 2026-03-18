@@ -1097,20 +1097,31 @@ function renderPartidos(parts,ctx,puede){
           <div class="team-name-big">${p.local}</div>
         </div>
         <div class="vs-center">
-          ${!sinGoles?`<div class="score-vivo">${p.golesLocal}-${p.golesVisita}</div>`:sel?`<div class="prono-box ${sel}">${sel}</div><div class="prono-lbl">tu pronóstico</div>`:`<div class="vs-txt">VS</div>`}
           ${(()=>{
-            const prd=window._pr[p.id];
-            if(!prd||!prd.calculado)return"";
-            const badges=[];
-            if(prd.acertado){
-              if(prd.ptsGrilla)badges.push(`<span class="bdg bg" style="font-size:10px;padding:2px 7px">+${prd.ptsGrilla} Grilla</span>`);
-              if(prd.esToleTole)badges.push(`<span class="bdg bpur" style="font-size:10px;padding:2px 7px">+${prd.ptsToleTole} TOLE TOLE</span>`);
+            const prd=window._pr[p.id]||{};
+            // Sin resultado aún
+            if(sinGoles){
+              return sel?`<div class="prono-box ${sel}">${sel}</div><div class="prono-lbl">tu pronóstico</div>`:`<div class="vs-txt">VS</div>`;
             }
-            // Reglas del partido
-            const regs=prd.reglas||[];
-            regs.forEach(function(r){if(r.puntos)badges.push(`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">+${r.puntos} ${r.codigo}</span>`);});
-            if(!badges.length)return"";
-            return`<div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center;margin-top:4px">${badges.join("")}</div>`;
+            // Con resultado — score + pronóstico + tarjetas + badges
+            const rojas=p.tarjetasRojas||0;
+            const acerto=prd.acertado;
+            const pronoCls=acerto?"bg":prd.calculado?"bred":"";
+            const rojaHtml=rojas>0?Array.from({length:rojas}).map(function(){return'<span style="display:inline-block;width:14px;height:18px;background:#ef4444;border-radius:2px;margin:0 1px;vertical-align:middle"></span>';}).join(""):"";
+            const badges=[];
+            if(prd.calculado){
+              if(acerto&&prd.ptsGrilla)badges.push(`<span class="bdg bg" style="font-size:10px;padding:2px 7px">+${prd.ptsGrilla} Grilla</span>`);
+              if(acerto&&prd.esToleTole)badges.push(`<span class="bdg bpur" style="font-size:10px;padding:2px 7px">+${prd.ptsToleTole} TOLE</span>`);
+              (prd.reglas||[]).forEach(function(r){if(r.puntos>0)badges.push(`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">+${r.puntos} ${r.codigo}</span>`);});
+            }
+            return`<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+              <div style="display:flex;align-items:center;gap:6px">
+                <div class="score-vivo">${p.golesLocal}-${p.golesVisita}</div>
+                ${rojaHtml}
+              </div>
+              ${sel?`<div class="bdg ${pronoCls}" style="font-size:18px;font-weight:900;padding:4px 12px;font-family:var(--ff)">${sel}</div>`:""}
+              ${badges.length?`<div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center">${badges.join("")}</div>`:""}
+            </div>`;
           })()}
         </div>
         <div class="team-box">
