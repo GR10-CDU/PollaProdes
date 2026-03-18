@@ -1110,16 +1110,18 @@ function renderPartidos(parts,ctx,puede){
             const rojaHtml=rojas>0?Array.from({length:rojas}).map(function(){return'<span style="display:inline-block;width:14px;height:18px;background:#ef4444;border-radius:2px;margin:0 1px;vertical-align:middle"></span>';}).join(""):"";
             const badges=[];
             if(prd.calculado){
-              if(acerto&&prd.ptsGrilla)badges.push(`<span class="bdg bg" style="font-size:10px;padding:2px 7px">+${prd.ptsGrilla} Grilla</span>`);
               if(acerto&&prd.esToleTole)badges.push(`<span class="bdg bpur" style="font-size:10px;padding:2px 7px">+${prd.ptsToleTole} TOLE</span>`);
-              (prd.reglas||[]).forEach(function(r){if(r.puntos>0)badges.push(`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">+${r.puntos} ${r.codigo}</span>`);});
+              (prd.reglas||[]).forEach(function(r){
+                if(r.puntos>0)badges.push(`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">+${r.puntos} ${r.codigo}</span>`);
+                else if(r.puntos===0)badges.push(`<span class="bdg bgr" style="font-size:10px;padding:2px 7px">0 ${r.codigo}</span>`);
+              });
             }
             return`<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
               <div style="display:flex;align-items:center;gap:6px">
                 <div class="score-vivo">${p.golesLocal}-${p.golesVisita}</div>
                 ${rojaHtml}
               </div>
-              ${sel?`<div class="bdg ${pronoCls}" style="font-size:18px;font-weight:900;padding:4px 12px;font-family:var(--ff)">${sel}</div>`:""}
+              ${sel?`<div style="font-family:var(--ff);font-size:28px;font-weight:900;padding:2px 10px;border-radius:10px;background:${acerto?"rgba(34,197,94,.15)":prd.calculado?"rgba(239,68,68,.12)":"rgba(0,0,0,.06)"};color:${acerto?"var(--g2)":prd.calculado?"var(--red)":"var(--txt)"};display:flex;align-items:center;gap:6px">${sel}${acerto&&prd.ptsGrilla?`<span style="font-size:13px;font-weight:700">+${prd.ptsGrilla}</span>`:""}${prd.calculado&&!acerto?`<span style="font-size:13px;font-weight:700">✗</span>`:""}</div>`:""}
               ${badges.length?`<div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center">${badges.join("")}</div>`:""}
             </div>`;
           })()}
