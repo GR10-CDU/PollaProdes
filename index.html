@@ -662,7 +662,7 @@ function saveSession(u,t){App.user=u;App.token=t;localStorage.setItem(SK,t);loca
 function loadSession(){const t=localStorage.getItem(SK),u=localStorage.getItem(UK);if(t&&u){App.token=t;App.user=JSON.parse(u);return true;}return false;}
 function clearSession(){api("logout");localStorage.removeItem(SK);localStorage.removeItem(UK);App.user=null;App.token=null;}
 
-const NAV_J=[{k:"fechas",i:"📅",l:"Fechas",t:"Fechas"},{k:"tabla",i:"🏆",l:"Tabla",t:"Tabla"},{k:"grilla",i:"👥",l:"Los Otros",t:"Los Otros"},{k:"stats",i:"📊",l:"Estadísticas",t:"Hall of Fame"},{k:"perfil",i:"👤",l:"Perfil",t:"Perfil"}];
+const NAV_J=[{k:"fechas",i:"📅",l:"Fechas",t:"Fechas"},{k:"mis-fechas",i:"🎯",l:"Mis Fechas",t:"Mis Fechas"},{k:"tabla",i:"🏆",l:"Tabla",t:"Tabla"},{k:"grilla",i:"👥",l:"Los Otros",t:"Los Otros"},{k:"stats",i:"📊",l:"Estadísticas",t:"Hall of Fame"},{k:"perfil",i:"👤",l:"Perfil",t:"Perfil"}];
 const NAV_A=[{k:"admin-dash",i:"📊",l:"Dashboard",t:"Dashboard"},{k:"admin-fechas",i:"📅",l:"Fechas",t:"Fechas"},{k:"admin-importar",i:"🔗",l:"Importar",t:"Importar Partidos"},{k:"admin-res",i:"⚽",l:"Resultados",t:"Resultados"},{k:"admin-noticias",i:"📣",l:"Noticias",t:"Noticias"},{k:"admin-users",i:"👥",l:"Jugadores",t:"Jugadores"},{k:"admin-pagos",i:"💰",l:"Pagos",t:"Pagos Pendientes"},{k:"perfil",i:"👤",l:"Perfil",t:"Perfil"}];
 function getNav(){return App.user?.rol==="Admin"?NAV_A:NAV_J;}
 
@@ -703,6 +703,7 @@ function renderScreen(k,ctx){
       <div id="jc"><div class="loading"><div class="spinner"></div></div></div>
       <div id="jf" style="margin-top:14px"></div></div>`;
     case"tabla":return`<div class="su"><div id="tc"><div class="loading"><div class="spinner"></div></div></div></div>`;
+    case"mis-fechas":return`<div class="su"><div id="mfc"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"grilla":return`<div class="su"><div id="gc"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"stats":return`<div class="su"><div style="display:flex;background:var(--off);border:1px solid var(--bdr-l);border-radius:var(--rs);padding:3px;gap:3px;margin-bottom:14px"><div style="flex:1;padding:8px;text-align:center;font-size:13px;font-weight:600;border-radius:6px;cursor:pointer;background:white;color:var(--g2)" onclick="switchStats('fechas',this)">Por fechas</div><div style="flex:1;padding:8px;text-align:center;font-size:13px;font-weight:600;border-radius:6px;cursor:pointer;color:var(--txt2)" onclick="switchStats('dinero',this)">Por dinero</div></div><div id="sc"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"perfil":return`<div class="su"><div id="pc"><div class="loading"><div class="spinner"></div></div></div></div>`;
@@ -728,6 +729,7 @@ function afterRender(k,ctx){
     case"fecha-det":loadFechaDet(ctx);break;
     case"jugar":loadJugar(ctx);break;
     case"tabla":loadTabla(ctx);break;
+    case"mis-fechas":loadMisFechas();break;
     case"grilla":loadGrilla(ctx);break;
     case"stats":loadStats();break;
     case"perfil":loadPerfil();break;
@@ -794,9 +796,20 @@ async function cargarExtraFecha(f){
   const reglasHtml=f.reglasHabilitadas?.length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${f.reglasHabilitadas.map(function(cod){return`<span class="bdg bgold" style="font-size:10px;padding:2px 6px">📏 ${cod}</span>`;}).join("")}</div>`:"";
   let estadoHtml="";
   if(yaJugo){
+    const cf=yaJugo.cambiosRestantesFecha!==undefined?yaJugo.cambiosRestantesFecha:null;
     estadoHtml=`<span class="bdg bg" style="font-size:11px;padding:3px 10px;font-weight:700">✅ JUGADA</span>`;
-    if(f.minutosRestantes>0)estadoHtml+=` <span style="font-size:11px;color:var(--blue);font-weight:600;cursor:pointer" onclick="event.stopPropagation();go('jugar',{fechaId:'${f.id}',pozoId:'${yaJugo.id}'})">✏️ Modificar</span>`;
-    else estadoHtml+=` <span class="bdg bred" style="font-size:11px;padding:3px 8px">🔒 En Curso</span>`;
+    if(f.minutosRestantes>0){
+      estadoHtml+=` <span style="font-size:11px;color:var(--blue);font-weight:600;cursor:pointer" onclick="event.stopPropagation();go('jugar',{fechaId:'${f.id}',pozoId:'${yaJugo.id}'})">✏️ Modificar</span>`;
+    } else {
+      // En curso — mostrar cambios restantes y link
+      if(cf!==null&&cf>0){
+        estadoHtml+=` <span class="bdg" style="font-size:11px;padding:3px 10px;background:var(--bluel);color:var(--blue);font-weight:700;cursor:pointer" onclick="event.stopPropagation();go('jugar',{fechaId:'${f.id}',pozoId:'${yaJugo.id}'})">🔄 ${cf} cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</span>`;
+      } else if(cf===0){
+        estadoHtml+=` <span class="bdg bred" style="font-size:11px;padding:3px 8px">🔒 Sin cambios</span>`;
+      } else {
+        estadoHtml+=` <span class="bdg bred" style="font-size:11px;padding:3px 8px;cursor:pointer" onclick="event.stopPropagation();go('jugar',{fechaId:'${f.id}',pozoId:'${yaJugo.id}'})">👁 Ver pronósticos</span>`;
+      }
+    }
   }
   el.innerHTML=(estadoHtml?`<div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">${estadoHtml}</div>`:"")
     +`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${pozosHtml}</div>${reglasHtml}`;
@@ -1217,6 +1230,54 @@ window.guardarTodos=async function(){
   const r=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});
   toast(r.ok?"✅ "+r.guardados+" guardados":"❌ "+r.error);
 };
+
+/* ══ MIS FECHAS ═════════════════════════════════════════════ */
+async function loadMisFechas(){
+  const el=document.getElementById("mfc");if(!el)return;
+  el.innerHTML=`<div class="loading"><div class="spinner"></div></div>`;
+  const [rf,ri]=await Promise.all([api("getFechas"),api("getMisInscripciones")]);
+  const inscripciones=ri.ok?(ri.inscripciones||[]):[];
+  if(!inscripciones.length){el.innerHTML=emptyBox("🎯","No estás inscripto en ninguna fecha");return;}
+  const fechas=rf.ok?(rf.fechas||[]):[];
+
+  // Para cada inscripción, cargar cambios restantes
+  const items=await Promise.all(inscripciones.map(async function(i){
+    const f=fechas.find(function(x){return x.id===i.fechaId;})||{};
+    const rp=await api("getPozos",{fechaId:i.fechaId,userId:App.user?.id});
+    const pozo=rp.ok?rp.pozos?.find(function(p){return p.id===i.pozoId;}):null;
+    const cf=pozo?.cambiosRestantesFecha;
+    return{...i,fecha:f,cf};
+  }));
+
+  el.innerHTML=`<div>
+    <p class="sec" style="margin-bottom:14px">Tus fechas inscriptas</p>
+    ${items.map(function(i){
+      const f=i.fecha;
+      const cerrada=f.estado==="Cerrada"||f.estado==="Finalizada";
+      const cf=i.cf;
+      const cfHtml=cerrada&&cf!==undefined?
+        cf>0?`<span class="bdg" style="background:var(--bluel);color:var(--blue);font-weight:700;font-size:13px;padding:5px 14px">🔄 ${cf} cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</span>`:
+        `<span class="bdg bred" style="font-size:12px">🔒 Sin cambios</span>`:"";
+      return`<div class="card" style="margin-bottom:12px;padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div>
+            <div style="font-family:var(--ff);font-size:18px;font-weight:800">${f.nombre||i.fechaId}</div>
+            <div style="font-size:12px;color:var(--txt3);margin-top:2px">${f.liga||""} · Pozo $${(i.monto||0).toLocaleString("es-AR")} · <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr"}" style="font-size:10px">${f.estado||""}</span></div>
+          </div>
+          ${cfHtml}
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-p" style="flex:1;padding:10px" onclick="go('jugar',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})">
+            ${cerrada&&cf>0?"✏️ Modificar pronósticos":"👁 Ver pronósticos"}
+          </button>
+          <button class="btn btn-s" style="flex:1;padding:10px" onclick="go('tabla',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})">
+            🏆 Ver tabla
+          </button>
+        </div>
+      </div>`;
+    }).join("")}
+  </div>`;
+}
 
 /* ══ TABLA ═══════════════════════════════════════════════════ */
 async function loadTabla(ctx){
