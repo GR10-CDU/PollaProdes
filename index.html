@@ -953,7 +953,7 @@ window.inscribirse=async()=>{if(!window._selPozo){toast("Seleccioná un pozo");r
 // ── Catálogo de reglas (sin NPF) ──
 const TODAS_LAS_REGLAS=[
   {codigo:"LMR",nombre:"La Marea Roja",desc:"Elegí 3 partidos en los que creas que habrá al menos una tarjeta roja.<br>Sumás 1 punto por cada expulsión.",pts:1},
-  {codigo:"LR",nombre:"La Rachita",desc:"Elegí un partido como inicio de La Rachita.<br>El objetivo es acertar 5 partidos consecutivos.<br>Sumás 1 punto por cada acierto consecutivo.",pts:1},
+  {codigo:"LR",nombre:"La Rachita",desc:"Elegí un partido como inicio de La Rachita.<br>1 punto si acertás el primero, 2 puntos si acertás el segundo y 4 puntos si acertás el tercero.",pts:4},
   {codigo:"LLDG",nombre:"Lluvia de Goles",desc:"Elegí un partido en el que creas que habrá 5 goles o más.<br>Si acertás, sumás 4 puntos.",pts:4},
   {codigo:"DIEGO",nombre:"El Diego",desc:"Elegí 3 partidos que creas terminarán en empate.<br>Si acertás los 3, sumás 5 puntos.",pts:5},
   {codigo:"GSA",nombre:"Goles Son Amores",desc:"Elegí un partido en el que ambos equipos conviertan goles.<br>Sumás 1 punto por cada gol del partido.",pts:1},
@@ -1229,7 +1229,7 @@ function _renderPartidoRegla(part,pid,reg,bloq){
   const border=partCalc?(ptsReg>0?"rgba(34,197,94,.3)":"rgba(239,68,68,.25)"):"rgba(0,200,83,.2)";
   let extras="";
   if(golesOk)extras+=`<span style="font-family:var(--ff);font-size:13px;font-weight:800;margin:0 4px">${part.golesLocal}-${part.golesVisita}</span>`;
-  if(rojas>0)extras+=`<span style="margin:0 2px">${Array.from({length:rojas}).map(function(){return"🟥";}).join("")}</span>`;
+  if(rojas>0)extras+=Array.from({length:rojas}).map(function(){return`<span style="display:inline-block;width:12px;height:16px;background:#ef4444;border-radius:2px;margin:0 2px;vertical-align:middle"></span>`;}).join("");
   if(partCalc&&ptsReg!==null)extras+=`<span class="bdg" style="font-size:10px;padding:2px 6px;background:${ptsReg>0?"rgba(34,197,94,.15)":"rgba(239,68,68,.12)"};color:${ptsReg>0?"var(--g2)":"var(--red)"};">${ptsReg>0?"+"+ptsReg+" ✓":"0 ✗"}</span>`;
   const quitBtn=!bloq?`<button onclick="quitarPartidoRegla('${reg.codigo}','${pid}')" style="font-size:14px;color:var(--txt3);padding:2px 6px;border-radius:4px;background:var(--off)">✕</button>`:"";
   return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:${bg};border:1px solid ${border};border-radius:var(--rs)"><span style="font-size:11px;font-weight:700;color:var(--txt3)">#${part.numero}</span><span style="font-size:13px;font-weight:500;flex:1;display:inline-flex;align-items:center;gap:4px">${logoHtml(part.localLogo,part.local)} <span style="color:var(--txt3);font-size:11px">vs</span> ${logoHtml(part.visitaLogo,part.visita)}</span>${extras}${quitBtn}</div>`;
@@ -1243,7 +1243,7 @@ function renderReglasSection(puede){
     window._reglasDisp.forEach(function(reg){
       const yaCompleta=reg.partidos.length>=reg.cantReq;
       const esMultiple=reg.cantReq>1;
-      html+=`<div class="card" style="margin-bottom:10px;padding:16px"><div style="margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-family:var(--ff);font-size:18px;font-weight:800">${reg.nombre}</span><span style="font-family:var(--ff);font-size:16px;font-weight:700;color:var(--g2)">+${reg.pts}pts</span>${yaCompleta?`<span class="bdg bg">✓ Lista</span>`:`<span class="bdg bgold">${reg.partidos.length}/${reg.cantReq}</span>`}</div><p style="font-size:12px;color:var(--txt2);margin-top:3px">${reg.desc}</p>${esMultiple?`<p style="font-size:11px;color:var(--blue);margin-top:2px">Elegí ${reg.cantReq} partidos</p>`:""}</div>`;
+      html+=`<div class="card" style="margin-bottom:10px;padding:16px"><div style="margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-family:var(--ff);font-size:18px;font-weight:800">${reg.nombre}</span>${yaCompleta?`<span class="bdg bg">✓ Lista</span>`:`<span class="bdg bgold">${reg.partidos.length}/${reg.cantReq}</span>`}</div><p style="font-size:12px;color:var(--txt2);margin-top:3px">${reg.desc}</p>${esMultiple?`<p style="font-size:11px;color:var(--blue);margin-top:2px">Elegí ${reg.cantReq} partidos</p>`:""}</div>`;
       if(reg.partidos.length){html+=`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px">`;reg.partidos.forEach(function(pid){const part=window._parts.find(function(p){return p.id===pid;});if(!part)return;html+=_renderPartidoRegla(part,pid,reg,bloq);});html+=`</div>`;}
       if(!bloq&&!yaCompleta){const disp=window._parts.filter(function(p){return !reg.partidos.includes(p.id);});if(disp.length){const restantes=reg.cantReq-reg.partidos.length;html+=`<select class="inp" onchange="agregarPartidoRegla('${reg.codigo}',this.value);this.value=''"><option value="">+ Elegir partido${esMultiple?" ("+restantes+" más)":""}...</option>${disp.map(function(p){return`<option value="${p.id}">#${p.numero} ${p.local} vs ${p.visita}</option>`;}).join("")}</select>`;}}
       if(reg.codigo==="MK"&&!bloq&&reg.partidos.length){
