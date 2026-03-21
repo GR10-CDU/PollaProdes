@@ -212,8 +212,10 @@ input:focus,select:focus{outline:none}
 
 .spinner{width:30px;height:30px;border:3px solid var(--bdr-l);border-top-color:var(--g2);border-radius:50%;animation:spin .6s linear infinite}
 .loading{display:flex;justify-content:center;align-items:center;padding:52px}
-#page-loader{position:fixed;bottom:20px;right:20px;background:var(--d2);color:#fff;padding:9px 16px;border-radius:20px;font-size:12px;font-weight:600;z-index:9999;display:none;align-items:center;gap:8px;box-shadow:0 4px 18px rgba(0,0,0,.3)}
+#page-loader{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
 #page-loader.show{display:flex}
+#page-loader-inner{background:var(--white);border-radius:16px;padding:32px 40px;text-align:center;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+#page-loader-txt{font-size:15px;font-weight:600;color:var(--txt);margin-top:14px}
 .empty{text-align:center;padding:52px 20px;color:var(--txt3)}
 .empty .ei{font-size:40px;margin-bottom:12px}
 .err-box{color:var(--red);font-size:12px;padding:10px 14px;background:var(--redl);border:1px solid rgba(255,82,52,.3);border-radius:var(--rs)}
@@ -636,6 +638,7 @@ input:focus,select:focus{outline:none}
 <div id="bn"><div class="bn-wrap" id="bn-wrap"></div></div>
 <div id="sl" style="display:none"></div>
 
+<div id="page-loader"><div id="page-loader-inner"><div class="spinner" style="width:40px;height:40px;border-width:3px;margin:0 auto"></div><div id="page-loader-txt">Cargando...</div></div></div>
 <script>
 const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxJCewWO7hdi4L9LNgMLFS7JgorXXIppgB7hOuSxdJfolje8jrOmCkcwC1GSj53BmK2/exec";
 // ── Caché global del frontend ──
@@ -1115,6 +1118,7 @@ async function loadJugar(ctx){
 window.actualizarPuntajes=async function(){
   const btn=document.getElementById("btn-actualizar-pts");
   if(btn){btn.textContent="⏳ Actualizando...";btn.disabled=true;}
+  showLoader("Actualizando puntajes...");
   // Parallelizar las dos llamadas
   const [rm,rf]=await Promise.all([
     api("getMiFecha",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId}),
@@ -1140,6 +1144,7 @@ window.actualizarPuntajes=async function(){
     renderReglasSection(false);
     renderResumenCambios();
   }
+  hideLoader();
   if(btn){btn.textContent="🔄 Actualizar";btn.disabled=false;}
 };
 
@@ -1466,7 +1471,9 @@ window.pronosticar=async function(pid,v,fid,poid){
   if(!window._pr[pid])window._pr[pid]={v:v,cr:3};
   else window._pr[pid].v=v;
   renderPartidos(window._parts,window._ctx,true);
+  showLoader("Guardando pronóstico...");
   const r=await api("guardarPronostico",{fechaId:fid,pozoId:poid,partidoId:pid,pronostico:v});
+  hideLoader();
   if(!r.ok){toast("❌ "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];renderPartidos(window._parts,window._ctx,true);return;}
   if(r.cambiosRestantesFecha!==undefined){window._cambiosFecha=r.cambiosRestantesFecha;renderResumenCambios();}
   if(r.mensaje&&r.cambio)toast(r.mensaje);
