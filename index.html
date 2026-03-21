@@ -1210,70 +1210,100 @@ function renderPartidos(parts,ctx,puede){
     // Reglas aplicadas a este partido
     const reglaEnPartido=window._reglasDisp.filter(function(r){return r.partidos.includes(p.id);});
 
-    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}" id="pc-${p.id}">
-      <div class="pc-meta">
-        <div class="pc-bdgs">
-          <span style="font-size:11px;font-weight:700;color:var(--txt3)">#${p.numero}</span>
-          ${p.tipo==="Polla"?`<span class="bdg bgold" style="font-size:12px;padding:4px 11px">⭐ POLLA</span>`:p.tipo==="Doble"?`<span class="bdg bpur" style="font-size:12px;padding:4px 11px">×2 DOBLE</span>`:`<span class="bdg bgr" style="font-size:12px;padding:4px 11px">NORMAL</span>`}
-          ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:12px;padding:4px 11px">● VIVO</span>`:""}
-          ${reglaEnPartido.map(function(r){return`<span class="bdg bgold" style="font-size:11px;padding:3px 8px">📏 ${r.codigo}</span>`;}).join("")}
+    return(()=>{
+    const prd=window._pr[p.id]||{};
+    const sinGoles=p.golesLocal===null||p.golesLocal===undefined||p.golesLocal==="";
+    const acerto=prd.acertado;
+    const calculado=prd.calculado;
+    const rojas=p.tarjetasRojas||0;
+    const rojaHtml=rojas>0?Array.from({length:rojas}).map(()=>'<span style="display:inline-block;width:9px;height:13px;background:#e24b4a;border-radius:1px;margin:0 1px;vertical-align:middle"></span>').join(""):"";
+    const lrInfoC=_getLRInfo();const lrDatC=lrInfoC[p.id];
+    // Calcular pts para el badge central
+    let badgeItems=[];
+    if(calculado){
+      if(acerto){
+        if(prd.ptsGrilla)badgeItems.push({txt:"+"+prd.ptsGrilla+" Grilla",ok:true});
+        if(prd.esToleTole&&prd.ptsToleTole>0)badgeItems.push({txt:"+"+prd.ptsToleTole+" TOLE",ok:true});
+        if(lrDatC){const lp=acerto?lrDatC.mult:0;badgeItems.push({txt:(lp>0?"+"+lp:" 0")+" LR×"+lrDatC.mult,ok:lp>0});}
+        (prd.reglas||[]).forEach(function(r){if(r.codigo==="LR")return;badgeItems.push({txt:(r.puntos>0?"+"+r.puntos:"0")+" "+r.codigo,ok:r.puntos>0});});
+      } else {
+        badgeItems.push({txt:"0 Grilla",ok:false});
+        if(lrDatC)badgeItems.push({txt:"0 LR×"+lrDatC.mult,ok:false});
+        (prd.reglas||[]).forEach(function(r){if(r.codigo==="LR")return;badgeItems.push({txt:(r.puntos>0?"+"+r.puntos:"0")+" "+r.codigo,ok:r.puntos>0});});
+      }
+    } else {
+      // Sin resultado — mostrar reglas aplicadas
+      const reglaEnPartido=window._reglasDisp.filter(function(r){return r.partidos.includes(p.id);});
+      reglaEnPartido.forEach(function(r){badgeItems.push({txt:r.codigo,ok:null});});
+      if(lrDatC&&!reglaEnPartido.find(r=>r.codigo==="LR"))badgeItems.push({txt:"LR",ok:null});
+    }
+    const badgeHtml=badgeItems.map(function(b){
+      const bg=b.ok===true?"rgba(29,158,117,.18)":b.ok===false?"rgba(239,68,68,.12)":"var(--off)";
+      const col=b.ok===true?"#085041":b.ok===false?"#a32d2d":"var(--txt2)";
+      return`<span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;background:${bg};color:${col}">${b.txt}</span>`;
+    }).join("");
+    // Barra de acento
+    const accentCol=calculado?(acerto?"linear-gradient(90deg,#185fa5,#1d9e75)":"linear-gradient(90deg,#a32d2d,#e24b4a)"):"#185fa5";
+    // Círculo pronóstico
+    const circleCol=calculado?(acerto?"#1d9e75":"#a32d2d"):"#185fa5";
+    // Texto estado
+    const statusTxt=calculado?(acerto?"Acertaste "+({L:"Local",E:"Empate",V:"Visitante"}[sel]||sel):"Erraste — apostaste "+({L:"Local",E:"Empate",V:"Visitante"}[sel]||sel)):(sel?"Apostaste "+({L:"Local",E:"Empate",V:"Visitante"}[sel]||sel):"Sin pronóstico");
+    // Fondo barra central
+    const barBg=calculado?(acerto?"#eaf3de":sel?"#fcebeb":"var(--off)"):"var(--off)";
+    const barTxtCol=calculado?(acerto?"#27500a":sel?"#791f1f":"var(--txt)"):"var(--txt)";
+    // Tipo badge
+    const tipoBadge=p.tipo==="Polla"?`<span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;background:#faeeda;color:#633806">⭐ POLLA</span>`:p.tipo==="Doble"?`<span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;background:#eeedfe;color:#3c3489">×2 DOBLE</span>`:`<span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;background:var(--off);color:var(--txt3)">Normal</span>`;
+    // Total pts
+    const lrPtsC=lrDatC?(acerto?lrDatC.mult:0):0;
+    const totPts=calculado?((prd.ptsGrilla||0)+(prd.esToleTole&&prd.ptsToleTole>0?prd.ptsToleTole:0)+lrPtsC+(prd.reglas||[]).filter(r=>r.codigo!=="LR"&&r.codigo!=="DIEGO").reduce((s,r)=>s+(r.puntos||0),0)):0;
+    let totalHtml="";
+    if(totPts>0)totalHtml=`<span style="font-size:18px;font-weight:500;color:#1d9e75">+${totPts}pts</span>`;
+    else if(calculado&&!acerto)totalHtml=`<span style="font-size:18px;font-weight:500;color:#a32d2d">0pts</span>`;
+    else totalHtml=`<span style="font-size:16px;font-weight:500;color:var(--txt3)">—</span>`;
+    // Botones LEV
+    const levHtml=!bloq?`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:12px">
+      ${["L","E","V"].map(v=>{const label=v==="L"?"Local":v==="E"?"Empate":"Visitante";const isSel=sel===v;const selBg=calculado?(acerto&&isSel?"#e6f1fb":!acerto&&isSel?"#fcebeb":"var(--off)"):(isSel?"#e6f1fb":"var(--off)");const selBorder=calculado?(!acerto&&isSel?"#e24b4a":isSel?"#378add":"var(--bdr-l)"):(isSel?"#378add":"var(--bdr-l)");const selColor=calculado?(!acerto&&isSel?"#a32d2d":isSel?"#185fa5":"var(--txt3)"):(isSel?"#185fa5":"var(--txt3)");return`<div style="padding:10px 6px;border-radius:8px;border:0.5px solid ${selBorder};text-align:center;cursor:pointer;background:${selBg}" onclick="pronosticar('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')"><div style="font-size:22px;font-weight:500;color:${selColor}">${v}</div><div style="font-size:10px;color:var(--txt3);margin-top:1px">${label}</div></div>`;}).join("")}
+    </div>`:(calculado?"":`<div style="text-align:center;padding:8px;font-size:12px;color:var(--txt3)">Sin pronóstico aún</div>`);
+    const escL=p.localLogo?`<img src="${p.localLogo}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.display='none'">`:p.local?p.local[0].toUpperCase():"L";
+    const escV=p.visitaLogo?`<img src="${p.visitaLogo}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.display='none'">`:p.visita?p.visita[0].toUpperCase():"V";
+
+    return`<div id="pc-${p.id}" style="background:var(--white);border-radius:var(--r);border:0.5px solid var(--bdr-l);overflow:hidden;margin-bottom:10px">
+      <div style="height:4px;background:${accentCol}"></div>
+      <div style="padding:14px 16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;font-weight:500;color:var(--txt3)">#${p.numero}</span>
+            ${tipoBadge}
+            ${p.estado==="En Vivo"?`<span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;background:#fcebeb;color:#a32d2d">● VIVO</span>`:""}
+          </div>
+          ${totPts>0||calculado?totalHtml:""}
         </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px;flex:1">
+            <div style="width:34px;height:34px;border-radius:6px;background:var(--off);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${escL}</div>
+            <span style="font-size:14px;font-weight:500">${p.local}</span>
+          </div>
+          <div style="text-align:center;min-width:70px">
+            ${sinGoles?`<div style="font-size:13px;color:var(--txt3);font-weight:500">${p.fechaHora?new Date(p.fechaHora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Argentina/Buenos_Aires"}):"vs"}</div>`:`<div style="display:flex;align-items:center;gap:4px;justify-content:center"><span style="font-size:28px;font-weight:500;letter-spacing:3px">${p.golesLocal}—${p.golesVisita}</span></div>${rojas>0?`<div style="display:flex;justify-content:center;gap:2px;margin-top:3px">${rojaHtml}</div>`:""}`}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex:1;flex-direction:row-reverse">
+            <div style="width:34px;height:34px;border-radius:6px;background:var(--off);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${escV}</div>
+            <span style="font-size:14px;font-weight:500;text-align:right">${p.visita}</span>
+          </div>
+        </div>
+        ${sel||calculado?`<div style="background:${barBg};border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:34px;height:34px;border-radius:50%;background:${circleCol};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;color:#fff;flex-shrink:0">${sel||"?"}</div>
+            <div>
+              <div style="font-size:12px;font-weight:500;color:${barTxtCol}">${statusTxt}</div>
+              <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">${badgeHtml}</div>
+            </div>
+          </div>
+        </div>`:""}
+        ${levHtml}
       </div>
-      <div class="teams-block">
-        <div class="team-box">
-          <div class="team-escudo">${p.localLogo?escL:li}</div>
-          <div class="team-name-big">${p.local}</div>
-        </div>
-        <div class="vs-center">
-          ${(()=>{
-            const prd=window._pr[p.id]||{};
-            // Sin resultado aún
-            if(sinGoles){
-              return sel?`<div class="prono-box ${sel}">${sel}</div><div class="prono-lbl">tu pronóstico</div>`:`<div class="vs-txt">VS</div>`;
-            }
-            // Con resultado — score + pronóstico + tarjetas + badges
-            const rojas=p.tarjetasRojas||0;
-            const acerto=prd.acertado;
-            const pronoCls=acerto?"bg":prd.calculado?"bred":"";
-            const rojaHtml=rojas>0?Array.from({length:rojas}).map(function(){return'<span style="display:inline-block;width:14px;height:18px;background:#ef4444;border-radius:2px;margin:0 1px;vertical-align:middle"></span>';}).join(""):"";
-            const badges=[];
-            if(prd.calculado){
-              if(acerto&&prd.esToleTole&&prd.ptsToleTole>0)badges.push(`<span class="bdg bpur" style="font-size:10px;padding:2px 7px">+${prd.ptsToleTole} TOLE</span>`);
-              // LR: badge en el partido elegido y los 2 siguientes si acertaron
-              const lrInfo=_getLRInfo();
-              const lrDat=lrInfo[p.id];
-              if(lrDat){
-                const lrPts=acerto?lrDat.mult:0;
-                if(lrPts>0)badges.push(`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">+${lrPts} LR×${lrDat.mult}</span>`);
-                else if(prd.calculado)badges.push(`<span class="bdg bgr" style="font-size:10px;padding:2px 7px">0 LR×${lrDat.mult}</span>`);
-              }
-              // Otras reglas (excluir LR que ya está arriba)
-              (prd.reglas||[]).forEach(function(r){
-                if(r.codigo==="LR")return;
-                if(r.codigo==="DIEGO")return; // DIEGO se muestra al final
-                if(r.puntos>0)badges.push(`<span class="bdg bgold" style="font-size:10px;padding:2px 7px">+${r.puntos} ${r.codigo}</span>`);
-                else if(prd.calculado)badges.push(`<span class="bdg bgr" style="font-size:10px;padding:2px 7px">0 ${r.codigo}</span>`);
-              });
-            }
-            return`<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-              <div style="display:flex;align-items:center;gap:6px">
-                <div class="score-vivo">${p.golesLocal}-${p.golesVisita}</div>
-                ${rojaHtml}
-              </div>
-              ${sel?`<div style="font-family:var(--ff);font-size:28px;font-weight:900;padding:2px 10px;border-radius:10px;background:${acerto?"rgba(34,197,94,.15)":prd.calculado?"rgba(239,68,68,.12)":"rgba(0,0,0,.06)"};color:${acerto?"var(--g2)":prd.calculado?"var(--red)":"var(--txt)"};display:flex;align-items:center;gap:6px">${sel}${acerto&&prd.ptsGrilla?`<span style="font-size:13px;font-weight:700">+${prd.ptsGrilla}</span>`:""}${prd.calculado&&!acerto?`<span style="font-size:13px;font-weight:700">✗</span>`:""}</div>`:""}
-              ${badges.length?`<div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center">${badges.join("")}</div>`:""}
-              ${(()=>{const lrInfoTot=_getLRInfo();const lrDatTot=lrInfoTot[p.id];const lrPtsTot=lrDatTot?(prd.acertado?lrDatTot.mult:0):0;
-              const tot=(prd.ptsGrilla||0)+(prd.esToleTole&&prd.ptsToleTole>0?prd.ptsToleTole:0)+lrPtsTot+(prd.reglas||[]).filter(function(r){return r.codigo!=="LR"&&r.codigo!=="DIEGO";}).reduce(function(s,r){return s+(r.puntos||0);},0);return prd.calculado&&tot>0?`<div style="font-family:var(--ff);font-size:13px;font-weight:800;color:var(--g2);border-top:1px solid rgba(0,200,83,.2);padding-top:3px;margin-top:2px">TOTAL +${tot}pts</div>`:"";})()}
-            </div>`;
-          })()}
-        </div>
-        <div class="team-box">
-          <div class="team-escudo">${p.visitaLogo?escV:vi}</div>
-          <div class="team-name-big">${p.visita}</div>
-        </div>
-      </div>
-      ${!bloq?`<div class="lev-wrap">${["L","E","V"].map(function(v){const label=v==="L"?"Local":v==="E"?"Empate":"Visitante";return`<button class="lev-btn ${v}${sel===v?" sel":""}" onclick="pronosticar('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')"><span class="lev-letra">${v}</span><span class="lev-sub">${label}</span></button>`;}).join("")}</div>`:!sinGoles?"":`<div class="partido-blocked">Sin pronóstico aún</div>`}
     </div>`;
+  })();
   }).join("");
 
   const jf=document.getElementById("jf");
