@@ -1238,8 +1238,9 @@ function renderPartidos(parts,ctx,puede){
       if(lrDatC&&!reglaEnPartido.find(r=>r.codigo==="LR"))badgeItems.push({txt:"LR",ok:null});
     }
     const badgeHtml=badgeItems.map(function(b){
-      const bg=b.ok===true?"rgba(29,158,117,.18)":b.ok===false?"rgba(239,68,68,.12)":"var(--off)";
-      const col=b.ok===true?"#085041":b.ok===false?"#a32d2d":"var(--txt2)";
+      // ok===true: verde, ok===false (erró/0pts): rojo suave, ok===null (pendiente): crema
+      const bg=b.ok===true?"rgba(29,158,117,.18)":b.ok===false?"rgba(239,68,68,.1)":"rgba(250,220,150,.25)";
+      const col=b.ok===true?"#085041":b.ok===false?"#a32d2d":"#854f0b";
       return`<span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;background:${bg};color:${col}">${b.txt}</span>`;
     }).join("");
     // Barra de acento
