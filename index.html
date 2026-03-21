@@ -1267,7 +1267,9 @@ function renderPartidos(parts,ctx,puede){
     const escL=p.localLogo?`<img src="${p.localLogo}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.display='none'">`:p.local?p.local[0].toUpperCase():"L";
     const escV=p.visitaLogo?`<img src="${p.visitaLogo}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.display='none'">`:p.visita?p.visita[0].toUpperCase():"V";
 
-    return`<div id="pc-${p.id}" style="background:var(--white);border-radius:var(--r);border:0.5px solid var(--bdr-l);overflow:hidden;margin-bottom:10px">
+    const cardBg=calculado?(acerto?"rgba(234,243,222,.3)":"rgba(252,235,235,.25)"):"var(--white)";
+    const cardBorder=calculado?(acerto?"rgba(99,153,34,.25)":"rgba(163,45,45,.2)"):"var(--bdr-l)";
+    return`<div id="pc-${p.id}" style="background:${cardBg};border-radius:var(--r);border:0.5px solid ${cardBorder};overflow:hidden;margin-bottom:10px">
       <div style="height:4px;background:${accentCol}"></div>
       <div style="padding:14px 16px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -1283,14 +1285,16 @@ function renderPartidos(parts,ctx,puede){
             <div style="width:32px;height:32px;border-radius:6px;background:var(--off);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${escL}</div>
             <span style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.local}</span>
           </div>
-          <div style="text-align:center;flex-shrink:0">
+          <div style="text-align:center;flex-shrink:0;min-width:80px">
             ${sinGoles
               ?`<div style="font-size:13px;color:var(--txt3);font-weight:500;padding:0 8px">${p.fechaHora?new Date(p.fechaHora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Argentina/Buenos_Aires"}):"vs"}</div>`
-              :`<div style="display:flex;align-items:center;gap:4px;justify-content:center">
-                  <span style="font-size:26px;font-weight:500">${p.golesLocal}</span>
-                  <span style="font-size:14px;color:var(--txt3);margin:0 2px">—</span>
-                  <span style="font-size:26px;font-weight:500">${p.golesVisita}</span>
-                  ${rojas>0?`<span style="margin-left:4px;display:flex;gap:2px;align-items:center">${rojaHtml}</span>`:""}
+              :`<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <span style="font-size:28px;font-weight:500">${p.golesLocal}</span>
+                    <span style="font-size:13px;color:var(--txt3)">—</span>
+                    <span style="font-size:28px;font-weight:500">${p.golesVisita}</span>
+                  </div>
+                  ${rojas>0?`<div style="display:flex;gap:3px;align-items:center">${rojaHtml}</div>`:""}
                </div>`}
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex:1;flex-direction:row-reverse;min-width:0">
@@ -1765,11 +1769,11 @@ async function loadRes(ctx){
         <td style="padding:8px 6px;color:var(--txt3)">${p.numero}${p.tipo==="Polla"?" ⭐":p.tipo==="Doble"?" ×2":""}</td>
         <td style="padding:8px 6px">
           <div style="display:flex;align-items:center;gap:6px">
-            ${logoHtml(p.localLogo,p.local)}
+            <img src="${p.localLogo}" style="width:20px;height:20px;object-fit:contain" onerror="this.style.display='none'">
             <span style="font-weight:500">${p.local}</span>
             <span style="color:var(--txt3);font-size:11px">vs</span>
             <span style="font-weight:500">${p.visita}</span>
-            ${logoHtml(p.visitaLogo,p.visita)}
+            <img src="${p.visitaLogo}" style="width:20px;height:20px;object-fit:contain" onerror="this.style.display='none'">
           </div>
         </td>
         <td style="padding:8px 6px;text-align:center">
