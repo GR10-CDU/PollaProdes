@@ -1276,29 +1276,37 @@ function renderPartidos(parts,ctx,puede){
             ${tipoBadge}
             ${p.estado==="En Vivo"?`<span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;background:#fcebeb;color:#a32d2d">● VIVO</span>`:""}
           </div>
-          ${totPts>0||calculado?totalHtml:""}
+
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px">
-          <div style="display:flex;align-items:center;gap:8px;flex:1">
-            <div style="width:34px;height:34px;border-radius:6px;background:var(--off);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${escL}</div>
-            <span style="font-size:14px;font-weight:500">${p.local}</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+            <div style="width:32px;height:32px;border-radius:6px;background:var(--off);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${escL}</div>
+            <span style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.local}</span>
           </div>
-          <div style="text-align:center;min-width:70px">
-            ${sinGoles?`<div style="font-size:13px;color:var(--txt3);font-weight:500">${p.fechaHora?new Date(p.fechaHora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Argentina/Buenos_Aires"}):"vs"}</div>`:`<div style="display:flex;align-items:center;gap:4px;justify-content:center"><span style="font-size:28px;font-weight:500;letter-spacing:3px">${p.golesLocal}—${p.golesVisita}</span></div>${rojas>0?`<div style="display:flex;justify-content:center;gap:2px;margin-top:3px">${rojaHtml}</div>`:""}`}
+          <div style="text-align:center;flex-shrink:0">
+            ${sinGoles
+              ?`<div style="font-size:13px;color:var(--txt3);font-weight:500;padding:0 8px">${p.fechaHora?new Date(p.fechaHora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Argentina/Buenos_Aires"}):"vs"}</div>`
+              :`<div style="display:flex;align-items:center;gap:4px;justify-content:center">
+                  <span style="font-size:26px;font-weight:500">${p.golesLocal}</span>
+                  <span style="font-size:14px;color:var(--txt3);margin:0 2px">—</span>
+                  <span style="font-size:26px;font-weight:500">${p.golesVisita}</span>
+                  ${rojas>0?`<span style="margin-left:4px;display:flex;gap:2px;align-items:center">${rojaHtml}</span>`:""}
+               </div>`}
           </div>
-          <div style="display:flex;align-items:center;gap:8px;flex:1;flex-direction:row-reverse">
-            <div style="width:34px;height:34px;border-radius:6px;background:var(--off);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${escV}</div>
-            <span style="font-size:14px;font-weight:500;text-align:right">${p.visita}</span>
+          <div style="display:flex;align-items:center;gap:8px;flex:1;flex-direction:row-reverse;min-width:0">
+            <div style="width:32px;height:32px;border-radius:6px;background:var(--off);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${escV}</div>
+            <span style="font-size:14px;font-weight:500;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.visita}</span>
           </div>
         </div>
         ${sel||calculado?`<div style="background:${barBg};border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
-          <div style="display:flex;align-items:center;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
             <div style="width:34px;height:34px;border-radius:50%;background:${circleCol};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;color:#fff;flex-shrink:0">${sel||"?"}</div>
-            <div>
+            <div style="min-width:0">
               <div style="font-size:12px;font-weight:500;color:${barTxtCol}">${statusTxt}</div>
               <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">${badgeHtml}</div>
             </div>
           </div>
+          ${calculado?`<div style="flex-shrink:0">${totalHtml}</div>`:""}
         </div>`:""}
         ${levHtml}
       </div>
@@ -1732,19 +1740,105 @@ async function loadRes(ctx){
   const sf=ctx?.fechaId||fs[0]?.id;
   if(!sf){el.innerHTML=emptyBox("📅","Sin fechas");return;}
   const rp=await api("getFecha",{fechaId:sf});if(!rp.ok){el.innerHTML=errBox(rp.error);return;}
-  el.innerHTML=`<div class="ig" style="margin-bottom:16px"><label class="lbl">Fecha</label>
-    <select class="inp" onchange="loadRes({fechaId:this.value})">${fs.map(f=>`<option value="${f.id}"${f.id===sf?" selected":""}>${f.nombre}</option>`).join("")}</select></div>
-    ${rp.partidos.map(p=>{const done=p.estado==="Finalizado";return`<div class="res-card${p.tipo==="Polla"?" polla":p.tipo==="Doble"?" doble":""}">
-      <div class="res-inner"><div class="res-info"><div class="res-meta">#${p.numero} · ${p.tipo}${p.tipo==="Polla"?" ⭐":p.tipo==="Doble"?" ×2":""}</div><div class="res-teams" style="display:flex;align-items:center;gap:5px">${logoHtml(p.localLogo,p.local)} <span style="color:var(--txt3);font-size:11px">vs</span> ${logoHtml(p.visitaLogo,p.visita)}</div></div>
-      <div class="res-inputs">
-        <input class="score-inp" id="gL-${p.id}" type="number" min="0" max="20" value="${p.golesLocal??""}" placeholder="—"/>
-        <span class="score-sep">-</span>
-        <input class="score-inp" id="gV-${p.id}" type="number" min="0" max="20" value="${p.golesVisita??""}" placeholder="—"/>
-        <input class="rojas-inp" id="tr-${p.id}" type="number" min="0" max="10" value="${p.tarjetasRojas||0}" title="Rojas"/>
-        <button class="${done?"btn-gres done":"btn-gres"}" onclick="guardarRes('${p.id}','${sf}')">${done?"✓":"▶"}</button>
-      </div></div></div>`;}).join("")}`;
+  el.innerHTML=`<div style="margin-bottom:14px">
+    <label class="lbl">Fecha</label>
+    <select class="inp" onchange="loadRes({fechaId:this.value})">${fs.map(f=>`<option value="${f.id}"${f.id===sf?" selected":""}>${f.nombre}</option>`).join("")}</select>
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+    <button class="btn btn-p" onclick="guardarTodosRes('${sf}')" style="display:flex;align-items:center;gap:6px;padding:8px 16px">
+      ▶▶ Guardar todos
+    </button>
+  </div>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="border-bottom:2px solid var(--bdr-l)">
+      <th style="text-align:left;padding:8px 6px;color:var(--txt3);font-weight:500">#</th>
+      <th style="text-align:left;padding:8px 6px;color:var(--txt3);font-weight:500">Partido</th>
+      <th style="text-align:center;padding:8px 6px;color:var(--txt3);font-weight:500">Local</th>
+      <th style="text-align:center;padding:8px 6px;color:var(--txt3);font-weight:500">Visita</th>
+      <th style="text-align:center;padding:8px 6px;color:var(--txt3);font-weight:500">🟥</th>
+      <th style="padding:8px 6px"></th>
+    </tr></thead>
+    <tbody>${rp.partidos.map(p=>{
+      const done=p.estado==="Finalizado";
+      const rowBg=done?"background:rgba(0,200,83,.04)":"";
+      return`<tr data-pid="${p.id}" style="border-bottom:0.5px solid var(--bdr-l);${rowBg}">
+        <td style="padding:8px 6px;color:var(--txt3)">${p.numero}${p.tipo==="Polla"?" ⭐":p.tipo==="Doble"?" ×2":""}</td>
+        <td style="padding:8px 6px">
+          <div style="display:flex;align-items:center;gap:6px">
+            ${logoHtml(p.localLogo,p.local)}
+            <span style="font-weight:500">${p.local}</span>
+            <span style="color:var(--txt3);font-size:11px">vs</span>
+            <span style="font-weight:500">${p.visita}</span>
+            ${logoHtml(p.visitaLogo,p.visita)}
+          </div>
+        </td>
+        <td style="padding:8px 6px;text-align:center">
+          <input class="score-inp" id="gL-${p.id}" type="number" min="0" max="20" value="${p.golesLocal??""}" placeholder="—" style="width:52px;text-align:center"/>
+        </td>
+        <td style="padding:8px 6px;text-align:center">
+          <input class="score-inp" id="gV-${p.id}" type="number" min="0" max="20" value="${p.golesVisita??""}" placeholder="—" style="width:52px;text-align:center"/>
+        </td>
+        <td style="padding:8px 6px;text-align:center">
+          <input class="rojas-inp" id="tr-${p.id}" type="number" min="0" max="10" value="${p.tarjetasRojas||0}" style="width:44px;text-align:center"/>
+        </td>
+        <td style="padding:8px 6px;text-align:center">
+          <button class="${done?"btn-gres done":"btn-gres"}" onclick="guardarRes('${p.id}','${sf}')" title="Guardar resultado">${done?"✓":"▶"}</button>
+        </td>
+      </tr>`;
+    }).join("")}</tbody>
+  </table>`;
 }
-window.guardarRes=async(pid,fid)=>{const gL=document.getElementById("gL-"+pid)?.value,gV=document.getElementById("gV-"+pid)?.value,tr=document.getElementById("tr-"+pid)?.value;if(gL===""||gV===""){toast("Ingresá ambos goles");return;}showLoader("Calculando puntajes...");const r=await api("adminIngresarResultado",{partidoId:pid,fechaId:fid,golesLocal:+gL,golesVisita:+gV,tarjetasRojas:+tr||0});hideLoader();toast(r.ok?`✅ ${r.resultado||""} guardado`:"❌ "+r.error);};
+window.guardarTodosRes=async(fid)=>{
+  // Recolectar todos los partidos con datos cargados
+  const rows=document.querySelectorAll("tr[data-pid]");
+  const pendientes=[];
+  rows.forEach(function(row){
+    const pid=row.dataset.pid;
+    const gL=document.getElementById("gL-"+pid)?.value;
+    const gV=document.getElementById("gV-"+pid)?.value;
+    const tr=document.getElementById("tr-"+pid)?.value;
+    const btn=row.querySelector(".btn-gres");
+    if(gL!==""&&gV!==""&&btn&&btn.textContent!=="✓"){
+      pendientes.push({pid,gL:+gL,gV:+gV,tr:+(tr||0)});
+    }
+  });
+  if(!pendientes.length){toast("No hay resultados nuevos para guardar");return;}
+  showLoader("Guardando "+pendientes.length+" resultados...");
+  let ok=0,err=0;
+  for(const p of pendientes){
+    const r=await api("adminIngresarResultado",{partidoId:p.pid,fechaId:fid,golesLocal:p.gL,golesVisita:p.gV,tarjetasRojas:p.tr});
+    if(r.ok){
+      ok++;
+      const btn=document.querySelector(`button[onclick="guardarRes('${p.pid}','${fid}')"]`);
+      if(btn){btn.textContent="✓";btn.className="btn-gres done";}
+      const row=document.querySelector(`tr[data-pid="${p.pid}"]`);
+      if(row)row.style.background="rgba(0,200,83,.04)";
+    } else { err++; }
+  }
+  hideLoader();
+  toast(ok>0?"✅ "+ok+" resultados guardados"+(err>0?" ("+err+" errores)":""):"❌ Error al guardar");
+};
+
+window.guardarRes=async(pid,fid)=>{
+  const gL=document.getElementById("gL-"+pid)?.value;
+  const gV=document.getElementById("gV-"+pid)?.value;
+  const tr=document.getElementById("tr-"+pid)?.value;
+  if(gL===""||gV===""){toast("Ingresá ambos goles");return;}
+  showLoader("Calculando puntajes...");
+  const r=await api("adminIngresarResultado",{partidoId:pid,fechaId:fid,golesLocal:+gL,golesVisita:+gV,tarjetasRojas:+tr||0});
+  hideLoader();
+  if(r.ok){
+    // Marcar fila como guardada visualmente
+    const btn=document.querySelector(`button[onclick="guardarRes('${pid}','${fid}')"]`);
+    if(btn){btn.textContent="✓";btn.className="btn-gres done";}
+    const row=btn?.closest("tr");
+    if(row)row.style.background="rgba(0,200,83,.04)";
+    toast("✅ "+({L:"Local",E:"Empate",V:"Visitante"}[r.resultado]||r.resultado)+" guardado");
+  } else {
+    toast("❌ "+r.error);
+  }
+};
+
 
 /* ══ ADMIN USUARIOS ══════════════════════════════════════════ */
 async function loadUsers(){
