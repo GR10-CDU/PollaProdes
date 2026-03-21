@@ -638,16 +638,82 @@ input:focus,select:focus{outline:none}
 
 <script>
 const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxJCewWO7hdi4L9LNgMLFS7JgorXXIppgB7hOuSxdJfolje8jrOmCkcwC1GSj53BmK2/exec";
+// ── Caché global del frontend ──
+const _cache = {};
+function _cacheGet(key, ttlMs=30000) {
+  const e = _cache[key];
+  return (e && Date.now()-e.ts < ttlMs) ? e.data : null;
+}
+function _cacheSet(key, data) { _cache[key]={data,ts:Date.now()}; return data; }
+function _cacheInvalidate(key) { delete _cache[key]; }
+
 const API_SECRET="PP2026-xK9mQ7vL2nR4wT8yU3pA5cE1hG6jF0bD";
 const SK="pp_tok",UK="pp_usr";
 const App={user:null,token:null,screen:null,ctx:{}};
 
+// ── Popup de loading para acciones importantes ──
+function showPopupLoading(msg){
+  let el=document.getElementById("popup-loading");
+  if(!el){el=document.createElement("div");el.id="popup-loading";el.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px)";document.body.appendChild(el);}
+  el.innerHTML=`<div style="background:var(--white);border-radius:16px;padding:28px 32px;text-align:center;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,.2)"><div class="spinner" style="margin:0 auto 14px;width:32px;height:32px;border-width:3px"></div><div style="font-size:14px;font-weight:600;color:var(--txt)">${msg||"Procesando..."}</div></div>`;
+  el.style.display="flex";
+}
+function hidePopupLoading(){const el=document.getElementById("popup-loading");if(el)el.style.display="none";}
+
 function showLoader(txt){const el=document.getElementById("page-loader");if(el){el.classList.add("show");const t=document.getElementById("page-loader-txt");if(t)t.textContent=txt||"Cargando...";}}
 function hideLoader(){const el=document.getElementById("page-loader");if(el)el.classList.remove("show");}
+function showActionPopup(msg,sub){
+  let p=document.getElementById("action-popup");
+  if(!p){p=document.createElement("div");p.id="action-popup";
+    p.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)";
+    document.body.appendChild(p);}
+  p.innerHTML=`<div style="background:var(--white);border-radius:20px;padding:36px 40px;text-align:center;min-width:240px;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+    <div class="spinner" style="margin:0 auto 16px;width:40px;height:40px;border-width:3px"></div>
+    <div style="font-family:var(--ff);font-size:20px;font-weight:900;margin-bottom:4px">${msg||"Procesando..."}</div>
+    ${sub?`<div style="font-size:13px;color:var(--txt3);margin-top:4px">${sub}</div>`:""}
+  </div>`;
+  p.style.display="flex";}
+function hideActionPopup(){const p=document.getElementById("action-popup");if(p)p.style.display="none";}
 
 async function api(action,p={}){
-  const MSGS={jugarFecha:"Guardando fecha...",autoguardar:"Guardando pronósticos...",guardarReglas:"Guardando reglas...",getMiFecha:"Cargando pronósticos...",getFecha:"Cargando fecha...",getFechas:"Cargando fechas...",getTabla:"Cargando tabla...",adminCrearFecha:"Creando fecha...",adminEditarFecha:"Guardando cambios...",adminCerrarFecha:"Cerrando fecha...",adminCerrarYCalcular:"Calculando puntajes...",adminCrearPozo:"Creando pozo...",importarPartidos:"Importando...",buscarPartidos:"Buscando partidos...",buscarPorRonda:"Buscando partidos...",getRondas:"Cargando rondas...",inscribirse:"Inscribiendo..."};
-  if(MSGS[action])showLoader(MSGS[action]);
+  const MSGS={
+    jugarFecha:"Guardando fecha...",
+    autoguardar:"Guardando pronósticos...",
+    guardarReglas:"Guardando reglas...",
+    guardarRegla:"Guardando regla...",
+    getMiFecha:"Cargando pronósticos...",
+    getFecha:"Cargando fecha...",
+    getFechas:"Cargando fechas...",
+    getTabla:"Cargando tabla...",
+    getGrilla:"Cargando grilla...",
+    adminCrearFecha:"Creando fecha...",
+    adminEditarFecha:"Guardando cambios...",
+    adminCerrarFecha:"Cerrando fecha...",
+    adminCerrarYCalcular:"Calculando puntajes...",
+    adminIngresarResultado:"Calculando puntajes...",
+    adminCrearPozo:"Creando pozo...",
+    adminAgregarPartido:"Agregando partido...",
+    adminEditarPartido:"Guardando partido...",
+    adminEliminarPartido:"Eliminando...",
+    importarPartidos:"Importando partidos...",
+    buscarPartidos:"Buscando partidos...",
+    buscarPorRonda:"Buscando partidos...",
+    getRondas:"Cargando rondas...",
+    inscribirse:"Inscribiendo...",
+    crearPreferencia:"Conectando con MercadoPago...",
+    loginConToken:"Verificando sesión...",
+    login:"Iniciando sesión...",
+    registro:"Creando cuenta...",
+    getMisInscripciones:"Cargando tus fechas...",
+    getPozos:"Cargando pozos...",
+    agregarNoticia:"Guardando noticia...",
+    eliminarNoticia:"Eliminando noticia...",
+  };
+  const accionesLentas=["adminIngresarResultado","adminCerrarYCalcular","importarPartidos","jugarFecha","autoguardar","guardarReglas"];
+  if(MSGS[action]){
+    if(accionesLentas.includes(action)){showActionPopup(MSGS[action]);}
+    else{showLoader(MSGS[action]);}
+  }
   try{
     const body=JSON.stringify({action,apiSecret:API_SECRET,sessionToken:App.token,...p});
     let r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body,redirect:"follow"});
@@ -656,7 +722,7 @@ async function api(action,p={}){
     const j=await r.json();return j;
   }
   catch(e){return{ok:false,error:"Sin conexión: "+e.message};}
-  finally{hideLoader();}
+  finally{hideLoader();hideActionPopup();}
 }
 function saveSession(u,t){App.user=u;App.token=t;localStorage.setItem(SK,t);localStorage.setItem(UK,JSON.stringify(u));}
 function loadSession(){const t=localStorage.getItem(SK),u=localStorage.getItem(UK);if(t&&u){App.token=t;App.user=JSON.parse(u);return true;}return false;}
@@ -748,7 +814,10 @@ function afterRender(k,ctx){
 
 /* ══ FECHAS ══════════════════════════════════════════════════ */
 async function loadFechas(){
-  const r=await api("getFechas"),el=document.getElementById("fl");if(!el)return;
+  const el=document.getElementById("fl");if(!el)return;
+  el.innerHTML=`<div class="loading"><div class="spinner"></div></div>`;
+  let r=_cacheGet("getFechas",60000);
+  if(!r){r=await api("getFechas");if(r.ok)_cacheSet("getFechas",r);}
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
   if(!r.fechas?.length){el.innerHTML=emptyBox("📅","No hay fechas disponibles");return;}
   const ICONS={"Liga Argentina":"🇦🇷","Premier League":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","La Liga":"🇪🇸","Serie A":"🇮🇹","Champions League":"🏆","Copa Libertadores":"🌎","Ligue 1":"🇫🇷"};
@@ -947,7 +1016,7 @@ async function loadPozos(fid){
 window.selPozo=id=>{window._selPozo=id;document.querySelectorAll(".pozo-card").forEach(c=>c.classList.remove("sel"));const e=document.getElementById("poz-"+id);if(e)e.classList.add("sel");const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=`<button class="btn btn-p btn-lg" onclick="inscribirse()">Pagar e inscribirse →</button>`;}};
 window.toggleGrupo=()=>{const e=document.getElementById("gform");if(e)e.style.display=e.style.display==="none"?"block":"none";};
 window.buscarGrupo=async()=>{const c=document.getElementById("gcod")?.value;if(!c||c.length<4){toast("Ingresá el código");return;}const r=await api("getGrupoPorCodigo",{codigo:c}),el=document.getElementById("gres");if(!el)return;if(!r.ok){el.innerHTML=`<div class="err-box" style="margin-top:8px">${r.error}</div>`;return;}el.innerHTML=`<div class="card" style="margin-top:10px"><p style="font-size:15px;font-weight:600">${r.grupo.nombre}</p><button class="btn btn-p" style="margin-top:10px;width:100%" onclick="selPozo('${r.grupo.pozoId}');inscribirse()">Unirse — $${(r.pozo?.monto||0).toLocaleString("es-AR")}</button></div>`;};
-window.inscribirse=async()=>{if(!window._selPozo){toast("Seleccioná un pozo");return;}const r=await api("inscribirse",{fechaId:window._fid,pozoId:window._selPozo});if(!r.ok){toast("❌ "+r.error);return;}console.log("inscribirse ok, inscripcionId:",r.inscripcionId,"habilitado:",r.habilitado);if(r.habilitado){toast("✅ ¡Habilitado!");setTimeout(()=>go("jugar",{fechaId:window._fid,pozoId:window._selPozo}),800);}else{console.log("llamando crearPreferencia con:",r.inscripcionId);const mp=await api("crearPreferencia",{inscripcionId:r.inscripcionId});console.log("crearPreferencia resp:",JSON.stringify(mp));if(mp.ok&&(mp.initPoint||mp.sandboxUrl))window.location.href=mp.initPoint||mp.sandboxUrl;else toast("💡 "+(mp.error||"Error MP"));}};
+window.inscribirse=async()=>{if(!window._selPozo){toast("Seleccioná un pozo");return;}showLoader("Inscribiendo...");const r=await api("inscribirse",{fechaId:window._fid,pozoId:window._selPozo});if(!r.ok){toast("❌ "+r.error);return;}console.log("inscribirse ok, inscripcionId:",r.inscripcionId,"habilitado:",r.habilitado);hideLoader();if(r.habilitado){toast("✅ ¡Habilitado!");setTimeout(()=>go("jugar",{fechaId:window._fid,pozoId:window._selPozo}),800);}else{console.log("llamando crearPreferencia con:",r.inscripcionId);const mp=await api("crearPreferencia",{inscripcionId:r.inscripcionId});console.log("crearPreferencia resp:",JSON.stringify(mp));if(mp.ok&&(mp.initPoint||mp.sandboxUrl))window.location.href=mp.initPoint||mp.sandboxUrl;else toast("💡 "+(mp.error||"Error MP"));}};
 
 
 // ── Catálogo de reglas (sin NPF) ──
@@ -964,10 +1033,19 @@ const TODAS_LAS_REGLAS=[
 window._reglasSelAdmin=new Set();
 
 /* ══ SIDEBAR DERECHO ════════════════════════════════════════ */
-async function loadSidebarRight(){loadSRFechas();loadSRNoticias();loadSRHoF();}
+// Caché del sidebar — evitar recargas innecesarias
+let _sidebarLastLoad=0;
+async function loadSidebarRight(){
+  const ahora=Date.now();
+  // Solo recargar si pasaron más de 60 segundos
+  if(ahora-_sidebarLastLoad<60000&&_sidebarLastLoad>0)return;
+  _sidebarLastLoad=ahora;
+  // Parallelizar todas las cargas del sidebar
+  Promise.all([loadSRFechas(),loadSRNoticias(),loadSRHoF()]);
+}
 async function loadSRFechas(){
   const el=document.getElementById("sr-fechas-list");if(!el)return;
-  const r=await api("getFechas");
+  let r=_cacheGet("getFechas",60000);if(!r){r=await api("getFechas");if(r.ok)_cacheSet("getFechas",r);}
   if(!r.ok||!r.fechas?.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">Sin fechas abiertas</div>`;return;}
   const abiertas=r.fechas.filter(function(f){return f.estado==="Abierta";});
   if(!abiertas.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">Sin fechas abiertas</div>`;return;}
@@ -995,7 +1073,12 @@ window._pr={};window._re=[];window._ctx={};window._parts=[];window._reglasDisp=[
 
 async function loadJugar(ctx){
   const jel=document.getElementById("jc");
-  const rf=await api("getFecha",{fechaId:ctx.fechaId});
+  if(jel)jel.innerHTML=`<div class="loading"><div class="spinner"></div></div>`;
+  // Parallelizar getFecha + getMiFecha — ahorra ~2-3 segundos
+  const [rf,rm]=await Promise.all([
+    api("getFecha",{fechaId:ctx.fechaId}),
+    api("getMiFecha",{fechaId:ctx.fechaId,pozoId:ctx.pozoId})
+  ]);
   if(!rf.ok){if(jel)jel.innerHTML=errBox(rf.error);return;}
   window._ctx=ctx;window._parts=rf.partidos||[];window._pr={};window._reglasDisp=[];window._cambiosFecha=3;
   (rf.fecha.reglasDetalle||[]).forEach(function(r){
@@ -1004,45 +1087,39 @@ async function loadJugar(ctx){
   });
   if(!window._parts.length){if(jel)jel.innerHTML=emptyBox("&#9917;","Sin partidos en esta fecha");return;}
   const puede=rf.fecha.estado==="Abierta"&&rf.fecha.minutosRestantes>0;
+  if(rm&&rm.ok){
+    window._cambiosFecha=rm.cambiosRestantesFecha!==undefined?rm.cambiosRestantesFecha:3;
+    (rm.pronos||[]).forEach(function(p){
+      window._pr[p.partidoId]={
+        v:p.pronostico,cr:p.cambiosRestantes,
+        acertado:p.acertado,
+        ptsGrilla:p.ptsGrilla,ptsToleTole:p.ptsToleTole,
+        ptsReglas:p.ptsReglas,ptsTotal:p.ptsTotal,
+        esToleTole:p.esToleTole,calculado:p.calculado,
+        reglas:p.reglas||[]
+      };
+    });
+    const reglasPorCodigo={};
+    (rm.reglas||[]).forEach(function(rg){if(!reglasPorCodigo[rg.codigo])reglasPorCodigo[rg.codigo]=[];reglasPorCodigo[rg.codigo].push(rg.partidoId);});
+    window._reglasDisp.forEach(function(disp){
+      if(reglasPorCodigo[disp.codigo])disp.partidos=reglasPorCodigo[disp.codigo];
+      if(disp.codigo==="MK"){const mkReg=(rm.reglas||[]).find(function(r){return r.codigo==="MK";});if(mkReg)disp.detalleMK=mkReg.detalle||"";}
+    });
+  }
   renderPartidos(window._parts,ctx,puede);
-  // Toast loading
-  const loadDiv=document.createElement("div");
-  loadDiv.id="pronos-loading";
-  loadDiv.style.cssText="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--d2);color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.3)";
-  loadDiv.innerHTML=`<div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Cargando pronósticos...`;
-  document.body.appendChild(loadDiv);
-  try{
-    const rm=await api("getMiFecha",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
-    if(rm.ok){
-      window._cambiosFecha=rm.cambiosRestantesFecha!==undefined?rm.cambiosRestantesFecha:3;
-      (rm.pronos||[]).forEach(function(p){
-        window._pr[p.partidoId]={
-          v:p.pronostico,cr:p.cambiosRestantes,
-          acertado:p.acertado,
-          ptsGrilla:p.ptsGrilla,ptsToleTole:p.ptsToleTole,
-          ptsReglas:p.ptsReglas,ptsTotal:p.ptsTotal,
-          esToleTole:p.esToleTole,calculado:p.calculado,
-          reglas:p.reglas||[]
-        };
-      });
-      const reglasPorCodigo={};
-      (rm.reglas||[]).forEach(function(rg){if(!reglasPorCodigo[rg.codigo])reglasPorCodigo[rg.codigo]=[];reglasPorCodigo[rg.codigo].push(rg.partidoId);});
-      window._reglasDisp.forEach(function(disp){
-        if(reglasPorCodigo[disp.codigo])disp.partidos=reglasPorCodigo[disp.codigo];
-        if(disp.codigo==="MK"){const mkReg=(rm.reglas||[]).find(function(r){return r.codigo==="MK";});if(mkReg)disp.detalleMK=mkReg.detalle||"";}
-      });
-    }
-    renderPartidos(window._parts,ctx,puede);
-    renderReglasSection(puede);
-    renderResumenCambios();
-  }catch(e){renderReglasSection(puede);}
-  finally{const ld=document.getElementById("pronos-loading");if(ld)ld.remove();}
+  renderReglasSection(puede);
+  renderResumenCambios();
 }
+
 
 window.actualizarPuntajes=async function(){
   const btn=document.getElementById("btn-actualizar-pts");
   if(btn){btn.textContent="⏳ Actualizando...";btn.disabled=true;}
-  const rm=await api("getMiFecha",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId});
+  // Parallelizar las dos llamadas
+  const [rm,rf]=await Promise.all([
+    api("getMiFecha",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId}),
+    api("getFecha",{fechaId:window._ctx.fechaId})
+  ]);
   if(rm.ok){
     window._cambiosFecha=rm.cambiosRestantesFecha!==undefined?rm.cambiosRestantesFecha:3;
     (rm.pronos||[]).forEach(function(p){
@@ -1056,13 +1133,12 @@ window.actualizarPuntajes=async function(){
       window._pr[p.partidoId].calculado=p.calculado;
       window._pr[p.partidoId].reglas=p.reglas||[];
     });
-    const rf=await api("getFecha",{fechaId:window._ctx.fechaId});
-    if(rf.ok){
-      window._parts=rf.partidos||[];
-      renderPartidos(window._parts,window._ctx,false);
-      renderReglasSection(false);
-      renderResumenCambios();
-    }
+  }
+  if(rf.ok){
+    window._parts=rf.partidos||[];
+    renderPartidos(window._parts,window._ctx,false);
+    renderReglasSection(false);
+    renderResumenCambios();
   }
   if(btn){btn.textContent="🔄 Actualizar";btn.disabled=false;}
 };
@@ -1304,11 +1380,13 @@ window._guardarTodasLasReglas=async function(){
   return true;
 };
 window.guardarProgreso=async function(){
+  showPopupLoading("Guardando progreso...");
   const btn=document.getElementById("btn-jugar-area");
   if(btn)btn.innerHTML=`<button class="btn btn-s btn-lg" disabled>💾 Guardando...</button>`;
   const ps=Object.entries(window._pr).map(function(e){return{partidoId:e[0],pronostico:e[1].v};});
   if(ps.length){const r=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});if(!r.ok){toast("❌ "+r.error);renderReglasSection(true);return;}}
   await window._guardarTodasLasReglas();
+  hidePopupLoading();
   toast("✅ Progreso guardado.");
   setTimeout(function(){go("fechas");},1500);
 };
@@ -1316,6 +1394,7 @@ window.jugarFecha=async function(){
   const estado=_calcularEstado();
   if(!estado.completo){toast("⚠️ "+estado.msgs[0]);return;}
   if(!window._ctx.fechaId||!window._ctx.pozoId){toast("❌ Error: falta contexto. Volvé a entrar a la fecha.");return;}
+  showPopupLoading("Guardando tu fecha... 🏆");
   const btn=document.getElementById("btn-jugar-area");
   if(btn)btn.innerHTML=`<div style="text-align:center;padding:8px"><div class="spinner" style="margin:0 auto 8px"></div><p style="font-size:13px;color:var(--txt2)">Guardando fecha...</p></div>`;
   try{
@@ -1323,6 +1402,7 @@ window.jugarFecha=async function(){
     const rp=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});
     if(!rp.ok){toast("❌ Pronósticos: "+rp.error);renderReglasSection(true);return;}
     if(window._reglasDisp.length){const ok=await window._guardarTodasLasReglas();if(!ok){renderReglasSection(true);return;}}
+    hidePopupLoading();
     App._fechaJugada=window._ctx.fechaId;
     // Popup grande FECHA JUGADA
     const popup=document.createElement("div");
@@ -1336,7 +1416,7 @@ window.jugarFecha=async function(){
     popup.id="pp-jugada";
     document.body.appendChild(popup);
     setTimeout(function(){go("fechas");document.getElementById("pp-jugada")?.remove();},4000);
-  }catch(e){toast("❌ Error: "+e.message);renderReglasSection(true);}
+  }catch(e){hidePopupLoading();toast("❌ Error: "+e.message);renderReglasSection(true);}
 };
 window.pronosticar=async function(pid,v,fid,poid){
   const prev=window._pr[pid]?Object.assign({},window._pr[pid]):null;
@@ -1364,13 +1444,18 @@ async function loadMisFechas(){
   const fechas=rf.ok?(rf.fechas||[]):[];
 
   // Para cada inscripción, cargar cambios restantes
-  const items=await Promise.all(inscripciones.map(async function(i){
-    const f=fechas.find(function(x){return x.id===i.fechaId;})||{};
-    const rp=await api("getPozos",{fechaId:i.fechaId,userId:App.user?.id});
-    const pozo=rp.ok?rp.pozos?.find(function(p){return p.id===i.pozoId;}):null;
-    const cf=pozo?.cambiosRestantesFecha;
-    return{...i,fecha:f,cf};
+  // Parallelizar getPozos para todas las fechas únicas
+  const fechasUnicas=[...new Set(inscripciones.map(function(i){return i.fechaId;}))];
+  const pozosMap={};
+  await Promise.all(fechasUnicas.map(async function(fid){
+    const rp=await api("getPozos",{fechaId:fid,userId:App.user?.id});
+    if(rp.ok)(rp.pozos||[]).forEach(function(p){pozosMap[p.id]=p;});
   }));
+  const items=inscripciones.map(function(i){
+    const f=fechas.find(function(x){return x.id===i.fechaId;})||{};
+    const pozo=pozosMap[i.pozoId];
+    return{...i,fecha:f,cf:pozo?.cambiosRestantesFecha};
+  });
 
   el.innerHTML=`<div>
     <p class="sec" style="margin-bottom:14px">Tus fechas inscriptas</p>
@@ -1405,10 +1490,10 @@ async function loadMisFechas(){
 /* ══ TABLA ═══════════════════════════════════════════════════ */
 async function loadTabla(ctx){
   const el=document.getElementById("tc");if(!el)return;
+  el.innerHTML=`<div class="loading"><div class="spinner"></div></div>`;
   if(!ctx.fechaId||!ctx.pozoId){
     el.innerHTML=`<div class="loading"><div class="spinner"></div></div>`;
-    const rf=await api("getFechas");
-    const ri=await api("getMisInscripciones");
+    const [rf,ri]=await Promise.all([api("getFechas"),api("getMisInscripciones")]);
     const inscripciones=ri.ok?(ri.inscripciones||[]):[];
     if(!inscripciones.length){el.innerHTML=emptyBox("🏆","No estás inscripto en ninguna fecha");return;}
     const fechas=rf.ok?(rf.fechas||[]):[];
@@ -1567,7 +1652,7 @@ window.crearPozos=async function(fechaId){
   if(!montos.length){toast("Ingresá al menos un monto");return;}
   const btn=document.getElementById("btn-crear-pozo");if(btn){btn.textContent="Creando...";btn.disabled=true;}
   let creados=0;
-  for(const monto of montos){
+  showLoader("Creando pozos...");for(const monto of montos){
     const r=await api("adminCrearPozo",{fechaId,monto});
     if(r.ok)creados++;else toast("❌ Error en $"+monto.toLocaleString("es-AR")+": "+r.error);
   }
@@ -1575,7 +1660,7 @@ window.crearPozos=async function(fechaId){
   toast("✅ "+creados+" pozo"+(creados!==1?"s":"")+" creado"+(creados!==1?"s":""));
   loadAdminFechas();
 };
-window.cerrarFecha=async function(id){if(!confirm("¿Cerrar esta fecha?"))return;const r=await api("adminCerrarFecha",{fechaId:id});toast(r.ok?"✅ Cerrada":"❌ "+r.error);if(r.ok)loadAdminFechas();};
+window.cerrarFecha=async function(id){if(!confirm("¿Cerrar esta fecha?"))return;showLoader("Cerrando fecha...");const r=await api("adminCerrarFecha",{fechaId:id});hideLoader();if(r.ok)_cacheInvalidate("getFechas");toast(r.ok?"✅ Cerrada":"❌ "+r.error);if(r.ok)loadAdminFechas();};
 window.calcularFecha=async function(id){if(!confirm("¿Calcular puntajes?"))return;toast("Calculando...");const r=await api("adminCerrarYCalcular",{fechaId:id});toast(r.ok?"✅ "+r.mensaje:"❌ "+r.error);if(r.ok)loadAdminFechas();};
 
 
@@ -1629,7 +1714,7 @@ async function loadRes(ctx){
         <button class="${done?"btn-gres done":"btn-gres"}" onclick="guardarRes('${p.id}','${sf}')">${done?"✓":"▶"}</button>
       </div></div></div>`;}).join("")}`;
 }
-window.guardarRes=async(pid,fid)=>{const gL=document.getElementById("gL-"+pid)?.value,gV=document.getElementById("gV-"+pid)?.value,tr=document.getElementById("tr-"+pid)?.value;if(gL===""||gV===""){toast("Ingresá ambos goles");return;}toast("Guardando...");const r=await api("adminIngresarResultado",{partidoId:pid,fechaId:fid,golesLocal:+gL,golesVisita:+gV,tarjetasRojas:+tr||0});toast(r.ok?`✅ ${r.resultado||""} guardado`:"❌ "+r.error);};
+window.guardarRes=async(pid,fid)=>{const gL=document.getElementById("gL-"+pid)?.value,gV=document.getElementById("gV-"+pid)?.value,tr=document.getElementById("tr-"+pid)?.value;if(gL===""||gV===""){toast("Ingresá ambos goles");return;}showLoader("Calculando puntajes...");const r=await api("adminIngresarResultado",{partidoId:pid,fechaId:fid,golesLocal:+gL,golesVisita:+gV,tarjetasRojas:+tr||0});hideLoader();toast(r.ok?`✅ ${r.resultado||""} guardado`:"❌ "+r.error);};
 
 /* ══ ADMIN USUARIOS ══════════════════════════════════════════ */
 async function loadUsers(){
@@ -1768,6 +1853,10 @@ function startAutoRefresh(){
   stopAutoRefresh();
   _refreshTimer=setInterval(function(){
     const s=App.screen;
+    // Indicador visual de auto-refresh
+    const ind=document.getElementById("auto-refresh-ind");
+    if(ind)ind.style.opacity="1";
+    setTimeout(function(){if(ind)ind.style.opacity="0";},1000);
     if(s==="jugar"){
       // Recargar pronósticos silenciosamente sin mostrar loader
       api("getMiFecha",{fechaId:App.ctx?.fechaId,pozoId:App.ctx?.pozoId}).then(function(rm){
@@ -1798,6 +1887,10 @@ function startAutoRefresh(){
 function stopAutoRefresh(){if(_refreshTimer){clearInterval(_refreshTimer);_refreshTimer=null;}}
 
 function initApp(){
+  // Precarga en background — sin bloquear UI
+  setTimeout(function(){
+    if(!_cacheFechas)api("getFechas").then(function(r){if(r.ok){_cacheFechas=r;_cacheFechasTs=Date.now();}});
+  },500);
   document.getElementById("sl").style.display="none";
   const mob=window.innerWidth<=768;
   if(mob){["mh","mc","bn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=id==="mc"?"block":"flex";});const ch=document.getElementById("mh-chip");if(ch)ch.textContent=App.user?.usuario||"";}
@@ -1813,7 +1906,14 @@ function mkModal(title,body){const m=document.createElement("div");m.className="
 
 (()=>{const p=new URLSearchParams(location.search).get("pago");if(!p)return;history.replaceState({},"",location.pathname);if(p==="ok")toast("✅ ¡Pago aprobado! Podés jugar");else if(p==="error")toast("❌ Pago no procesado");else toast("⏳ Pago pendiente");})();
 
-async function boot(){if(loadSession()){const r=await api("loginConToken",{sessionToken:App.token});if(r.ok){saveSession(r.user,r.sessionToken);initApp();return;}clearSession();}showLogin();}
+async function boot(){
+  if(loadSession()){
+    const r=await api("loginConToken",{sessionToken:App.token});
+    if(r.ok){saveSession(r.user,r.sessionToken);initApp();return;}
+    clearSession();
+  }
+  showLogin();
+}
 boot();
 </script>
 </body>
