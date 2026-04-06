@@ -1355,7 +1355,7 @@ window.pronosticar=async function(pid,v,fid,poid){
   if(!window._pr[pid])window._pr[pid]={v:v,cr:3};
   else window._pr[pid].v=v;
   renderPartidos(window._parts,window._ctx,true);
-  const r=await api("guardarPronostico",{fechaId:fid,pozoId:poid,partidoId:pid,pronostico:v});
+  const r=await api("autoguardar",{fechaId:fid,pozoId:poid,pronos:[{partidoId:pid,pronostico:v}]});
   if(!r.ok){toast("❌ "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];renderPartidos(window._parts,window._ctx,true);return;}
   if(r.cambiosRestantesFecha!==undefined){window._cambiosFecha=r.cambiosRestantesFecha;renderResumenCambios();}
   if(r.mensaje&&r.cambio)toast(r.mensaje);
