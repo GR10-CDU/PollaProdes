@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- POLLA PRODES — index.html | 2026-04-06 21:15 ARG — MÁXIMA ÉPICA 🔥 -->
+<!-- POLLA PRODES — index.html | 2026-04-06 21:30 ARG — Fixes funcionales -->
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
@@ -103,21 +103,16 @@ input:focus,select:focus{outline:none}
 .sb-logo{
   width:64px;height:64px;border-radius:16px;overflow:hidden;flex-shrink:0;
   border:none;
-  box-shadow:0 0 40px rgba(255,179,0,.3),0 8px 32px rgba(0,0,0,.5)
+  box-shadow:0 8px 32px rgba(0,0,0,.5)
 }
 .sb-brand .name{
-  font-family:var(--ff);font-size:36px;font-weight:900;
-  letter-spacing:5px;line-height:1;
-  background:linear-gradient(90deg,#FF8F00,#FFB300,#FFD54F,#FFB300,#FF8F00);
-  background-size:200% 100%;
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  animation:shimmer 3s linear infinite;
-  filter:drop-shadow(0 0 12px rgba(255,179,0,.8))
+  font-family:var(--ff);font-size:34px;font-weight:900;
+  letter-spacing:4px;line-height:1;
+  color:#fff;
+  text-shadow:0 2px 8px rgba(0,0,0,.5)
 }
 .sb-brand .sub{
-  font-size:11px;color:#00E676;margin-top:8px;letter-spacing:6px;text-transform:uppercase;
-  text-shadow:0 0 15px rgba(0,230,118,.7);
-  animation:breathe 2s ease-in-out infinite
+  font-size:11px;color:rgba(255,255,255,.4);margin-top:6px;letter-spacing:4px;text-transform:uppercase
 }
 
 #sb-nav{flex:1;overflow-y:auto;padding:18px 14px}
@@ -1123,7 +1118,7 @@ async function loadMisPronoDet(fechaId,f){
   const el=document.getElementById("plist-cerrada");
   const yaInsc=rp.ok?rp.pozos?.find(function(p){return p.yaInscripto;}):null;
   if(!yaInsc){
-    if(el)el.innerHTML=`<div style="padding:14px;background:rgba(255,82,52,.04);border:1px solid rgba(255,82,52,.15);border-radius:var(--r);text-align:center"><p style="color:var(--txt2);font-size:17px">🔒 Fecha cerrada</p></div>`;
+    if(el)el.innerHTML=`<div style="padding:14px;background:rgba(255,82,52,.04);border:1px solid rgba(255,82,52,.15);border-radius:var(--r);text-align:center"><p style="color:var(--txt2);font-size:17px">🔒 Inscripción cerrada</p><p style="color:var(--txt3);font-size:14px;margin-top:4px">Ya no podés inscribirte a esta fecha</p></div>`;
     return;
   }
   // Cargar pronósticos
@@ -1134,17 +1129,32 @@ async function loadMisPronoDet(fechaId,f){
   const reglaMap={};
   reglas.forEach(function(r){reglaMap[r.partidoId]={codigo:r.codigo,nombre:r.nombre};});
   const ahora=new Date();
-  const pronosModif=pronos.filter(function(p){
-    const inicio=p.fechaHora?new Date(p.fechaHora):null;
-    return inicio&&(inicio-ahora)/60000>30;
-  });
-  const cf=rm.cambiosRestantesFecha!==undefined?rm.cambiosRestantesFecha:3;
+  const cf=rm.cambiosRestantes!==undefined?rm.cambiosRestantes:(rm.cambiosRestantesFecha!==undefined?rm.cambiosRestantesFecha:3);
+  const pozoActual=yaInsc.pozoActual||yaInsc.premioGanador||0;
+  
+  // Función para formatear tiempo restante
+  function formatTiempo(mins){
+    if(mins<=0)return null;
+    if(mins<60)return Math.floor(mins)+"min";
+    const h=Math.floor(mins/60);
+    const m=Math.floor(mins%60);
+    return h+"h"+(m>0?" "+m+"m":"");
+  }
+  
   if(el)el.innerHTML=`
     <div style="margin-bottom:12px">
-      ${cf>0&&pronosModif.length?`<div style="padding:10px 14px;background:var(--bluel);border:1px solid rgba(68,138,255,.2);border-radius:var(--rs);display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <!-- Pozo actual -->
+      <div style="padding:12px 16px;background:linear-gradient(135deg,rgba(255,179,0,.1),rgba(255,179,0,.05));border:1px solid rgba(255,179,0,.25);border-radius:var(--r);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+        <div><div style="font-size:13px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:1px">💰 Pozo actual</div></div>
+        <div style="font-family:var(--ff);font-size:32px;font-weight:900;color:var(--gold)">$${pozoActual.toLocaleString("es-AR")}</div>
+      </div>
+      
+      <!-- Cambios disponibles -->
+      ${cf>0?`<div style="padding:12px 16px;background:var(--bluel);border:1px solid rgba(68,138,255,.2);border-radius:var(--rs);display:flex;align-items:center;gap:12px;margin-bottom:10px">
         <span style="font-family:var(--ff);font-size:42px;font-weight:900;color:var(--blue)">${cf}</span>
-        <div><div style="font-size:17px;font-weight:700;color:var(--blue)">cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</div><div style="font-size:14px;color:var(--txt3)">Hasta 30 min antes del inicio de cada partido</div></div>
-      </div>`:""}
+        <div><div style="font-size:17px;font-weight:700;color:var(--blue)">cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</div><div style="font-size:14px;color:var(--txt3)">Costo: 20%/25%/30% del pozo por cambio</div></div>
+      </div>`:`<div style="padding:10px 14px;background:rgba(255,82,82,.08);border:1px solid rgba(255,82,82,.2);border-radius:var(--rs);margin-bottom:10px;text-align:center"><span style="color:var(--red);font-weight:600">🔒 Sin cambios disponibles</span></div>`}
+      
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <button class="btn btn-p" onclick="go('jugar',{fechaId:'${fechaId}',pozoId:'${yaInsc.id}'})" style="flex:1;padding:12px">✏️ Ver y modificar pronósticos</button>
         <button class="btn btn-s" onclick="go('tabla',{fechaId:'${fechaId}',pozoId:'${yaInsc.id}'})" style="flex:1;padding:12px">🏆 Ver tabla</button>
@@ -1153,15 +1163,21 @@ async function loadMisPronoDet(fechaId,f){
       ${pronos.map(function(p){
         const regla=reglaMap[p.partidoId];
         const inicio=p.fechaHora?new Date(p.fechaHora):null;
-        const puedeM=inicio&&(inicio-ahora)/60000>30&&cf>0;
-        return`<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--bdr-l)">
-          <span style="font-size:14px;font-weight:700;color:var(--txt3);width:22px">#${p.numero}</span>
+        const minsRest=inicio?(inicio-ahora)/60000:9999;
+        const puedeM=minsRest>30&&cf>0;
+        const tiempoTxt=minsRest>30?formatTiempo(minsRest-30):null;
+        const nombreLocal=p.local||p.localNombre||"Equipo Local";
+        const nombreVisita=p.visita||p.visitaNombre||"Equipo Visitante";
+        return`<div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--bdr-l)">
+          <span style="font-size:14px;font-weight:700;color:var(--txt3);width:26px">#${p.numero}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-size:17px;font-weight:500;display:flex;align-items:center;gap:4px">${logoHtml(p.localLogo,p.local)} <span style="color:var(--txt3);font-size:14px">vs</span> ${logoHtml(p.visitaLogo,p.visita)}</div>
-            ${regla?`<div style="font-size:13px;color:var(--gold)">📏 ${regla.nombre}</div>`:""}
+            <div style="font-size:16px;font-weight:500;display:flex;align-items:center;gap:4px">${logoHtml(p.localLogo,nombreLocal)} <span style="color:var(--txt3);font-size:13px">vs</span> ${logoHtml(p.visitaLogo,nombreVisita)}</div>
+            ${regla?`<div style="font-size:12px;color:var(--gold)">📏 ${regla.nombre}</div>`:""}
           </div>
-          <span class="prono-box ${p.pronostico}" style="width:36px;height:36px;font-size:26px;border-radius:8px">${p.pronostico}</span>
-          <span style="font-size:14px;color:${puedeM?"var(--blue)":"var(--txt3)"};min-width:28px;text-align:right">${puedeM?"🔄":"🔒"}</span>
+          <span class="prono-box ${p.pronostico}" style="width:34px;height:34px;font-size:24px;border-radius:8px">${p.pronostico}</span>
+          <div style="min-width:65px;text-align:right">
+            ${puedeM?`<span style="font-size:13px;color:var(--blue);font-weight:600">🔄 ${tiempoTxt||""}</span>`:`<span style="font-size:13px;color:var(--txt3)">🔒</span>`}
+          </div>
         </div>`;
       }).join("")}
     </div>`;
@@ -1779,13 +1795,21 @@ async function loadMisFechas(){
   if(!inscripciones.length){el.innerHTML=emptyBox("🎯","No estás inscripto en ninguna fecha");return;}
   const fechas=rf.ok?(rf.fechas||[]):[];
 
-  // Para cada inscripción, cargar cambios restantes
+  // Para cada inscripción, cargar cambios restantes Y puntos
   const items=await Promise.all(inscripciones.map(async function(i){
     const f=fechas.find(function(x){return x.id===i.fechaId;})||{};
-    const rp=await api("getPozos",{fechaId:i.fechaId,userId:App.user?.id});
+    const [rp,rt]=await Promise.all([
+      api("getPozos",{fechaId:i.fechaId,userId:App.user?.id}),
+      api("getTabla",{fechaId:i.fechaId,pozoId:i.pozoId})
+    ]);
     const pozo=rp.ok?rp.pozos?.find(function(p){return p.id===i.pozoId;}):null;
     const cf=pozo?.cambiosRestantesFecha;
-    return{...i,fecha:f,cf};
+    const pozoActual=pozo?.pozoActual||pozo?.premioGanador||i.monto||0;
+    // Buscar mis puntos en la tabla
+    const miPuntaje=rt.ok?(rt.tabla||[]).find(function(u){return u.userId===App.user?.id;}):null;
+    const pts=miPuntaje?miPuntaje.ptsTotal:0;
+    const pos=miPuntaje?miPuntaje.posicion:null;
+    return{...i,fecha:f,cf,pts,pos,pozoActual};
   }));
 
   el.innerHTML=`<div>
@@ -1794,20 +1818,26 @@ async function loadMisFechas(){
       const f=i.fecha;
       const cerrada=f.estado==="Cerrada"||f.estado==="Finalizada";
       const cf=i.cf;
-      const cfHtml=cerrada&&cf!==undefined?
-        cf>0?`<span class="bdg" style="background:var(--bluel);color:var(--blue);font-weight:700;font-size:17px;padding:5px 14px">🔄 ${cf} cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</span>`:
-        `<span class="bdg bred" style="font-size:16px">🔒 Sin cambios</span>`:"";
+      const pts=i.pts||0;
+      const pos=i.pos;
+      const pozoActual=i.pozoActual;
       return`<div class="card" style="margin-bottom:12px;padding:16px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-          <div>
+          <div style="flex:1">
             <div style="font-family:var(--ff);font-size:23px;font-weight:800">${f.nombre||i.fechaId}</div>
-            <div style="font-size:16px;color:var(--txt3);margin-top:2px">${f.liga||""} · Pozo $${(i.monto||0).toLocaleString("es-AR")} · <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr"}" style="font-size:13px">${f.estado||""}</span></div>
+            <div style="font-size:15px;color:var(--txt3);margin-top:2px">${f.liga||""} · <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr"}" style="font-size:12px">${f.estado||""}</span></div>
+            <div style="font-size:14px;color:var(--gold);margin-top:4px">💰 Pozo: <strong>$${pozoActual.toLocaleString("es-AR")}</strong></div>
           </div>
-          ${cfHtml}
+          <div style="text-align:right">
+            <div style="font-family:var(--ff);font-size:32px;font-weight:900;color:var(--g2)">${pts}</div>
+            <div style="font-size:12px;color:var(--txt3)">puntos</div>
+            ${pos?`<div style="font-size:13px;color:var(--txt2);margin-top:2px">${pos===1?"🥇":pos===2?"🥈":pos===3?"🥉":"#"+pos}</div>`:""}
+          </div>
         </div>
+        ${cerrada&&cf!==undefined?cf>0?`<div style="padding:8px 12px;background:var(--bluel);border:1px solid rgba(68,138,255,.15);border-radius:var(--rs);margin-bottom:10px;display:flex;align-items:center;gap:8px"><span style="font-family:var(--ff);font-size:24px;font-weight:900;color:var(--blue)">${cf}</span><span style="font-size:14px;color:var(--blue);font-weight:600">cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</span></div>`:`<div style="padding:6px 10px;background:rgba(255,82,82,.06);border-radius:var(--rs);margin-bottom:10px;text-align:center"><span style="font-size:13px;color:var(--red)">🔒 Sin cambios</span></div>`:""}
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-p" style="flex:1;padding:10px" onclick="go('jugar',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})">
-            ${cerrada&&cf>0?"✏️ Modificar pronósticos":"👁 Ver pronósticos"}
+            ${cerrada&&cf>0?"✏️ Modificar":"👁 Ver"} pronósticos
           </button>
           <button class="btn btn-s" style="flex:1;padding:10px" onclick="go('tabla',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})">
             🏆 Ver tabla
@@ -1833,9 +1863,30 @@ async function loadTabla(ctx){
   }
   const r=await api("getTabla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});if(!r.ok){el.innerHTML=errBox(r.error);return;}
   const t=r.tabla||[],md=["🥇","🥈","🥉"],po=t.slice(0,3);
-  el.innerHTML=`<p style="font-size:14px;color:var(--txt3);margin-bottom:14px">Calculado hasta partido #${r.ultimoPartidoCalculado||0} de ${r.totalPartidos||0}</p>
-  ${po.length>=3?`<div class="podio-wrap">${[po[1],po[0],po[2]].map((u,i)=>{const ri=i===0?1:i===1?0:2;return`<div class="podio-item${ri===0?" first":""}"><div class="med">${md[ri]}</div><div class="pnm">${u.siglas}</div><div class="podio-box"><div class="podio-pts">${u.ptsTotal}</div><div style="font-size:12px;color:var(--txt3)">pts</div></div></div>`;}).join("")}</div>`:""}
-  <div>${t.map((u,i)=>`<div class="rank-row${u.userId===App.user?.id?" yo":""}"><span class="rank-pos" style="color:${i===0?"#DAA520":i===1?"#888":i===2?"#B87333":"var(--txt3)"}">${i<3?md[i]:u.posicion}</span><span class="rank-nm">${u.siglas}${u.userId===App.user?.id?` <span style="font-size:13px;color:var(--txt3)">(vos)</span>`:""}</span><div><span class="rank-pts" style="color:${u.userId===App.user?.id?"var(--g2)":"var(--txt)"}">${u.ptsTotal}</span><span style="font-size:13px;color:var(--txt3);margin-left:2px">pts</span></div></div>`).join("")}</div>`;
+  const ultimoPart=r.ultimoPartidoCalculado||0;
+  const totalParts=r.totalPartidos||0;
+  el.innerHTML=`<p style="font-size:14px;color:var(--txt3);margin-bottom:14px">Calculado hasta partido #${ultimoPart} de ${totalParts}</p>
+  ${po.length>=3?`<div class="podio-wrap">${[po[1],po[0],po[2]].map((u,i)=>{const ri=i===0?1:i===1?0:2;return`<div class="podio-item${ri===0?" first":""}"><div class="med">${md[ri]}</div><div class="pnm">${u.nombre||u.siglas||"Jugador"}</div><div class="podio-box"><div class="podio-pts">${u.ptsTotal}</div><div style="font-size:12px;color:var(--txt3)">pts</div></div></div>`;}).join("")}</div>`:""}
+  <div>${t.map((u,i)=>{
+    const nombre=u.nombre||u.siglas||"Jugador";
+    const siglas=u.siglas||"??";
+    const ptsPartidos=u.ptsPartidos||0;
+    const ptsReglas=u.ptsReglas||0;
+    return`<div class="rank-row${u.userId===App.user?.id?" yo":""}">
+      <span class="rank-pos" style="color:${i===0?"#DAA520":i===1?"#888":i===2?"#B87333":"var(--txt3)"}">${i<3?md[i]:u.posicion}</span>
+      <div style="flex:1;min-width:0">
+        <div class="rank-nm">${siglas}${u.userId===App.user?.id?` <span style="font-size:13px;color:var(--txt3)">(vos)</span>`:""}</div>
+        <div style="font-size:12px;color:var(--txt3);display:flex;gap:8px;margin-top:2px">
+          <span>⚽ ${ptsPartidos}pts</span>
+          ${ptsReglas>0?`<span>📏 ${ptsReglas}pts</span>`:""}
+        </div>
+      </div>
+      <div style="text-align:right">
+        <span class="rank-pts" style="color:${u.userId===App.user?.id?"var(--g2)":"var(--txt)"}">${u.ptsTotal}</span>
+        <span style="font-size:13px;color:var(--txt3);margin-left:2px">pts</span>
+      </div>
+    </div>`;
+  }).join("")}</div>`;
 }
 
 /* ══ GRILLA ══════════════════════════════════════════════════ */
