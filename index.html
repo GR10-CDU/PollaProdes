@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <title>POLLA PRODES</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -638,6 +639,13 @@ input:focus,select:focus{outline:none}
 
 <script>
 const SUPABASE_URL="https://auqxyraejmcxxtitkzzd.supabase.co/functions/v1/api";
+const SUPABASE_DB_URL="https://auqxyraejmcxxtitkzzd.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1cXh5cmFlam1jeHh0aXRrenpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MzIzODgsImV4cCI6MjA5MTAwODM4OH0.MRRYHXV2-ECBH0mrfPbpMNQIHR2RF4Hl7jIo9LajO1o";
+let _supabase = null;
+function getSupabase(){
+  if(!_supabase && window.supabase) _supabase = window.supabase.createClient(SUPABASE_DB_URL, SUPABASE_ANON_KEY);
+  return _supabase;
+}
 const SUPABASE_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1cXh5cmFlam1jeHh0aXRrenpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MzIzODgsImV4cCI6MjA5MTAwODM4OH0.MRRYHXV2-ECBH0mrfPbpMNQIHR2RF4Hl7jIo9LajO1o";
 const API_SECRET="PP2026-xK9mQ7vL2nR4wT8yU3pA5cE1hG6jF0bD";
 const SK="pp_tok",UK="pp_usr";
@@ -1800,7 +1808,7 @@ function startAutoRefresh(){
 }
 function stopAutoRefresh(){if(_refreshTimer){clearInterval(_refreshTimer);_refreshTimer=null;}}
 
-function initApp(){
+function initApp(){initRealtime();
   document.getElementById("sl").style.display="none";
   const mob=window.innerWidth<=768;
   if(mob){["mh","mc","bn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=id==="mc"?"block":"flex";});const ch=document.getElementById("mh-chip");if(ch)ch.textContent=App.user?.usuario||"";}
@@ -1815,6 +1823,40 @@ function emptyBox(icon,msg){return`<div class="empty"><div class="ei">${icon}</d
 function mkModal(title,body){const m=document.createElement("div");m.className="modal-bg";m.onclick=e=>{if(e.target===m)m.remove();};m.innerHTML=`<div class="modal-box"><div class="modal-head"><div class="modal-title">${title}</div><div class="modal-close" onclick="this.closest('.modal-bg').remove()">×</div></div>${body}</div>`;return m;}
 
 (()=>{const p=new URLSearchParams(location.search).get("pago");if(!p)return;history.replaceState({},"",location.pathname);if(p==="ok")toast("✅ ¡Pago aprobado! Podés jugar");else if(p==="error")toast("❌ Pago no procesado");else toast("⏳ Pago pendiente");})();
+
+// ── REALTIME ─────────────────────────────────────────────────
+let _realtimeChannel = null;
+function initRealtime(){
+  const sb = getSupabase();
+  if(!sb) return;
+  if(_realtimeChannel) sb.removeChannel(_realtimeChannel);
+  _realtimeChannel = sb.channel("polla-prodes-live")
+    .on("postgres_changes", {event:"UPDATE", schema:"public", table:"partidos"}, (payload) => {
+      // Partido actualizado — refrescar si está en pantalla
+      const p = payload.new;
+      if(App.screen === "jugar" && App.ctx?.fechaId === p.fecha_id){
+        // Actualizar score en vivo sin recargar todo
+        const el = document.getElementById("pc-"+p.id);
+        if(el && p.resultado){
+          const ind = document.getElementById("auto-refresh-ind");
+          if(ind){ind.style.background="var(--g2)";ind.style.opacity="1";setTimeout(()=>{ind.style.opacity="0";ind.style.background="var(--g2)";},2000);}
+          loadJugar(App.ctx, true);
+        }
+      }
+      if(["tabla","grilla"].includes(App.screen)) loadTabla(App.ctx);
+    })
+    .on("postgres_changes", {event:"INSERT", schema:"public", table:"puntajes"}, () => {
+      if(["tabla","grilla"].includes(App.screen)) loadTabla(App.ctx);
+    })
+    .subscribe((status) => {
+      console.log("Realtime:", status);
+    });
+}
+
+function stopRealtime(){
+  const sb = getSupabase();
+  if(sb && _realtimeChannel){ sb.removeChannel(_realtimeChannel); _realtimeChannel=null; }
+}
 
 async function boot(){if(loadSession()){const r=await api("loginConToken",{sessionToken:App.token});if(r.ok){saveSession(r.user,r.sessionToken);initApp();return;}clearSession();}showLogin();}
 boot();
