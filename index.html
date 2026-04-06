@@ -808,6 +808,7 @@ async function loadFechas(){
 }
 
 async function cargarExtraFecha(f){
+  try{
   const el=document.getElementById("fecha-extra-"+f.id);if(!el)return;
   const uid=App.user?.id||"";
   const rp=await api("getPozos",{fechaId:f.id,userId:uid});
@@ -840,6 +841,7 @@ async function cargarExtraFecha(f){
   }
   el.innerHTML=(estadoHtml?`<div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">${estadoHtml}</div>`:"")
     +`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${pozosHtml}</div>${reglasHtml}`;
+  }catch(e){console.warn("cargarExtraFecha:",e.message);}
 }
 
 /* ══ DETALLE FECHA ═══════════════════════════════════════════ */
@@ -988,7 +990,7 @@ const TODAS_LAS_REGLAS=[
 window._reglasSelAdmin=new Set();
 
 /* ══ SIDEBAR DERECHO ════════════════════════════════════════ */
-async function loadSidebarRight(){loadSRFechas();loadSRNoticias();loadSRHoF();}
+async function loadSidebarRight(){try{loadSRFechas();}catch(e){}try{loadSRNoticias();}catch(e){}try{loadSRHoF();}catch(e){}}
 async function loadSRFechas(){
   const el=document.getElementById("sr-fechas-list");if(!el)return;
   const r=await api("getFechas");
@@ -1009,9 +1011,9 @@ async function loadSRNoticias(){
 async function loadSRHoF(){
   const el=document.getElementById("sr-hof-list");if(!el)return;
   const r=await api("getEstadisticas");
-  if(!r.ok||!r.porFechas?.length){el.innerHTML=`<div style="font-size:16px;color:var(--txt3)">Sin ganadores aún</div>`;return;}
+  if(!r.ok||!r.ganadores?.length){el.innerHTML=`<div style="font-size:16px;color:var(--txt3)">Sin ganadores aún</div>`;return;}
   const medals=["🥇","🥈","🥉"];
-  el.innerHTML=r.porFechas.slice(0,5).map(function(u,i){return`<div class="sr-hof-item"><span class="sr-hof-medal">${medals[i]||"🏅"}</span><div class="sr-hof-name">${u.siglas}<span style="font-size:14px;color:var(--txt3);margin-left:5px">${u.nombre||""}</span></div><span class="sr-hof-wins">${u.fechasGanadas}🏆</span></div>`;}).join("");
+  el.innerHTML=r.ganadores.slice(0,5).map(function(u,i){return`<div class="sr-hof-item"><span class="sr-hof-medal">${medals[i]||"🏅"}</span><div class="sr-hof-name">${u.usuario||""}</div><span class="sr-hof-wins">🏆</span></div>`;}).join("");
 }
 
 /* ══ JUGAR ═══════════════════════════════════════════════════ */
