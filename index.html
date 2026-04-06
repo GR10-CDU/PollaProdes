@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- POLLA PRODES — index.html | 2026-03-18 00:00 ARG -->
+<!-- POLLA PRODES — index.html | 2026-04-05 22:00 ARG — Supabase -->
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
@@ -637,7 +637,8 @@ input:focus,select:focus{outline:none}
 <div id="sl" style="display:none"></div>
 
 <script>
-const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxJCewWO7hdi4L9LNgMLFS7JgorXXIppgB7hOuSxdJfolje8jrOmCkcwC1GSj53BmK2/exec";
+const SUPABASE_URL="https://auqxyraejmcxxtitkzzd.supabase.co/functions/v1/api";
+const SUPABASE_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1cXh5cmFlam1jeHh0aXRrenpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MzIzODgsImV4cCI6MjA5MTAwODM4OH0.MRRYHXV2-ECBH0mrfPbpMNQIHR2RF4Hl7jIo9LajO1o";
 const API_SECRET="PP2026-xK9mQ7vL2nR4wT8yU3pA5cE1hG6jF0bD";
 const SK="pp_tok",UK="pp_usr";
 const App={user:null,token:null,screen:null,ctx:{}};
@@ -646,14 +647,16 @@ function showLoader(txt){const el=document.getElementById("page-loader");if(el){
 function hideLoader(){const el=document.getElementById("page-loader");if(el)el.classList.remove("show");}
 
 async function api(action,p={}){
-  const MSGS={jugarFecha:"Guardando fecha...",autoguardar:"Guardando pronósticos...",guardarReglas:"Guardando reglas...",getMiFecha:"Cargando pronósticos...",getFecha:"Cargando fecha...",getFechas:"Cargando fechas...",getTabla:"Cargando tabla...",adminCrearFecha:"Creando fecha...",adminEditarFecha:"Guardando cambios...",adminCerrarFecha:"Cerrando fecha...",adminCerrarYCalcular:"Calculando puntajes...",adminCrearPozo:"Creando pozo...",importarPartidos:"Importando...",buscarPartidos:"Buscando partidos...",buscarPorRonda:"Buscando partidos...",getRondas:"Cargando rondas...",inscribirse:"Inscribiendo..."};
+  const MSGS={jugarFecha:"Guardando...",autoguardar:"Guardando pronósticos...",guardarReglas:"Guardando reglas...",getMiFecha:"Cargando pronósticos...",getFecha:"Cargando fecha...",getFechas:"Cargando fechas...",getTabla:"Cargando tabla...",adminCrearFecha:"Creando fecha...",adminEditarFecha:"Guardando cambios...",adminCerrarFecha:"Cerrando fecha...",adminCerrarYCalcular:"Calculando puntajes...",adminIngresarResultado:"Calculando puntajes...",adminCrearPozo:"Creando pozo...",importarPartidos:"Importando...",buscarPartidos:"Buscando partidos...",buscarPorRonda:"Buscando partidos...",getRondas:"Cargando rondas...",inscribirse:"Inscribiendo...",crearPreferencia:"Iniciando pago..."};
   if(MSGS[action])showLoader(MSGS[action]);
   try{
-    const body=JSON.stringify({action,apiSecret:API_SECRET,sessionToken:App.token,...p});
-    let r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body,redirect:"follow"});
-    // Apps Script a veces redirige el POST — reintentar si es necesario
-    if(!r.ok&&r.status===0){r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body,redirect:"follow"});}
-    const j=await r.json();return j;
+    const r=await fetch(SUPABASE_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+SUPABASE_ANON},
+      body:JSON.stringify({action,apiSecret:API_SECRET,sessionToken:App.token,...p}),
+    });
+    if(!r.ok){const t=await r.text();return{ok:false,error:"HTTP "+r.status+": "+t};}
+    return await r.json();
   }
   catch(e){return{ok:false,error:"Sin conexión: "+e.message};}
   finally{hideLoader();}
