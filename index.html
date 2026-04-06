@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <title>POLLA PRODES</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -1768,7 +1768,8 @@ window.doLogin=async()=>{
   const r=await api("login",{telefono:t,pin:p});
   if(b){b.textContent="Entrar →";b.disabled=false;}
   if(!r.ok){if(er)er.innerHTML=`<div class="ll-err">⚠ ${r.error}</div>`;return;}
-  saveSession(r.user,r.sessionToken);initApp();
+  saveSession(r.user,r.sessionToken);
+  try{initApp();}catch(e){console.error("initApp error:",e);hideLoader();}
 };
 window.doReg=async()=>{
   const n=document.getElementById("rn")?.value,t=document.getElementById("rt")?.value,p=document.getElementById("rp")?.value,a=document.getElementById("ra")?.value,e=document.getElementById("rem")?.value,er=document.getElementById("re");
@@ -1815,7 +1816,7 @@ function startAutoRefresh(){
 }
 function stopAutoRefresh(){if(_refreshTimer){clearInterval(_refreshTimer);_refreshTimer=null;}}
 
-function initApp(){initRealtime();
+function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
   document.getElementById("sl").style.display="none";
   const mob=window.innerWidth<=768;
   if(mob){["mh","mc","bn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=id==="mc"?"block":"flex";});const ch=document.getElementById("mh-chip");if(ch)ch.textContent=App.user?.usuario||"";}
@@ -1865,7 +1866,16 @@ function stopRealtime(){
   if(sb && _realtimeChannel){ sb.removeChannel(_realtimeChannel); _realtimeChannel=null; }
 }
 
-async function boot(){if(loadSession()){const r=await api("loginConToken",{sessionToken:App.token});if(r.ok){saveSession(r.user,r.sessionToken);initApp();return;}clearSession();}showLogin();}
+async function boot(){
+  if(loadSession()){
+    try{
+      const r=await api("loginConToken",{sessionToken:App.token});
+      if(r.ok){saveSession(r.user,r.sessionToken);hideLoader();try{initApp();}catch(e){console.error('initApp:',e);}return;}
+    }catch(e){console.warn("boot error:",e);}
+    clearSession();
+  }
+  showLogin();
+}
 boot();
 </script>
 </body>
