@@ -30,7 +30,7 @@
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
-@media(max-width:768px){html,body{height:100%;overflow:hidden}#app{display:none!important}#mh{display:flex!important}#bn{display:flex!important}#mc{display:block!important;position:fixed;top:54px;left:0;right:0;bottom:56px;overflow-y:auto;z-index:10;background:var(--off)}#sl{z-index:20}}
+@media(max-width:768px){html,body{height:100%;overflow:hidden}#app{display:none!important}#mh{display:flex!important}#bn{display:flex!important}#mc{display:block!important;position:fixed;top:54px;left:0;right:0;bottom:56px;overflow-y:auto;z-index:10;background:var(--off);font-size:13px}#sl{z-index:20}.mh-title{font-size:14px!important;letter-spacing:1px!important}}
 body{background:var(--off);font-family:var(--fb);color:var(--txt);-webkit-font-smoothing:antialiased}
 button{cursor:pointer;border:none;background:none;color:inherit;font-family:var(--fb)}
 button:active:not(:disabled){transform:scale(.96)}
@@ -161,10 +161,11 @@ input:focus,select:focus{outline:none}
   padding-bottom:env(safe-area-inset-bottom)
 }
 .bn-wrap{display:flex}
-.bn-item{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;border-top:2px solid transparent;transition:all .12s}
-.bn-item.active{border-top-color:var(--g1)}
+.bn-item{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:all .12s;position:relative}
+.bn-item.active{}
 .bn-item .ni{font-size:25px;display:flex;align-items:center;justify-content:center}
 .bn-item .nl{font-size:12px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.3px}
+.bn-item.active .ni{background:rgba(0,200,83,.18);color:var(--g1)}
 .bn-item.active .nl{color:var(--g1)}
 
 @media(max-width:768px){
@@ -630,7 +631,7 @@ input:focus,select:focus{outline:none}
 <div id="mh">
   <div class="mh-left">
     <div class="mh-logo"><svg width="32" height="32"><use href="#logo"/></svg></div>
-    <span class="mh-title">PRODES</span>
+    <span class="mh-title">POLLA PRODES</span>
   </div>
   <div class="mh-chip" id="mh-chip">—</div>
 </div>
@@ -681,7 +682,7 @@ const _ico={
   grilla:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',
   perfil:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
 };
-const NAV_J=[{k:"fechas",i:_ico.fechas,l:"Fechas",t:"Fechas"},{k:"mis-fechas",i:_ico.misfechas,l:"Mis Fechas",t:"Mis Fechas"},{k:"tabla",i:_ico.tabla,l:"Tabla",t:"Tabla"},{k:"grilla",i:_ico.grilla,l:"Grilla",t:"Los Otros"},{k:"perfil",i:_ico.perfil,l:"Perfil",t:"Perfil"}];
+const NAV_J=[{k:"fechas",i:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',l:"Fechas",t:"Fechas"},{k:"mis-fechas",i:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>',l:"Mis Fechas",t:"Mis Fechas"},{k:"tabla",i:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>',l:"Tabla",t:"Tabla"},{k:"grilla",i:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',l:"Grilla",t:"Los Otros"},{k:"perfil",i:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',l:"Perfil",t:"Perfil"}];
 const NAV_A=[{k:"admin-dash",i:"📊",l:"Dashboard",t:"Dashboard"},{k:"admin-fechas",i:"📅",l:"Fechas",t:"Fechas"},{k:"admin-importar",i:"🔗",l:"Importar",t:"Importar Partidos"},{k:"admin-res",i:"⚽",l:"Resultados",t:"Resultados"},{k:"admin-noticias",i:"📣",l:"Noticias",t:"Noticias"},{k:"admin-users",i:"👥",l:"Jugadores",t:"Jugadores"},{k:"admin-pagos",i:"💰",l:"Pagos",t:"Pagos Pendientes"},{k:"perfil",i:"👤",l:"Perfil",t:"Perfil"}];
 function getNav(){return App.user?.rol==="Admin"?NAV_A:NAV_J;}
 
