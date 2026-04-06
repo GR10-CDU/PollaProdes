@@ -1819,7 +1819,7 @@ function stopAutoRefresh(){if(_refreshTimer){clearInterval(_refreshTimer);_refre
 function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
   document.getElementById("sl").style.display="none";
   const mob=window.innerWidth<=768;
-  if(mob){["mh","mc","bn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=id==="mc"?"block":"flex";});const ch=document.getElementById("mh-chip");if(ch)ch.textContent=App.user?.usuario||"";}
+  if(mob){document.getElementById("app").style.display="none";["mh","mc","bn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=id==="mc"?"block":"flex";});const ch=document.getElementById("mh-chip");if(ch)ch.textContent=App.user?.usuario||"";}
   else{document.getElementById("app").style.display="flex";const sb=document.getElementById("sidebar"),mn=document.getElementById("main"),sr=document.getElementById("sidebar-right");if(sb)sb.style.display="flex";if(mn)mn.style.display="flex";if(sr)sr.style.display="flex";const sf=document.getElementById("sb-foot");if(sf)sf.innerHTML=`<div class="sb-av">${App.user?.avatar||"👤"}</div><div class="sb-ui"><div class="nm">${App.user?.usuario||""}</div><div class="rl">${App.user?.rol||"Jugador"}</div></div><button class="sb-logout" onclick="logout()" title="Salir">⎋</button>`;loadSidebarRight();}
   go(App.user?.rol==="Admin"?"admin-dash":"fechas");
 }
