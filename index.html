@@ -691,7 +691,7 @@ function go(k,ctx={}){
   const html=renderScreen(k,ctx);
   const dc=document.getElementById("content");if(dc)dc.innerHTML=html;
   const mc=document.getElementById("mc");if(mc)mc.innerHTML=html;
-  setTimeout(()=>afterRender(k,ctx),200);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>afterRender(k,ctx)));
 }
 
 function renderNav(){
