@@ -655,7 +655,7 @@ function showLoader(txt){const el=document.getElementById("page-loader");if(el){
 function hideLoader(){const el=document.getElementById("page-loader");if(el)el.classList.remove("show");}
 
 async function api(action,p={}){
-  const MSGS={jugarFecha:"Guardando...",autoguardar:"Guardando pronósticos...",guardarReglas:"Guardando reglas...",getMiFecha:"Cargando pronósticos...",getFecha:"Cargando fecha...",getFechas:"Cargando fechas...",getTabla:"Cargando tabla...",adminCrearFecha:"Creando fecha...",adminEditarFecha:"Guardando cambios...",adminCerrarFecha:"Cerrando fecha...",adminCerrarYCalcular:"Calculando puntajes...",adminIngresarResultado:"Calculando puntajes...",adminCrearPozo:"Creando pozo...",importarPartidos:"Importando...",buscarPartidos:"Buscando partidos...",buscarPorRonda:"Buscando partidos...",getRondas:"Cargando rondas...",inscribirse:"Inscribiendo...",crearPreferencia:"Iniciando pago..."};
+  const MSGS={jugarFecha:"Guardando...",autoguardar:"Guardando pronósticos...",guardarReglas:"Guardando reglas...",adminCrearFecha:"Creando fecha...",adminEditarFecha:"Guardando cambios...",adminCerrarFecha:"Cerrando fecha...",adminCerrarYCalcular:"Calculando puntajes...",adminIngresarResultado:"Calculando puntajes...",adminCrearPozo:"Creando pozo...",importarPartidos:"Importando...",buscarPartidos:"Buscando partidos...",buscarPorRonda:"Buscando partidos...",getRondas:"Cargando rondas...",inscribirse:"Inscribiendo...",crearPreferencia:"Iniciando pago..."};
   if(MSGS[action])showLoader(MSGS[action]);
   try{
     const r=await fetch(SUPABASE_URL,{
