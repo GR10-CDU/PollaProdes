@@ -30,7 +30,7 @@
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
-@media(max-width:768px){html,body{height:100%;overflow:hidden}#mc{position:fixed;top:54px;left:0;right:0;bottom:56px;overflow-y:auto;z-index:10;background:var(--off)}}
+@media(max-width:768px){html,body{height:100%;overflow:hidden}#app{display:none!important}#mh{display:flex!important}#bn{display:flex!important}#mc{display:block!important;position:fixed;top:54px;left:0;right:0;bottom:56px;overflow-y:auto;z-index:10;background:var(--off)}#sl{z-index:20}}
 body{background:var(--off);font-family:var(--fb);color:var(--txt);-webkit-font-smoothing:antialiased}
 button{cursor:pointer;border:none;background:none;color:inherit;font-family:var(--fb)}
 button:active:not(:disabled){transform:scale(.96)}
@@ -1738,7 +1738,7 @@ window.importar=async()=>{const fechaId=document.getElementById("imp-fecha")?.va
 /* ══ LOGIN ═══════════════════════════════════════════════════ */
 function showLogin(){
   document.getElementById("app").style.display="none";
-  ["mh","mc","bn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
+
   const el=document.getElementById("sl");el.style.display="flex";
   el.innerHTML=`<div class="lb su">
     <div class="ll-head">
@@ -1832,8 +1832,16 @@ function stopAutoRefresh(){if(_refreshTimer){clearInterval(_refreshTimer);_refre
 function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
   document.getElementById("sl").style.display="none";
   const mob=window.innerWidth<=768;
-  if(mob){document.getElementById("app").style.display="none";["mh","mc","bn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=id==="mc"?"block":"flex";});const ch=document.getElementById("mh-chip");if(ch)ch.textContent=App.user?.usuario||"";}
-  else{document.getElementById("app").style.display="flex";const sb=document.getElementById("sidebar"),mn=document.getElementById("main"),sr=document.getElementById("sidebar-right");if(sb)sb.style.display="flex";if(mn)mn.style.display="flex";if(sr)sr.style.display="flex";const sf=document.getElementById("sb-foot");if(sf)sf.innerHTML=`<div class="sb-av">${App.user?.avatar||"👤"}</div><div class="sb-ui"><div class="nm">${App.user?.usuario||""}</div><div class="rl">${App.user?.rol||"Jugador"}</div></div><button class="sb-logout" onclick="logout()" title="Salir">⎋</button>`;loadSidebarRight();}
+  if(mob){
+    const ch=document.getElementById("mh-chip");if(ch)ch.textContent=App.user?.usuario||"";
+  } else {
+    document.getElementById("app").style.display="flex";
+    const sb=document.getElementById("sidebar"),mn=document.getElementById("main"),sr=document.getElementById("sidebar-right");
+    if(sb)sb.style.display="flex";if(mn)mn.style.display="flex";if(sr)sr.style.display="flex";
+    const sf=document.getElementById("sb-foot");
+    if(sf)sf.innerHTML=`<div class="sb-av">${App.user?.avatar||"👤"}</div><div class="sb-ui"><div class="nm">${App.user?.usuario||""}</div><div class="rl">${App.user?.rol||"Jugador"}</div></div><button class="sb-logout" onclick="logout()" title="Salir">⎋</button>`;
+    loadSidebarRight();
+  }
   go(App.user?.rol==="Admin"?"admin-dash":"fechas");
 }
 
