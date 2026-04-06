@@ -679,10 +679,8 @@ const NAV_A=[{k:"admin-dash",i:"📊",l:"Dashboard",t:"Dashboard"},{k:"admin-fec
 function getNav(){return App.user?.rol==="Admin"?NAV_A:NAV_J;}
 
 function go(k,ctx={}){
-  // Ocultar badge si salimos de jugar
   if(k!=="jugar"){const b=document.getElementById("reglas-badge");if(b)b.style.display="none";}
   App.screen=k;App.ctx=ctx;
-  // Auto-refresh solo en pantallas de juego
   if(["jugar","tabla","grilla","los-otros"].includes(k)){startAutoRefresh();}
   else{stopAutoRefresh();}
   const item=getNav().find(n=>n.k===k)||{t:k};
@@ -691,7 +689,21 @@ function go(k,ctx={}){
   const html=renderScreen(k,ctx);
   const dc=document.getElementById("content");if(dc)dc.innerHTML=html;
   const mc=document.getElementById("mc");if(mc)mc.innerHTML=html;
-  requestAnimationFrame(()=>requestAnimationFrame(()=>afterRender(k,ctx)));
+  // Esperar que el elemento clave exista en el DOM antes de afterRender
+  const keyEl={
+    "fechas":"fl","fecha-det":"fdc","jugar":"jc","tabla":"tc",
+    "mis-fechas":"mfc","grilla":"gc","perfil":"pc","stats":"sc",
+    "admin-dash":"adc","admin-fechas":"afl","admin-res":"arf",
+    "admin-users":"aul","admin-pagos":"apl","admin-noticias":"anl"
+  }[k];
+  function waitAndRender(attempts){
+    if(!keyEl){afterRender(k,ctx);return;}
+    const el=document.getElementById(keyEl);
+    if(el){afterRender(k,ctx);return;}
+    if(attempts>20){afterRender(k,ctx);return;}
+    setTimeout(()=>waitAndRender(attempts+1),30);
+  }
+  waitAndRender(0);
 }
 
 function renderNav(){
