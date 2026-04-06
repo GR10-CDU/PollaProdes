@@ -30,6 +30,7 @@
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
+@media(max-width:768px){html,body{height:100%;overflow:hidden}#mc{position:fixed;top:54px;left:0;right:0;bottom:56px;overflow-y:auto;z-index:10;background:var(--off)}}
 body{background:var(--off);font-family:var(--fb);color:var(--txt);-webkit-font-smoothing:antialiased}
 button{cursor:pointer;border:none;background:none;color:inherit;font-family:var(--fb)}
 button:active:not(:disabled){transform:scale(.96)}
