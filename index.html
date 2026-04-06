@@ -687,7 +687,8 @@ function go(k,ctx={}){
   renderNav();
   const tt=document.getElementById("topbar-title");if(tt)tt.textContent=item.t;
   const html=renderScreen(k,ctx);
-  const dc=document.getElementById("content");if(dc)dc.innerHTML=html;
+  const isMob=window.innerWidth<=768;
+  if(!isMob){const dc=document.getElementById("content");if(dc)dc.innerHTML=html;}
   const mc=document.getElementById("mc");if(mc)mc.innerHTML=html;
   // Esperar que el elemento clave exista en el DOM antes de afterRender
   const keyEl={
