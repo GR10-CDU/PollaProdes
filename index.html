@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- POLLA PRODES — index.html | 2026-04-06 19:30 ARG — Supabase -->
+<!-- POLLA PRODES — index.html | 2026-04-06 20:15 ARG — Supabase + Cambios Pagos -->
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
@@ -1032,13 +1032,14 @@ async function loadSRHoF(){
 }
 
 /* ══ JUGAR ═══════════════════════════════════════════════════ */
-window._pr={};window._re=[];window._ctx={};window._parts=[];window._reglasDisp=[];window._cambiosFecha=3;
+window._pr={};window._re=[];window._ctx={};window._parts=[];window._reglasDisp=[];window._cambiosFecha=3;window._cambiosUsados=0;window._cambiosRestantes=3;window._proximoCosto=null;window._proximoPorcentaje=null;
 
 async function loadJugar(ctx){
   const jel=document.getElementById("jc");
   const rf=await api("getFecha",{fechaId:ctx.fechaId});
   if(!rf.ok){if(jel)jel.innerHTML=errBox(rf.error);return;}
-  window._ctx=ctx;window._parts=rf.partidos||[];window._pr={};window._reglasDisp=[];window._cambiosFecha=3;
+  window._ctx=ctx;window._parts=rf.partidos||[];window._pr={};window._reglasDisp=[];
+  window._cambiosFecha=3;window._cambiosUsados=0;window._cambiosRestantes=3;window._proximoCosto=null;window._proximoPorcentaje=null;
   (rf.fecha.reglasDetalle||[]).forEach(function(r){
     const local=TODAS_LAS_REGLAS.find(function(x){return x.codigo===r.codigo;});
     window._reglasDisp.push({codigo:r.codigo,nombre:local?local.nombre:r.nombre,pts:local?local.pts:r.pts,desc:local?local.desc:r.desc,cantReq:r.cantPartidos||1,partidos:[],detalleMK:""});
@@ -1055,7 +1056,13 @@ async function loadJugar(ctx){
   try{
     const rm=await api("getMiFecha",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
     if(rm.ok){
-      window._cambiosFecha=rm.cambiosRestantesFecha!==undefined?rm.cambiosRestantesFecha:3;
+      // Info de cambios
+      window._cambiosUsados=rm.cambiosUsados||0;
+      window._cambiosRestantes=rm.cambiosRestantes!==undefined?rm.cambiosRestantes:3;
+      window._proximoCosto=rm.proximoCosto||null;
+      window._proximoPorcentaje=rm.proximoPorcentaje||null;
+      window._cambiosFecha=window._cambiosRestantes;
+      
       (rm.pronos||[]).forEach(function(p){
         window._pr[p.partidoId]={
           v:p.pronostico,cr:p.cambiosRestantes,
@@ -1063,7 +1070,8 @@ async function loadJugar(ctx){
           ptsGrilla:p.ptsGrilla,ptsToleTole:p.ptsToleTole,
           ptsReglas:p.ptsReglas,ptsTotal:p.ptsTotal,
           esToleTole:p.esToleTole,calculado:p.calculado,
-          reglas:p.reglas||[]
+          reglas:p.reglas||[],
+          cambioPendiente:p.cambioPendiente||null
         };
       });
       const reglasPorCodigo={};
@@ -1072,6 +1080,14 @@ async function loadJugar(ctx){
         if(reglasPorCodigo[disp.codigo])disp.partidos=reglasPorCodigo[disp.codigo];
         if(disp.codigo==="MK"){const mkReg=(rm.reglas||[]).find(function(r){return r.codigo==="MK";});if(mkReg)disp.detalleMK=mkReg.detalle||"";}
       });
+      
+      // Verificar si hay cambios pendientes de ejecutar
+      const cambiosPendientes=rm.cambiosPendientes||[];
+      const cambiosPagados=cambiosPendientes.filter(function(c){return c.estado==="Pagado";});
+      if(cambiosPagados.length>0){
+        // Mostrar modal para ejecutar cambios pagados
+        showModalCambiosPagados(cambiosPagados);
+      }
     }
     renderPartidos(window._parts,ctx,puede);
     renderReglasSection(puede);
@@ -1079,6 +1095,31 @@ async function loadJugar(ctx){
   }catch(e){renderReglasSection(puede);}
   finally{const ld=document.getElementById("pronos-loading");if(ld)ld.remove();}
 }
+
+// Modal para ejecutar cambios que ya fueron pagados
+window.showModalCambiosPagados=function(cambios){
+  const html=cambios.map(function(c){
+    const part=window._parts.find(function(p){return p.id===c.partidoId;});
+    return`<div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(0,200,83,.06);border:1px solid rgba(0,200,83,.2);border-radius:var(--rs);margin-bottom:8px">
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:600">#${part?.numero||"?"} ${c.local||part?.local} vs ${c.visita||part?.visita}</div>
+        <div style="font-size:14px;color:var(--txt3)">${c.de} → <strong style="color:var(--g2)">${c.a}</strong></div>
+      </div>
+      <button class="btn btn-p" style="padding:8px 16px" onclick="ejecutarCambioPendiente('${c.id}');this.closest('.modal-bg').remove()">
+        ✓ Ejecutar
+      </button>
+    </div>`;
+  }).join("");
+  
+  const m=mkModal("✅ Cambios pagados",`
+    <div style="padding:10px 0">
+      <p style="font-size:16px;color:var(--txt2);margin-bottom:14px">Tenés ${cambios.length} cambio${cambios.length>1?"s":""} pagado${cambios.length>1?"s":""} listo${cambios.length>1?"s":""} para ejecutar:</p>
+      ${html}
+      <button class="btn btn-s" style="width:100%;margin-top:10px" onclick="this.closest('.modal-bg').remove()">Cerrar</button>
+    </div>
+  `);
+  document.body.appendChild(m);
+};
 
 window.actualizarPuntajes=async function(){
   const btn=document.getElementById("btn-actualizar-pts");
@@ -1111,12 +1152,14 @@ window.actualizarPuntajes=async function(){
 function renderResumenCambios(){
   const el=document.getElementById("prog-cambios");if(!el)return;
   const ahora=new Date();
-  const cf=window._cambiosFecha!==undefined?window._cambiosFecha:3;
+  const cambiosUsados=window._cambiosUsados||0;
+  const cambiosRestantes=window._cambiosRestantes!==undefined?window._cambiosRestantes:(3-cambiosUsados);
+  const proximoCosto=window._proximoCosto||null;
+  const proximoPct=window._proximoPorcentaje||null;
   const hayModif=window._parts.some(function(p){const i=p.fechaHora?new Date(p.fechaHora):null;return i&&(i-ahora)/60000>30;});
-  if(!hayModif)return;
+  if(!hayModif){el.style.display="none";return;}
+  
   // Calcular total de puntos acumulados
-  // Total = suma de ptsTotal por partido + puntos de reglas postFecha (LR, DIEGO) de _reglasDisp
-  // Total = suma de ptsTotal de cada partido + puntos de LR/DIEGO calculados como 1pt por acierto
   const lrInfoGen=_getLRInfo();
   const totalPts=Object.entries(window._pr).reduce(function(t,kv){
     const pid=kv[0];const p=kv[1];
@@ -1127,9 +1170,25 @@ function renderResumenCambios(){
     return t+ptsBase+lrPts+ptsReglas;
   },0);
   const ptsBadge=totalPts>0?`<span style="font-family:var(--ff);font-size:26px;font-weight:900;color:var(--g2);margin-left:12px">🏆 ${totalPts} pts</span> <button onclick="actualizarPuntajes()" style="font-size:14px;padding:3px 10px;background:var(--off);border:1px solid var(--bdr-l2);border-radius:var(--rs);cursor:pointer;font-weight:600;color:var(--txt2);margin-left:6px" id="btn-actualizar-pts">🔄 Actualizar</button>`:"";
+  
   el.style.display="block";
-  if(cf<=0){el.innerHTML=`<span style="font-size:17px;font-weight:600;color:var(--red)">🔒 Sin cambios disponibles para esta fecha</span>${ptsBadge}`;return;}
-  el.innerHTML=`<span style="font-family:var(--ff);font-size:36px;font-weight:900;color:var(--blue)">${cf}</span><div style="margin-left:8px"><div style="font-size:17px;font-weight:700;color:var(--blue)">cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</div><div style="font-size:14px;color:var(--txt3)">Podés cambiar hasta 30 min antes de cada partido</div></div>${ptsBadge}`;
+  if(cambiosRestantes<=0){
+    el.innerHTML=`<span style="font-size:17px;font-weight:600;color:var(--red)">🔒 Sin cambios disponibles para esta fecha</span>${ptsBadge}`;
+    return;
+  }
+  
+  const costoInfo=proximoCosto?`<div style="font-size:14px;color:var(--gold);margin-top:2px">💰 Próximo cambio: <strong>$${proximoCosto.toLocaleString("es-AR")}</strong> (${proximoPct}%)</div>`:"";
+  
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;flex:1">
+      <span style="font-family:var(--ff);font-size:36px;font-weight:900;color:var(--blue)">${cambiosRestantes}</span>
+      <div>
+        <div style="font-size:17px;font-weight:700;color:var(--blue)">cambio${cambiosRestantes!==1?"s":""} disponible${cambiosRestantes!==1?"s":""}</div>
+        ${costoInfo}
+      </div>
+    </div>
+    ${ptsBadge}
+  `;
 }
 
 // Calcular qué partidos son parte de la racha LR y sus multiplicadores
@@ -1388,14 +1447,121 @@ window.jugarFecha=async function(){
 };
 window.pronosticar=async function(pid,v,fid,poid){
   const prev=window._pr[pid]?Object.assign({},window._pr[pid]):null;
-  if(!window._pr[pid])window._pr[pid]={v:v,cr:3};
-  else window._pr[pid].v=v;
-  renderPartidos(window._parts,window._ctx,true);
-  const r=await api("autoguardar",{fechaId:fid,pozoId:poid,pronos:[{partidoId:pid,pronostico:v}]});
-  if(!r.ok){toast("❌ "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];renderPartidos(window._parts,window._ctx,true);return;}
-  if(r.cambiosRestantesFecha!==undefined){window._cambiosFecha=r.cambiosRestantesFecha;renderResumenCambios();}
-  if(r.mensaje&&r.cambio)toast(r.mensaje);
+  const esNuevo=!prev||!prev.v;
+  const esCambio=prev&&prev.v&&prev.v!==v;
+  
+  // Si es un pronóstico nuevo (no cambio), guardar directo
+  if(esNuevo){
+    if(!window._pr[pid])window._pr[pid]={v:v,cr:3};
+    else window._pr[pid].v=v;
+    renderPartidos(window._parts,window._ctx,true);
+    const r=await api("autoguardar",{fechaId:fid,pozoId:poid,pronos:[{partidoId:pid,pronostico:v}]});
+    if(!r.ok){toast("❌ "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];renderPartidos(window._parts,window._ctx,true);return;}
+    if(r.cambiosRestantesFecha!==undefined){window._cambiosFecha=r.cambiosRestantesFecha;renderResumenCambios();}
+    return;
+  }
+  
+  // Es un CAMBIO — mostrar modal de confirmación con costo
+  if(esCambio){
+    showModalCambio(pid,prev.v,v,fid,poid);
+  }
 };
+
+// Modal para confirmar cambio con pago
+window.showModalCambio=async function(pid,pronoAnterior,pronoNuevo,fid,poid){
+  const part=window._parts.find(function(p){return p.id===pid;});
+  if(!part)return;
+  
+  // Obtener info de cambios y costo
+  const r=await api("getMisCambios",{fechaId:fid,pozoId:poid});
+  if(!r.ok){toast("❌ "+r.error);return;}
+  
+  const cambiosUsados=r.cambiosUsados||0;
+  const cambiosRestantes=r.cambiosRestantes||0;
+  
+  if(cambiosRestantes<=0){
+    toast("❌ Ya usaste los 3 cambios permitidos");
+    return;
+  }
+  
+  const numeroCambio=r.proximoCambio;
+  const costo=r.proximoCosto;
+  const porcentaje=r.proximoPorcentaje;
+  
+  const labels={L:"Local",E:"Empate",V:"Visitante"};
+  
+  const m=mkModal(`🔄 Cambio #${numeroCambio}`,`
+    <div style="text-align:center;padding:10px 0">
+      <div style="font-size:17px;color:var(--txt2);margin-bottom:16px">
+        <strong>#${part.numero}</strong> ${part.local} vs ${part.visita}
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:20px">
+        <div style="text-align:center">
+          <div class="prono-box ${pronoAnterior}" style="width:56px;height:56px;font-size:36px;border-radius:12px;margin:0 auto 4px">${pronoAnterior}</div>
+          <div style="font-size:14px;color:var(--txt3)">${labels[pronoAnterior]}</div>
+        </div>
+        <div style="font-size:32px;color:var(--txt3)">→</div>
+        <div style="text-align:center">
+          <div class="prono-box ${pronoNuevo}" style="width:56px;height:56px;font-size:36px;border-radius:12px;margin:0 auto 4px;border:3px solid var(--g2)">${pronoNuevo}</div>
+          <div style="font-size:14px;color:var(--g2);font-weight:600">${labels[pronoNuevo]}</div>
+        </div>
+      </div>
+      <div style="background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--r);padding:16px;margin-bottom:16px">
+        <div style="font-size:15px;color:var(--txt2);margin-bottom:4px">Costo del cambio #${numeroCambio} (${porcentaje}%)</div>
+        <div style="font-family:var(--ff);font-size:42px;font-weight:900;color:var(--gold)">$${costo.toLocaleString("es-AR")}</div>
+        <div style="font-size:14px;color:var(--txt3);margin-top:4px">Se suma al pozo del ganador</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-p btn-lg" id="btn-pagar-cambio" onclick="pagarCambio('${pid}','${pronoNuevo}','${fid}','${poid}')">
+          💳 Pagar y cambiar
+        </button>
+        <button class="btn btn-s" style="padding:12px" onclick="this.closest('.modal-bg').remove()">
+          Cancelar
+        </button>
+      </div>
+      <div style="font-size:13px;color:var(--txt3);margin-top:12px">
+        Cambios disponibles: <strong>${cambiosRestantes}</strong> de 3
+      </div>
+    </div>
+  `);
+  document.body.appendChild(m);
+};
+
+// Solicitar y pagar el cambio
+window.pagarCambio=async function(pid,pronoNuevo,fid,poid){
+  const btn=document.getElementById("btn-pagar-cambio");
+  if(btn){btn.textContent="⏳ Procesando...";btn.disabled=true;}
+  
+  // 1. Solicitar el cambio (crea registro pendiente)
+  const r=await api("solicitarCambio",{fechaId:fid,pozoId:poid,partidoId:pid,pronosticoNuevo:pronoNuevo});
+  if(!r.ok){
+    toast("❌ "+r.error);
+    document.querySelector(".modal-bg")?.remove();
+    return;
+  }
+  
+  // 2. Crear preferencia de MercadoPago
+  const mp=await api("crearPreferenciaCambio",{cambioId:r.cambioId});
+  if(mp.ok&&(mp.initPoint||mp.sandboxUrl)){
+    window.location.href=mp.initPoint||mp.sandboxUrl;
+  }else{
+    toast("❌ Error MP: "+(mp.error||"No se pudo crear el pago"));
+    document.querySelector(".modal-bg")?.remove();
+  }
+};
+
+// Ejecutar cambio después de pago confirmado
+window.ejecutarCambioPendiente=async function(cambioId){
+  const r=await api("ejecutarCambio",{cambioId:cambioId});
+  if(r.ok){
+    toast("✅ "+r.mensaje);
+    // Recargar la pantalla actual
+    if(App.screen==="jugar")loadJugar(App.ctx);
+  }else{
+    toast("❌ "+r.error);
+  }
+};
+
 window.guardarTodos=async function(){
   const ps=Object.entries(window._pr).map(function(e){return{partidoId:e[0],pronostico:e[1].v};});
   const r=await api("autoguardar",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId,pronos:ps});
@@ -1871,7 +2037,37 @@ function errBox(msg){return`<div class="err-box">⚠ ${msg}</div>`;}
 function emptyBox(icon,msg){return`<div class="empty"><div class="ei">${icon}</div><p>${msg}</p></div>`;}
 function mkModal(title,body){const m=document.createElement("div");m.className="modal-bg";m.onclick=e=>{if(e.target===m)m.remove();};m.innerHTML=`<div class="modal-box"><div class="modal-head"><div class="modal-title">${title}</div><div class="modal-close" onclick="this.closest('.modal-bg').remove()">×</div></div>${body}</div>`;return m;}
 
-(()=>{const p=new URLSearchParams(location.search).get("pago");if(!p)return;history.replaceState({},"",location.pathname);if(p==="ok")toast("✅ ¡Pago aprobado! Podés jugar");else if(p==="error")toast("❌ Pago no procesado");else toast("⏳ Pago pendiente");})();
+(()=>{
+  const params=new URLSearchParams(location.search);
+  const p=params.get("pago");
+  const c=params.get("cambio");
+  const cambioId=params.get("id");
+  
+  if(p||c)history.replaceState({},"",location.pathname);
+  
+  // Manejo de pago de inscripción
+  if(p==="ok")toast("✅ ¡Pago aprobado! Podés jugar");
+  else if(p==="error")toast("❌ Pago no procesado");
+  else if(p==="pendiente")toast("⏳ Pago pendiente");
+  
+  // Manejo de pago de cambio
+  if(c==="ok"&&cambioId){
+    toast("✅ ¡Cambio pagado! Ejecutando...");
+    // Ejecutar el cambio automáticamente
+    setTimeout(async function(){
+      const r=await api("ejecutarCambio",{cambioId:cambioId});
+      if(r.ok){
+        toast("✅ "+r.mensaje);
+      }else{
+        toast("❌ "+r.error);
+      }
+    },1000);
+  }else if(c==="error"){
+    toast("❌ Pago de cambio no procesado");
+  }else if(c==="pendiente"){
+    toast("⏳ Pago de cambio pendiente");
+  }
+})();
 
 // ── REALTIME ─────────────────────────────────────────────────
 let _realtimeChannel = null;
