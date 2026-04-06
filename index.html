@@ -30,7 +30,7 @@
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
-@media(max-width:768px){html,body{height:100%;overflow:hidden}#app{display:none!important}#mh{display:flex!important}#bn{display:flex!important}#mc{display:block!important;position:fixed;top:54px;left:0;right:0;bottom:56px;overflow-y:auto;z-index:10;background:var(--off);font-size:13px}#sl{z-index:20}.mh-title{font-size:14px!important;letter-spacing:1px!important}}
+@media(max-width:768px){html,body{height:100%;overflow:hidden}#app{display:none!important}#mh{display:flex!important}#bn{display:flex!important}#mc{display:block!important;position:fixed;top:54px;left:0;right:0;bottom:56px;overflow-y:auto;z-index:10;background:var(--off);zoom:0.8}#sl{z-index:20}.mh-title{font-size:14px!important;letter-spacing:1px!important}}
 body{background:var(--off);font-family:var(--fb);color:var(--txt);-webkit-font-smoothing:antialiased}
 button{cursor:pointer;border:none;background:none;color:inherit;font-family:var(--fb)}
 button:active:not(:disabled){transform:scale(.96)}
@@ -152,11 +152,11 @@ input:focus,select:focus{outline:none}
 }
 .mh-left{display:flex;align-items:center;gap:10px}
 .mh-logo{width:32px;height:32px;border-radius:9px;overflow:hidden;border:1px solid rgba(255,255,255,.1)}
-.mh-title{font-family:var(--ff);font-size:26px;font-weight:900;letter-spacing:2px;color:var(--white)}
+.mh-title{font-family:var(--ff);font-size:18px;font-weight:900;letter-spacing:1px;color:var(--white)}
 .mh-chip{font-size:14px;color:var(--g1);background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);padding:4px 12px;border-radius:20px;font-weight:600}
 #mc{display:none;overflow-y:auto;padding:12px 14px 80px;margin-top:54px}
 #bn{
-  display:none;position:fixed;bottom:0;left:0;right:0;
+  display:none;position:fixed;bottom:0;left:0;right:0;justify-content:center;
   background:var(--d2);border-top:1px solid var(--bdr);z-index:100;
   padding-bottom:env(safe-area-inset-bottom)
 }
