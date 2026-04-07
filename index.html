@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- POLLA PRODES — index.html | 2026-04-06 21:30 ARG — Fixes funcionales -->
+<!-- POLLA PRODES — index.html | 2026-04-06 21:45 ARG — Fixes visuales -->
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
@@ -102,8 +102,11 @@ input:focus,select:focus{outline:none}
 }
 .sb-logo{
   width:64px;height:64px;border-radius:16px;overflow:hidden;flex-shrink:0;
-  border:none;
+  background:#fff;
   box-shadow:0 8px 32px rgba(0,0,0,.5)
+}
+.sb-logo svg{
+  width:100%;height:100%;border-radius:16px;
 }
 .sb-brand .name{
   font-family:var(--ff);font-size:34px;font-weight:900;
@@ -112,7 +115,7 @@ input:focus,select:focus{outline:none}
   text-shadow:0 2px 8px rgba(0,0,0,.5)
 }
 .sb-brand .sub{
-  font-size:11px;color:rgba(255,255,255,.4);margin-top:6px;letter-spacing:4px;text-transform:uppercase
+  font-size:11px;color:rgba(255,255,255,.5);margin-top:6px;letter-spacing:4px;text-transform:uppercase
 }
 
 #sb-nav{flex:1;overflow-y:auto;padding:18px 14px}
@@ -1142,9 +1145,9 @@ async function loadMisPronoDet(fechaId,f){
   }
   
   if(el)el.innerHTML=`
-    <div style="margin-bottom:12px">
+    <div class="card" style="padding:16px;margin-bottom:12px">
       <!-- Pozo actual -->
-      <div style="padding:12px 16px;background:linear-gradient(135deg,rgba(255,179,0,.1),rgba(255,179,0,.05));border:1px solid rgba(255,179,0,.25);border-radius:var(--r);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+      <div style="padding:12px 16px;background:linear-gradient(135deg,rgba(255,179,0,.15),rgba(255,179,0,.08));border:1px solid rgba(255,179,0,.25);border-radius:var(--r);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
         <div><div style="font-size:13px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:1px">💰 Pozo actual</div></div>
         <div style="font-family:var(--ff);font-size:32px;font-weight:900;color:var(--gold)">$${pozoActual.toLocaleString("es-AR")}</div>
       </div>
@@ -1159,7 +1162,7 @@ async function loadMisPronoDet(fechaId,f){
         <button class="btn btn-p" onclick="go('jugar',{fechaId:'${fechaId}',pozoId:'${yaInsc.id}'})" style="flex:1;padding:12px">✏️ Ver y modificar pronósticos</button>
         <button class="btn btn-s" onclick="go('tabla',{fechaId:'${fechaId}',pozoId:'${yaInsc.id}'})" style="flex:1;padding:12px">🏆 Ver tabla</button>
       </div>
-      <p class="sec">Mis pronósticos</p>
+      <p class="sec" style="color:var(--txt)">Mis pronósticos</p>
       ${pronos.map(function(p){
         const regla=reglaMap[p.partidoId];
         const inicio=p.fechaHora?new Date(p.fechaHora):null;
@@ -1171,7 +1174,7 @@ async function loadMisPronoDet(fechaId,f){
         return`<div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--bdr-l)">
           <span style="font-size:14px;font-weight:700;color:var(--txt3);width:26px">#${p.numero}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-size:16px;font-weight:500;display:flex;align-items:center;gap:4px">${logoHtml(p.localLogo,nombreLocal)} <span style="color:var(--txt3);font-size:13px">vs</span> ${logoHtml(p.visitaLogo,nombreVisita)}</div>
+            <div style="font-size:16px;font-weight:600;color:var(--txt);display:flex;align-items:center;gap:4px">${logoHtml(p.localLogo,nombreLocal)} <span style="color:var(--txt3);font-size:13px">vs</span> ${logoHtml(p.visitaLogo,nombreVisita)}</div>
             ${regla?`<div style="font-size:12px;color:var(--gold)">📏 ${regla.nombre}</div>`:""}
           </div>
           <span class="prono-box ${p.pronostico}" style="width:34px;height:34px;font-size:24px;border-radius:8px">${p.pronostico}</span>
@@ -1858,14 +1861,15 @@ async function loadTabla(ctx){
     const inscripciones=ri.ok?(ri.inscripciones||[]):[];
     if(!inscripciones.length){el.innerHTML=emptyBox("🏆","No estás inscripto en ninguna fecha");return;}
     const fechas=rf.ok?(rf.fechas||[]):[];
-    el.innerHTML=`<div><p class="sec">Seleccioná fecha y pozo</p>${inscripciones.map(function(i){const f=fechas.find(function(x){return x.id===i.fechaId;});return`<div class="card" style="margin-bottom:8px;padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="go('tabla',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})"><div><div style="font-size:20px;font-weight:600">${f?f.nombre:i.fechaId}</div><div style="font-size:16px;color:var(--txt3)">Pozo $${(i.monto||0).toLocaleString("es-AR")} · ${f?f.liga||"":""}</div></div><span style="color:var(--g2);font-size:23px">→</span></div>`;}).join("")}</div>`;
+    el.innerHTML=`<div class="card" style="padding:20px"><p class="sec" style="margin-top:0;color:var(--txt)">Seleccioná fecha y pozo</p>${inscripciones.map(function(i){const f=fechas.find(function(x){return x.id===i.fechaId;});return`<div class="admin-btn" onclick="go('tabla',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})"><div><div class="abt">${f?f.nombre:i.fechaId}</div><div class="abd">Pozo $${(i.monto||0).toLocaleString("es-AR")} · ${f?f.liga||"":""}</div></div><span style="color:var(--g2);font-size:23px">→</span></div>`;}).join("")}</div>`;
     return;
   }
   const r=await api("getTabla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});if(!r.ok){el.innerHTML=errBox(r.error);return;}
   const t=r.tabla||[],md=["🥇","🥈","🥉"],po=t.slice(0,3);
   const ultimoPart=r.ultimoPartidoCalculado||0;
   const totalParts=r.totalPartidos||0;
-  el.innerHTML=`<p style="font-size:14px;color:var(--txt3);margin-bottom:14px">Calculado hasta partido #${ultimoPart} de ${totalParts}</p>
+  el.innerHTML=`<div class="card" style="padding:20px">
+  <p style="font-size:14px;color:var(--txt3);margin-bottom:14px">Calculado hasta partido #${ultimoPart} de ${totalParts}</p>
   ${po.length>=3?`<div class="podio-wrap">${[po[1],po[0],po[2]].map((u,i)=>{const ri=i===0?1:i===1?0:2;return`<div class="podio-item${ri===0?" first":""}"><div class="med">${md[ri]}</div><div class="pnm">${u.nombre||u.siglas||"Jugador"}</div><div class="podio-box"><div class="podio-pts">${u.ptsTotal}</div><div style="font-size:12px;color:var(--txt3)">pts</div></div></div>`;}).join("")}</div>`:""}
   <div>${t.map((u,i)=>{
     const nombre=u.nombre||u.siglas||"Jugador";
@@ -1875,7 +1879,7 @@ async function loadTabla(ctx){
     return`<div class="rank-row${u.userId===App.user?.id?" yo":""}">
       <span class="rank-pos" style="color:${i===0?"#DAA520":i===1?"#888":i===2?"#B87333":"var(--txt3)"}">${i<3?md[i]:u.posicion}</span>
       <div style="flex:1;min-width:0">
-        <div class="rank-nm">${siglas}${u.userId===App.user?.id?` <span style="font-size:13px;color:var(--txt3)">(vos)</span>`:""}</div>
+        <div class="rank-nm" style="color:var(--txt)">${siglas}${u.userId===App.user?.id?` <span style="font-size:13px;color:var(--txt3)">(vos)</span>`:""}</div>
         <div style="font-size:12px;color:var(--txt3);display:flex;gap:8px;margin-top:2px">
           <span>⚽ ${ptsPartidos}pts</span>
           ${ptsReglas>0?`<span>📏 ${ptsReglas}pts</span>`:""}
@@ -1886,15 +1890,51 @@ async function loadTabla(ctx){
         <span style="font-size:13px;color:var(--txt3);margin-left:2px">pts</span>
       </div>
     </div>`;
-  }).join("")}</div>`;
+  }).join("")}</div>
+  </div>`;
 }
 
 /* ══ GRILLA ══════════════════════════════════════════════════ */
 async function loadGrilla(ctx){
   const el=document.getElementById("gc");if(!el)return;
-  if(!ctx.fechaId||!ctx.pozoId){el.innerHTML=emptyBox("🔒","La grilla se habilita cuando cierra la fecha");return;}
-  const r=await api("getGrilla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});if(!r.ok){el.innerHTML=emptyBox("🔒",r.error);return;}
-  el.innerHTML=`<div class="grilla-wrap"><table class="grilla-tbl"><thead><tr><th style="text-align:left;padding-left:10px">Jugador</th>${r.partidos?.map(p=>`<th>#${p.numero}</th>`).join("")||""}<th>Pts</th></tr></thead><tbody>${(r.jugadores||[]).map(j=>`<tr><td class="gcell-nm${j.esTuFecha?" yo":""}">${j.siglas}${j.esTuFecha?" 👈":""}</td>${j.pronosticos.map(pr=>{const v=pr.pronostico,ok=pr.acertado===true;return`<td>${v?`<span class="pcell ${v}${ok?" ok":""}">${v}</span>`:"-"}</td>`;}).join("")}<td style="font-family:var(--ff);font-size:20px;font-weight:700;color:${j.esTuFecha?"var(--g2)":"var(--txt)"}">${j.puntosAcumulados}</td></tr>`).join("")}</tbody></table></div>`;
+  
+  // Si no hay contexto, buscar automáticamente la primera fecha cerrada del usuario
+  if(!ctx.fechaId||!ctx.pozoId){
+    el.innerHTML=`<div class="loading"><div class="spinner"></div></div>`;
+    const ri=await api("getMisInscripciones");
+    const inscripciones=ri.ok?(ri.inscripciones||[]):[];
+    if(!inscripciones.length){
+      el.innerHTML=emptyBox("🔒","No estás inscripto en ninguna fecha");
+      return;
+    }
+    // Buscar fechas cerradas
+    const rf=await api("getFechas");
+    const fechas=rf.ok?(rf.fechas||[]):[];
+    const inscCerradas=inscripciones.filter(function(i){
+      const f=fechas.find(function(x){return x.id===i.fechaId;});
+      return f&&(f.estado==="Cerrada"||f.estado==="Finalizada");
+    });
+    if(!inscCerradas.length){
+      el.innerHTML=emptyBox("⏳","La grilla se habilita cuando cierra la fecha");
+      return;
+    }
+    // Mostrar selector de fechas cerradas
+    el.innerHTML=`<div class="card" style="padding:20px">
+      <p class="sec" style="margin-top:0">Seleccioná una fecha para ver la grilla</p>
+      ${inscCerradas.map(function(i){
+        const f=fechas.find(function(x){return x.id===i.fechaId;})||{};
+        return`<div class="admin-btn" onclick="go('grilla',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})">
+          <div><div class="abt">${f.nombre||i.fechaId}</div><div class="abd">Pozo $${(i.monto||0).toLocaleString("es-AR")} · ${f.liga||""}</div></div>
+          <span style="font-size:22px;color:var(--g2)">→</span>
+        </div>`;
+      }).join("")}
+    </div>`;
+    return;
+  }
+  
+  const r=await api("getGrilla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
+  if(!r.ok){el.innerHTML=emptyBox("🔒",r.error);return;}
+  el.innerHTML=`<div class="card" style="padding:16px"><div class="grilla-wrap"><table class="grilla-tbl"><thead><tr><th style="text-align:left;padding-left:10px">Jugador</th>${r.partidos?.map(p=>`<th>#${p.numero}</th>`).join("")||""}<th>Pts</th></tr></thead><tbody>${(r.jugadores||[]).map(j=>`<tr><td class="gcell-nm${j.esTuFecha?" yo":""}">${j.siglas}${j.esTuFecha?" 👈":""}</td>${j.pronosticos.map(pr=>{const v=pr.pronostico,ok=pr.acertado===true;return`<td>${v?`<span class="pcell ${v}${ok?" ok":""}">${v}</span>`:"-"}</td>`;}).join("")}<td style="font-family:var(--ff);font-size:20px;font-weight:700;color:${j.esTuFecha?"var(--g2)":"var(--txt)"}">${j.puntosAcumulados}</td></tr>`).join("")}</tbody></table></div></div>`;
 }
 
 /* ══ STATS ═══════════════════════════════════════════════════ */
