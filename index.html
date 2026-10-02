@@ -1966,6 +1966,12 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
 .fdp-otros{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .fdp-otros span{font-size:12.5px;padding:4px 10px;border-radius:12px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8)}
 .fdp-otros b{color:#FFD268}
+/* Casillero de código en Fechas */
+.cod-box{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 16px;margin-bottom:14px;border:1.5px dashed var(--accent-line);background:var(--accent-soft)}
+.cod-tx b{display:block;font-family:var(--ff);font-size:22px;font-weight:800;text-transform:uppercase;line-height:1}
+.cod-tx small{font-size:13px;color:var(--ink-2)}
+.cod-in{display:flex;gap:8px;flex:1;min-width:240px;max-width:380px}
+.cod-in .inp{flex:1;font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em;text-align:center}
 
 </style>
 </head>
@@ -2395,10 +2401,10 @@ function afterRender(k,ctx){
 async function loadFechas(){
   const r=await api("getFechas"),el=document.getElementById("fl");if(!el)return;
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
-  if(!r.fechas?.length){el.innerHTML=emptyBox("📅","No hay fechas disponibles");mostrarNovedadesEn(el);return;}
+  if(!r.fechas?.length){el.innerHTML=emptyBox("📅","No hay fechas disponibles");cajaCodigoEn(el);mostrarNovedadesEn(el);return;}
   const ICONS={"Liga Argentina":"🇦🇷","Premier League":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","La Liga":"🇪🇸","Serie A":"🇮🇹","Champions League":"🏆","Copa Libertadores":"🌎","Ligue 1":"🇫🇷"};
   var fechasVis=App.user&&App.user.rol==="Admin"?r.fechas:r.fechas.filter(function(f){return f.estado==="Abierta";});
-  if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas abiertas por ahora. Tus fechas jugadas están en F. Jugadas");mostrarNovedadesEn(el);return;}
+  if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas abiertas por ahora. Tus fechas jugadas están en F. Jugadas");cajaCodigoEn(el);mostrarNovedadesEn(el);return;}
   el.innerHTML=fechasVis.map(function(f){
     const mins=f.minutosRestantes,urg=mins<120&&mins>0;
     const urgente=mins>0&&mins<=30;
@@ -2426,6 +2432,7 @@ async function loadFechas(){
     </div>`;
   }).join("");
   fechasVis.forEach(function(f){cargarExtraFecha(f);});
+  cajaCodigoEn(el);
   mostrarNovedadesEn(el);
 }
 
@@ -2490,6 +2497,7 @@ async function loadFechaDet(ctx){
       <div id="fd-premio"></div>
       <div class="fecha-hero-stats">
         <span>⚽ <strong style="color:rgba(255,255,255,.85)">${f.cantPartidos||0}</strong> partidos</span>
+        <span title="Después del cierre, cada cambio hasta 1 hora antes de su partido">🔄 <strong style="color:rgba(255,255,255,.85)">3</strong> cambios ${f.cambiosGratis?"gratis":"pagos"}</span>
         ${f.minutosRestantes>0?`<span>⏱ <strong style="color:rgba(255,255,255,.85)">${f.minutosRestantes<60?f.minutosRestantes+"min":Math.floor(f.minutosRestantes/60)+"hs"}</strong></span>`:`<span style="color:var(--red)">🔒 Cerrada</span>`}
       </div>
       ${f.reglasDetalle?.length?`<div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px"><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">📏 Reglas especiales</div><div style="display:flex;gap:6px;flex-wrap:wrap">${f.reglasDetalle.map(function(r){return`<div style="padding:5px 10px;background:rgba(255,179,0,.15);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs)"><span style="font-size:16px;font-weight:700;color:var(--gold)">${r.nombre}</span><span style="font-size:14px;color:rgba(255,255,255,.5);margin-left:5px">+${r.pts}pts</span></div>`;}).join("")}</div></div>`:""}
@@ -2772,7 +2780,7 @@ async function loadJugar(ctx){
       // Info de cambios
       window._cambiosUsados=rm.cambiosUsados||0;
       window._cambiosRestantes=rm.cambiosRestantes!==undefined?rm.cambiosRestantes:3;
-      window._proximoCosto=rm.proximoCosto||null;
+      window._proximoCosto=rm.proximoCosto||null;window._cambiosGratis=!!rm.cambiosGratis||!!App.user?.empresa;
       window._proximoPorcentaje=rm.proximoPorcentaje||null;
       window._cambiosFecha=window._cambiosRestantes;
       window._enRevision={};(rm.cambiosEnRevision||[]).forEach(function(c){window._enRevision[c.partidoId]=c;});
@@ -2889,14 +2897,14 @@ function renderResumenCambios(){
   el.style.display="block";
   if(_enLibre()){
     const h=_libreHasta(window._parts);
-    el.innerHTML=`<div class="cambios-box libre"><div class="cb-ico" aria-hidden="true">✓</div><div class="cb-txt"><div class="cb-t">Cambios <b>gratis</b>${h?` hasta ${_fmtH(h)}`:""}</div><div class="cb-s">Cambiá tus pronósticos todas las veces que quieras hasta 1 hora antes del primer partido. Después tenés 3 cambios pagos (20%, 25% y 30% del pozo).</div></div>${ptsBadge}</div>`;
+    el.innerHTML=`<div class="cambios-box libre"><div class="cb-ico" aria-hidden="true">✓</div><div class="cb-txt"><div class="cb-t">Cambios <b>gratis</b>${h?` hasta ${_fmtH(h)}`:""}</div><div class="cb-s">Cambiá tus pronósticos todas las veces que quieras hasta 1 hora antes del primer partido. ${window._cambiosGratis?"Después tenés 3 cambios gratis, cada uno hasta 1 hora antes de su partido.":"Después tenés 3 cambios pagos (20%, 25% y 30% del pozo)."}</div></div>${ptsBadge}</div>`;
     return;
   }
   const usados=Math.min(3,Math.max(0,3-cambiosRestantes));
   const dots=[0,1,2].map(function(i){return`<i class="${i<usados?"used":""}"></i>`;}).join("");
   const sub=cambiosRestantes<=0
     ?"Ya usaste los 3 cambios de esta fecha"
-    :App.user?.empresa||!proximoCosto?`Cambios <strong>gratis</strong> · se cierran 1 hora antes de cada partido`
+    :App.user?.empresa||window._cambiosGratis||!proximoCosto?`Cambios <strong>gratis</strong> · cada uno hasta 1 hora antes de su partido`
     :`Próximo cambio: <strong>$${(proximoCosto||0).toLocaleString("es-AR")}</strong>${proximoPct?` (${proximoPct}% del pozo)`:""} · se cierran 1 hora antes de cada partido`;
   el.innerHTML=`<div class="cambios-box${cambiosRestantes<=0?" agotados":""}">
     <div class="cb-dots" aria-hidden="true">${dots}</div>
@@ -3043,7 +3051,7 @@ function renderPartidos(parts,ctx,puede){
       <div class="lr-item E"><span class="lr-n">${cnt.E}</span><span class="lr-l">Empates</span></div>
       <div class="lr-item V"><span class="lr-n">${cnt.V}</span><span class="lr-l">Visitantes</span></div>
       <div class="lr-item F"><span class="lr-n">${faltan}</span><span class="lr-l">Sin elegir</span></div>
-      <div class="lr-item C"><span class="lr-n">${_enLibre()?"Libre":(window._cambiosRestantes!==undefined?window._cambiosRestantes:3)+"<small>/3</small>"}</span><span class="lr-l">${_enLibre()?"Cambios gratis":"Cambios pagos"}</span></div>
+      <div class="lr-item C"><span class="lr-n">${_enLibre()?"Libre":(window._cambiosRestantes!==undefined?window._cambiosRestantes:3)+"<small>/3</small>"}</span><span class="lr-l">${_enLibre()||window._cambiosGratis?"Cambios gratis":"Cambios pagos"}</span></div>
     </div>`;
     jf.innerHTML=resumen+(puede?`<button class="btn btn-p btn-lg" onclick="guardarTodos()">💾 Guardar pronósticos</button>`:"");
   }
@@ -3823,6 +3831,7 @@ async function loadAdminFechas(){
       </div>
       <div id="pozos-${f.id}" style="margin-bottom:8px"></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${f.codigoGrupo?`<button class="btn btn-p" style="padding:6px 12px;font-size:16px" onclick="compartirFecha('${f.id}')">🔗 Compartir</button>`:""}
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="partidosManual('${f.id}')">✍️ Cargar a mano</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-importar',{fechaId:'${f.id}'})">🔗 Importar</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-res',{fechaId:'${f.id}'})">⚽ Resultados</button>
@@ -3855,11 +3864,11 @@ window.showCrearFecha=async function(){
   const reglasHTML=TODAS_LAS_REGLAS.map(function(r){return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer"><input type="checkbox" value="${r.codigo}" style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/><div><div style="font-size:17px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:14px">+${r.pts}pts</span></div></div></label>`;}).join("");
   const re=await api("adminGetEmpresas");const emps=re.ok?(re.empresas||[]):[];const pre=window._fechaParaEmpresa||(window._afFiltro&&!["todas","pub"].includes(window._afFiltro)?window._afFiltro:"");window._fechaParaEmpresa="";
   const selEmp=emps.length?`<div class="ig"><label class="lbl">🏢 ¿Para quién es?</label><select class="inp" id="nfe">${'<option value="">Pública (Polla Prodes)</option>'}${emps.map(function(e){return`<option value="${e.id}"${e.id===pre?" selected":""}>Empresa: ${escH(e.nombre)}</option>`;}).join("")}</select><div style="font-size:13px;color:var(--txt3);margin-top:6px">Si es de una empresa, solo la ven sus empleados, juegan gratis y se arma sola su Polla (no hace falta crear pozos).</div></div>`:"";
-  const m=mkModal("Nueva fecha",`<div class="fg">${selEmp}<div class="ig"><label class="lbl">Nombre</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div><div class="ig"><label class="lbl">Plazo límite</label>${fhInput("nfp","")}</div><div class="ig"><label class="lbl">Descripción</label><input class="inp" id="nfd"/></div><div class="ig"><label class="lbl">🔒 Código de grupo cerrado (opcional)</label><input class="inp" id="nfc" placeholder="Ej: AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Quien tenga este código entra a la fecha sin pagar. Dejalo vacío para una fecha abierta con pago.</div></div><div class="g2c"><div class="ig"><label class="lbl">🏦 Alias o CVU (opcional)</label><input class="inp" id="nfa" placeholder="Usa el general si está vacío"/></div><div class="ig"><label class="lbl">Titular</label><input class="inp" id="nft"/></div></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" onclick="crearFecha()">Crear fecha</button></div>`);
+  const m=mkModal("Nueva fecha",`<div class="fg">${selEmp}<div class="ig"><label class="lbl">Nombre</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div><div class="ig"><label class="lbl">Plazo límite</label>${fhInput("nfp","")}</div><div class="ig"><label class="lbl">Descripción</label><input class="inp" id="nfd"/></div><div class="ig"><label class="lbl">🔒 Código de grupo cerrado (opcional)</label><input class="inp" id="nfc" placeholder="Ej: AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Quien tenga este código entra a la fecha sin pagar. Dejalo vacío para una fecha abierta con pago.</div></div><div class="g2c"><div class="ig"><label class="lbl">🏦 Alias o CVU (opcional)</label><input class="inp" id="nfa" placeholder="Usa el general si está vacío"/></div><div class="ig"><label class="lbl">Titular</label><input class="inp" id="nft"/></div></div><div class="ig"><label class="lbl">🔄 Cambios después del cierre</label><select class="inp" id="nfg"><option value="0">Pagos (20%, 25% y 30% del pozo)</option><option value="1">Gratis (3 cambios sin costo)</option></select><div style="font-size:13px;color:var(--txt3);margin-top:6px">Antes del cierre siempre son gratis e ilimitados. Después, 3 cambios, cada uno hasta 1 hora antes de su partido.</div></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" onclick="crearFecha()">Crear fecha</button></div>`);
   document.body.appendChild(m);
 };
 window.crearFecha=async function(){
-  const r=await api("adminCrearFecha",{empresaId:document.getElementById("nfe")?.value||"",nombre:document.getElementById("nfn")?.value,liga:document.getElementById("nfl")?.value,plazoLimite:leerFH("nfp"),descripcion:document.getElementById("nfd")?.value,codigoGrupo:document.getElementById("nfc")?.value||"",pagoAlias:document.getElementById("nfa")?.value||"",pagoTitular:document.getElementById("nft")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
+  const r=await api("adminCrearFecha",{cambiosGratis:document.getElementById("nfg")?.value==="1",empresaId:document.getElementById("nfe")?.value||"",nombre:document.getElementById("nfn")?.value,liga:document.getElementById("nfl")?.value,plazoLimite:leerFH("nfp"),descripcion:document.getElementById("nfd")?.value,codigoGrupo:document.getElementById("nfc")?.value||"",pagoAlias:document.getElementById("nfa")?.value||"",pagoTitular:document.getElementById("nft")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
   document.querySelector(".modal-bg")?.remove();
   if(r.ok){toast("✅ Fecha creada");loadAdminFechas();}else toast("❌ "+r.error);
 };
@@ -3869,12 +3878,12 @@ window.showEditarFecha=function(fechaId){
   window._reglasSelAdmin=new Set(reglasActuales);
   const reglasHTML=TODAS_LAS_REGLAS.map(function(r){const checked=reglasActuales.includes(r.codigo)?"checked":"";return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer"><input type="checkbox" value="${r.codigo}" ${checked} style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/><div><div style="font-size:17px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:14px">+${r.pts}pts</span></div></div></label>`;}).join("");
   let plazoFmt="";if(f.plazoLimite){try{const d=new Date(f.plazoLimite);const offset=d.getTimezoneOffset();const local=new Date(d.getTime()-offset*60000);plazoFmt=local.toISOString().slice(0,16);}catch(e){}}
-  const m=mkModal("✏️ Editar — "+(f.nombre||"Fecha"),`<div class="fg"><div class="ig"><label class="lbl">Nombre</label><input class="inp" id="ef-nom" value="${f.nombre||""}"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="ef-lig" value="${f.liga||""}"/></div><div class="ig"><label class="lbl">Plazo límite</label>${fhInput("ef-pla",plazoFmt)}</div><div class="ig"><label class="lbl">🔒 Código de grupo cerrado (opcional)</label><input class="inp" id="ef-cod" value="${f.codigoGrupo||""}" placeholder="Ej: AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Quien tenga este código entra a la fecha sin pagar. Dejalo vacío para una fecha abierta con pago.</div></div><div class="g2c"><div class="ig"><label class="lbl">🏦 Alias o CVU (opcional)</label><input class="inp" id="ef-pa" value="${f.pagoAlias||""}" placeholder="Usa el general si está vacío"/></div><div class="ig"><label class="lbl">Titular</label><input class="inp" id="ef-pt" value="${f.pagoTitular||""}"/></div></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" id="btn-guardar-fecha" onclick="guardarEditarFecha('${fechaId}')">Guardar cambios</button></div>`);
+  const m=mkModal("✏️ Editar — "+(f.nombre||"Fecha"),`<div class="fg"><div class="ig"><label class="lbl">Nombre</label><input class="inp" id="ef-nom" value="${f.nombre||""}"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="ef-lig" value="${f.liga||""}"/></div><div class="ig"><label class="lbl">Plazo límite</label>${fhInput("ef-pla",plazoFmt)}</div><div class="ig"><label class="lbl">🔒 Código de grupo cerrado (opcional)</label><input class="inp" id="ef-cod" value="${f.codigoGrupo||""}" placeholder="Ej: AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Quien tenga este código entra a la fecha sin pagar. Dejalo vacío para una fecha abierta con pago.</div></div><div class="g2c"><div class="ig"><label class="lbl">🏦 Alias o CVU (opcional)</label><input class="inp" id="ef-pa" value="${f.pagoAlias||""}" placeholder="Usa el general si está vacío"/></div><div class="ig"><label class="lbl">Titular</label><input class="inp" id="ef-pt" value="${f.pagoTitular||""}"/></div></div><div class="ig"><label class="lbl">🔄 Cambios después del cierre</label><select class="inp" id="ef-cg"><option value="0"${f.cambiosGratis?"":" selected"}>Pagos (20%, 25% y 30% del pozo)</option><option value="1"${f.cambiosGratis?" selected":""}>Gratis (3 cambios sin costo)</option></select><div style="font-size:13px;color:var(--txt3);margin-top:6px">Antes del cierre siempre son gratis e ilimitados. Después, 3 cambios, cada uno hasta 1 hora antes de su partido.</div></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" id="btn-guardar-fecha" onclick="guardarEditarFecha('${fechaId}')">Guardar cambios</button></div>`);
   document.body.appendChild(m);
 };
 window.guardarEditarFecha=async function(fechaId){
   const btn=document.getElementById("btn-guardar-fecha");if(btn){btn.textContent="Guardando...";btn.disabled=true;}
-  const r=await api("adminEditarFecha",{fechaId,nombre:document.getElementById("ef-nom")?.value,liga:document.getElementById("ef-lig")?.value,plazoLimite:leerFH("ef-pla"),codigoGrupo:document.getElementById("ef-cod")?.value||"",pagoAlias:document.getElementById("ef-pa")?.value||"",pagoTitular:document.getElementById("ef-pt")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
+  const r=await api("adminEditarFecha",{fechaId,cambiosGratis:document.getElementById("ef-cg")?.value==="1",nombre:document.getElementById("ef-nom")?.value,liga:document.getElementById("ef-lig")?.value,plazoLimite:leerFH("ef-pla"),codigoGrupo:document.getElementById("ef-cod")?.value||"",pagoAlias:document.getElementById("ef-pa")?.value||"",pagoTitular:document.getElementById("ef-pt")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
   document.querySelector(".modal-bg")?.remove();
   if(r.ok){toast("✅ Fecha actualizada");loadAdminFechas();}else toast("❌ "+r.error);
 };
@@ -4290,6 +4299,7 @@ function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
   setTimeout(procesarVueltaPago,600);
   setTimeout(mostrarAvisos,1200);
   setTimeout(pedirDatosEmpresa,900);
+  setTimeout(unirsePorLink,700);
 }
 
 /* ══ HELPERS ═════════════════════════════════════════════════ */
@@ -4458,7 +4468,11 @@ async function loginEmpresa(){
   if(!cod){try{cod=localStorage.getItem("pp_emp_cod");}catch(e){}}
   if(!cod){window._empLogin=null;return;}
   const r=await api("getEmpresaPublica",{codigo:cod});
-  if(!r.ok){try{localStorage.removeItem("pp_emp_cod");}catch(e){}window._empLogin=null;if(qs.get("e"))toast("⚠ "+r.error);return;}
+  if(!r.ok){try{localStorage.removeItem("pp_emp_cod");}catch(e){}window._empLogin=null;
+    if(qs.get("e")){const g=await api("getGrupoPorCodigo",{codigo:qs.get("e")});
+      if(g.ok){window._codigoPend=qs.get("e");const sb=document.querySelector(".ll-sub");if(sb)sb.innerHTML=`Te invitaron a <b>${escH(g.grupo.fechaNombre||g.grupo.nombre)}</b>. Entrá o registrate y quedás adentro.`;}
+      else toast("⚠ Ese link no corresponde a ninguna empresa ni torneo");}
+    return;}
   const emp=r.empresa;window._empLogin=emp;
   if(qs.get("e")){try{history.replaceState(null,"",linkEmpresa(emp).replace(location.origin,""));}catch(e){}}
   try{localStorage.setItem("pp_emp_cod",emp.codigo);}catch(e){}
@@ -4895,6 +4909,42 @@ function premioEnCabecera(pozos){
   const otros=ord.length>1?`<div class="fdp-otros">${ord.map(function(p){return`<span>${p.monto?"Pozo "+fmt(p.monto):"Gratis"} → <b>${p.premioGanador?fmt(p.premioGanador):"sin premio"}</b></span>`;}).join("")}</div>`:"";
   el.innerHTML=`<div class="fd-premio"><span class="fdp-ic">${ICO_COPA}</span><div class="fdp-tx"><small>${gratis?"Entrada gratis · ":""}${sub}</small><b>${tit}</b></div></div>${otros}`;
 }
+
+// ── Código de fecha: directo desde Fechas o con el link pollaprodes.ar/CODIGO ──
+function cajaCodigoEn(el){
+  if(!el||App.user?.empresa||App.user?.rol==="Admin")return;
+  const box=document.createElement("div");box.className="card cod-box";
+  box.innerHTML=`<div class="cod-tx"><b>¿Tenés un código?</b><small>Entrá directo al torneo de tus amigos</small></div>
+    <div class="cod-in"><input class="inp" id="cod-q" placeholder="AMIGOS26" maxlength="16" autocapitalize="characters" oninput="this.value=this.value.toUpperCase().replace(/\\s/g,'')" onkeydown="if(event.key==='Enter')entrarConCodigo(this.value)"/><button class="btn btn-p" onclick="entrarConCodigo(document.getElementById('cod-q').value)">Entrar</button></div>`;
+  el.prepend(box);
+}
+window.entrarConCodigo=async function(cod,silencioso){
+  cod=String(cod||"").trim().toUpperCase();if(cod.length<3){if(!silencioso)toast("Escribí el código");return false;}
+  const g=await api("getGrupoPorCodigo",{codigo:cod});
+  if(!g.ok){if(!silencioso)toast("❌ "+(g.error||"Código inválido"));return false;}
+  const r=await api("unirseConCodigo",{codigo:cod,pozoId:g.grupo.pozoId});
+  if(!r.ok){toast("❌ "+r.error);return false;}
+  toast("✅ ¡Adentro de "+(g.grupo.fechaNombre||g.grupo.nombre)+"! Ya podés pronosticar",3500);
+  window._misFechasBadge=(window._misFechasBadge||0)+1;renderNav();
+  go("jugar",{fechaId:r.fechaId,pozoId:r.pozoId});return true;
+};
+async function unirsePorLink(){
+  const qs=new URLSearchParams(location.search);const cod=window._codigoPend||qs.get("c")||(!App.user?.empresa?qs.get("e"):"");
+  if(!cod||App.user?.empresa||App.user?.rol==="Admin")return;
+  window._codigoPend=null;
+  const ok=await entrarConCodigo(cod,true);
+  if(ok)try{history.replaceState(null,"",location.pathname);}catch(e){}
+}
+window.compartirFecha=function(id){
+  const f=window._adminFechas[id]||{},link=location.origin+location.pathname.replace(/[^/]*$/,"")+encodeURIComponent(String(f.codigoGrupo||"").toLowerCase());
+  const txt=`¡Sumate a mi torneo "${f.nombre}" en Polla Prodes! Entrá acá: ${link} (código ${f.codigoGrupo})`;
+  const m=mkModal("Compartir "+escH(f.nombre||""),`<div class="fg"><p style="font-size:15px;color:var(--txt3)">Con este link entran directo: se registran o inician sesión y quedan adentro, sin escribir el código.</p>
+    <div class="me-link"><code>${escH(link)}</code></div>
+    <div class="me-acc"><button class="btn btn-s" onclick="navigator.clipboard?.writeText(${JSON.stringify(txt).replace(/"/g,"&quot;")}).then(function(){toast('Mensaje copiado')})">Copiar mensaje</button><a class="btn btn-p" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(txt)}">Mandar por WhatsApp</a></div>
+    <p style="font-size:14px;color:var(--txt3)">O que escriban el código <b style="font-family:var(--ff);font-size:20px;letter-spacing:.1em;color:var(--txt)">${escH(f.codigoGrupo||"")}</b> en Fechas.</p></div>`);
+  document.body.appendChild(m);
+};
+
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){

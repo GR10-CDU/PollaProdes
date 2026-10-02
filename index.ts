@@ -411,7 +411,7 @@ async function getFechas(db: any, data: any) {
       puedeJugar: f.estado === "Abierta" && mins > 0,
       minutosRestantes: mins,
       tieneCodigo: !!f.codigo_grupo,
-      empresaId: f.empresa_id || null, oculta: esAdmin ? !!f.oculta : undefined,
+      empresaId: f.empresa_id || null, oculta: esAdmin ? !!f.oculta : undefined, cambiosGratis: !!(f.cambios_gratis || f.empresa_id),
       empresaNombre: esAdmin && f.empresa_id ? ((emps||[]).find((e:any) => e.id === f.empresa_id)?.nombre || "") : undefined,
       codigoGrupo: esAdmin ? (f.codigo_grupo || "") : undefined,
       pagoAlias: esAdmin ? (f.pago_alias || "") : undefined, pagoTitular: esAdmin ? (f.pago_titular || "") : undefined,
@@ -439,7 +439,7 @@ async function getFecha(db: any, data: any) {
   }));
 
   return {ok:true,
-    fecha: {id:fecha.id, nombre:fecha.nombre, descripcion:fecha.descripcion, plazoLimite:cierre?.toISOString()||fecha.plazo_limite, estado:fecha.estado, cantPartidos:fecha.cant_partidos, liga:fecha.liga, puedeJugar:fecha.estado==="Abierta"&&mins>0, minutosRestantes:mins, reglasHabilitadas:fecha.reglas_habilitadas||[], reglasDetalle, tieneCodigo:!!fecha.codigo_grupo},
+    fecha: {id:fecha.id, nombre:fecha.nombre, descripcion:fecha.descripcion, plazoLimite:cierre?.toISOString()||fecha.plazo_limite, estado:fecha.estado, cantPartidos:fecha.cant_partidos, liga:fecha.liga, puedeJugar:fecha.estado==="Abierta"&&mins>0, minutosRestantes:mins, reglasHabilitadas:fecha.reglas_habilitadas||[], reglasDetalle, tieneCodigo:!!fecha.codigo_grupo, cambiosGratis:!!(fecha.cambios_gratis||fecha.empresa_id)},
     partidos: (parts||[]).map((p:any) => ({
       id:p.id, numero:p.numero, local:p.local, visita:p.visita,
       fechaHora:p.fecha_hora, liga:p.liga, tipo:p.tipo, estado:p.estado,
@@ -685,7 +685,7 @@ async function getMiFecha(db: any, data: any) {
   ]);
 
   const ahora = new Date();
-  const {data: fechaMF} = await db.from("fechas").select("plazo_limite").eq("id",fechaId).single();
+  const {data: fechaMF} = await db.from("fechas").select("plazo_limite,empresa_id,cambios_gratis").eq("id",fechaId).single();
   const cambiosUsados = (pronos||[]).reduce((t:number,p:any) => t+(p.cambios_realizados||0), 0);
   const cambiosRestantes = Math.max(0, MAX_CAMBIOS - cambiosUsados);
   
@@ -697,7 +697,8 @@ async function getMiFecha(db: any, data: any) {
   // Obtener monto del pozo para calcular costo
   const {data: pozo} = await db.from("pozos").select("monto").eq("id", pozoId).single();
   const montoPozo = pozo?.monto || 0;
-  const proximoCosto = Math.round(montoPozo * proximoPorcentaje / 100);
+  const cambiosGratis = !!(fechaMF?.empresa_id || fechaMF?.cambios_gratis || !Number(montoPozo));
+  const proximoCosto = cambiosGratis ? 0 : Math.round(montoPozo * proximoPorcentaje / 100);
 
   // Cambios pendientes de ejecutar
   const cambiosEnRevision = (cambios||[]).filter((c:any) => c.mp_status === "revision").map((c:any) => ({id:c.id, partidoId:c.partido_id, de:c.pronostico_anterior, a:c.pronostico_nuevo, monto:c.monto}));
@@ -757,6 +758,7 @@ async function getMiFecha(db: any, data: any) {
     proximoCambio,
     proximoPorcentaje,
     proximoCosto,
+    cambiosGratis,
     cambiosPendientes,
     cambiosEnRevision,
     cambiosLibresHasta: libreHasta(parts||[], fechaMF)?.toISOString() || null,
@@ -929,7 +931,7 @@ async function adminCrearFecha(db: any, data: any) {
     reglas_habilitadas:data.reglasHabilitadas||[],
     codigo_grupo: normalizarCodigo(data.codigoGrupo),
     pago_alias: String(data.pagoAlias||"").trim() || null, pago_titular: String(data.pagoTitular||"").trim() || null,
-    empresa_id: data.empresaId || null,
+    empresa_id: data.empresaId || null, cambios_gratis: !!data.cambiosGratis,
   });
   if (error) return {ok:false, error: error.code === "23505" ? "Ese código ya lo usa otra fecha" : error.message};
   if (data.empresaId) {
@@ -951,6 +953,7 @@ async function adminEditarFecha(db: any, data: any) {
   if (data.codigoGrupo !== undefined) upd.codigo_grupo = normalizarCodigo(data.codigoGrupo);
   if (data.pagoAlias !== undefined) upd.pago_alias = String(data.pagoAlias||"").trim() || null;
   if (data.pagoTitular !== undefined) upd.pago_titular = String(data.pagoTitular||"").trim() || null;
+  if (data.cambiosGratis !== undefined) upd.cambios_gratis = !!data.cambiosGratis;
   const {error} = await db.from("fechas").update(upd).eq("id",data.fechaId);
   if (error) return {ok:false, error: error.code === "23505" ? "Ese código ya lo usa otra fecha" : error.message};
   return {ok:true};
@@ -1474,10 +1477,12 @@ function libreHasta(parts: any[], fecha?: any): Date | null { return cierreFecha
 function enPeriodoLibre(parts: any[], fecha?: any): boolean { return minutosHasta(cierreFecha(fecha, parts)) > 0; }
 
 async function infoCambios(db: any, userId: string, fechaId: string, pozoId: string) {
-  const [{data: pronos}, {data: pozo}] = await Promise.all([
+  const [{data: pronos}, {data: pozo}, {data: fe}] = await Promise.all([
     db.from("pronosticos").select("cambios_realizados").eq("user_id",userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId),
     db.from("pozos").select("monto").eq("id",pozoId).single(),
+    db.from("fechas").select("empresa_id,cambios_gratis").eq("id",fechaId).single(),
   ]);
+  const gratis = !!(fe?.empresa_id || fe?.cambios_gratis || !Number(pozo?.monto));
   const cambiosUsados = (pronos||[]).reduce((t:number,p:any) => t+(p.cambios_realizados||0), 0);
   const proximoCambio = cambiosUsados + 1;
   const proximoPorcentaje = COSTO_CAMBIO[proximoCambio] || 30;
@@ -1485,7 +1490,7 @@ async function infoCambios(db: any, userId: string, fechaId: string, pozoId: str
     cambiosUsados,
     cambiosRestantes: Math.max(0, MAX_CAMBIOS - cambiosUsados),
     proximoCambio, proximoPorcentaje,
-    proximoCosto: Math.round((pozo?.monto||0) * proximoPorcentaje / 100),
+    proximoCosto: gratis ? 0 : Math.round((pozo?.monto||0) * proximoPorcentaje / 100), gratis,
   };
 }
 
