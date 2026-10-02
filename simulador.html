@@ -1028,7 +1028,7 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
 .d-pos.m1,.d-pos.m2,.d-pos.m3{background:none;font-size:38px;padding:0;min-width:40px}
 .d-lado .g-av{width:42px;height:42px;font-size:17px;flex-shrink:0}
 .d-lado.yo .g-av{background:var(--accent);color:var(--accent-ink)}
-.d-who{min-width:0}
+.d-who{flex:0 0 auto}
 .d-nm{font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .d-sub{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink-3)}
 .d-pts{font-family:var(--ff);font-size:46px;font-weight:800;line-height:1;margin-left:auto;padding-left:6px}
@@ -1330,6 +1330,25 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
   .d-mid{min-width:40px;padding:4px 6px}.d-delta{font-size:20px}.d-k{font-size:8.5px}
   .d-head{grid-template-columns:1fr auto 1fr}
   .d-pts{font-size:26px;padding-left:2px}
+}
+
+/* Cara a cara de a dos por fila: encabezado más compacto para que entren los nombres */
+@media(min-width:1100px){
+  .duelos:has(.duelo:nth-child(2)) .d-head{gap:10px}
+  .duelos:has(.duelo:nth-child(2)) .d-lado{gap:7px}
+  .duelos:has(.duelo:nth-child(2)) .d-pos{min-width:34px;height:34px;font-size:19px;border-radius:10px}
+  .duelos:has(.duelo:nth-child(2)) .d-pos.m1,.duelos:has(.duelo:nth-child(2)) .d-pos.m2,.duelos:has(.duelo:nth-child(2)) .d-pos.m3{font-size:28px;min-width:28px}
+  .duelos:has(.duelo:nth-child(2)) .d-lado .g-av{width:32px;height:32px;font-size:14px}
+  .duelos:has(.duelo:nth-child(2)) .d-nm{font-size:14.5px}
+  .duelos:has(.duelo:nth-child(2)) .d-pts{font-size:34px}
+  .duelos:has(.duelo:nth-child(2)) .d-mid{min-width:62px;padding:4px 8px}
+  .duelos:has(.duelo:nth-child(2)) .d-delta{font-size:24px}
+  .duelos:has(.duelo:nth-child(2)) .d-k{font-size:9.5px}
+  .duelos:has(.duelo:nth-child(2)) .d-dif{font-size:13px}
+  .duelos:has(.duelo:nth-child(2)) .dl{grid-template-columns:54px 30px 1fr auto 56px;gap:8px;padding:7px 10px}
+  .duelos:has(.duelo:nth-child(2)) .dl-team b{font-size:17px}
+  .duelos:has(.duelo:nth-child(2)) .dl-team img{width:24px;height:24px}
+  .duelos:has(.duelo:nth-child(2)) .dl-picks .pcell{width:30px;height:30px;font-size:17px}
 }
 
 /* ═══ MODAL ══════════════════════════════════════════════════ */
