@@ -1957,6 +1957,15 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
 .fh-g{display:flex;align-items:center;gap:6px}
 .fh .inp{padding:0 26px 0 12px;min-width:0}
 .pozo-card.info{cursor:default}
+/* Premio destacado en la cabecera de la fecha */
+.fd-premio{display:flex;align-items:center;gap:14px;margin-top:16px;padding:12px 16px;border-radius:18px;background:linear-gradient(135deg,rgba(255,200,80,.22),rgba(255,200,80,.06));border:1px solid rgba(255,210,104,.45)}
+.fdp-ic{flex:none;display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:rgba(255,210,104,.18);color:#FFD268}
+.fdp-ic svg{width:28px;height:28px}
+.fdp-tx small{display:block;font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,226,160,.85)}
+.fdp-tx b{display:block;font-family:var(--ff);font-size:34px;font-weight:800;line-height:1;color:#FFD268}
+.fdp-otros{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.fdp-otros span{font-size:12.5px;padding:4px 10px;border-radius:12px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8)}
+.fdp-otros b{color:#FFD268}
 
 </style>
 </head>
@@ -2478,6 +2487,7 @@ async function loadFechaDet(ctx){
         </div>
         <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr"}" style="font-size:16px;padding:5px 12px">${f.estado}</span>
       </div>
+      <div id="fd-premio"></div>
       <div class="fecha-hero-stats">
         <span>⚽ <strong style="color:rgba(255,255,255,.85)">${f.cantPartidos||0}</strong> partidos</span>
         ${f.minutosRestantes>0?`<span>⏱ <strong style="color:rgba(255,255,255,.85)">${f.minutosRestantes<60?f.minutosRestantes+"min":Math.floor(f.minutosRestantes/60)+"hs"}</strong></span>`:`<span style="color:var(--red)">🔒 Cerrada</span>`}
@@ -2632,6 +2642,7 @@ async function loadPozos(fid){
     </div>`).join("")}</div>
   <div style="margin-top:10px"><button class="btn btn-s" style="width:100%;padding:11px;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--bdr-l2)" onclick="toggleGrupo()">🔒 <span style="font-size:17px;font-weight:600">Tengo código de grupo cerrado</span></button><div id="gform" style="display:none;margin-top:10px;background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--r);padding:16px"><p style="font-size:17px;font-weight:600;margin-bottom:10px">Ingresá tu código</p><div style="display:flex;gap:8px"><input class="inp" id="gcod" placeholder="AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" onkeydown="if(event.key==='Enter')buscarGrupo()" style="flex:1;font-family:var(--ff);font-size:26px;font-weight:800;letter-spacing:4px;text-align:center"/><button class="btn btn-p" style="padding:10px 16px" onclick="buscarGrupo()">Buscar</button></div><div id="gres" style="margin-top:10px"></div></div></div>`;
   const ya=r.pozos.find(p=>p.yaInscripto);
+  premioEnCabecera(r.pozos);
   if(conCodigo&&!ya){const gf=document.getElementById("gform");if(gf){gf.style.display="block";gf.previousElementSibling&&(gf.previousElementSibling.style.display="none");const t=gf.querySelector("p");if(t)t.innerHTML="🔒 Esta fecha es con código. Ingresalo para jugar";}}
   if(ya){const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=`<button class="btn btn-p btn-lg" onclick="go('jugar',{fechaId:'${fid}',pozoId:'${ya.id}'})">▶ Jugar fecha →</button>`;}}
   const top=document.getElementById("pjtop");
@@ -3816,7 +3827,7 @@ async function loadAdminFechas(){
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-importar',{fechaId:'${f.id}'})">🔗 Importar</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-res',{fechaId:'${f.id}'})">⚽ Resultados</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showEditarFecha('${f.id}')">✏️ Editar</button>
-        ${f.empresaId?"":`<button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showGestionPozos('${f.id}')">💰 Pozos</button>
+        ${f.empresaId?"":`<button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showGestionPozos('${f.id}')">💰 Pozos y premios</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-pagos',{fechaId:'${f.id}'})">👥 Inscriptos</button>`}
         ${f.estado==="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:16px" onclick="cerrarFecha('${f.id}')">🔒 Cerrar</button>`:""}
         ${f.estado==="Cerrada"?`<button class="btn btn-p" style="padding:6px 12px;font-size:16px" onclick="calcularFecha('${f.id}')">🏆 Calcular</button>`:""}
@@ -3871,7 +3882,7 @@ window.showGestionPozos=async function(fechaId){
   const f=window._adminFechas[fechaId];
   const rp=await api("getPozos",{fechaId});
   const pozosHTML=rp.ok&&rp.pozos?.length?rp.pozos.map(function(p){return`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bdr-l)"><div><span style="font-family:var(--ff);font-size:23px;font-weight:800">$${p.monto.toLocaleString("es-AR")}</span><span style="font-size:14px;color:var(--txt3);margin-left:8px">${p.tipo} · ${p.inscriptos} inscriptos · ${p.premioFijo?"Premio fijo":"Premio"}: $${p.premioGanador.toLocaleString("es-AR")}</span></div><span class="bdg ${p.estado==="Activo"?"bg":"bgr"}">${p.estado}</span></div>`;}).join(""):`<p style="font-size:17px;color:var(--txt3);padding:12px 0">Sin pozos aún</p>`;
-  const m=mkModal("💰 Pozos — "+(f?f.nombre:""),`<div>${pozosHTML}<div style="margin-top:14px;border-top:1px solid var(--bdr-l);padding-top:14px"><label class="lbl" style="margin-bottom:4px;display:block">Agregar pozos</label><div style="font-size:13px;color:var(--txt3);margin-bottom:8px">Dejá el monto vacío para un pozo <b>gratis</b> (torneo de amigos).</div><div id="np-lista" style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;gap:8px;align-items:center"><input class="inp" placeholder="Monto ($)" type="number" min="1" style="flex:1" oninput="window._npMontos[0]=this.value"/><span style="font-size:16px;color:var(--txt3);width:60px">pozo 1</span></div></div><button class="btn btn-s" style="margin-top:8px;width:100%;padding:8px" onclick="agregarCampoPozo()">+ Agregar otro monto</button><div class="ig" style="margin-top:14px"><label class="lbl">🎁 Premio fijo (opcional)</label><input class="inp" placeholder="Ej: 50000" type="number" min="1" oninput="window._npPremio=this.value"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Para fechas con código (pruebas o invitaciones): el ganador se lleva este monto, sin importar cuántos entren. Si lo dejás vacío, el premio es el 75% de lo recaudado.</div></div><button class="btn btn-p" id="btn-crear-pozo" style="margin-top:8px;width:100%;padding:11px" onclick="crearPozos('${fechaId}')">💰 Crear pozos</button></div></div>`);
+  const m=mkModal("💰 Pozos y premios — "+(f?f.nombre:""),`<div>${pozosHTML}<div style="margin-top:14px;border-top:1px solid var(--bdr-l);padding-top:14px"><label class="lbl" style="margin-bottom:4px;display:block">Agregar pozos</label><div style="font-size:13px;color:var(--txt3);margin-bottom:8px">Dejá el monto vacío para un pozo <b>gratis</b> (torneo de amigos).</div><div id="np-lista" style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;gap:8px;align-items:center"><input class="inp" placeholder="Monto ($)" type="number" min="1" style="flex:1" oninput="window._npMontos[0]=this.value"/><span style="font-size:16px;color:var(--txt3);width:60px">pozo 1</span></div></div><button class="btn btn-s" style="margin-top:8px;width:100%;padding:8px" onclick="agregarCampoPozo()">+ Agregar otro monto</button><div class="ig" style="margin-top:14px"><label class="lbl">🎁 Premio fijo (opcional)</label><input class="inp" placeholder="Ej: 50000" type="number" min="1" oninput="window._npPremio=this.value"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Para fechas con código (pruebas o invitaciones): el ganador se lleva este monto, sin importar cuántos entren. Si lo dejás vacío, el premio es el 75% de lo recaudado.</div></div><button class="btn btn-p" id="btn-crear-pozo" style="margin-top:8px;width:100%;padding:11px" onclick="crearPozos('${fechaId}')">💰 Crear pozos</button></div></div>`);
   window._npMontos=[""];window._npPremio="";
   document.body.appendChild(m);
 };
@@ -4873,6 +4884,17 @@ function leerFH(id){const g=function(k){return document.getElementById(id+"-"+k)
 function ponerFH(id,val){const set=function(k,v){const e=document.getElementById(id+"-"+k);if(e)e.value=String(+v);};
   set("Y",val.slice(0,4));set("M",val.slice(5,7));set("D",val.slice(8,10));set("h",val.slice(11,13));set("m",+val.slice(14,16)-(+val.slice(14,16))%5);}
 
+// Premio de la fecha bien visible en la cabecera
+function premioEnCabecera(pozos){
+  const el=document.getElementById("fd-premio");if(!el||!pozos||!pozos.length)return;
+  const ord=pozos.slice().sort(function(a,b){return(b.premioGanador||0)-(a.premioGanador||0);}),top=ord[0];
+  const fmt=function(n){return"$"+Number(n||0).toLocaleString("es-AR");};
+  const gratis=pozos.every(function(p){return !p.monto;});
+  const tit=top.premioGanador?fmt(top.premioGanador):"Por la gloria";
+  const sub=top.premioGanador?(top.premioFijo?"Premio fijo para el ganador":pozos.length>1?"Premio mayor · crece con cada inscripto":"Premio · crece con cada inscripto"):"Sin premio en plata";
+  const otros=ord.length>1?`<div class="fdp-otros">${ord.map(function(p){return`<span>${p.monto?"Pozo "+fmt(p.monto):"Gratis"} → <b>${p.premioGanador?fmt(p.premioGanador):"sin premio"}</b></span>`;}).join("")}</div>`:"";
+  el.innerHTML=`<div class="fd-premio"><span class="fdp-ic">${ICO_COPA}</span><div class="fdp-tx"><small>${gratis?"Entrada gratis · ":""}${sub}</small><b>${tit}</b></div></div>${otros}`;
+}
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
