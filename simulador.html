@@ -2825,11 +2825,6 @@ function renderTabla(){
     ${primeros.length>1?`<div class="t-empate">🤝 <b>${primeros.length} jugadores empatados en el primer puesto</b> en todos los criterios: si termina así, se dividen el premio.</div>`:""}
     ${po.length>=3?`<div class="podio-wrap">${[po[1],po[0],po[2]].map(function(u,i){const first=i===1;return`<div class="podio-item${first?" first":""}"><div class="med">${md[u.posicion-1]||u.posicion+"º"}</div><div class="pnm">${u.userId===me?"Vos":(u.nombre||u.siglas)}</div><div class="podio-box"><div class="podio-pts">${u.ptsTotal}</div><div style="font-size:12px;opacity:.7">pts · ${u.acertados} aciertos</div></div></div>`;}).join("")}</div>`:""}
     <div class="g-bar">
-      <div class="seg g-seg">
-        <button aria-pressed="${T.ver==="todos"}" onclick="setTabla('ver','todos')">Todos</button>
-        <button aria-pressed="${T.ver==="top10"}" onclick="setTabla('ver','top10')">Top 10</button>
-        ${yo?`<button aria-pressed="${T.ver==="cerca"}" onclick="setTabla('ver','cerca')">Cerca mío</button>`:""}
-      </div>
       <input class="inp g-q" placeholder="Buscar jugador…" value="${T.q||""}" oninput="window._tabla.q=this.value;clearTimeout(window._tqT);window._tqT=setTimeout(function(){renderTabla();var i=document.querySelector('#tc .g-q');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},250)"/>
     </div>
     <div class="card g-card">
@@ -3027,11 +3022,6 @@ function renderGrilla(){
         <button aria-pressed="${g.cmp==="puntero"}" onclick="window._grilla.sel=[];setGrilla('cmp','puntero')">vs Puntero</button>
         <button aria-pressed="${g.cmp==="top3"}" onclick="window._grilla.sel=[];setGrilla('cmp','top3')">vs Top 3</button>
         <button aria-pressed="${g.cmp==="sel"}" onclick="${g.sel.length?"setGrilla('cmp','sel')":"toast('Tocá la fila de hasta 3 jugadores para compararlos')"}">Elegidos${g.sel.length?" ("+g.sel.length+")":""}</button>
-      </div>
-      <div class="seg g-seg">
-        <button aria-pressed="${g.ver==="todos"}" onclick="setGrilla('ver','todos')">Todos</button>
-        <button aria-pressed="${g.ver==="top10"}" onclick="setGrilla('ver','top10')">Top 10</button>
-        ${yo?`<button aria-pressed="${g.ver==="cerca"}" onclick="setGrilla('ver','cerca')">Cerca mío</button>`:""}
       </div>
       <div class="seg g-seg g-seg-tipo">
         <button aria-pressed="${g.tipo==="todos"}" onclick="setGrilla('tipo','todos')">Todos los partidos</button>
