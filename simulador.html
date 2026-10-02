@@ -1351,6 +1351,44 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
   .duelos:has(.duelo:nth-child(2)) .dl-picks .pcell{width:30px;height:30px;font-size:17px}
 }
 
+/* Encabezado del cara a cara: 3 variantes */
+.dh{position:relative;max-width:640px;margin:0 auto;padding-top:14px}
+.dh .pd-lbl{top:-8px;left:0}
+.dh-dif{font-size:14px;font-weight:600;color:var(--ink-2);text-align:center}
+.dh-dif b{font-family:var(--ff);font-size:19px;font-weight:800}
+.dh-dif.up b{color:var(--ok)}.dh-dif.down b{color:var(--no)}
+/* A: marcador */
+.dh-a{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px}
+.dha-j{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.dha-j .g-av{width:44px;height:44px;font-size:18px}
+.dha-j.yo .g-av{background:var(--accent);color:var(--accent-ink)}
+.dha-j b{font-size:16px;font-weight:800}
+.dha-j small{font-size:13px;font-weight:700;color:var(--ink-3)}
+.dha-mid{display:flex;flex-direction:column;align-items:center;gap:6px}
+.dha-score{display:flex;align-items:center;gap:10px;padding:6px 18px;border-radius:16px;background:var(--hero-b);color:#fff}
+.dha-score span{font-family:var(--ff);font-size:40px;font-weight:800;line-height:1}
+.dha-score i{font-style:normal;font-size:24px;opacity:.5}
+/* B: mini tabla */
+.dh-b{display:flex;flex-direction:column;gap:6px}
+.dhb-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
+.dhb-row.yo{background:var(--accent-soft);border-color:var(--accent-line)}
+.dhb-row.yo .g-av{background:var(--accent);color:var(--accent-ink)}
+.dhb-pos{min-width:34px;text-align:center;font-family:var(--ff);font-size:24px;font-weight:800;color:var(--ink-2)}
+.dhb-nm{font-size:16px;font-weight:800}
+.dhb-pts{margin-left:auto;font-family:var(--ff);font-size:32px;font-weight:800;line-height:1}
+.dhb-pts small{font-family:var(--fb);font-size:12px;font-weight:700;color:var(--ink-3);margin-left:3px}
+/* C: barra */
+.dhc-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dhc-j{display:flex;align-items:center;gap:8px;min-width:0}
+.dhc-j.der{text-align:right}
+.dhc-j b{display:block;font-size:15px;font-weight:800}
+.dhc-j small{font-size:12.5px;font-weight:700;color:var(--ink-3)}
+.dhc-j.yo .g-av{background:var(--accent);color:var(--accent-ink)}
+.dhc-pts{font-family:var(--ff);font-size:38px;font-weight:800;line-height:1;margin:0 4px}
+.dhc-bar{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:10px 0 8px;background:var(--surface-3);gap:2px}
+.dhc-bar i{display:block;height:100%;background:color-mix(in srgb,var(--ink) 25%,transparent)}
+.dhc-bar i.yo{background:var(--accent)}
+
 /* ═══ MODAL ══════════════════════════════════════════════════ */
 .modal-bg{position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-end;justify-content:center;background:color-mix(in srgb,var(--hero-b) 55%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:fi .2s ease}
 .modal-box{
@@ -3014,6 +3052,24 @@ function renderGrilla(){
     </tr>`;
   };
 
+  window._dueloIdx=0;
+  const nm=function(j){return j.userId===me?"Vos":j.siglas;};
+  const medal=function(j){const p=j.posicion;return p&&p<=3?["🥇","🥈","🥉"][p-1]:"";};
+  const ptxt=function(j){return j.posicion?j.posicion+"º":"";};
+  const difTxt=function(d){return d>0?`Le sacás <b>${d}</b> punto${d!==1?"s":""}`:d<0?`Te saca <b>${-d}</b> punto${d!==-1?"s":""}`:"Están <b>empatados</b>";};
+  const duelHead=function(a,r,delta,i){
+    const v=g.cmp==="top3"?(["A","B","C"][i]||"A"):"A";
+    const lbl=g.cmp==="top3"?`<span class="pd-lbl">Opción ${v}</span>`:"";
+    const cls=delta>0?"up":delta<0?"down":"";
+    if(v==="B"){const filas=[a,r].sort(function(x,y){return (x.posicion||99)-(y.posicion||99)||(y.ptsTotal-x.ptsTotal);});
+      return`<div class="dh dh-b">${lbl}${filas.map(function(j){return`<div class="dhb-row${j===a?" yo":""}"><span class="dhb-pos">${medal(j)||ptxt(j)}</span>${av(j)}<span class="dhb-nm">${nm(j)}</span>${dots(j.cambiosRestantes)}<span class="dhb-pts">${j.ptsTotal||0}<small>pts</small></span></div>`;}).join("")}<div class="dh-dif ${cls}">${difTxt(delta)}</div></div>`;}
+    if(v==="C"){const ta=a.ptsTotal||0,tr=r.ptsTotal||0,tot=Math.max(1,ta+tr),pa=Math.round(ta/tot*100);
+      return`<div class="dh dh-c">${lbl}<div class="dhc-top"><div class="dhc-j yo">${av(a)}<div><b>${nm(a)}</b><small>${medal(a)} ${ptxt(a)}</small></div><span class="dhc-pts">${ta}</span></div><div class="dhc-j der"><span class="dhc-pts">${tr}</span><div><b>${nm(r)}</b><small>${medal(r)} ${ptxt(r)}</small></div>${av(r)}</div></div>
+        <div class="dhc-bar"><i class="yo" style="width:${pa}%"></i><i style="width:${100-pa}%"></i></div><div class="dh-dif ${cls}">${difTxt(delta)}</div></div>`;}
+    return`<div class="dh dh-a">${lbl}<div class="dha-j yo">${av(a)}<b>${nm(a)}</b><small>${medal(a)} ${ptxt(a)}</small></div>
+      <div class="dha-mid"><div class="dha-score"><span>${a.ptsTotal||0}</span><i>–</i><span>${r.ptsTotal||0}</span></div><div class="dh-dif ${cls}">${difTxt(delta)}</div></div>
+      <div class="dha-j">${av(r)}<b>${nm(r)}</b><small>${medal(r)} ${ptxt(r)}</small></div></div>`;
+  };
   const posB=function(j){const p=j.posicion;if(!p)return"";return p<=3?`<span class="d-pos m${p}" title="${p}º puesto">${["🥇","🥈","🥉"][p-1]}</span>`:`<span class="d-pos" title="${p}º puesto">${p}º</span>`;};
   // Cara a cara: compacto, un partido distinto por línea
   const duelo=function(r){
@@ -3030,11 +3086,7 @@ function renderGrilla(){
         <span class="dl-pts">${jugado?"":"+"+valor(p)+" pts"}</span>
       </div>`;};
     return`<div class="duelo">
-      <div class="d-head">
-        <div class="d-lado yo">${posB(base)}${av(base)}<div class="d-who"><div class="d-nm">${base.userId===me?"Vos":base.siglas}</div><div class="d-sub">${dots(base.cambiosRestantes)}</div></div><span class="d-pts">${base.ptsTotal||0}</span></div>
-        <div class="d-mid"><div class="d-delta ${delta>0?"up":delta<0?"down":""}">${delta>0?"+"+delta:delta}</div><div class="d-k">${delta>0?"le sacás":delta<0?"te saca":"empate"}</div></div>
-        <div class="d-lado otro">${posB(r)}${av(r)}<div class="d-who"><div class="d-nm">${r.siglas}</div><div class="d-sub">${dots(r.cambiosRestantes)}</div></div><span class="d-pts">${r.ptsTotal||0}</span></div>
-      </div>
+      ${duelHead(base,r,delta,window._dueloIdx++)}
       <div class="d-dif"><b>${dif.length}</b> partido${dif.length!==1?"s":""} distinto${dif.length!==1?"s":""}${filtrado?" en este filtro":""}${pend.length?` · <b>${pend.length}</b> por jugarse, hasta <b>${peso}</b> pts en juego`:""}</div>
       ${dif.length?`<div class="d-lista">${pend.map(linea).join("")}${dif.filter(function(p){return p.estado==="Finalizado";}).map(linea).join("")}</div>`:""}
     </div>`;
