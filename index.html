@@ -277,7 +277,17 @@ html[data-mode="dark"] .tn-item.active{background:linear-gradient(135deg,rgba(25
 .tb-spacer{flex:1}
 .tb-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;position:relative;z-index:2;background:inherit}
 #topbar{overflow:visible}
-.tb-chip{display:flex;align-items:center;gap:8px;height:40px;padding:0 14px 0 6px;border-radius:20px;background:var(--surface);border:1px solid var(--line);font-size:13.5px;font-weight:700;white-space:nowrap}
+.tb-user{position:relative}
+.tb-chip{display:flex;align-items:center;gap:8px;height:42px;padding:0 14px 0 6px;border-radius:21px;background:var(--surface);border:1px solid var(--line);font-size:14px;font-weight:700;white-space:nowrap;cursor:pointer;color:var(--ink);transition:border-color .2s,box-shadow .2s}
+.tb-chip:hover{border-color:var(--line-2);box-shadow:var(--shadow-1)}
+.tb-chip::after{content:"";width:7px;height:7px;margin-left:2px;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);transform:rotate(45deg) translateY(-2px)}
+.tb-umenu{display:none;position:absolute;top:calc(100% + 10px);right:0;min-width:210px;padding:6px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-3);z-index:60}
+.tb-user.open .tb-umenu{display:block;animation:su .2s var(--ease-out)}
+.tb-ui{display:flex;align-items:center;gap:10px;height:46px;padding:0 12px;border-radius:11px;font-size:15px;font-weight:700;color:var(--ink-2);cursor:pointer}
+.tb-ui svg{width:19px;height:19px}
+.tb-ui:hover{background:var(--surface-2);color:var(--ink)}
+.tb-ui.salir{color:var(--no);border-top:1px solid var(--line);border-radius:0 0 11px 11px;margin-top:4px}
+.tb-ui.salir:hover{background:var(--no-soft)}
 .tb-chip .av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-text);font-size:13px}
 .icon-btn{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);transition:all .25s var(--ease);flex-shrink:0}
 .icon-btn svg{width:20px;height:20px}
@@ -345,7 +355,8 @@ html[data-layout="top"] .tb-crumb{display:none}
   .tb-brand{display:flex!important;margin-right:0}
   .tb-brand .tb-name{font-size:21px}
   .tb-crumb,#tb-nav{display:none!important}
-  .tb-chip{display:none}
+  .tb-chip{padding:0 10px 0 4px;font-size:0;gap:4px}
+  .tb-chip .av{font-size:13px}
   #bn{display:flex}
   .page{padding:18px 14px 110px}
   #topbar-title{font-size:36px}
@@ -1309,7 +1320,14 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
       <nav id="tb-nav" aria-label="Menú principal"></nav>
       <div class="tb-spacer"></div>
       <div class="tb-actions">
-        <div class="tb-chip" id="mh-chip"></div>
+        <div class="tb-user">
+          <button class="tb-chip" id="mh-chip" onclick="event.stopPropagation();document.querySelector('.tb-user').classList.toggle('open')" aria-label="Tu cuenta"></button>
+          <div class="tb-umenu">
+            <div class="tb-ui" onclick="go('perfil')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>Mi perfil</div>
+            <div class="tb-ui" onclick="openSettings()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Apariencia</div>
+            <div class="tb-ui salir" onclick="if(confirm('¿Cerrar sesión?'))logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</div>
+          </div>
+        </div>
         <button class="icon-btn tb-regla" onclick="go('reglamento')" aria-label="Reglamento" title="Reglamento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M9 7h7M9 11h5"/></svg></button>
         <button class="icon-btn gear" onclick="openSettings()" aria-label="Ajustes de apariencia" title="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
       </div>
@@ -1515,7 +1533,7 @@ window.addEventListener("resize",function(){clearTimeout(window._amT);window._am
 // Volver a medir cuando terminan de cargar las tipografías y cuando cambia el ancho de la barra
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){acomodarMenu();});
 if(window.ResizeObserver){new ResizeObserver(function(){clearTimeout(window._amT);window._amT=setTimeout(acomodarMenu,60);}).observe(document.getElementById("topbar"));}
-document.addEventListener("click",function(){document.querySelector(".tn-mas.open")?.classList.remove("open");});
+document.addEventListener("click",function(){document.querySelector(".tn-mas.open")?.classList.remove("open");document.querySelector(".tb-user.open")?.classList.remove("open");});
 
 // Helper logo pequeño sin reborde
 function logoHtml(url,nombre){
@@ -3369,7 +3387,7 @@ window.doReg=async()=>{
   if(!r.ok){if(er)er.innerHTML=`<div class="ll-err">⚠ ${r.error}</div>`;return;}
   saveSession(r.user,r.sessionToken);toast(`✅ Bienvenido, ${r.user.usuario}`);initApp();
 };
-window.logout=()=>{clearSession();showLogin();};
+window.logout=()=>{document.querySelector(".tb-user")?.classList.remove("open");clearSession();showLogin();};
 window.togglePin=b=>{const i=b.parentElement.querySelector("input");const v=i.type==="password";i.type=v?"text":"password";b.classList.toggle("on",v);b.setAttribute("aria-label",v?"Ocultar PIN":"Mostrar PIN");};
 window.chkPin=()=>{const a=document.getElementById("rp")?.value||"",b=document.getElementById("rp2")?.value||"",m=document.getElementById("rp-msg");if(!m)return;
   if(!b){m.textContent="";m.className="pin-msg";return;}
