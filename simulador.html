@@ -456,6 +456,7 @@ html[data-layout="top"] .tb-crumb{display:none}
 .page-kicker::before{content:"";width:18px;height:2px;border-radius:2px;background:var(--accent)}
 #topbar-title{font-family:var(--ff);font-size:56px;font-weight:800;letter-spacing:.01em;line-height:.95;text-transform:uppercase}
 #content{position:relative}
+.tt-n{display:inline-block;vertical-align:middle;margin-left:10px;padding:6px 12px;border-radius:14px;font-family:var(--fb);font-size:15px;font-weight:800;letter-spacing:0;text-transform:none;background:var(--accent-soft);color:var(--accent-text);transform:translateY(-6px)}
 
 /* Sidebar derecho (fechas abiertas, noticias, salón de la fama) */
 #sidebar-right{
@@ -1021,22 +1022,19 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
 .duelos{display:grid;gap:12px;margin-bottom:16px}
 @media(min-width:1100px){.duelos:has(.duelo:nth-child(2)){grid-template-columns:1fr 1fr}}
 .duelo{padding:16px 18px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1);animation:su .4s var(--ease-out) both}
-.d-head{display:flex;align-items:center;justify-content:center;gap:18px;max-width:640px;margin:0 auto}
-.d-lado{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.d-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;max-width:760px;margin:0 auto}
+.d-lado{display:flex;align-items:center;gap:10px;min-width:0}
 .d-pos{flex-shrink:0;min-width:46px;height:46px;padding:0 8px;border-radius:14px;display:grid;place-items:center;font-family:var(--ff);font-size:26px;font-weight:800;line-height:1;background:var(--ink);color:var(--bg)}
 .d-pos.m1,.d-pos.m2,.d-pos.m3{background:none;font-size:38px;padding:0;min-width:40px}
-.d-lado.yo{justify-content:flex-end;text-align:right}
-.d-lado.yo>div{order:-1}
-.d-lado .g-av{width:42px;height:42px;font-size:17px}
+.d-lado .g-av{width:42px;height:42px;font-size:17px;flex-shrink:0}
 .d-lado.yo .g-av{background:var(--accent);color:var(--accent-ink)}
+.d-who{min-width:0}
 .d-nm{font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .d-sub{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink-3)}
-.d-lado.yo .d-sub{justify-content:flex-end}
-.d-score{display:flex;align-items:center;gap:14px;flex-shrink:0}
-.d-pts{font-family:var(--ff);font-size:44px;font-weight:800;line-height:1}
-.d-mid{text-align:center;min-width:64px}
-.d-delta{font-family:var(--ff);font-size:28px;font-weight:800;line-height:1;color:var(--ink-3)}
-.d-delta.up{color:var(--accent-text)}.d-delta.down{color:var(--danger)}
+.d-pts{font-family:var(--ff);font-size:46px;font-weight:800;line-height:1;margin-left:auto;padding-left:6px}
+.d-mid{text-align:center;min-width:76px;padding:6px 10px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
+.d-delta{font-family:var(--ff);font-size:30px;font-weight:800;line-height:1;color:var(--ink-3)}
+.d-delta.up{color:var(--ok)}.d-delta.down{color:var(--no)}
 .d-k{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
 .d-dif{text-align:center;font-size:13.5px;color:var(--ink-2);margin-top:12px;padding-top:12px;border-top:1px dashed var(--line-2)}
 .d-dif b{font-family:var(--ff);font-size:18px;color:var(--ink)}
@@ -1126,7 +1124,6 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
 .g-ley{display:flex;flex-wrap:wrap;gap:14px 18px;padding:12px 16px;border-top:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--ink-3)}
 .g-ley>span{display:inline-flex;align-items:center;gap:4px}
 .g-ley .pcell{width:22px;height:22px;font-size:13px;border-radius:7px}
-@media(max-width:700px){.duelo{grid-template-columns:1fr 1fr}.d-mid{grid-column:1/-1;order:3}.d-pts{font-size:30px}.g-types{margin-left:0}}
 
 /* Reglamento */
 .tb-regla{display:none}
@@ -1322,14 +1319,17 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
 @media(max-width:600px){
   .duelo{padding:12px 10px}
   .d-head{gap:6px}
-  .d-lado{gap:5px}
+  .d-lado{gap:4px}
+  .d-who .d-sub{display:none}
   .d-lado .g-av{width:30px;height:30px;font-size:13px}
   .d-pos{min-width:30px;height:30px;font-size:17px;border-radius:9px;padding:0 5px}
   .d-pos.m1,.d-pos.m2,.d-pos.m3{font-size:26px;min-width:26px}
   .d-nm{font-size:13.5px}
   .d-pts{font-size:30px}
   .d-score{gap:6px}
-  .d-mid{min-width:44px}.d-delta{font-size:22px}.d-k{font-size:9px}
+  .d-mid{min-width:40px;padding:4px 6px}.d-delta{font-size:20px}.d-k{font-size:8.5px}
+  .d-head{grid-template-columns:1fr auto 1fr}
+  .d-pts{font-size:26px;padding-left:2px}
 }
 
 /* ═══ MODAL ══════════════════════════════════════════════════ */
@@ -2832,9 +2832,9 @@ function renderTabla(){
       <td class="t-dif">${pos===1?"—":"-"+(lider-(u.ptsTotal||0))}</td>
     </tr>`;};
   const po=t.slice(0,3);
+  const tt=document.getElementById("topbar-title");if(tt)tt.innerHTML=`Tabla <span class="tt-n">${t.length} jugadores</span>`;
   el.innerHTML=`
     <div class="g-top">
-      <div class="g-stat"><b>${t.length}</b><span>jugadores</span></div>
       <div class="g-stat"><b>${r.ultimoPartidoCalculado?r.ultimoPartidoCalculado:0}/${r.totalPartidos||0}</b><span>calculado hasta el partido</span></div>
       ${yo?`<div class="g-stat yo"><b>${yo.posicion}º</b><span>tu puesto · ${yo.ptsTotal} pts</span></div>`:""}
     </div>
@@ -3012,19 +3012,19 @@ function renderGrilla(){
       </div>`;};
     return`<div class="duelo">
       <div class="d-head">
-        <div class="d-lado yo">${posB(base)}${av(base)}<div><div class="d-nm">${base.userId===me?"Vos":base.siglas}</div><div class="d-sub">${dots(base.cambiosRestantes)}</div></div></div>
-        <div class="d-score"><span class="d-pts">${base.ptsTotal||0}</span><div class="d-mid"><div class="d-delta ${delta>0?"up":delta<0?"down":""}">${delta>0?"+"+delta:delta}</div><div class="d-k">${delta>0?"le sacás":delta<0?"te saca":"empate"}</div></div><span class="d-pts">${r.ptsTotal||0}</span></div>
-        <div class="d-lado otro"><div><div class="d-nm">${r.siglas}</div><div class="d-sub">${dots(r.cambiosRestantes)}</div></div>${av(r)}${posB(r)}</div>
+        <div class="d-lado yo">${posB(base)}${av(base)}<div class="d-who"><div class="d-nm">${base.userId===me?"Vos":base.siglas}</div><div class="d-sub">${dots(base.cambiosRestantes)}</div></div><span class="d-pts">${base.ptsTotal||0}</span></div>
+        <div class="d-mid"><div class="d-delta ${delta>0?"up":delta<0?"down":""}">${delta>0?"+"+delta:delta}</div><div class="d-k">${delta>0?"le sacás":delta<0?"te saca":"empate"}</div></div>
+        <div class="d-lado otro">${posB(r)}${av(r)}<div class="d-who"><div class="d-nm">${r.siglas}</div><div class="d-sub">${dots(r.cambiosRestantes)}</div></div><span class="d-pts">${r.ptsTotal||0}</span></div>
       </div>
       <div class="d-dif"><b>${dif.length}</b> partido${dif.length!==1?"s":""} distinto${dif.length!==1?"s":""}${filtrado?" en este filtro":""}${pend.length?` · <b>${pend.length}</b> por jugarse, hasta <b>${peso}</b> pts en juego`:""}</div>
       ${dif.length?`<div class="d-lista">${pend.map(linea).join("")}${dif.filter(function(p){return p.estado==="Finalizado";}).map(linea).join("")}</div>`:""}
     </div>`;
   };
 
+  const ttG=document.getElementById("topbar-title");if(ttG)ttG.innerHTML=`Los Otros <span class="tt-n">${jug.length} jugadores</span>`;
   const nTole=todos.filter(function(p){return st[p.id].tole;}).length;
   el.innerHTML=`
     <div class="g-top">
-      <div class="g-stat"><b>${jug.length}</b><span>jugadores</span></div>
       <div class="g-stat"><b>${todos.filter(function(p){return p.estado==="Finalizado";}).length}/${todos.length}</b><span>partidos jugados</span></div>
       <div class="g-stat"><b>${nTole}</b><span>con TOLE 🔥</span></div>
     </div>
