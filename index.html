@@ -1948,6 +1948,14 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
 .pm-nota{font-size:12.5px;color:var(--ink-3)}
 @media(max-width:560px){.pm-eqs{grid-template-columns:1fr}.pm-vs{text-align:center}.pm-fila{grid-template-columns:1fr 1fr}.pm-fila select{grid-column:span 2}.pm-it{grid-template-columns:30px auto 1fr;}.pm-it small,.pm-acc,.pm-fin{grid-column:2/-1}}
 .btn[hidden]{display:none!important}
+/* Fecha y hora propias (24 hs, en castellano) */
+.fh{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.fh .inp{width:auto;flex:none;padding-right:28px;min-width:64px}
+.fh-sep,.fh-hs{font-size:14px;color:var(--ink-3);font-weight:600}
+.fh-dos{font-family:var(--ff);font-size:22px;font-weight:800;color:var(--ink-2)}
+.fh{gap:10px 16px}
+.fh-g{display:flex;align-items:center;gap:6px}
+.fh .inp{padding:0 26px 0 12px;min-width:0}
 
 </style>
 </head>
@@ -3831,11 +3839,11 @@ window.showCrearFecha=async function(){
   const reglasHTML=TODAS_LAS_REGLAS.map(function(r){return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer"><input type="checkbox" value="${r.codigo}" style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/><div><div style="font-size:17px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:14px">+${r.pts}pts</span></div></div></label>`;}).join("");
   const re=await api("adminGetEmpresas");const emps=re.ok?(re.empresas||[]):[];const pre=window._fechaParaEmpresa||(window._afFiltro&&!["todas","pub"].includes(window._afFiltro)?window._afFiltro:"");window._fechaParaEmpresa="";
   const selEmp=emps.length?`<div class="ig"><label class="lbl">🏢 ¿Para quién es?</label><select class="inp" id="nfe">${'<option value="">Pública (Polla Prodes)</option>'}${emps.map(function(e){return`<option value="${e.id}"${e.id===pre?" selected":""}>Empresa: ${escH(e.nombre)}</option>`;}).join("")}</select><div style="font-size:13px;color:var(--txt3);margin-top:6px">Si es de una empresa, solo la ven sus empleados, juegan gratis y se arma sola su Polla (no hace falta crear pozos).</div></div>`:"";
-  const m=mkModal("Nueva fecha",`<div class="fg">${selEmp}<div class="ig"><label class="lbl">Nombre</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div><div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="nfp" type="datetime-local"/></div><div class="ig"><label class="lbl">Descripción</label><input class="inp" id="nfd"/></div><div class="ig"><label class="lbl">🔒 Código de grupo cerrado (opcional)</label><input class="inp" id="nfc" placeholder="Ej: AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Quien tenga este código entra a la fecha sin pagar. Dejalo vacío para una fecha abierta con pago.</div></div><div class="g2c"><div class="ig"><label class="lbl">🏦 Alias o CVU (opcional)</label><input class="inp" id="nfa" placeholder="Usa el general si está vacío"/></div><div class="ig"><label class="lbl">Titular</label><input class="inp" id="nft"/></div></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" onclick="crearFecha()">Crear fecha</button></div>`);
+  const m=mkModal("Nueva fecha",`<div class="fg">${selEmp}<div class="ig"><label class="lbl">Nombre</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div><div class="ig"><label class="lbl">Plazo límite</label>${fhInput("nfp","")}</div><div class="ig"><label class="lbl">Descripción</label><input class="inp" id="nfd"/></div><div class="ig"><label class="lbl">🔒 Código de grupo cerrado (opcional)</label><input class="inp" id="nfc" placeholder="Ej: AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Quien tenga este código entra a la fecha sin pagar. Dejalo vacío para una fecha abierta con pago.</div></div><div class="g2c"><div class="ig"><label class="lbl">🏦 Alias o CVU (opcional)</label><input class="inp" id="nfa" placeholder="Usa el general si está vacío"/></div><div class="ig"><label class="lbl">Titular</label><input class="inp" id="nft"/></div></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" onclick="crearFecha()">Crear fecha</button></div>`);
   document.body.appendChild(m);
 };
 window.crearFecha=async function(){
-  const r=await api("adminCrearFecha",{empresaId:document.getElementById("nfe")?.value||"",nombre:document.getElementById("nfn")?.value,liga:document.getElementById("nfl")?.value,plazoLimite:document.getElementById("nfp")?.value,descripcion:document.getElementById("nfd")?.value,codigoGrupo:document.getElementById("nfc")?.value||"",pagoAlias:document.getElementById("nfa")?.value||"",pagoTitular:document.getElementById("nft")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
+  const r=await api("adminCrearFecha",{empresaId:document.getElementById("nfe")?.value||"",nombre:document.getElementById("nfn")?.value,liga:document.getElementById("nfl")?.value,plazoLimite:leerFH("nfp"),descripcion:document.getElementById("nfd")?.value,codigoGrupo:document.getElementById("nfc")?.value||"",pagoAlias:document.getElementById("nfa")?.value||"",pagoTitular:document.getElementById("nft")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
   document.querySelector(".modal-bg")?.remove();
   if(r.ok){toast("✅ Fecha creada");loadAdminFechas();}else toast("❌ "+r.error);
 };
@@ -3845,12 +3853,12 @@ window.showEditarFecha=function(fechaId){
   window._reglasSelAdmin=new Set(reglasActuales);
   const reglasHTML=TODAS_LAS_REGLAS.map(function(r){const checked=reglasActuales.includes(r.codigo)?"checked":"";return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer"><input type="checkbox" value="${r.codigo}" ${checked} style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/><div><div style="font-size:17px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:14px">+${r.pts}pts</span></div></div></label>`;}).join("");
   let plazoFmt="";if(f.plazoLimite){try{const d=new Date(f.plazoLimite);const offset=d.getTimezoneOffset();const local=new Date(d.getTime()-offset*60000);plazoFmt=local.toISOString().slice(0,16);}catch(e){}}
-  const m=mkModal("✏️ Editar — "+(f.nombre||"Fecha"),`<div class="fg"><div class="ig"><label class="lbl">Nombre</label><input class="inp" id="ef-nom" value="${f.nombre||""}"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="ef-lig" value="${f.liga||""}"/></div><div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="ef-pla" type="datetime-local" value="${plazoFmt}"/></div><div class="ig"><label class="lbl">🔒 Código de grupo cerrado (opcional)</label><input class="inp" id="ef-cod" value="${f.codigoGrupo||""}" placeholder="Ej: AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Quien tenga este código entra a la fecha sin pagar. Dejalo vacío para una fecha abierta con pago.</div></div><div class="g2c"><div class="ig"><label class="lbl">🏦 Alias o CVU (opcional)</label><input class="inp" id="ef-pa" value="${f.pagoAlias||""}" placeholder="Usa el general si está vacío"/></div><div class="ig"><label class="lbl">Titular</label><input class="inp" id="ef-pt" value="${f.pagoTitular||""}"/></div></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" id="btn-guardar-fecha" onclick="guardarEditarFecha('${fechaId}')">Guardar cambios</button></div>`);
+  const m=mkModal("✏️ Editar — "+(f.nombre||"Fecha"),`<div class="fg"><div class="ig"><label class="lbl">Nombre</label><input class="inp" id="ef-nom" value="${f.nombre||""}"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="ef-lig" value="${f.liga||""}"/></div><div class="ig"><label class="lbl">Plazo límite</label>${fhInput("ef-pla",plazoFmt)}</div><div class="ig"><label class="lbl">🔒 Código de grupo cerrado (opcional)</label><input class="inp" id="ef-cod" value="${f.codigoGrupo||""}" placeholder="Ej: AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Quien tenga este código entra a la fecha sin pagar. Dejalo vacío para una fecha abierta con pago.</div></div><div class="g2c"><div class="ig"><label class="lbl">🏦 Alias o CVU (opcional)</label><input class="inp" id="ef-pa" value="${f.pagoAlias||""}" placeholder="Usa el general si está vacío"/></div><div class="ig"><label class="lbl">Titular</label><input class="inp" id="ef-pt" value="${f.pagoTitular||""}"/></div></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" id="btn-guardar-fecha" onclick="guardarEditarFecha('${fechaId}')">Guardar cambios</button></div>`);
   document.body.appendChild(m);
 };
 window.guardarEditarFecha=async function(fechaId){
   const btn=document.getElementById("btn-guardar-fecha");if(btn){btn.textContent="Guardando...";btn.disabled=true;}
-  const r=await api("adminEditarFecha",{fechaId,nombre:document.getElementById("ef-nom")?.value,liga:document.getElementById("ef-lig")?.value,plazoLimite:document.getElementById("ef-pla")?.value,codigoGrupo:document.getElementById("ef-cod")?.value||"",pagoAlias:document.getElementById("ef-pa")?.value||"",pagoTitular:document.getElementById("ef-pt")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
+  const r=await api("adminEditarFecha",{fechaId,nombre:document.getElementById("ef-nom")?.value,liga:document.getElementById("ef-lig")?.value,plazoLimite:leerFH("ef-pla"),codigoGrupo:document.getElementById("ef-cod")?.value||"",pagoAlias:document.getElementById("ef-pa")?.value||"",pagoTitular:document.getElementById("ef-pt")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
   document.querySelector(".modal-bg")?.remove();
   if(r.ok){toast("✅ Fecha actualizada");loadAdminFechas();}else toast("❌ "+r.error);
 };
@@ -4774,6 +4782,7 @@ function escudoLocal(nombre){const n=_normEq(nombre);if(n.length<3)return null;
 window.partidosManual=async function(fechaId){
   window._pm={fechaId,edit:null,logo:{l:"",v:""}};
   const f=window._adminFechas[fechaId]||{};
+  const diaPlazo=f.plazoLimite?new Date(new Date(f.plazoLimite).getTime()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10):new Date().toISOString().slice(0,10);
   const m=mkModal("Partidos · "+escH(f.nombre||""),`<div class="pm">
     <div id="pm-lista" class="pm-lista"><div class="loading"><div class="spinner"></div></div></div>
     <div class="pm-form">
@@ -4784,13 +4793,12 @@ window.partidosManual=async function(fechaId){
         <div class="pm-eq"><span class="pm-esc" id="pm-ev"></span><input class="inp" id="pm-v" list="pm-equipos" placeholder="Visitante" maxlength="40" oninput="pmEscudo('v')"/></div>
       </div>
       <datalist id="pm-equipos">${ESCUDOS.map(function(e){return`<option value="${escH(e[0])}">`;}).join("")}</datalist>
-      <div class="pm-fila"><input class="inp" id="pm-d" type="date"/><input class="inp" id="pm-h" type="time" value="${window._pmHora||"21:00"}"/>
-        <select class="inp" id="pm-t"><option value="Normal">Simple ×1</option><option value="Doble">Doble ×2</option><option value="Polla">Polla</option></select></div>
+      ${fhInput("pm",(window._pmDia||diaPlazo)+"T"+(window._pmHora||"21:00"))}
+      <div class="pm-fila"><select class="inp" id="pm-t"><option value="Normal">Simple ×1</option><option value="Doble">Doble ×2</option><option value="Polla">Polla</option></select></div>
       <div class="me-acc"><button class="btn btn-s" id="pm-cancel" hidden onclick="pmLimpiar()">Cancelar</button><button class="btn btn-p" id="pm-ok" onclick="pmGuardar()">+ Agregar partido</button></div>
       <p class="pm-nota">El escudo aparece solo si conocemos al equipo. Si no, el partido queda sin escudo y funciona igual.</p>
     </div></div>`);
   document.body.appendChild(m);
-  const d=document.getElementById("pm-d");if(d)d.value=window._pmDia||(f.plazoLimite?new Date(new Date(f.plazoLimite).getTime()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10):"");
   pmCargar();
 };
 async function pmCargar(){
@@ -4815,9 +4823,9 @@ window.pmEscudo=function(lado){
 };
 window.pmGuardar=async function(){
   const g=function(i){return document.getElementById(i)?.value||"";};
-  const l=g("pm-l").trim(),v=g("pm-v").trim(),d=g("pm-d"),h=g("pm-h"),t=g("pm-t");
-  if(!l||!v){toast("Poné los dos equipos");return;}if(!d||!h){toast("Poné el día y la hora");return;}
-  const fh=new Date(d+"T"+h);if(isNaN(fh)){toast("Fecha u hora inválida");return;}
+  const l=g("pm-l").trim(),v=g("pm-v").trim(),t=g("pm-t"),fhs=leerFH("pm"),d=fhs.slice(0,10),h=fhs.slice(11,16);
+  if(!l||!v){toast("Poné los dos equipos");return;}
+  const fh=new Date(fhs);if(isNaN(fh)){toast("Fecha u hora inválida");return;}
   window._pmDia=d;window._pmHora=h;
   const datos={fechaId:window._pm.fechaId,local:l,visita:v,fechaHora:fh.toISOString(),tipo:t,localLogo:window._pm.logo.l,visitaLogo:window._pm.logo.v};
   const r=window._pm.edit?await api("adminEditarPartido",Object.assign({partidoId:window._pm.edit},datos)):await api("adminAgregarPartido",datos);
@@ -4829,7 +4837,7 @@ window.pmEditar=function(id){
   const x=(window._pm.partidos||[]).find(function(p){return p.id===id;});if(!x)return;window._pm.edit=id;
   const loc=new Date(new Date(x.fechaHora).getTime()-new Date().getTimezoneOffset()*6e4).toISOString();
   document.getElementById("pm-l").value=x.local;document.getElementById("pm-v").value=x.visita;
-  document.getElementById("pm-d").value=loc.slice(0,10);document.getElementById("pm-h").value=loc.slice(11,16);document.getElementById("pm-t").value=x.tipo||"Normal";
+  ponerFH("pm",loc.slice(0,16));document.getElementById("pm-t").value=x.tipo||"Normal";
   window._pm.logo={l:x.localLogo||"",v:x.visitaLogo||""};
   document.getElementById("pm-el").innerHTML=x.localLogo?`<img src="${escH(x.localLogo)}" alt="">`:"";document.getElementById("pm-ev").innerHTML=x.visitaLogo?`<img src="${escH(x.visitaLogo)}" alt="">`:"";
   document.getElementById("pm-tit").textContent="Editar partido #"+x.numero;document.getElementById("pm-ok").textContent="Guardar cambios";document.getElementById("pm-cancel").hidden=false;
@@ -4842,6 +4850,22 @@ window.pmLimpiar=function(){
   const tt=document.getElementById("pm-tit");if(tt)tt.textContent="Agregar partido";const ok=document.getElementById("pm-ok");if(ok)ok.textContent="+ Agregar partido";const c=document.getElementById("pm-cancel");if(c)c.hidden=true;
 };
 window.pmBorrar=async function(id){if(!confirm("¿Borrar este partido? Se borran también los pronósticos que tenga."))return;const r=await api("adminBorrarPartido",{partidoId:id});if(!r.ok){toast("❌ "+r.error);return;}toast("Partido borrado");pmCargar();if(App.screen==="admin-fechas")loadAdminFechas();};
+
+
+// ── Fecha y hora en castellano y 24 hs (no depende del idioma del navegador) ──
+const MESES_C=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+function fhInput(id,val){
+  const v=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(val||"")?val:new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,11)+"21:00";
+  const Y=+v.slice(0,4),M=+v.slice(5,7),D=+v.slice(8,10),h=+v.slice(11,13),mi=+v.slice(14,16),yNow=new Date().getFullYear();
+  const op=function(a,b,sel,fmt){let o="";for(let i=a;i<=b;i++)o+=`<option value="${i}"${i===sel?" selected":""}>${fmt?fmt(i):i}</option>`;return o;};
+  const p2=function(n){return String(n).padStart(2,"0");};
+  let mins="";for(let i=0;i<60;i+=5)mins+=`<option value="${i}"${i===mi-mi%5?" selected":""}>${p2(i)}</option>`;
+  return`<div class="fh" id="${id}-fh"><span class="fh-g"><select class="inp" id="${id}-D" aria-label="Día">${op(1,31,D)}</select><select class="inp" id="${id}-M" aria-label="Mes">${op(1,12,M,function(i){return MESES_C[i-1];})}</select><select class="inp" id="${id}-Y" aria-label="Año">${op(yNow,yNow+1,Y<yNow?yNow:Y)}</select></span><span class="fh-g"><span class="fh-sep">a las</span><select class="inp" id="${id}-h" aria-label="Hora">${op(0,23,h,p2)}</select><span class="fh-dos">:</span><select class="inp" id="${id}-m" aria-label="Minutos">${mins}</select><span class="fh-hs">hs</span></span></div>`;
+}
+function leerFH(id){const g=function(k){return document.getElementById(id+"-"+k)?.value||"";};const p2=function(n){return String(n).padStart(2,"0");};
+  if(!g("Y"))return"";return`${g("Y")}-${p2(g("M"))}-${p2(g("D"))}T${p2(g("h"))}:${p2(g("m"))}`;}
+function ponerFH(id,val){const set=function(k,v){const e=document.getElementById(id+"-"+k);if(e)e.value=String(+v);};
+  set("Y",val.slice(0,4));set("M",val.slice(5,7));set("D",val.slice(8,10));set("h",val.slice(11,13));set("m",+val.slice(14,16)-(+val.slice(14,16))%5);}
 
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
