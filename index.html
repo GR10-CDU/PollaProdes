@@ -3558,6 +3558,7 @@ function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
   if(App.user?.rol==="Admin"){
     go("admin-res");
   } else go("fechas");
+  setTimeout(procesarVueltaPago,600);
 }
 
 /* ══ HELPERS ═════════════════════════════════════════════════ */
@@ -3566,37 +3567,39 @@ function errBox(msg){return`<div class="err-box">⚠ ${msg}</div>`;}
 function emptyBox(icon,msg){return`<div class="empty"><div class="ei">${icon}</div><p>${msg}</p></div>`;}
 function mkModal(title,body){const m=document.createElement("div");m.className="modal-bg";m.onclick=e=>{if(e.target===m)m.remove();};m.innerHTML=`<div class="modal-box"><div class="modal-head"><div class="modal-title">${title}</div><div class="modal-close" onclick="this.closest('.modal-bg').remove()">×</div></div>${body}</div>`;return m;}
 
+// ── VUELTA DE MERCADOPAGO ─────────────────────────────────
+// Se guarda al cargar y se procesa recién cuando la app recuperó la sesión del jugador.
 (()=>{
-  const params=new URLSearchParams(location.search);
-  const p=params.get("pago");
-  const c=params.get("cambio");
-  const cambioId=params.get("id");
-  
-  if(p||c)history.replaceState({},"",location.pathname);
-  
-  // Manejo de pago de inscripción
-  if(p==="ok")toast("✅ ¡Pago aprobado! Podés jugar");
-  else if(p==="error")toast("❌ Pago no procesado");
-  else if(p==="pendiente")toast("⏳ Pago pendiente");
-  
-  // Manejo de pago de cambio
-  if(c==="ok"&&cambioId){
-    toast("✅ ¡Cambio pagado! Ejecutando...");
-    // Ejecutar el cambio automáticamente
-    setTimeout(async function(){
-      const r=await api("ejecutarCambio",{cambioId:cambioId});
-      if(r.ok){
-        toast("✅ "+r.mensaje);
-      }else{
-        toast("❌ "+r.error);
-      }
-    },1000);
-  }else if(c==="error"){
-    toast("❌ Pago de cambio no procesado");
-  }else if(c==="pendiente"){
-    toast("⏳ Pago de cambio pendiente");
-  }
+  const q=new URLSearchParams(location.search);
+  const v={pago:q.get("pago"),insc:q.get("insc"),cambio:q.get("cambio"),id:q.get("id")};
+  if(v.pago||v.cambio){window._vueltaPago=v;history.replaceState({},"",location.pathname);}
 })();
+async function procesarVueltaPago(){
+  const v=window._vueltaPago;if(!v)return;window._vueltaPago=null;
+  const esperar=function(ms){return new Promise(function(r){setTimeout(r,ms);});};
+  if(v.pago==="ok"&&v.insc){
+    toast("⏳ Verificando tu pago con MercadoPago...",6000);
+    for(let i=0;i<6;i++){
+      const r=await api("verificarPagoInscripcion",{inscripcionId:v.insc});
+      if(r.ok&&r.aprobado){toast("✅ ¡Pago aprobado! Ya podés pronosticar",4000);setTimeout(function(){go("jugar",{fechaId:r.fechaId,pozoId:r.pozoId});},800);return;}
+      if(!r.ok){toast("❌ "+r.error,5000);return;}
+      await esperar(2500);
+    }
+    toast("⏳ MercadoPago todavía no confirmó el pago. Apenas lo confirme vas a quedar habilitado solo.",6000);
+  }else if(v.pago==="pendiente")toast("⏳ Tu pago quedó pendiente. Apenas MercadoPago lo apruebe vas a quedar habilitado.",6000);
+  else if(v.pago==="error")toast("❌ El pago no se completó. Podés intentarlo de nuevo.",5000);
+  if(v.cambio==="ok"&&v.id){
+    toast("⏳ Verificando el pago del cambio...",6000);
+    for(let i=0;i<6;i++){
+      const r=await api("ejecutarCambio",{cambioId:v.id});
+      if(r.ok){toast("✅ "+(r.mensaje||"Cambio aplicado"),4000);if(App.screen==="jugar")loadJugar(App.ctx);return;}
+      if(!/todavía no vemos el pago/i.test(r.error||"")){toast("❌ "+r.error,6000);return;}
+      await esperar(2500);
+    }
+    toast("⏳ MercadoPago todavía no confirmó el pago del cambio. Apenas lo confirme se aplica solo.",6000);
+  }else if(v.cambio==="pendiente")toast("⏳ El pago del cambio quedó pendiente.",5000);
+  else if(v.cambio==="error")toast("❌ El pago del cambio no se completó.",5000);
+}
 
 // ── REALTIME ─────────────────────────────────────────────────
 let _realtimeChannel = null;

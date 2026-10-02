@@ -155,6 +155,10 @@ async function requireAuth(db: any, data: any): Promise<{ok:boolean, userId?:str
 // ── ROUTER ──────────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, {headers: corsHeaders()});
+  if (new URL(req.url).searchParams.get("webhook") === "mp") {
+    try { await webhookMP(createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY), req); } catch (e) { console.error("webhook", e); }
+    return new Response("ok", {status:200});
+  }
   if (req.method !== "POST") return resp({ok:false, error:"Method not allowed"}, 405);
 
   let data: any;
@@ -183,6 +187,7 @@ Deno.serve(async (req) => {
       case "inscribirse": return resp(await inscribirse(db, data));
       case "getMisInscripciones": return resp(await getMisInscripciones(db, data));
       case "crearPreferencia": return resp(await crearPreferencia(db, data));
+      case "verificarPagoInscripcion": return resp(await verificarPagoInscripcion(db, data));
 
       // ── PRONÓSTICOS ───────────────────────────────────────
       case "autoguardar": return resp(await autoguardar(db, data));
@@ -523,6 +528,7 @@ async function crearPreferencia(db: any, data: any) {
       back_urls:{success:`${APP_URL}?pago=ok&insc=${data.inscripcionId}`,failure:`${APP_URL}?pago=error`,pending:`${APP_URL}?pago=pendiente`},
       auto_return:"approved",
       external_reference:data.inscripcionId,
+      notification_url: `${SUPABASE_URL}/functions/v1/api?webhook=mp`,
     }),
   });
   const mpData = await mpResp.json();
@@ -1484,6 +1490,7 @@ async function crearPreferenciaCambio(db: any, data: any) {
       back_urls:{success:`${APP_URL}?cambio=ok&id=${cambio.id}`,failure:`${APP_URL}?cambio=error`,pending:`${APP_URL}?cambio=pendiente`},
       auto_return:"approved",
       external_reference:`CAMBIO:${cambio.id}`,
+      notification_url: `${SUPABASE_URL}/functions/v1/api?webhook=mp`,
     }),
   });
   const mpData = await mpResp.json();
@@ -1712,4 +1719,60 @@ async function adminResolverFoto(db: any, data: any) {
     await db.from("usuarios").update({foto_pendiente:null, foto_enviada_at:null}).eq("id",u.id);
   }
   return {ok:true};
+}
+
+// ============================================================
+//  MERCADOPAGO: verificación de pagos (aviso automático + vuelta del jugador)
+//  Nunca se confía en lo que llega: siempre se consulta el pago a la API de MercadoPago.
+// ============================================================
+async function aprobarInscripcionPagada(db: any, inscId: string, pago: any) {
+  await db.from("inscripciones").update({
+    estado_pago:"Aprobado", habilitado:true, mp_payment_id:String(pago.id), pagado_at:new Date().toISOString(),
+  }).eq("id", inscId).eq("estado_pago","Pendiente");
+}
+
+async function webhookMP(db: any, req: Request) {
+  const MP_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
+  if (!MP_TOKEN) return;
+  const url = new URL(req.url);
+  let body: any = {};
+  try { body = await req.json(); } catch {}
+  const tipo = body.type || body.topic || url.searchParams.get("type") || url.searchParams.get("topic");
+  const id = body.data?.id || url.searchParams.get("data.id") || url.searchParams.get("id");
+  if (tipo !== "payment" || !id) return;
+  const r = await fetch(`https://api.mercadopago.com/v1/payments/${id}`, {headers:{"Authorization":`Bearer ${MP_TOKEN}`}});
+  if (!r.ok) return;
+  const pago = await r.json();
+  if (pago.status !== "approved") return;
+  const ref = String(pago.external_reference || "");
+  if (ref.startsWith("CAMBIO:")) {
+    const cambioId = ref.slice(7);
+    await db.from("cambios_pagos").update({
+      estado:"Pagado", mp_payment_id:String(pago.id), mp_status:pago.status, pagado_at:new Date().toISOString(),
+    }).eq("id",cambioId).eq("estado","Pendiente");
+    const {data: cambio} = await db.from("cambios_pagos").select("*").eq("id",cambioId).single();
+    if (cambio?.estado === "Pagado") {
+      const {data: part} = await db.from("partidos").select("estado,fecha_hora").eq("id",cambio.partido_id).single();
+      const cerrado = part?.estado === "Finalizado" || (part?.fecha_hora && (new Date(part.fecha_hora).getTime() - Date.now()) / 60000 <= MINUTOS_CIERRE_CAMBIO);
+      if (cerrado) await devolverPagoCambio(db, cambioId); else await aplicarCambio(db, cambio);
+    }
+  } else if (ref) {
+    await aprobarInscripcionPagada(db, ref, pago);
+  }
+}
+
+async function verificarPagoInscripcion(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  const {data: insc} = await db.from("inscripciones").select("*").eq("id",data.inscripcionId).eq("user_id",auth.userId).single();
+  if (!insc) return {ok:false, error:"Inscripción no encontrada"};
+  if (insc.estado_pago === "Aprobado") return {ok:true, aprobado:true, fechaId:insc.fecha_id, pozoId:insc.pozo_id};
+  const MP_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
+  if (!MP_TOKEN) return {ok:false, error:"MercadoPago no configurado"};
+  const r = await fetch(`https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent(insc.id)}`, {headers:{"Authorization":`Bearer ${MP_TOKEN}`}});
+  const res = await r.json();
+  const pago = (res.results||[]).find((p:any) => p.status === "approved");
+  if (!pago) return {ok:true, aprobado:false};
+  await aprobarInscripcionPagada(db, insc.id, pago);
+  return {ok:true, aprobado:true, fechaId:insc.fecha_id, pozoId:insc.pozo_id};
 }
