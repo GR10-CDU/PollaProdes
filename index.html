@@ -18,6 +18,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script>
+/* Siempre por conexión segura en el dominio propio */
+if(location.protocol==="http:"&&/(^|\.)pollaprodes\.ar$/.test(location.hostname))location.replace("https://"+location.host+location.pathname+location.search+location.hash);
 /* Preferencias de apariencia: se aplican antes de pintar para que no haya parpadeo */
 (function(){var d={mode:"auto",theme:"cancha",layout:"side"},p=d;
 try{p=Object.assign({},d,JSON.parse(localStorage.getItem("pp_prefs")||"{}"));}catch(e){}
