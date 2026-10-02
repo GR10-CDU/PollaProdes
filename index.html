@@ -1975,6 +1975,9 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
 .pd-mio:empty{display:none}
 .pd-mio .pcell{width:28px;height:28px;font-size:15px;border-radius:8px;margin-top:2px}
 .cta-top .cta-t{white-space:normal;overflow:visible;text-overflow:clip}
+.ico-silbato{width:1.15em;height:1.15em;flex:none;color:var(--gold)}
+.fd-regla.hecha{background:rgba(52,211,153,.16)!important;border-color:rgba(52,211,153,.45)!important}
+.fd-regla.hecha::before{content:"✓ ";color:#34D399;font-weight:900}
 
 </style>
 </head>
@@ -2454,7 +2457,7 @@ async function cargarExtraFecha(f){
   const pozosHtml=pozos.map(function(p){
     return`<span class="bdg ${p.yaJugo?"bg":p.yaInscripto?"bg":"bgr"}" style="font-size:14px;padding:3px 8px">${p.yaInscripto?"✓ ":""}$${p.monto.toLocaleString("es-AR")}</span>`;
   }).join("");
-  const reglasHtml=f.reglasHabilitadas?.length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${f.reglasHabilitadas.map(function(cod){return`<span class="bdg bgold" style="font-size:13px;padding:2px 6px">📏 ${cod}</span>`;}).join("")}</div>`:"";
+  const reglasHtml=f.reglasHabilitadas?.length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${f.reglasHabilitadas.map(function(cod){return`<span class="bdg bgold" style="font-size:13px;padding:2px 7px">${cod}</span>`;}).join("")}</div>`:"";
   let estadoHtml="";
   if(yaJugo){
     const cf=yaJugo.cambiosRestantesFecha!==undefined?yaJugo.cambiosRestantesFecha:null;
@@ -2488,6 +2491,7 @@ async function loadFechaDet(ctx){
   const tc=document.getElementById("tb-crumb");if(tc)tc.textContent=f.nombre||"Fecha";
   // puedeJugar = abierta y dentro del plazo
   const puedeJugar=f.estado==="Abierta"&&f.minutosRestantes>0;
+  window._fdReglas=f.reglasHabilitadas||[];
   el.innerHTML=`
     <div class="fecha-hero">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -2503,7 +2507,7 @@ async function loadFechaDet(ctx){
         <span title="Después del cierre, cada cambio hasta 1 hora antes de su partido">🔄 <strong style="color:rgba(255,255,255,.85)">3</strong> cambios ${f.cambiosGratis?"gratis":"pagos"}</span>
         ${f.minutosRestantes>0?`<span>⏱ <strong style="color:rgba(255,255,255,.85)">${f.minutosRestantes<60?f.minutosRestantes+"min":Math.floor(f.minutosRestantes/60)+"hs"}</strong></span>`:`<span style="color:var(--red)">🔒 Cerrada</span>`}
       </div>
-      ${f.reglasDetalle?.length?`<div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px"><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">📏 Reglas especiales</div><div style="display:flex;gap:6px;flex-wrap:wrap">${f.reglasDetalle.map(function(r){return`<div style="padding:5px 10px;background:rgba(255,179,0,.15);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs)"><span style="font-size:16px;font-weight:700;color:var(--gold)">${r.nombre}</span><span style="font-size:14px;color:rgba(255,255,255,.5);margin-left:5px">+${r.pts}pts</span></div>`;}).join("")}</div></div>`:""}
+      ${f.reglasDetalle?.length?`<div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px"><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px">${ICO_SILBATO} Reglas especiales</div><div style="display:flex;gap:6px;flex-wrap:wrap">${f.reglasDetalle.map(function(r){return`<div class="fd-regla" id="fdr-${r.codigo}" style="padding:5px 10px;background:rgba(255,179,0,.15);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs)"><span style="font-size:16px;font-weight:700;color:var(--gold)">${r.nombre}</span><span style="font-size:14px;color:rgba(255,255,255,.5);margin-left:5px">+${r.pts}pts</span></div>`;}).join("")}</div></div>`:""}
     </div>
 
     <div id="pjtop"></div>
@@ -2622,7 +2626,7 @@ async function loadMisPronoDet(fechaId,f){
           <span style="font-size:14px;font-weight:700;color:var(--txt3);width:26px">#${p.numero}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:16px;font-weight:600;color:var(--txt);display:flex;align-items:center;gap:4px">${logoHtml(p.localLogo,nombreLocal)} <span style="color:var(--txt3);font-size:13px">vs</span> ${logoHtml(p.visitaLogo,nombreVisita)}</div>
-            ${regla?`<div style="font-size:12px;color:var(--gold)">📏 ${regla.nombre}</div>`:""}
+            ${regla?`<div style="font-size:12px;color:var(--gold);display:flex;align-items:center;gap:4px">${ICO_SILBATO} ${regla.nombre}</div>`:""}
           </div>
           <span class="prono-box ${p.pronostico}" style="width:34px;height:34px;font-size:24px;border-radius:8px">${p.pronostico}</span>
           <div style="min-width:65px;text-align:right">
@@ -2999,7 +3003,7 @@ function renderPartidos(parts,ctx,puede){
           <span style="font-size:14px;font-weight:700;color:var(--txt3)">#${p.numero}</span>
           ${(function(){const t=TIPO_INFO[p.tipo]||TIPO_INFO.Normal;return`<span class="t-tag ${t.cls} pc-tipo">${t.k}</span><span class="pc-tipo-n">${t.n}</span>`;})()}${p.esToleTole?'<span class="t-tag t-tole pc-tipo">🔥 TOLE</span>':""}
           ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:16px;padding:4px 11px">● VIVO</span>`:""}
-          ${reglaEnPartido.map(function(r){return`<span class="bdg bgold" style="font-size:14px;padding:3px 8px">📏 ${r.codigo}</span>`;}).join("")}
+          ${reglaEnPartido.map(function(r){return`<span class="bdg bgold" style="font-size:14px;padding:3px 8px">${r.codigo}</span>`;}).join("")}
         </div>
         ${_calc?"":plazoHtml}
       </div>
@@ -3130,7 +3134,7 @@ function renderReglasSection(puede){
   const jf=document.getElementById("jf");if(!jf)return;
   const bloq=!puede;let html="";
   if(window._reglasDisp.length){
-    html+=`<div style="margin-top:22px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-family:var(--ff);font-size:29px;font-weight:900;letter-spacing:.5px">📏 REGLAS ESPECIALES</span>${bloq?`<span class="bdg bred">🔒 Bloqueadas</span>`:`<span class="bdg bg">Abiertas</span>`}</div><p style="font-size:16px;color:var(--txt3);margin-bottom:6px">Elegí a qué partido aplicar cada regla.</p>${(function(){const h=_libreHasta(window._parts);return _enLibre()?`<div class="reglas-aviso libre">✓ Podés mover tus reglas libremente${h?` hasta <b>${_fmtH(h)}</b>`:""} (1 hora antes del primer partido). Después quedan <b>fijas para siempre</b>.</div>`:`<div class="reglas-aviso">🔒 Las reglas que guardaste quedaron <b>fijas</b> y no se pueden cambiar. Solo podés completar las que te falten.</div>`;})()}`;
+    html+=`<div style="margin-top:22px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-family:var(--ff);font-size:29px;font-weight:900;letter-spacing:.5px;display:inline-flex;align-items:center;gap:8px">${ICO_SILBATO} REGLAS ESPECIALES</span>${bloq?`<span class="bdg bred">🔒 Bloqueadas</span>`:`<span class="bdg bg">Abiertas</span>`}</div><p style="font-size:16px;color:var(--txt3);margin-bottom:6px">Elegí a qué partido aplicar cada regla.</p>${(function(){const h=_libreHasta(window._parts);return _enLibre()?`<div class="reglas-aviso libre">✓ Podés mover tus reglas libremente${h?` hasta <b>${_fmtH(h)}</b>`:""} (1 hora antes del primer partido). Después quedan <b>fijas para siempre</b>.</div>`:`<div class="reglas-aviso">🔒 Las reglas que guardaste quedaron <b>fijas</b> y no se pueden cambiar. Solo podés completar las que te falten.</div>`;})()}`;
     window._reglasDisp.forEach(function(reg){
       const yaCompleta=reg.partidos.length>=reg.cantReq;
       const esMultiple=reg.cantReq>1;
@@ -4504,6 +4508,7 @@ async function mostrarNovedadesEn(el){
   window._nvResto=novs.slice(3).map(nvItem).join("");
   el.prepend(box);
 }
+const ICO_SILBATO='<svg class="ico-silbato" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12a5 5 0 1 0 10 0h9V8H8A5 5 0 0 0 2.5 12z"/><circle cx="7.5" cy="12" r="1.6"/><path d="M15 8V5"/></svg>';
 const ICO_COPA='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 2.6 3.5M16 6h2.5a2.5 2.5 0 0 1-2.6 3.5"/><path d="M12 13v3.5M8.5 21h7M9.5 21v-2.5h5V21"/></svg>';
 function nvFecha(f){try{return new Date(f).toLocaleDateString("es-AR",{day:"numeric",month:"short",timeZone:"America/Argentina/Buenos_Aires"});}catch(e){return"";}}
 function nvItem(n){return`<div class="nv-it"><div class="nv-it-h"><b>${escH(n.titulo)}</b><small>${nvFecha(n.fecha)}</small></div>${n.texto?`<p>${escH(n.texto)}</p>`:""}</div>`;}
@@ -4960,8 +4965,12 @@ async function mejorarCtaJugar(fid,pozoId,empresa){
   const hasta=r.cambiosLibresHasta?new Date(r.cambiosLibresHasta):null,libre=hasta&&hasta>new Date();
   const fmt=function(d){return d.toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","").replace(",", " a las");};
   const falta=Math.max(0,total-n);
-  const titulo=falta?`Completar pronósticos`:libre?`✏️ Modificar pronósticos`:`Ver mis pronósticos`;
-  const k=falta?`Pusiste ${n} de ${total} · te falta${falta!==1?"n":""} ${falta}`:`Pusiste ${n} de ${total}`;
+  // Reglas especiales: cuántas de las habilitadas ya usó (y marcarlas con ✓ en la cabecera)
+  const habil=window._fdReglas||[],usadas=habil.filter(function(c){return(r.reglas||[]).some(function(x){return x.codigo===c;});});
+  usadas.forEach(function(c){const e=document.getElementById("fdr-"+c);if(e)e.classList.add("hecha");});
+  const faltanR=habil.length-usadas.length;
+  const titulo=falta?`Completar pronósticos`:faltanR&&(libre||r.cambiosRestantes>0)?`Completar reglas`:libre?`✏️ Modificar pronósticos`:`Ver mis pronósticos`;
+  const k=(falta?`Pusiste ${n} de ${total} · te falta${falta!==1?"n":""} ${falta}`:`Pusiste ${n} de ${total}`)+(habil.length?` · Reglas ${usadas.length} de ${habil.length}`:"");
   const t=libre?`Podés cambiarlos gratis hasta el ${fmt(hasta)}`:(r.cambiosRestantes>0?`Te quedan ${r.cambiosRestantes} cambio${r.cambiosRestantes!==1?"s":""} ${r.cambiosGratis||empresa?"gratis":"pagos"} · hasta 1 hora antes de cada partido`:"Ya no quedan cambios");
   const go_=`go('jugar',{fechaId:'${fid}',pozoId:'${pozoId}'})`;
   const top=document.getElementById("pjtop");if(top)top.innerHTML=`<div class="cta-top"><div class="cta-txt"><div class="cta-k">${k}</div><div class="cta-t">${t}</div></div><button class="btn btn-p btn-lg" onclick="${go_}">${titulo} →</button></div>`;
