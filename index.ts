@@ -1,14 +1,14 @@
 // ============================================================
 //  POLLA PRODES — Edge Function principal
 //  Supabase Edge Functions (Deno)
-//  2026-04-05 ARG
+//  2026-04-06 21:30 ARG — Fixes: nombres equipos, tabla, pozo actual
 // ============================================================
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const API_SECRET = Deno.env.get("API_SECRET") || "PP2026-xK9mQ7vL2nR4wT8yU3pA5cE1hG6jF0bD";
+const API_SECRET = Deno.env.get("API_SECRET")!;
 
 const REGLAS_DEF: Record<string, any> = {
   LMR:  { nombre:"La Marea Roja",    pts:1,  cantPartidos:3, desc:"Elegí 3 partidos con tarjeta roja. +1pt por expulsión." },
@@ -22,7 +22,18 @@ const REGLAS_DEF: Record<string, any> = {
 };
 
 const PTS_NORMAL = 1, PTS_DOBLE = 2, PTS_POLLA = 5, TOLE_UMBRAL = 45, TOLE_PTS = 3;
-const MAX_CAMBIOS = 3, MINUTOS_CIERRE = 30;
+const MAX_CAMBIOS = 3, MINUTOS_CIERRE = 30, MINUTOS_CIERRE_CAMBIO = 60;
+// CIERRE DE LA FECHA = 1 hora antes del primer partido (o el plazo que cargó el admin, si es antes).
+// Hasta el cierre: inscripción, pronósticos nuevos, cambios gratis y reglas. Después: solo cambios pagos,
+// cada uno hasta 1 hora antes de su propio partido.
+function cierreFecha(fecha: any, parts: any[]): Date | null {
+  const t = (parts||[]).map((p:any) => p.fecha_hora ? new Date(p.fecha_hora).getTime() : NaN).filter((x:number) => !isNaN(x));
+  const porPartido = t.length ? Math.min(...t) - MINUTOS_CIERRE_CAMBIO*60000 : NaN;
+  const porAdmin = fecha?.plazo_limite ? new Date(fecha.plazo_limite).getTime() : NaN;
+  const v = [porPartido, porAdmin].filter(x => !isNaN(x));
+  return v.length ? new Date(Math.min(...v)) : null;
+}
+const minutosHasta = (d: Date | null) => d ? Math.floor((d.getTime() - Date.now()) / 60000) : 99999;
 
 function corsHeaders() {
   return {
@@ -50,6 +61,68 @@ async function hashPinAsync(pin: string): Promise<string> {
   const data = encoder.encode(pin + "PP2026SALT");
   const buf = await crypto.subtle.digest("SHA-256", data);
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+}
+
+// PIN: PBKDF2-SHA256 con sal propia por usuario. Formato guardado: "pbkdf2$<iteraciones>$<sal hex>$<hash hex>".
+// Los hashes viejos (SHA-256 con sal fija) se aceptan una vez y se actualizan solos al entrar.
+const PBKDF2_ITER = 100000;
+const toHex = (b: Uint8Array) => Array.from(b).map(x => x.toString(16).padStart(2,"0")).join("");
+const fromHex = (h: string) => new Uint8Array(h.match(/../g)!.map(x => parseInt(x,16)));
+
+async function pbkdf2(pin: string, salt: Uint8Array, iter: number): Promise<string> {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pin), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({name:"PBKDF2", hash:"SHA-256", salt, iterations:iter}, key, 256);
+  return toHex(new Uint8Array(bits));
+}
+async function hashPinSeguro(pin: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  return `pbkdf2$${PBKDF2_ITER}$${toHex(salt)}$${await pbkdf2(pin, salt, PBKDF2_ITER)}`;
+}
+function igualSeguro(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let r = 0; for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return r === 0;
+}
+async function verificarPin(pin: string, guardado: string): Promise<{ok:boolean, viejo:boolean}> {
+  if (guardado?.startsWith("pbkdf2$")) {
+    const [, it, sal, h] = guardado.split("$");
+    return {ok: igualSeguro(await pbkdf2(pin, fromHex(sal), parseInt(it)), h), viejo:false};
+  }
+  return {ok: igualSeguro(await hashPinAsync(pin), guardado || ""), viejo:true};
+}
+const PIN_OK = (pin: any) => /^\d{4,8}$/.test(String(pin||""));
+const MAX_INTENTOS = 5, MINUTOS_BLOQUEO = 15;
+
+// Mail (Resend). Si falta RESEND_API_KEY no se manda nada y el registro sigue igual.
+async function enviarMail(para: string, asunto: string, html: string) {
+  const KEY = Deno.env.get("RESEND_API_KEY");
+  if (!KEY || !para) return {ok:false, motivo:"sin configurar"};
+  try {
+    const r = await fetch("https://api.resend.com/emails", {
+      method:"POST",
+      headers:{"Authorization":`Bearer ${KEY}`, "Content-Type":"application/json"},
+      body: JSON.stringify({from: Deno.env.get("MAIL_FROM") || "Polla Prodes <hola@pollaprodes.com>", to:[para], subject:asunto, html}),
+    });
+    return {ok:r.ok};
+  } catch (e) { console.error("mail", e); return {ok:false}; }
+}
+const esc = (t: any) => String(t ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"} as any)[c]);
+function mailBienvenida(nombre: string, usuario: string, tel: string, alias: string) {
+  const APP_URL = Deno.env.get("APP_URL") || "https://gr10-cdu.github.io/PollaProdes/";
+  return `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;background:#0B2A1B;border-radius:18px;overflow:hidden;color:#fff">
+  <div style="padding:28px 28px 8px"><div style="font-size:30px;font-weight:900;letter-spacing:2px">POLLA <span style="color:#3BEA8B">PRODES</span></div></div>
+  <div style="padding:8px 28px 28px">
+    <p style="font-size:18px">¡Hola ${esc(nombre)}! Ya sos parte de Polla Prodes.</p>
+    <p style="color:#B8D8C6">Estos son los datos de tu registro:</p>
+    <table style="width:100%;background:#06140D;border-radius:12px;padding:12px;color:#fff">
+      <tr><td style="color:#8FB3A0;padding:6px">Usuario</td><td style="font-weight:bold;padding:6px">${esc(usuario)}</td></tr>
+      <tr><td style="color:#8FB3A0;padding:6px">Teléfono</td><td style="font-weight:bold;padding:6px">${esc(tel)}</td></tr>
+      ${alias ? `<tr><td style="color:#8FB3A0;padding:6px">Alias MP</td><td style="font-weight:bold;padding:6px">${esc(alias)}</td></tr>` : ""}
+    </table>
+    <p style="color:#B8D8C6;margin-top:16px">Para entrar usás tu teléfono y tu PIN. Nunca te vamos a pedir el PIN por mail ni por WhatsApp.</p>
+    <a href="${APP_URL}" style="display:inline-block;margin-top:10px;background:#27E07F;color:#03140A;font-weight:bold;text-decoration:none;padding:14px 22px;border-radius:12px">Entrar a jugar →</a>
+    <p style="color:#6E8F7E;font-size:12px;margin-top:22px">Si no te registraste vos, respondé este mail y lo revisamos.</p>
+  </div></div>`;
 }
 
 function generarId(prefix: string): string {
@@ -116,6 +189,14 @@ Deno.serve(async (req) => {
       case "getMiFecha": return resp(await getMiFecha(db, data));
       case "guardarReglas": return resp(await guardarReglas(db, data));
 
+      // ── CAMBIOS PAGOS ─────────────────────────────────────
+      case "getMisCambios": return resp(await getMisCambios(db, data));
+      case "solicitarCambio": return resp(await solicitarCambio(db, data));
+      case "crearPreferenciaCambio": return resp(await crearPreferenciaCambio(db, data));
+      case "ejecutarCambio": return resp(await ejecutarCambio(db, data));
+      case "adminHabilitarCambio": return resp(await adminHabilitarCambio(db, data));
+      case "pagarCambioPrueba": return resp(await pagarCambioPrueba(db, data));
+
       // ── PUNTAJES ──────────────────────────────────────────
       case "getTabla": return resp(await getTabla(db, data));
       case "getNoticias": return resp(await getNoticias(db));
@@ -126,6 +207,7 @@ Deno.serve(async (req) => {
       case "adminCerrarFecha": return resp(await adminCerrarFecha(db, data));
       case "adminCrearPozo": return resp(await adminCrearPozo(db, data));
       case "adminIngresarResultado": return resp(await adminIngresarResultado(db, data));
+      case "adminEstadoPartido": return resp(await adminEstadoPartido(db, data));
       case "adminGetUsuarios": return resp(await adminGetUsuarios(db, data));
       case "agregarNoticia": return resp(await agregarNoticia(db, data));
       case "eliminarNoticia": return resp(await eliminarNoticia(db, data));
@@ -142,6 +224,11 @@ Deno.serve(async (req) => {
       case "adminCambiarEstado": return resp(await adminCambiarEstado(db, data));
       case "adminGetInscripcionesPendientes": return resp(await adminGetInscripcionesPendientes(db, data));
       case "getGrupoPorCodigo": return resp(await getGrupoPorCodigo(db, data));
+      case "unirseConCodigo": return resp(await unirseConCodigo(db, data));
+      case "subirFoto": return resp(await subirFoto(db, data));
+      case "cancelarFoto": return resp(await cancelarFoto(db, data));
+      case "adminGetFotosPendientes": return resp(await adminGetFotosPendientes(db, data));
+      case "adminResolverFoto": return resp(await adminResolverFoto(db, data));
 
       default: return resp({ok:false, error:`Acción desconocida: ${action}`}, 404);
     }
@@ -158,7 +245,12 @@ async function registro(db: any, data: any) {
   const { nombre, telefono, pin } = data;
   if (!nombre || !telefono || !pin) return {ok:false, error:"Faltan datos"};
   const tel = telefono.replace(/\D/g,"");
-  const pinHash = await hashPinAsync(pin);
+  if (String(nombre).trim().length < 3) return {ok:false, error:"Escribí tu nombre y apellido"};
+  if (tel.length < 8 || tel.length > 15) return {ok:false, error:"El teléfono no parece válido"};
+  if (!PIN_OK(pin)) return {ok:false, error:"El PIN tiene que tener entre 4 y 8 números"};
+  if (data.pin2 !== undefined && data.pin2 !== pin) return {ok:false, error:"Los PIN no coinciden"};
+  if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) return {ok:false, error:"El email no parece válido"};
+  const pinHash = await hashPinSeguro(pin);
 
   // Verificar si existe
   const {data: existe} = await db.from("usuarios").select("id").eq("telefono", tel).single();
@@ -174,6 +266,7 @@ async function registro(db: any, data: any) {
   if (error) return {ok:false, error: error.message};
 
   const token = await crearSesion(db, id);
+  if (data.email) await enviarMail(data.email, "¡Bienvenido a Polla Prodes!", mailBienvenida(nombre, usuario, tel, data.alias || ""));
   return {ok:true, user:{id, usuario, nombre, rol:"Jugador"}, sessionToken: token};
 }
 
@@ -188,13 +281,29 @@ async function login(db: any, data: any) {
     .select("*").eq("telefono", tel).single();
   if (!user) return {ok:false, error:"Teléfono no registrado"};
   if (user.estado !== "Activo") return {ok:false, error:"Cuenta suspendida"};
+  if (user.bloqueado_hasta && new Date(user.bloqueado_hasta) > new Date()) {
+    const min = Math.ceil((new Date(user.bloqueado_hasta).getTime() - Date.now()) / 60000);
+    return {ok:false, error:`Demasiados intentos. Probá de nuevo en ${min} minuto${min!==1?"s":""}`};
+  }
 
-  const pinHash = await hashPinAsync(data.pin);
-  if (user.pin_hash !== pinHash) return {ok:false, error:"PIN incorrecto"};
+  const v = await verificarPin(String(data.pin), user.pin_hash);
+  if (!v.ok) {
+    const n = (user.intentos_fallidos || 0) + 1;
+    const bloquear = n >= MAX_INTENTOS;
+    await db.from("usuarios").update({
+      intentos_fallidos: bloquear ? 0 : n,
+      bloqueado_hasta: bloquear ? new Date(Date.now() + MINUTOS_BLOQUEO*60000).toISOString() : null,
+    }).eq("id", user.id);
+    if (bloquear) return {ok:false, error:`Demasiados intentos. Tu cuenta quedó trabada ${MINUTOS_BLOQUEO} minutos`};
+    const quedan = MAX_INTENTOS - n;
+    return {ok:false, error:`PIN incorrecto. Te quedan ${quedan} intento${quedan!==1?"s":""}`};
+  }
 
-  await db.from("usuarios").update({ultimo_login: new Date().toISOString()}).eq("id", user.id);
+  const upd: any = {ultimo_login: new Date().toISOString(), intentos_fallidos: 0, bloqueado_hasta: null};
+  if (v.viejo) upd.pin_hash = await hashPinSeguro(String(data.pin)); // actualizar al formato seguro
+  await db.from("usuarios").update(upd).eq("id", user.id);
   const token = await crearSesion(db, user.id);
-  return {ok:true, user:{id:user.id, usuario:user.usuario, nombre:user.nombre, alias:user.alias_mp, email:user.email, avatar:user.avatar, rol:user.rol, cupones:user.cupones}, sessionToken: token};
+  return {ok:true, user:{id:user.id, usuario:user.usuario, nombre:user.nombre, alias:user.alias_mp, email:user.email, telefono:user.telefono, avatar:user.avatar, fotoPendiente:user.foto_pendiente||null, rol:user.rol, cupones:user.cupones}, sessionToken: token};
 }
 
 // ============================================================
@@ -205,7 +314,7 @@ async function loginConToken(db: any, data: any) {
   if (!auth.ok) return auth;
   const {data: user} = await db.from("usuarios").select("*").eq("id", auth.userId).single();
   if (!user) return {ok:false, error:"Usuario no encontrado"};
-  return {ok:true, user:{id:user.id, usuario:user.usuario, nombre:user.nombre, alias:user.alias_mp, email:user.email, avatar:user.avatar, rol:user.rol, cupones:user.cupones}, sessionToken: data.sessionToken};
+  return {ok:true, user:{id:user.id, usuario:user.usuario, nombre:user.nombre, alias:user.alias_mp, email:user.email, telefono:user.telefono, avatar:user.avatar, fotoPendiente:user.foto_pendiente||null, rol:user.rol, cupones:user.cupones}, sessionToken: data.sessionToken};
 }
 
 async function logout(db: any, data: any) {
@@ -226,22 +335,26 @@ async function crearSesion(db: any, userId: string): Promise<string> {
 //  GET FECHAS
 // ============================================================
 async function getFechas(db: any, data: any) {
+  const esAdmin = data.sessionToken ? (await requireAuth(db, data)).rol === "Admin" : false;
   const {data: fechas} = await db.from("fechas")
     .select("*")
     .in("estado", ["Abierta","Cerrada","Jugada"])
     .order("plazo_limite");
 
-  const ahora = new Date();
+  const ids = (fechas||[]).map((f:any) => f.id);
+  const {data: pts} = ids.length ? await db.from("partidos").select("fecha_id,fecha_hora").in("fecha_id", ids) : {data: []};
   return {ok:true, fechas: (fechas||[]).map((f:any) => {
-    const plazo = new Date(f.plazo_limite);
-    const mins = Math.floor((plazo.getTime() - ahora.getTime()) / 60000);
+    const cierre = cierreFecha(f, (pts||[]).filter((p:any) => p.fecha_id === f.id));
+    const mins = minutosHasta(cierre);
     return {
       id: f.id, nombre: f.nombre, descripcion: f.descripcion,
-      plazoLimite: f.plazo_limite, estado: f.estado,
+      plazoLimite: cierre?.toISOString() || f.plazo_limite, estado: f.estado,
       cantPartidos: f.cant_partidos, liga: f.liga,
       reglasHabilitadas: f.reglas_habilitadas || [],
-      puedeJugar: f.estado === "Abierta" && mins > MINUTOS_CIERRE,
+      puedeJugar: f.estado === "Abierta" && mins > 0,
       minutosRestantes: mins,
+      tieneCodigo: !!f.codigo_grupo,
+      codigoGrupo: esAdmin ? (f.codigo_grupo || "") : undefined,
     };
   })};
 }
@@ -259,18 +372,19 @@ async function getFecha(db: any, data: any) {
   if (!fecha) return {ok:false, error:"Fecha no encontrada"};
 
   const ahora = new Date();
-  const mins = Math.floor((new Date(fecha.plazo_limite).getTime() - ahora.getTime()) / 60000);
+  const cierre = cierreFecha(fecha, parts||[]);
+  const mins = minutosHasta(cierre);
   const reglasDetalle = (fecha.reglas_habilitadas||[]).filter((c:string) => REGLAS_DEF[c]).map((c:string) => ({
     codigo:c, ...REGLAS_DEF[c]
   }));
 
   return {ok:true,
-    fecha: {id:fecha.id, nombre:fecha.nombre, descripcion:fecha.descripcion, plazoLimite:fecha.plazo_limite, estado:fecha.estado, cantPartidos:fecha.cant_partidos, liga:fecha.liga, puedeJugar:fecha.estado==="Abierta"&&mins>MINUTOS_CIERRE, minutosRestantes:mins, reglasHabilitadas:fecha.reglas_habilitadas||[], reglasDetalle},
+    fecha: {id:fecha.id, nombre:fecha.nombre, descripcion:fecha.descripcion, plazoLimite:cierre?.toISOString()||fecha.plazo_limite, estado:fecha.estado, cantPartidos:fecha.cant_partidos, liga:fecha.liga, puedeJugar:fecha.estado==="Abierta"&&mins>0, minutosRestantes:mins, reglasHabilitadas:fecha.reglas_habilitadas||[], reglasDetalle, tieneCodigo:!!fecha.codigo_grupo},
     partidos: (parts||[]).map((p:any) => ({
       id:p.id, numero:p.numero, local:p.local, visita:p.visita,
       fechaHora:p.fecha_hora, liga:p.liga, tipo:p.tipo, estado:p.estado,
       golesLocal:p.goles_local, golesVisita:p.goles_visita,
-      resultado:p.resultado, tarjetasRojas:p.tarjetas_rojas||0,
+      resultado:p.resultado, tarjetasRojas:p.tarjetas_rojas||0, esToleTole:!!p.es_tole,
       localLogo:p.local_logo||"", visitaLogo:p.visita_logo||"",
     })),
   };
@@ -279,34 +393,54 @@ async function getFecha(db: any, data: any) {
 // ============================================================
 //  GET POZOS
 // ============================================================
+// Premio = 75% de (inscriptos que PAGARON × monto + cambios pagados). Si el pozo tiene premio fijo, es ese.
+const COMISION_PCT = 25;
+function calcPremio(pozo: any, inscAprobadas: any[], cambios: any[]) {
+  const pagaron = inscAprobadas.filter((i:any) => i.pozo_id === pozo.id && !i.via_codigo).length;
+  const totalCambios = cambios.filter((c:any) => c.pozo_id === pozo.id).reduce((t:number,c:any) => t+(c.monto||0), 0);
+  const totalRecaudado = pagaron * pozo.monto + totalCambios;
+  const premio = pozo.premio_fijo != null ? Number(pozo.premio_fijo) : Math.floor(totalRecaudado * (1 - COMISION_PCT/100));
+  return {totalRecaudado, totalCambios, premio};
+}
+
 async function getPozos(db: any, data: any) {
   if (!data.fechaId) return {ok:false, error:"Falta fechaId"};
 
-  const [{data: pozos}, {data: inscripciones}] = await Promise.all([
+  const [{data: pozos}, {data: inscripciones}, {data: cambiosPagados}] = await Promise.all([
     db.from("pozos").select("*").eq("fecha_id", data.fechaId).eq("estado","Activo").order("monto"),
     db.from("inscripciones").select("*").eq("fecha_id", data.fechaId).in("estado_pago",["Pendiente","Aprobado"]),
+    db.from("cambios_pagos").select("pozo_id,monto,estado").eq("fecha_id", data.fechaId).in("estado",["Pagado","Usado"]),
   ]);
 
   const {data: parts} = await db.from("partidos").select("id").eq("fecha_id", data.fechaId);
   const cantPartidos = parts?.length || 0;
 
   return {ok:true, pozos: (pozos||[]).map((p:any) => {
-    const insc = (inscripciones||[]).filter((i:any) => i.pozo_id === p.id);
+    const insc = (inscripciones||[]).filter((i:any) => i.pozo_id === p.id && i.estado_pago === "Aprobado");
     const cantInscriptos = insc.length;
-    const total = cantInscriptos * p.monto;
-    const premio = Math.floor(total * (1 - p.comision_pct/100));
+    const {totalRecaudado, totalCambios, premio} = calcPremio(p, insc, cambiosPagados||[]);
 
-    let yaInscripto = false, yaJugo = false, cambiosRestantes = null;
+    let yaInscripto = false, yaJugo = false, cambiosRestantesFecha = null;
     if (data.userId) {
-      const miInsc = insc.find((i:any) => i.user_id === data.userId && i.estado_pago === "Aprobado");
+      const miInsc = insc.find((i:any) => i.user_id === data.userId);
       yaInscripto = !!miInsc;
+      
+      // Calcular cambios restantes del usuario
+      if (yaInscripto) {
+        // Necesitamos contar cambios realizados del usuario
+        // Por ahora dejamos null, el frontend lo calcula con getMiFecha
+      }
     }
 
     return {
       id:p.id, fechaId:p.fecha_id, nombre:p.nombre, monto:p.monto,
-      tipo:p.tipo, estado:p.estado, comisionPct:p.comision_pct,
-      inscriptos:cantInscriptos, totalRecaudado:total, premioGanador:premio,
-      cantPartidos, yaInscripto, yaJugo, cambiosRestantes,
+      tipo:p.tipo, estado:p.estado, comisionPct:COMISION_PCT, premioFijo:p.premio_fijo,
+      inscriptos:cantInscriptos, 
+      totalRecaudado,
+      totalCambios,
+      premioGanador:premio,
+      pozoActual: premio, // Alias más claro
+      cantPartidos, yaInscripto, yaJugo, cambiosRestantesFecha,
     };
   })};
 }
@@ -324,8 +458,8 @@ async function inscribirse(db: any, data: any) {
   // Verificar fecha abierta
   const {data: fecha} = await db.from("fechas").select("*").eq("id", fechaId).single();
   if (!fecha || fecha.estado !== "Abierta") return {ok:false, error:"Fecha cerrada"};
-  const mins = (new Date(fecha.plazo_limite).getTime() - Date.now()) / 60000;
-  if (mins <= MINUTOS_CIERRE) return {ok:false, error:"Plazo vencido"};
+  const {data: partsF} = await db.from("partidos").select("fecha_hora").eq("fecha_id", fechaId);
+  if (minutosHasta(cierreFecha(fecha, partsF||[])) <= 0) return {ok:false, error:"La fecha ya cerró (1 hora antes del primer partido)"};
 
   // Verificar si ya está inscripto
   const {data: yaInsc} = await db.from("inscripciones")
@@ -414,9 +548,12 @@ async function autoguardar(db: any, data: any) {
 
   // Leer partidos y pronósticos existentes en paralelo
   const [{data:parts}, {data:existentes}] = await Promise.all([
-    db.from("partidos").select("id,fecha_hora,numero").eq("fecha_id",fechaId),
+    db.from("partidos").select("*").eq("fecha_id",fechaId),
     db.from("pronosticos").select("*").eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId),
   ]);
+  const {data: fechaRow} = await db.from("fechas").select("plazo_limite").eq("id",fechaId).single();
+  const libre = minutosHasta(cierreFecha(fechaRow, parts||[])) > 0;
+  if (!libre) return {ok:false, error:"La fecha ya cerró: solo podés hacer cambios pagos"};
 
   const {data: user} = await db.from("usuarios").select("usuario").eq("id",auth.userId).single();
   const ahora = new Date();
@@ -435,7 +572,8 @@ async function autoguardar(db: any, data: any) {
 
     const existente = existentes?.find((e:any) => e.partido_id === p.partidoId);
     const esCambio = existente && existente.pronostico !== p.pronostico;
-    if (esCambio && cambiosUsados >= MAX_CAMBIOS) continue;
+    // Antes del período libre los cambios son gratis; después se pagan (solicitarCambio → ejecutarCambio)
+    if (esCambio && !libre) continue;
 
     upserts.push({
       id: existente?.id || generarId("PRO"),
@@ -443,9 +581,8 @@ async function autoguardar(db: any, data: any) {
       fecha_id: fechaId, pozo_id: pozoId, partido_id: p.partidoId,
       numero_partido: part.numero, local: part.local, visita: part.visita,
       pronostico: p.pronostico, updated_at: new Date().toISOString(),
-      cambios_realizados: existente ? (existente.cambios_realizados||0)+(esCambio?1:0) : 0,
+      cambios_realizados: existente ? (existente.cambios_realizados||0) : 0, // los cambios gratis no cuentan
     });
-    if (esCambio) cambiosUsados++;
     guardados++;
   }
 
@@ -465,27 +602,59 @@ async function getMiFecha(db: any, data: any) {
 
   const {fechaId, pozoId} = data;
   const [
-    {data:pronos}, {data:reglas}, {data:puntos}, {data:parts}
+    {data:pronos}, {data:reglas}, {data:puntos}, {data:parts}, {data:cambios}
   ] = await Promise.all([
     db.from("pronosticos").select("*").eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId),
     db.from("reglas").select("*").eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId),
     db.from("puntajes").select("*").eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId),
     db.from("partidos").select("*").eq("fecha_id",fechaId).order("numero"),
+    db.from("cambios_pagos").select("*").eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId),
   ]);
 
   const ahora = new Date();
+  const {data: fechaMF} = await db.from("fechas").select("plazo_limite").eq("id",fechaId).single();
   const cambiosUsados = (pronos||[]).reduce((t:number,p:any) => t+(p.cambios_realizados||0), 0);
+  const cambiosRestantes = Math.max(0, MAX_CAMBIOS - cambiosUsados);
+  
+  // Calcular costo del próximo cambio
+  const COSTO_CAMBIO: Record<number, number> = {1: 20, 2: 25, 3: 30};
+  const proximoCambio = cambiosUsados + 1;
+  const proximoPorcentaje = COSTO_CAMBIO[proximoCambio] || 30;
+  
+  // Obtener monto del pozo para calcular costo
+  const {data: pozo} = await db.from("pozos").select("monto").eq("id", pozoId).single();
+  const montoPozo = pozo?.monto || 0;
+  const proximoCosto = Math.round(montoPozo * proximoPorcentaje / 100);
+
+  // Cambios pendientes de ejecutar
+  const cambiosPendientes = (cambios||[]).filter((c:any) => c.estado === "Pagado").map((c:any) => {
+    const part = parts?.find((p:any) => p.id === c.partido_id);
+    return {
+      id: c.id, partidoId: c.partido_id, 
+      de: c.pronostico_anterior, a: c.pronostico_nuevo,
+      estado: c.estado, local: part?.local, visita: part?.visita
+    };
+  });
 
   const resultado = (pronos||[]).map((pr:any) => {
+    // IMPORTANTE: Obtener nombres desde la tabla partidos, no desde pronosticos
     const part = parts?.find((p:any) => p.id === pr.partido_id);
     const pts = puntos?.find((p:any) => p.partido_id === pr.partido_id);
     const reglasPartido = (reglas||[]).filter((r:any) => r.partido_id === pr.partido_id);
     const diffMin = part?.fecha_hora ? (new Date(part.fecha_hora).getTime() - ahora.getTime()) / 60000 : 9999;
+    const cambioPend = cambiosPendientes.find((c:any) => c.partidoId === pr.partido_id);
+    
     return {
-      id:pr.id, partidoId:pr.partido_id, numero:pr.numero_partido,
-      local:pr.local, visita:pr.visita, pronostico:pr.pronostico,
+      id:pr.id, partidoId:pr.partido_id, numero:part?.numero || pr.numero_partido,
+      // Usar nombres desde partidos (part), no desde pronosticos (pr)
+      local: part?.local || pr.local || "Local",
+      visita: part?.visita || pr.visita || "Visitante",
+      localLogo: part?.local_logo,
+      visitaLogo: part?.visita_logo,
+      fechaHora: part?.fecha_hora,
+      pronostico:pr.pronostico,
       acertado:pr.acertado, cambiosRealizados:pr.cambios_realizados||0,
-      puedeCambiar:diffMin>MINUTOS_CIERRE,
+      puedeCambiar:diffMin>MINUTOS_CIERRE_CAMBIO,
       reglas:reglasPartido.map((r:any) => ({codigo:r.codigo,nombre:r.nombre,detalle:r.detalle,puntos:r.puntos_obtenidos||0})),
       ptsGrilla:pts?(pts.pts_normal+pts.pts_doble+pts.pts_polla):null,
       ptsToleTole:pts?pts.pts_tole:null,
@@ -493,6 +662,7 @@ async function getMiFecha(db: any, data: any) {
       ptsTotal:pts?pts.pts_total:null,
       esToleTole:pts?pts.es_tole:null,
       calculado:!!pts,
+      cambioPendiente: cambioPend || null,
     };
   });
 
@@ -502,7 +672,23 @@ async function getMiFecha(db: any, data: any) {
     return {partidoId:r.partido_id, codigo:r.codigo, nombre:r.nombre, detalle:r.detalle, puntos:r.puntos_obtenidos||0, esMovible:diffMin>MINUTOS_CIERRE};
   });
 
-  return {ok:true, pronos:resultado, reglas:reglasMap, totalPartidos:parts?.length||0, totalCompletos:resultado.length, cambiosRestantesFecha:Math.max(0,MAX_CAMBIOS-cambiosUsados)};
+  return {
+    ok:true, 
+    pronos:resultado, 
+    reglas:reglasMap, 
+    totalPartidos:parts?.length||0, 
+    totalCompletos:resultado.length, 
+    cambiosUsados,
+    cambiosRestantes,
+    proximoCambio,
+    proximoPorcentaje,
+    proximoCosto,
+    cambiosPendientes,
+    cambiosLibresHasta: libreHasta(parts||[], fechaMF)?.toISOString() || null,
+    enPeriodoLibre: enPeriodoLibre(parts||[], fechaMF),
+    // Legacy field
+    cambiosRestantesFecha: cambiosRestantes
+  };
 }
 
 // ============================================================
@@ -525,18 +711,29 @@ async function guardarReglas(db: any, data: any) {
   const nuevas: any[] = [];
   const codigosNuevos = reglas.map((r:any) => r.codigo);
 
-  // Eliminar reglas anteriores de los mismos códigos
-  await db.from("reglas").delete()
-    .eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId)
-    .in("codigo",codigosNuevos);
+  // Hasta 1 h antes del primer partido las reglas se mueven libremente (se reemplazan);
+  // después, lo guardado queda fijo para siempre y solo se pueden completar lugares vacíos.
+  const {data: fechaGR} = await db.from("fechas").select("plazo_limite").eq("id",fechaId).single();
+  if (!enPeriodoLibre(parts||[], fechaGR)) return {ok:false, error:"La fecha ya cerró: las reglas quedaron fijas"};
+  {
+    await db.from("reglas").delete()
+      .eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId)
+      .in("codigo",codigosNuevos);
+  }
+  const {data: existentes} = await db.from("reglas").select("codigo,partido_id")
+    .eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId);
+  let ignoradas = 0;
 
   for (const reg of reglas) {
     const def = REGLAS_DEF[reg.codigo];
     if (!def) continue;
+    const previas = new Set((existentes||[]).filter((e:any) => e.codigo === reg.codigo).map((e:any) => e.partido_id));
+    let lugares = Math.max(0, def.cantPartidos - previas.size);
     for (const pid of (reg.partidos||[])) {
+      if (previas.has(pid)) continue;
+      if (lugares <= 0) { ignoradas++; continue; }
       const part = parts?.find((p:any) => p.id===pid);
       if (!part) continue;
-      // Solo bloquear si el partido tiene fecha_hora válida Y ya cerró
       const diffMin = part.fecha_hora ? (new Date(part.fecha_hora).getTime()-ahora.getTime())/60000 : 9999;
       if (part.estado === "Finalizado" || part.estado === "Suspendido") continue;
       if (part.fecha_hora && diffMin <= MINUTOS_CIERRE) continue;
@@ -547,32 +744,68 @@ async function guardarReglas(db: any, data: any) {
         codigo:reg.codigo, nombre:def.nombre,
         detalle:reg.detalle||"", puntos_obtenidos:0,
       });
+      lugares--;
     }
   }
 
   if (nuevas.length) await db.from("reglas").insert(nuevas);
-  return {ok:true, guardadas:nuevas.length};
+  return {ok:true, guardadas:nuevas.length, ignoradas};
 }
 
 // ============================================================
 //  GET TABLA
 // ============================================================
-async function getTabla(db: any, data: any) {
-  const {data: pts} = await db.from("puntajes")
-    .select("user_id,usuario,pts_total,acertado")
-    .eq("fecha_id",data.fechaId).eq("pozo_id",data.pozoId);
-
-  const usuarios: Record<string,any> = {};
+async function armarTabla(db: any, fechaId: string, pozoId: string) {
+  const [{data: pts}, {data: parts}, {data: usuarios}] = await Promise.all([
+    db.from("puntajes").select("user_id,usuario,pts_normal,pts_doble,pts_polla,pts_tole,pts_reglas,pts_total,acertado,resultado_real,partido_id")
+      .eq("fecha_id",fechaId).eq("pozo_id",pozoId),
+    db.from("partidos").select("id,numero,estado").eq("fecha_id",fechaId).order("numero"),
+    db.from("usuarios").select("id,nombre,usuario,avatar"),
+  ]);
+  const um: Record<string,any> = {};
+  for (const u of (usuarios||[])) um[u.id] = u;
+  const t: Record<string,any> = {};
   for (const p of (pts||[])) {
-    if (!usuarios[p.user_id]) usuarios[p.user_id] = {userId:p.user_id, siglas:p.usuario, ptsTotal:0, acertados:0};
-    usuarios[p.user_id].ptsTotal += p.pts_total||0;
-    if (p.acertado) usuarios[p.user_id].acertados++;
+    const u = t[p.user_id] ||= {userId:p.user_id, siglas:p.usuario||um[p.user_id]?.usuario||"???", nombre:um[p.user_id]?.nombre||p.usuario||"Jugador", avatar:um[p.user_id]?.avatar||null,
+      ptsTotal:0, ptsPartidos:0, ptsReglas:0, acertados:0, empatesAcertados:0, visitantesAcertados:0};
+    u.ptsPartidos += (p.pts_normal||0)+(p.pts_doble||0)+(p.pts_polla||0)+(p.pts_tole||0);
+    u.ptsReglas += p.pts_reglas||0;
+    u.ptsTotal += p.pts_total||0;
+    if (p.acertado) { u.acertados++; if (p.resultado_real==="E") u.empatesAcertados++; if (p.resultado_real==="V") u.visitantesAcertados++; }
   }
+  const cmp = (a:any,b:any) => b.ptsTotal-a.ptsTotal || b.acertados-a.acertados || b.empatesAcertados-a.empatesAcertados || b.visitantesAcertados-a.visitantesAcertados;
+  const lista = Object.values(t).sort(cmp);
+  // Misma posición para los que empatan en todos los criterios
+  lista.forEach((u:any,i:number) => { u.posicion = i>0 && cmp(lista[i-1],u)===0 ? lista[i-1].posicion : i+1; });
+  const finalizados = (parts||[]).filter((p:any) => p.estado === "Finalizado");
+  return {tabla:lista, ultimoPartidoCalculado: finalizados.length ? Math.max(...finalizados.map((p:any)=>p.numero)) : 0, totalPartidos: parts?.length||0};
+}
 
-  const tabla = Object.values(usuarios).sort((a:any,b:any) => b.ptsTotal-a.ptsTotal || b.acertados-a.acertados)
-    .map((u:any,i:number) => ({...u, posicion:i+1}));
+async function getTabla(db: any, data: any) {
+  return {ok:true, ...(await armarTabla(db, data.fechaId, data.pozoId))};
+}
 
-  return {ok:true, tabla};
+// Al cerrar y calcular: registra el/los ganadores de cada pozo; si empatan, se dividen el premio
+async function registrarGanadores(db: any, fechaId: string) {
+  const [{data: pozos}, {data: insc}, {data: cambios}] = await Promise.all([
+    db.from("pozos").select("*").eq("fecha_id",fechaId),
+    db.from("inscripciones").select("pozo_id,via_codigo").eq("fecha_id",fechaId).eq("estado_pago","Aprobado"),
+    db.from("cambios_pagos").select("pozo_id,monto").eq("fecha_id",fechaId).in("estado",["Pagado","Usado"]),
+  ]);
+  await db.from("ganadores").delete().eq("fecha_id",fechaId);
+  const filas: any[] = [];
+  for (const pozo of (pozos||[])) {
+    const {tabla} = await armarTabla(db, fechaId, pozo.id);
+    const primeros = tabla.filter((u:any) => u.posicion === 1 && u.ptsTotal > 0);
+    if (!primeros.length) continue;
+    const {premio} = calcPremio(pozo, insc||[], cambios||[]);
+    for (const u of primeros) filas.push({
+      id:generarId("GAN"), fecha_id:fechaId, pozo_id:pozo.id, user_id:u.userId, usuario:u.siglas,
+      puntos:u.ptsTotal, premio:Math.floor(premio/primeros.length), compartido_con:primeros.length,
+    });
+  }
+  if (filas.length) await db.from("ganadores").insert(filas);
+  return filas.length;
 }
 
 // ============================================================
@@ -619,8 +852,9 @@ async function adminCrearFecha(db: any, data: any) {
     id, nombre:data.nombre, descripcion:data.descripcion||"",
     plazo_limite:data.plazoLimite, liga:data.liga||"",
     reglas_habilitadas:data.reglasHabilitadas||[],
+    codigo_grupo: normalizarCodigo(data.codigoGrupo),
   });
-  if (error) return {ok:false, error:error.message};
+  if (error) return {ok:false, error: error.code === "23505" ? "Ese código ya lo usa otra fecha" : error.message};
   return {ok:true, fechaId:id};
 }
 
@@ -633,7 +867,9 @@ async function adminEditarFecha(db: any, data: any) {
   if (data.liga) upd.liga = data.liga;
   if (data.estado) upd.estado = data.estado;
   if (data.reglasHabilitadas) upd.reglas_habilitadas = data.reglasHabilitadas;
-  await db.from("fechas").update(upd).eq("id",data.fechaId);
+  if (data.codigoGrupo !== undefined) upd.codigo_grupo = normalizarCodigo(data.codigoGrupo);
+  const {error} = await db.from("fechas").update(upd).eq("id",data.fechaId);
+  if (error) return {ok:false, error: error.code === "23505" ? "Ese código ya lo usa otra fecha" : error.message};
   return {ok:true};
 }
 
@@ -653,7 +889,8 @@ async function adminCrearPozo(db: any, data: any) {
   const id = generarId("POZ");
   await db.from("pozos").insert({
     id, fecha_id:data.fechaId, nombre:data.nombre||`Pozo $${data.monto}`,
-    monto:data.monto, comision_pct:25,
+    monto:data.monto, comision_pct:COMISION_PCT,
+    premio_fijo: data.premioFijo ? Number(data.premioFijo) : null,
   });
   return {ok:true, pozoId:id};
 }
@@ -715,11 +952,20 @@ async function importarPartidos(db: any, data: any) {
 // ============================================================
 //  API FOOTBALL — Rondas y Partidos
 // ============================================================
+// Ligas del importador (ids de API-Football, verificadas el 2026-10-01 con temporada 2026 disponible)
 const LIGA_IDS: Record<string,number> = {
-  "Liga Argentina":128,"Serie A":135,"La Liga":140,"Ligue 1":61,
-  "Premier League":39,"Champions League":2,"Copa Libertadores":13,
+  // Europa
+  "Premier League":39, "La Liga":140, "Serie A":135, "Bundesliga":78, "Ligue 1":61, "Eredivisie":88, "Primeira Liga":94,
+  // América
+  "Liga Argentina":128, "Copa Argentina":130, "Brasileirão":71, "Liga MX":262, "MLS":253,
+  "Primera Chile":265, "Primera Colombia":239, "Primera Uruguay":268,
+  // Copas internacionales de clubes
+  "Copa Libertadores":13, "Copa Sudamericana":11, "Champions League":2, "Europa League":3, "Conference League":848,
+  // Selecciones
+  "Mundial":1, "Eliminatorias Sudamérica":34, "Eliminatorias Europa":32, "Amistosos internacionales":10,
+  "Nations League":5, "Copa América":9,
 };
-const TEMPORADA = 2024;
+const TEMPORADA = 2026;
 const AF_KEY = Deno.env.get("APIFOOTBALL_KEY") || "3ea8d01a35fbc69e57a1ea4ce7cf55e8";
 
 async function callAPIFootball(endpoint: string, params: Record<string,any>) {
@@ -730,10 +976,21 @@ async function callAPIFootball(endpoint: string, params: Record<string,any>) {
   return r.json();
 }
 
+function errorAPIFootball(res: any): string | null {
+  const e = res?.errors;
+  if (!e || (Array.isArray(e) && !e.length) || (typeof e === "object" && !Object.keys(e).length)) return null;
+  const txt = typeof e === "string" ? e : Object.values(e).join(" ");
+  if (/plan|season|access/i.test(txt)) return "Tu plan de API-Football no permite esa temporada. Con el plan gratis probá con 2024; para 2026 hay que contratar el plan pago.";
+  if (/limit|request/i.test(txt)) return "Se alcanzó el límite de consultas de API-Football. Probá en un minuto.";
+  return "API-Football: " + txt;
+}
+
 async function getRondas(db: any, data: any) {
   const ligaId = LIGA_IDS[data.liga];
   if (!ligaId) return {ok:false, error:"Liga no reconocida"};
   const res = await callAPIFootball("fixtures/rounds", {league:ligaId, season:data.temporada||TEMPORADA});
+  const err = errorAPIFootball(res);
+  if (err) return {ok:false, error:err};
   return {ok:true, rondas:res.response||[]};
 }
 
@@ -741,10 +998,13 @@ async function buscarPorRonda(db: any, data: any) {
   const ligaId = LIGA_IDS[data.liga];
   if (!ligaId) return {ok:false, error:"Liga no reconocida"};
   const res = await callAPIFootball("fixtures", {league:ligaId, season:data.temporada||TEMPORADA, round:data.ronda, timezone:"America/Argentina/Buenos_Aires"});
+  const err = errorAPIFootball(res);
+  if (err) return {ok:false, error:err};
   const partidos = (res.response||[]).map((f:any) => ({
     apiId:f.fixture.id, fecha:f.fixture.date, local:f.teams.home.name, visita:f.teams.away.name,
     localLogo:f.teams.home.logo, visitaLogo:f.teams.away.logo,
-    golesLocal:f.goals.home, golesVisita:f.goals.away,
+    // Solo cuentan los 90 minutos: sin alargue ni penales
+    golesLocal:f.score?.fulltime?.home ?? f.goals.home, golesVisita:f.score?.fulltime?.away ?? f.goals.away,
     liga:data.liga, ligaId, ronda:f.league.round,
   }));
   return {ok:true, partidos, ronda:data.ronda};
@@ -763,7 +1023,30 @@ async function adminGetUsuarios(db: any, data: any) {
 // ============================================================
 //  CALCULAR PUNTAJES (lógica completa)
 // ============================================================
+// TOLE: se fija UNA vez, al cierre de la fecha, con los pronósticos de ese momento (ninguna opción ≥45%).
+// Después no cambia aunque haya cambios pagos. Se llama antes de cualquier cambio pago, grilla o cálculo.
+async function fijarTole(db: any, fechaId: string) {
+  const {data: fecha} = await db.from("fechas").select("id,plazo_limite,tole_fijado_at").eq("id",fechaId).single();
+  if (!fecha || fecha.tole_fijado_at) return;
+  const {data: parts} = await db.from("partidos").select("id,tipo,fecha_hora").eq("fecha_id",fechaId);
+  if (minutosHasta(cierreFecha(fecha, parts||[])) > 0) return; // todavía no cerró
+  // Marcar primero (evita que dos pedidos simultáneos lo calculen dos veces)
+  const {data: marcado} = await db.from("fechas").update({tole_fijado_at:new Date().toISOString()}).eq("id",fechaId).is("tole_fijado_at",null).select("id");
+  if (!marcado?.length) return;
+  const {data: pronos} = await db.from("pronosticos").select("partido_id,pozo_id,pronostico").eq("fecha_id",fechaId);
+  for (const p of (parts||[])) {
+    if (p.tipo === "Polla") { await db.from("partidos").update({es_tole:false}).eq("id",p.id); continue; }
+    const ps = (pronos||[]).filter((x:any) => x.partido_id === p.id);
+    const t = ps.length || 1;
+    const pct = (v:string) => ps.filter((x:any) => x.pronostico === v).length / t * 100;
+    const tole = ps.length >= 3 && pct("L") < TOLE_UMBRAL && pct("E") < TOLE_UMBRAL && pct("V") < TOLE_UMBRAL;
+    await db.from("partidos").update({es_tole: tole}).eq("id", p.id);
+  }
+}
+
 async function calcularPuntajesPartido(db: any, partidoId: string) {
+  const {data: p0} = await db.from("partidos").select("fecha_id").eq("id",partidoId).single();
+  if (p0) await fijarTole(db, p0.fecha_id);
   const {data: part} = await db.from("partidos").select("*").eq("id",partidoId).single();
   if (!part||part.estado!=="Finalizado"||!part.resultado) return;
 
@@ -776,113 +1059,126 @@ async function calcularPuntajesPartido(db: any, partidoId: string) {
   const pctL=(pronos||[]).filter((p:any)=>p.pronostico==="L").length/total*100;
   const pctE=(pronos||[]).filter((p:any)=>p.pronostico==="E").length/total*100;
   const pctV=(pronos||[]).filter((p:any)=>p.pronostico==="V").length/total*100;
-  const esTole = pctL<TOLE_UMBRAL&&pctE<TOLE_UMBRAL&&pctV<TOLE_UMBRAL;
+  // TOLE fijado al cierre. Reemplaza el valor del partido (Simple o Doble pasan a valer 3). La Polla vale siempre 5.
+  const esTole = part.tipo!=="Polla" && !!part.es_tole;
 
   const puntajesUpsert: any[] = [];
-  const pronosUpdate: any[] = [];
   const reglasUpdate: any[] = [];
 
   for (const pr of (pronos||[])) {
     const acertado = pr.pronostico === part.resultado;
-    pronosUpdate.push({id:pr.id, acertado});
-
     let ptsN=0,ptsD=0,ptsP=0,ptsTole=0,ptsR=0;
     if (acertado) {
-      if (part.tipo==="Normal") ptsN=PTS_NORMAL;
+      if (part.tipo==="Polla") ptsP=PTS_POLLA;
+      else if (esTole) ptsTole=TOLE_PTS;
       else if (part.tipo==="Doble") ptsD=PTS_DOBLE;
-      else if (part.tipo==="Polla") ptsP=PTS_POLLA;
-      if (esTole) ptsTole=TOLE_PTS;
-
-      const misReglas = (reglas||[]).filter((r:any)=>r.user_id===pr.user_id&&r.pozo_id===pr.pozo_id);
-      for (const reg of misReglas) {
-        const pts = calcPtsRegla(reg, part.resultado, part.goles_local||0, part.goles_visita||0, part.tarjetas_rojas||0);
-        ptsR += pts;
-        reglasUpdate.push({id:reg.id, puntos_obtenidos:pts});
-      }
-    } else {
-      // Reglas que no dependen del pronóstico (LMR)
-      const misReglas = (reglas||[]).filter((r:any)=>r.user_id===pr.user_id&&r.pozo_id===pr.pozo_id);
-      for (const reg of misReglas) {
-        if (reg.codigo==="LMR") {
-          const pts = part.tarjetas_rojas||0;
-          ptsR += pts;
-          reglasUpdate.push({id:reg.id, puntos_obtenidos:pts});
-        } else {
-          reglasUpdate.push({id:reg.id, puntos_obtenidos:0});
-        }
-      }
+      else ptsN=PTS_NORMAL;
+    }
+    // Reglas: suman solas, sin importar el L/E/V (salvo La Rachita, que se calcula aparte con El Diego)
+    const misReglas = (reglas||[]).filter((r:any)=>r.user_id===pr.user_id&&r.pozo_id===pr.pozo_id);
+    for (const reg of misReglas) {
+      if (reg.codigo==="LR" || reg.codigo==="DIEGO") { ptsR += reg.puntos_obtenidos||0; continue; }
+      const pts = calcPtsRegla(reg, part.resultado, part.goles_local||0, part.goles_visita||0, part.tarjetas_rojas||0);
+      ptsR += pts;
+      reglasUpdate.push({id:reg.id, puntos_obtenidos:pts});
     }
 
-    const ptsTotal = ptsN+ptsD+ptsP+ptsTole+ptsR;
     puntajesUpsert.push({
       id:generarId("PTS"), user_id:pr.user_id, usuario:pr.usuario,
       fecha_id:part.fecha_id, pozo_id:pr.pozo_id, partido_id:partidoId,
       numero_partido:part.numero, local:part.local, visita:part.visita,
       resultado_real:part.resultado, pronostico:pr.pronostico,
       acertado, pts_normal:ptsN, pts_doble:ptsD, pts_polla:ptsP,
-      pts_tole:ptsTole, pts_reglas:ptsR, pts_total:ptsTotal, es_tole:esTole,
+      pts_tole:ptsTole, pts_reglas:ptsR, pts_total:ptsN+ptsD+ptsP+ptsTole+ptsR, es_tole:esTole,
     });
   }
 
-  // Ejecutar updates en paralelo
   await Promise.all([
-    ...pronosUpdate.map((p:any) => db.from("pronosticos").update({acertado:p.acertado}).eq("id",p.id)),
+    ...(pronos||[]).map((pr:any) => db.from("pronosticos").update({acertado: pr.pronostico===part.resultado}).eq("id",pr.id)),
     puntajesUpsert.length ? db.from("puntajes").upsert(puntajesUpsert, {onConflict:"user_id,partido_id,pozo_id"}) : Promise.resolve(),
     ...reglasUpdate.map((r:any) => db.from("reglas").update({puntos_obtenidos:r.puntos_obtenidos}).eq("id",r.id)),
   ]);
 
-  // Calcular LR post-partido
-  await calcularLRpostPartido(db, part.fecha_id);
+  // La Rachita y El Diego dependen de varios partidos
+  await calcularReglasMultiples(db, part.fecha_id);
 }
 
 function calcPtsRegla(reg:any, resultado:string, gL:number, gV:number, rojas:number): number {
   switch(reg.codigo) {
-    case "LMR": return rojas;
-    case "LLDG": return (gL+gV)>=5?4:0;
-    case "GSA": return (gL>0&&gV>0)?(gL+gV):0;
-    case "ZPL": return Math.abs(gL-gV)>=3?4:0;
-    case "EQS": return resultado==="E"?3:0;
-    case "MK": {
+    case "LMR": return rojas;                                   // 1 por roja
+    case "LLDG": return (gL+gV)>=5?4:0;                         // 5+ goles
+    case "GSA": return (gL>0&&gV>0)?(gL+gV):0;                  // ambos anotan: 1 por gol
+    case "ZPL": return Math.abs(gL-gV)>=3?4:0;                  // diferencia de 3+
+    case "EQS": return resultado==="E"?3:0;                     // termina empatado
+    case "MK": {                                                // resultado exacto
       const p=(reg.detalle||"").split("-").map(Number);
       return p.length===2&&p[0]===gL&&p[1]===gV?5:0;
     }
-    case "LR": case "DIEGO": return 0;
     default: return 0;
   }
 }
 
-async function calcularLRpostPartido(db: any, fechaId: string) {
-  const [{data:pronos},{data:reglas},{data:puntos}] = await Promise.all([
-    db.from("pronosticos").select("*").eq("fecha_id",fechaId).order("numero_partido"),
-    db.from("reglas").select("*").eq("fecha_id",fechaId).in("codigo",["LR","DIEGO"]),
-    db.from("puntajes").select("*").eq("fecha_id",fechaId),
+// Recalcula la fila de puntaje de un partido sumando todas las reglas de ese jugador en ese partido
+async function recomputarFila(db: any, userId: string, pozoId: string, partidoId: string) {
+  const [{data: fila}, {data: regs}] = await Promise.all([
+    db.from("puntajes").select("*").eq("user_id",userId).eq("pozo_id",pozoId).eq("partido_id",partidoId).single(),
+    db.from("reglas").select("puntos_obtenidos").eq("user_id",userId).eq("pozo_id",pozoId).eq("partido_id",partidoId),
   ]);
+  if (!fila) return;
+  const ptsR = (regs||[]).reduce((t:number,r:any) => t+(r.puntos_obtenidos||0), 0);
+  await db.from("puntajes").update({
+    pts_reglas: ptsR,
+    pts_total: (fila.pts_normal||0)+(fila.pts_doble||0)+(fila.pts_polla||0)+(fila.pts_tole||0)+ptsR,
+  }).eq("id", fila.id);
+}
 
-  const users = [...new Set((pronos||[]).map((p:any) => p.user_id+"|"+p.pozo_id))];
+const DIEGO_PTS = [0, 1, 3, 5]; // empates en sus 3 partidos: 1 → 1 pt, 2 → 3 pts, 3 → 5 pts
 
-  for (const key of users) {
-    const [userId, pozoId] = key.split("|");
-    const misPronos = (pronos||[]).filter((p:any)=>p.user_id===userId&&p.pozo_id===pozoId).sort((a:any,b:any)=>a.numero_partido-b.numero_partido);
-    const misReglas = (reglas||[]).filter((r:any)=>r.user_id===userId&&r.pozo_id===pozoId);
+async function calcularReglasMultiples(db: any, fechaId: string) {
+  const [{data:pronos},{data:reglas},{data:parts},{data:filas}] = await Promise.all([
+    db.from("pronosticos").select("user_id,pozo_id,numero_partido,acertado,partido_id").eq("fecha_id",fechaId),
+    db.from("reglas").select("*").eq("fecha_id",fechaId).in("codigo",["LR","DIEGO"]),
+    db.from("partidos").select("id,estado,resultado").eq("fecha_id",fechaId),
+    db.from("puntajes").select("user_id,pozo_id,partido_id").eq("fecha_id",fechaId),
+  ]);
+  const tieneFila = (u:string,z:string,p:string) => (filas||[]).some((f:any)=>f.user_id===u&&f.pozo_id===z&&f.partido_id===p);
+  const tocadas = new Set<string>();
 
-    // LR
-    const reglaLR = misReglas.find((r:any)=>r.codigo==="LR");
-    if (reglaLR) {
-      const numInicio = reglaLR.numero_partido;
-      const racha = misPronos.filter((p:any)=>p.numero_partido>=numInicio).slice(0,3);
-      const mults = [1,2,4];
-      let ptsLR = 0;
-      for (let i=0;i<racha.length;i++) {
-        if (racha[i].acertado===true) ptsLR+=mults[i]; else break;
-      }
-      const ptsViejo = reglaLR.puntos_obtenidos||0;
-      await db.from("reglas").update({puntos_obtenidos:ptsLR}).eq("id",reglaLR.id);
-      if (ptsLR!==ptsViejo) {
-        const pts = puntos?.find((p:any)=>p.user_id===userId&&p.pozo_id===pozoId);
-        if (pts) await db.from("puntajes").update({pts_reglas:pts.pts_reglas-ptsViejo+ptsLR, pts_total:pts.pts_total-ptsViejo+ptsLR}).eq("id",pts.id);
+  const grupos: Record<string, any[]> = {};
+  for (const r of (reglas||[])) (grupos[r.user_id+"|"+r.pozo_id+"|"+r.codigo] ||= []).push(r);
+
+  for (const [key, regs] of Object.entries(grupos)) {
+    const [userId, pozoId, codigo] = key.split("|");
+    const asignar: Record<string, number> = {};
+    regs.forEach((r:any) => asignar[r.id] = 0);
+
+    if (codigo === "LR") {
+      // Racha desde el partido elegido: 1 + 2 + 4 mientras acierte
+      const ini = regs[0];
+      const suspendidos = new Set((parts||[]).filter((p:any)=>p.estado==="Suspendido").map((p:any)=>p.id));
+      const racha = (pronos||[]).filter((p:any)=>p.user_id===userId&&p.pozo_id===pozoId&&p.numero_partido>=ini.numero_partido&&!suspendidos.has(p.partido_id))
+        .sort((a:any,b:any)=>a.numero_partido-b.numero_partido).slice(0,3);
+      let pts = 0; const mult = [1,2,4];
+      for (let i=0;i<racha.length;i++) { if (racha[i].acertado===true) pts+=mult[i]; else break; }
+      asignar[ini.id] = pts;
+    } else {
+      // El Diego: cuántos de sus partidos terminaron empatados (independiente del L/E/V)
+      const empates = regs.filter((r:any) => (parts||[]).find((p:any)=>p.id===r.partido_id&&p.estado==="Finalizado"&&p.resultado==="E")).length;
+      const pts = DIEGO_PTS[Math.min(3, empates)];
+      // Los puntos van a la fila del partido finalizado más reciente que tenga puntaje
+      const conFila = regs.filter((r:any) => tieneFila(userId, pozoId, r.partido_id) && (parts||[]).find((p:any)=>p.id===r.partido_id&&p.estado==="Finalizado"));
+      const destino = conFila.sort((a:any,b:any)=>b.numero_partido-a.numero_partido)[0];
+      if (destino) asignar[destino.id] = pts;
+    }
+
+    for (const r of regs) {
+      if ((r.puntos_obtenidos||0) !== asignar[r.id]) {
+        await db.from("reglas").update({puntos_obtenidos: asignar[r.id]}).eq("id", r.id);
+        tocadas.add(userId+"|"+pozoId+"|"+r.partido_id);
       }
     }
   }
+  for (const t of tocadas) { const [u,z,p] = t.split("|"); await recomputarFila(db, u, z, p); }
 }
 
 // ============================================================
@@ -901,8 +1197,17 @@ async function editarPerfil(db: any, data: any) {
   if (data.nombre) upd.nombre = data.nombre;
   if (data.alias) upd.alias_mp = data.alias;
   if (data.email) upd.email = data.email;
-  if (data.avatar) upd.avatar = data.avatar;
-  if (data.pin) upd.pin_hash = await hashPinAsync(data.pin);
+  if (data.avatar) {
+    const a = String(data.avatar);
+    const okEmoji = /^emoji:.{1,8}$/u.test(a);
+    const okEscudo = /^escudo:https:\/\/media\.api-sports\.io\/football\/teams\/\d+\.png$/.test(a);
+    if (!okEmoji && !okEscudo) return {ok:false, error:"Avatar inválido"};
+    upd.avatar = a;
+  }
+  if (data.pin) {
+    if (!PIN_OK(data.pin)) return {ok:false, error:"El PIN tiene que tener entre 4 y 8 números"};
+    upd.pin_hash = await hashPinSeguro(String(data.pin));
+  }
   await db.from("usuarios").update(upd).eq("id", auth.userId);
   return {ok:true};
 }
@@ -912,22 +1217,37 @@ async function editarPerfil(db: any, data: any) {
 // ============================================================
 async function getGrilla(db: any, data: any) {
   const {fechaId, pozoId} = data;
-  const [{data: pronos}, {data: parts}, {data: users}] = await Promise.all([
-    db.from("pronosticos").select("user_id,usuario,partido_id,pronostico,acertado").eq("fecha_id",fechaId).eq("pozo_id",pozoId),
-    db.from("partidos").select("id,numero,local,visita,resultado").eq("fecha_id",fechaId).order("numero"),
-    db.from("puntajes").select("user_id,usuario,pts_total").eq("fecha_id",fechaId).eq("pozo_id",pozoId),
+  const [{data: fecha}, {data: parts}] = await Promise.all([
+    db.from("fechas").select("plazo_limite").eq("id",fechaId).single(),
+    db.from("partidos").select("id,numero,local,visita,local_logo,visita_logo,resultado,goles_local,goles_visita,estado,tipo,fecha_hora").eq("fecha_id",fechaId).order("numero"),
   ]);
+  // Los pronósticos de los demás se ven recién cuando cierra la fecha
+  const cierre = cierreFecha(fecha, parts||[]);
+  if (minutosHasta(cierre) > 0) return {ok:false, cerrada:false, abreEl: cierre?.toISOString(), error:"La grilla se abre cuando cierra la fecha"};
+  await fijarTole(db, fechaId);
+  const {data: toles} = await db.from("partidos").select("id,es_tole").eq("fecha_id",fechaId);
+  for (const p of (parts||[])) p.es_tole = !!(toles||[]).find((t:any) => t.id === p.id && t.es_tole);
 
-  const ptsMap: Record<string,number> = {};
-  (users||[]).forEach((u:any) => { ptsMap[u.user_id] = (ptsMap[u.user_id]||0) + u.pts_total; });
+  const [{data: pronos}, {data: usuarios}, tablaRes] = await Promise.all([
+    db.from("pronosticos").select("user_id,usuario,partido_id,pronostico,acertado,cambios_realizados").eq("fecha_id",fechaId).eq("pozo_id",pozoId),
+    db.from("usuarios").select("id,nombre,usuario,avatar"),
+    armarTabla(db, fechaId, pozoId),
+  ]);
+  const pos: Record<string,any> = {};
+  for (const u of tablaRes.tabla) pos[u.userId] = u;
+  const um: Record<string,any> = {};
+  for (const u of (usuarios||[])) um[u.id] = u;
 
   const jugadores: Record<string,any> = {};
-  (pronos||[]).forEach((p:any) => {
-    if (!jugadores[p.user_id]) jugadores[p.user_id] = {userId:p.user_id, siglas:p.usuario, pronos:{}, ptsTotal:ptsMap[p.user_id]||0};
-    jugadores[p.user_id].pronos[p.partido_id] = {v:p.pronostico, ok:p.acertado};
-  });
-
-  return {ok:true, partidos:parts||[], jugadores:Object.values(jugadores).sort((a:any,b:any) => b.ptsTotal-a.ptsTotal)};
+  for (const p of (pronos||[])) {
+    const j = jugadores[p.user_id] ||= {userId:p.user_id, siglas:p.usuario||um[p.user_id]?.usuario, nombre:um[p.user_id]?.nombre||p.usuario, avatar:um[p.user_id]?.avatar||null,
+      pronos:{}, cambiosUsados:0, ptsTotal:pos[p.user_id]?.ptsTotal||0, acertados:pos[p.user_id]?.acertados||0, posicion:pos[p.user_id]?.posicion||null};
+    j.pronos[p.partido_id] = {v:p.pronostico, ok:p.acertado};
+    j.cambiosUsados += p.cambios_realizados||0;
+  }
+  const lista = Object.values(jugadores).map((j:any) => ({...j, cambiosRestantes: Math.max(0, MAX_CAMBIOS - j.cambiosUsados)}))
+    .sort((a:any,b:any) => (a.posicion||999)-(b.posicion||999) || b.ptsTotal-a.ptsTotal);
+  return {ok:true, cerrada:true, partidos:parts||[], jugadores:lista};
 }
 
 // ============================================================
@@ -968,8 +1288,9 @@ async function adminCerrarYCalcular(db: any, data: any) {
   for (const p of (parts||[])) {
     await calcularPuntajesPartido(db, p.id);
   }
+  const ganadores = await registrarGanadores(db, data.fechaId);
 
-  return {ok:true, calculados:parts?.length||0};
+  return {ok:true, calculados:parts?.length||0, ganadores};
 }
 
 // ============================================================
@@ -1018,7 +1339,30 @@ async function adminGetInscripcionesPendientes(db: any, data: any) {
 // ============================================================
 //  GET GRUPO POR CÓDIGO
 // ============================================================
+function normalizarCodigo(c: any): string | null {
+  const v = String(c || "").trim().toUpperCase().replace(/\s+/g, "");
+  return v || null;
+}
+
+async function fechaPorCodigo(db: any, codigo: any) {
+  const c = normalizarCodigo(codigo);
+  if (!c) return null;
+  const {data} = await db.from("fechas").select("*").eq("codigo_grupo", c).single();
+  return data;
+}
+
 async function getGrupoPorCodigo(db: any, data: any) {
+  const fecha = await fechaPorCodigo(db, data.codigo);
+  if (fecha) {
+    const {data: pozos} = await db.from("pozos").select("id,nombre,monto").eq("fecha_id",fecha.id).eq("estado","Activo").order("monto");
+    const pozo = (pozos||[]).find((p:any) => p.id === data.pozoId) || pozos?.[0];
+    if (!pozo) return {ok:false, error:"Esa fecha todavía no tiene pozos"};
+    return {ok:true, grupo:{
+      id:fecha.id, nombre:fecha.nombre, codigo:fecha.codigo_grupo,
+      fechaId:fecha.id, pozoId:pozo.id, fechaNombre:fecha.nombre, pozoNombre:pozo.nombre, monto:pozo.monto,
+      cerrado:true,
+    }};
+  }
   const {data: grupo} = await db.from("grupos")
     .select("*, fechas(nombre), pozos(nombre,monto)")
     .eq("codigo", data.codigo).single();
@@ -1030,4 +1374,342 @@ async function getGrupoPorCodigo(db: any, data: any) {
     fechaNombre:grupo.fechas?.nombre, pozoNombre:grupo.pozos?.nombre, monto:grupo.pozos?.monto,
     cantMiembros:grupo.cant_miembros,
   }};
+}
+
+// ============================================================
+//  CAMBIOS PAGOS
+//  Flujo: solicitarCambio (Pendiente) → crearPreferenciaCambio (link MP)
+//  → vuelve con ?cambio=ok&id=... → ejecutarCambio (verifica pago en MP,
+//  Pagado → Usado y actualiza el pronóstico)
+// ============================================================
+const COSTO_CAMBIO: Record<number, number> = {1: 20, 2: 25, 3: 30};
+
+// Cambios gratis e ilimitados hasta 1 hora antes del PRIMER partido de la fecha; después, cambios pagos.
+function libreHasta(parts: any[], fecha?: any): Date | null { return cierreFecha(fecha, parts); }
+function enPeriodoLibre(parts: any[], fecha?: any): boolean { return minutosHasta(cierreFecha(fecha, parts)) > 0; }
+
+async function infoCambios(db: any, userId: string, fechaId: string, pozoId: string) {
+  const [{data: pronos}, {data: pozo}] = await Promise.all([
+    db.from("pronosticos").select("cambios_realizados").eq("user_id",userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId),
+    db.from("pozos").select("monto").eq("id",pozoId).single(),
+  ]);
+  const cambiosUsados = (pronos||[]).reduce((t:number,p:any) => t+(p.cambios_realizados||0), 0);
+  const proximoCambio = cambiosUsados + 1;
+  const proximoPorcentaje = COSTO_CAMBIO[proximoCambio] || 30;
+  return {
+    cambiosUsados,
+    cambiosRestantes: Math.max(0, MAX_CAMBIOS - cambiosUsados),
+    proximoCambio, proximoPorcentaje,
+    proximoCosto: Math.round((pozo?.monto||0) * proximoPorcentaje / 100),
+  };
+}
+
+async function getMisCambios(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  const {fechaId, pozoId} = data;
+  if (!fechaId || !pozoId) return {ok:false, error:"Faltan datos"};
+
+  const [info, {data: cambios}] = await Promise.all([
+    infoCambios(db, auth.userId!, fechaId, pozoId),
+    db.from("cambios_pagos").select("*").eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId).order("created_at"),
+  ]);
+  return {ok:true, ...info, cambios:(cambios||[]).map((c:any) => ({
+    id:c.id, partidoId:c.partido_id, numero:c.numero_partido, local:c.local, visita:c.visita,
+    de:c.pronostico_anterior, a:c.pronostico_nuevo, numeroCambio:c.numero_cambio,
+    porcentaje:c.porcentaje, monto:c.monto, estado:c.estado,
+  }))};
+}
+
+async function solicitarCambio(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  const {fechaId, pozoId, partidoId, pronosticoNuevo} = data;
+  if (!fechaId || !pozoId || !partidoId || !["L","E","V"].includes(pronosticoNuevo)) return {ok:false, error:"Faltan datos"};
+
+  const [{data: insc}, {data: part}, {data: prono}] = await Promise.all([
+    db.from("inscripciones").select("id").eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId).eq("estado_pago","Aprobado").single(),
+    db.from("partidos").select("*").eq("id",partidoId).eq("fecha_id",fechaId).single(),
+    db.from("pronosticos").select("*").eq("user_id",auth.userId).eq("partido_id",partidoId).eq("pozo_id",pozoId).single(),
+  ]);
+  if (!insc) return {ok:false, error:"No habilitado"};
+  if (!part) return {ok:false, error:"Partido no encontrado"};
+  if (!prono) return {ok:false, error:"No tenés pronóstico en ese partido para cambiar"};
+  const {data: partsFecha} = await db.from("partidos").select("fecha_hora").eq("fecha_id",fechaId);
+  const {data: fechaSC} = await db.from("fechas").select("plazo_limite").eq("id",fechaId).single();
+  if (enPeriodoLibre(partsFecha||[], fechaSC)) return {ok:false, error:"Todavía estás en el período de cambios gratis: tocá directamente el pronóstico nuevo"};
+  if (prono.pronostico === pronosticoNuevo) return {ok:false, error:"Es el mismo pronóstico"};
+  if (part.estado === "Finalizado" || part.estado === "Suspendido") return {ok:false, error:"Partido cerrado"};
+  if (part.fecha_hora && (new Date(part.fecha_hora).getTime() - Date.now()) / 60000 <= MINUTOS_CIERRE_CAMBIO) return {ok:false, error:"Los cambios de este partido cerraron 1 hora antes del comienzo"};
+
+  const info = await infoCambios(db, auth.userId!, fechaId, pozoId);
+  if (info.cambiosRestantes <= 0) return {ok:false, error:"Ya usaste los 3 cambios permitidos"};
+
+  // Un solo cambio abierto por partido: si había uno sin pagar, se cancela
+  await db.from("cambios_pagos").update({estado:"Cancelado"})
+    .eq("user_id",auth.userId).eq("partido_id",partidoId).eq("pozo_id",pozoId).eq("estado","Pendiente");
+  const {data: pagado} = await db.from("cambios_pagos").select("id")
+    .eq("user_id",auth.userId).eq("partido_id",partidoId).eq("pozo_id",pozoId).eq("estado","Pagado").single();
+  if (pagado) return {ok:false, error:"Ya tenés un cambio pagado sin usar en ese partido"};
+
+  const id = generarId("CAM");
+  const {error} = await db.from("cambios_pagos").insert({
+    id, user_id:auth.userId, usuario:prono.usuario, fecha_id:fechaId, pozo_id:pozoId, partido_id:partidoId,
+    numero_partido:part.numero, local:part.local, visita:part.visita,
+    pronostico_anterior:prono.pronostico, pronostico_nuevo:pronosticoNuevo,
+    numero_cambio:info.proximoCambio, porcentaje:info.proximoPorcentaje, monto:info.proximoCosto,
+  });
+  if (error) return {ok:false, error:error.message};
+  return {ok:true, cambioId:id, monto:info.proximoCosto, porcentaje:info.proximoPorcentaje, numeroCambio:info.proximoCambio};
+}
+
+async function crearPreferenciaCambio(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  const MP_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
+
+  const {data: cambio} = await db.from("cambios_pagos").select("*").eq("id",data.cambioId).eq("user_id",auth.userId).single();
+  if (!cambio) return {ok:false, error:"Cambio no encontrado"};
+  if (cambio.estado !== "Pendiente") return {ok:false, error:"Ese cambio ya no está pendiente"};
+
+  // Sin MercadoPago configurado: modo prueba (el pago se simula con pagarCambioPrueba)
+  if (!MP_TOKEN) return {ok:true, modoPrueba:true, cambioId:cambio.id, monto:cambio.monto, numeroCambio:cambio.numero_cambio, porcentaje:cambio.porcentaje};
+
+  const APP_URL = Deno.env.get("APP_URL") || "https://gr10-cdu.github.io/PollaProdes/";
+  const mpResp = await fetch("https://api.mercadopago.com/checkout/preferences", {
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":`Bearer ${MP_TOKEN}`},
+    body:JSON.stringify({
+      items:[{title:`Polla Prodes — Cambio #${cambio.numero_cambio} — ${cambio.local} vs ${cambio.visita}`, quantity:1, unit_price:cambio.monto, currency_id:"ARS"}],
+      back_urls:{success:`${APP_URL}?cambio=ok&id=${cambio.id}`,failure:`${APP_URL}?cambio=error`,pending:`${APP_URL}?cambio=pendiente`},
+      auto_return:"approved",
+      external_reference:`CAMBIO:${cambio.id}`,
+    }),
+  });
+  const mpData = await mpResp.json();
+  if (!mpData.id) return {ok:false, error:"Error MP"};
+  await db.from("cambios_pagos").update({mp_preference_id:mpData.id}).eq("id",cambio.id);
+  return {ok:true, preferenceId:mpData.id, initPoint:mpData.init_point, sandboxUrl:mpData.sandbox_init_point};
+}
+
+// Consulta a MercadoPago si el cambio tiene un pago aprobado (no dependemos del webhook)
+async function verificarPagoCambio(db: any, cambio: any): Promise<boolean> {
+  const MP_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
+  if (!MP_TOKEN) return false;
+  const r = await fetch(`https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent("CAMBIO:"+cambio.id)}`,
+    {headers:{"Authorization":`Bearer ${MP_TOKEN}`}});
+  const res = await r.json();
+  const aprobado = (res.results||[]).find((p:any) => p.status === "approved");
+  if (!aprobado) return false;
+  await db.from("cambios_pagos").update({
+    estado:"Pagado", mp_payment_id:String(aprobado.id), mp_status:aprobado.status, pagado_at:new Date().toISOString(),
+  }).eq("id",cambio.id).eq("estado","Pendiente");
+  return true;
+}
+
+async function aplicarCambio(db: any, cambio: any) {
+  await fijarTole(db, cambio.fecha_id);
+  const {data: prono} = await db.from("pronosticos").select("*")
+    .eq("user_id",cambio.user_id).eq("partido_id",cambio.partido_id).eq("pozo_id",cambio.pozo_id).single();
+  if (!prono) return {ok:false, error:"Pronóstico no encontrado"};
+  await db.from("pronosticos").update({
+    pronostico:cambio.pronostico_nuevo,
+    cambios_realizados:(prono.cambios_realizados||0)+1,
+    updated_at:new Date().toISOString(),
+  }).eq("id",prono.id);
+  await db.from("cambios_pagos").update({estado:"Usado", ejecutado_at:new Date().toISOString()}).eq("id",cambio.id);
+  return {ok:true, mensaje:`Cambio aplicado: ${cambio.local} vs ${cambio.visita} → ${cambio.pronostico_nuevo}`};
+}
+
+async function ejecutarCambio(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  const {data: cambio} = await db.from("cambios_pagos").select("*").eq("id",data.cambioId).eq("user_id",auth.userId).single();
+  if (!cambio) return {ok:false, error:"Cambio no encontrado"};
+  if (cambio.estado === "Usado") return {ok:true, mensaje:"El cambio ya estaba aplicado"};
+  if (cambio.estado === "Pendiente" && !(await verificarPagoCambio(db, cambio))) {
+    return {ok:false, error:"Todavía no vemos el pago aprobado. Probá de nuevo en un rato."};
+  }
+  if (!["Pendiente","Pagado"].includes(cambio.estado)) return {ok:false, error:`Cambio ${cambio.estado.toLowerCase()}`};
+  // Si el partido ya cerró, el cambio queda Pagado para que el admin lo resuelva
+  const {data: part} = await db.from("partidos").select("estado,fecha_hora").eq("id",cambio.partido_id).single();
+  if (part?.estado === "Finalizado" || (part?.fecha_hora && (new Date(part.fecha_hora).getTime() - Date.now()) / 60000 <= MINUTOS_CIERRE_CAMBIO)) {
+    const dev = await devolverPagoCambio(db, cambio.id);
+    return {ok:false, error: dev ? "El partido ya cerró: el cambio no se aplicó y te devolvemos el pago." : "El partido ya cerró: el cambio no se aplicó. La devolución del pago quedó pendiente con el admin."};
+  }
+  return await aplicarCambio(db, cambio);
+}
+
+async function adminHabilitarCambio(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  if (Deno.env.get("MP_ACCESS_TOKEN")) return {ok:false, error:"Con MercadoPago activo los cambios solo se habilitan pagando"};
+  const {data: cambio} = await db.from("cambios_pagos").select("*").eq("id",data.cambioId).single();
+  if (!cambio) return {ok:false, error:"Cambio no encontrado"};
+  if (!["Pendiente","Pagado"].includes(cambio.estado)) return {ok:false, error:`Cambio ${cambio.estado.toLowerCase()}`};
+  return await aplicarCambio(db, cambio);
+}
+
+// ============================================================
+//  UNIRSE CON CÓDIGO DE GRUPO CERRADO
+//  Quien tiene el código de la fecha queda inscripto y habilitado sin pagar.
+// ============================================================
+async function unirseConCodigo(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+
+  const fecha = await fechaPorCodigo(db, data.codigo);
+  if (!fecha) return {ok:false, error:"Código inválido"};
+  if (fecha.estado !== "Abierta") return {ok:false, error:"Esa fecha ya está cerrada"};
+  const {data: partsF} = await db.from("partidos").select("fecha_hora").eq("fecha_id", fecha.id);
+  if (minutosHasta(cierreFecha(fecha, partsF||[])) <= 0) return {ok:false, error:"La fecha ya cerró (1 hora antes del primer partido)"};
+
+  const {data: pozos} = await db.from("pozos").select("id").eq("fecha_id",fecha.id).eq("estado","Activo").order("monto");
+  const pozo = (pozos||[]).find((p:any) => p.id === data.pozoId) || pozos?.[0];
+  if (!pozo) return {ok:false, error:"Esa fecha todavía no tiene pozos"};
+
+  const {data: ya} = await db.from("inscripciones").select("id,estado_pago")
+    .eq("user_id",auth.userId).eq("pozo_id",pozo.id).in("estado_pago",["Pendiente","Aprobado"]).single();
+  if (ya) {
+    if (ya.estado_pago !== "Aprobado") {
+      await db.from("inscripciones").update({estado_pago:"Aprobado", habilitado:true, pagado_at:new Date().toISOString(), via_codigo:true}).eq("id",ya.id);
+    }
+    return {ok:true, fechaId:fecha.id, pozoId:pozo.id, inscripcionId:ya.id};
+  }
+
+  const {data: user} = await db.from("usuarios").select("usuario").eq("id",auth.userId).single();
+  const id = generarId("INS");
+  const {error} = await db.from("inscripciones").insert({
+    id, user_id:auth.userId, usuario:user?.usuario, fecha_id:fecha.id, pozo_id:pozo.id,
+    estado_pago:"Aprobado", habilitado:true, pagado_at:new Date().toISOString(), via_codigo:true,
+  });
+  if (error) return {ok:false, error:error.message};
+  return {ok:true, fechaId:fecha.id, pozoId:pozo.id, inscripcionId:id};
+}
+
+// ============================================================
+//  PAGO DE PRUEBA (solo mientras MercadoPago no está configurado)
+//  Marca el cambio como pagado con un id "PRUEBA-..." y lo aplica.
+// ============================================================
+async function pagarCambioPrueba(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  if (Deno.env.get("MP_ACCESS_TOKEN")) return {ok:false, error:"MercadoPago ya está configurado: el pago de prueba está desactivado"};
+
+  const {data: cambio} = await db.from("cambios_pagos").select("*").eq("id",data.cambioId).eq("user_id",auth.userId).single();
+  if (!cambio) return {ok:false, error:"Cambio no encontrado"};
+  if (cambio.estado === "Pendiente") {
+    await db.from("cambios_pagos").update({
+      estado:"Pagado", mp_payment_id:"PRUEBA-"+Date.now(), mp_status:"prueba", pagado_at:new Date().toISOString(),
+    }).eq("id",cambio.id).eq("estado","Pendiente");
+  }
+  return await ejecutarCambio(db, data);
+}
+
+// Devolución de un cambio pagado tarde (el partido ya había cerrado)
+async function devolverPagoCambio(db: any, cambioId: string): Promise<boolean> {
+  const {data: c} = await db.from("cambios_pagos").select("*").eq("id",cambioId).single();
+  if (!c) return false;
+  const MP_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
+  let ok = false;
+  if (String(c.mp_payment_id||"").startsWith("PRUEBA-")) ok = true;
+  else if (MP_TOKEN && c.mp_payment_id) {
+    try {
+      const r = await fetch(`https://api.mercadopago.com/v1/payments/${c.mp_payment_id}/refunds`, {
+        method:"POST", headers:{"Authorization":`Bearer ${MP_TOKEN}`, "Content-Type":"application/json", "X-Idempotency-Key": "dev-"+c.id},
+        body:"{}",
+      });
+      ok = r.ok;
+    } catch (e) { console.error("refund", e); }
+  }
+  await db.from("cambios_pagos").update({estado:"Vencido", mp_status: ok ? "devuelto" : "devolucion_pendiente"}).eq("id",c.id);
+  return ok;
+}
+
+// ============================================================
+//  ADMIN — ESTADO DEL PARTIDO
+//  Suspendido: no suma para nadie (se borran sus puntos).
+//  Postergado: queda en espera; el admin decide después (carga resultado o lo suspende).
+//  Pendiente: vuelve a la normalidad.
+// ============================================================
+async function adminEstadoPartido(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const {partidoId, estado} = data;
+  if (!["Suspendido","Postergado","Pendiente"].includes(estado)) return {ok:false, error:"Estado inválido"};
+  const {data: part} = await db.from("partidos").select("id,fecha_id").eq("id",partidoId).single();
+  if (!part) return {ok:false, error:"Partido no encontrado"};
+  await db.from("partidos").update({
+    estado, resultado:null, goles_local:null, goles_visita:null, tarjetas_rojas:0, ultimo_update:new Date().toISOString(),
+  }).eq("id",partidoId);
+  // Sacar cualquier punto que haya tenido
+  await Promise.all([
+    db.from("puntajes").delete().eq("partido_id",partidoId),
+    db.from("pronosticos").update({acertado:null}).eq("partido_id",partidoId),
+    db.from("reglas").update({puntos_obtenidos:0}).eq("partido_id",partidoId),
+  ]);
+  await calcularReglasMultiples(db, part.fecha_id);
+  return {ok:true, estado};
+}
+
+// ============================================================
+//  FOTO DE PERFIL (queda pendiente hasta que la aprueba el admin)
+//  Se guarda en Storage, bucket público "avatares". Formato de avatar: "foto:<url>".
+// ============================================================
+const BUCKET = "avatares";
+async function asegurarBucket(db: any) {
+  const {data} = await db.storage.getBucket(BUCKET);
+  if (!data) await db.storage.createBucket(BUCKET, {public:true, fileSizeLimit: 500*1024, allowedMimeTypes:["image/jpeg","image/png","image/webp"]});
+}
+const rutaDe = (url: string) => (url||"").split(`/object/public/${BUCKET}/`)[1] || null;
+
+async function subirFoto(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  const m = /^data:image\/(jpeg|png|webp);base64,(.+)$/.exec(String(data.imagen||""));
+  if (!m) return {ok:false, error:"Imagen inválida"};
+  const bytes = Uint8Array.from(atob(m[2]), c => c.charCodeAt(0));
+  if (bytes.length > 500*1024) return {ok:false, error:"La foto es muy pesada (máximo 500 KB)"};
+  await asegurarBucket(db);
+  const {data: u} = await db.from("usuarios").select("foto_pendiente").eq("id",auth.userId).single();
+  const ext = m[1] === "jpeg" ? "jpg" : m[1];
+  const ruta = `pendientes/${auth.userId}-${crypto.randomUUID()}.${ext}`;
+  const up = await db.storage.from(BUCKET).upload(ruta, bytes, {contentType:`image/${m[1]}`, upsert:false});
+  if (up.error) return {ok:false, error:"No se pudo subir la foto: "+up.error.message};
+  if (u?.foto_pendiente && rutaDe(u.foto_pendiente)) await db.storage.from(BUCKET).remove([rutaDe(u.foto_pendiente)]);
+  const url = db.storage.from(BUCKET).getPublicUrl(ruta).data.publicUrl;
+  await db.from("usuarios").update({foto_pendiente:url, foto_enviada_at:new Date().toISOString()}).eq("id",auth.userId);
+  return {ok:true, fotoPendiente:url};
+}
+
+async function cancelarFoto(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  const {data: u} = await db.from("usuarios").select("foto_pendiente").eq("id",auth.userId).single();
+  if (u?.foto_pendiente && rutaDe(u.foto_pendiente)) await db.storage.from(BUCKET).remove([rutaDe(u.foto_pendiente)]);
+  await db.from("usuarios").update({foto_pendiente:null, foto_enviada_at:null}).eq("id",auth.userId);
+  return {ok:true};
+}
+
+async function adminGetFotosPendientes(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const {data: us} = await db.from("usuarios").select("id,usuario,nombre,avatar,foto_pendiente,foto_enviada_at").not("foto_pendiente","is",null).order("foto_enviada_at");
+  return {ok:true, fotos:(us||[]).map((u:any) => ({userId:u.id, usuario:u.usuario, nombre:u.nombre, avatar:u.avatar, foto:u.foto_pendiente, enviada:u.foto_enviada_at}))};
+}
+
+async function adminResolverFoto(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const {data: u} = await db.from("usuarios").select("id,avatar,foto_pendiente").eq("id",data.userId).single();
+  if (!u?.foto_pendiente) return {ok:false, error:"No hay foto pendiente"};
+  if (data.aprobar) {
+    // Si tenía una foto aprobada antes, se borra
+    if (String(u.avatar||"").startsWith("foto:") && rutaDe(u.avatar.slice(5))) await db.storage.from(BUCKET).remove([rutaDe(u.avatar.slice(5))]);
+    await db.from("usuarios").update({avatar:"foto:"+u.foto_pendiente, foto_pendiente:null, foto_enviada_at:null}).eq("id",u.id);
+  } else {
+    if (rutaDe(u.foto_pendiente)) await db.storage.from(BUCKET).remove([rutaDe(u.foto_pendiente)]);
+    await db.from("usuarios").update({foto_pendiente:null, foto_enviada_at:null}).eq("id",u.id);
+  }
+  return {ok:true};
 }
