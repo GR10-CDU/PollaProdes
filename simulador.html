@@ -2037,6 +2037,27 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
   .ld-feat.big{grid-column:auto;grid-template-columns:48px 1fr}
   .ld-quote{padding:56px 20px 16px}
 }
+/* Cara a cara: la fila de cada partido se acomoda al ancho de SU tarjeta (no se pisa nada) */
+.gx-duelos .duelo{container-type:inline-size}
+.dl-eq{min-width:0}
+.dl-team{min-width:0}
+@container (max-width:620px){
+  .dl{grid-template-columns:auto minmax(0,1fr) auto 50px;gap:8px;padding:7px 10px}
+  .dl-n{display:none}
+  .dl-eq{gap:6px}
+  .dl-team img{width:24px;height:24px}
+  .dl-team b{font-size:17px}
+  .dl-res{min-width:26px;font-size:15px}
+  .dl-picks{gap:4px}
+  .dl-picks .pcell{width:30px;height:30px;font-size:17px}
+}
+@container (max-width:400px){
+  .dl{grid-template-columns:minmax(0,1fr) auto 44px}
+  .dl-tags{display:none}
+  .dl-team img{width:22px;height:22px}
+  .dl-team b{font-size:16px}
+  .dl-pts{font-size:12px}
+}
 
 </style>
 </head>
