@@ -241,6 +241,10 @@ Deno.serve(async (req) => {
       case "agregarNoticia": return resp(await agregarNoticia(db, data));
       case "eliminarNoticia": return resp(await eliminarNoticia(db, data));
       case "importarPartidos": return resp(await importarPartidos(db, data));
+      case "adminAgregarPartido": return resp(await adminAgregarPartido(db, data));
+      case "adminEditarPartido": return resp(await adminEditarPartido(db, data));
+      case "adminBorrarPartido": return resp(await adminBorrarPartido(db, data));
+      case "buscarEquipos": return resp(await buscarEquipos(db, data));
       case "getRondas": return resp(await getRondas(db, data));
       case "buscarPorRonda": return resp(await buscarPorRonda(db, data));
 
@@ -2345,5 +2349,88 @@ async function adminQuitarInvitacion(db: any, data: any) {
   const auth = await requireAuth(db, data);
   if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
   await db.from("empresa_invitaciones").delete().eq("id", data.id);
+  return {ok:true};
+}
+
+// ============================================================
+//  PARTIDOS CARGADOS A MANO (sin la API)
+// ============================================================
+// Escudo: si la API anda, se busca el equipo por nombre; si no, queda sin escudo
+async function buscarEquipos(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const q = String(data.q||"").trim();
+  if (q.length < 3) return {ok:true, equipos:[]};
+  try {
+    const r = await callAPIFootball("teams", {search:q});
+    if (errorAPIFootball(r)) return {ok:true, equipos:[], sinApi:true};
+    return {ok:true, equipos:(r.response||[]).slice(0,8).map((t:any) => ({nombre:t.team?.name, logo:t.team?.logo, pais:t.team?.country}))};
+  } catch { return {ok:true, equipos:[], sinApi:true}; }
+}
+async function escudoDe(nombre: string): Promise<string> {
+  try {
+    const r = await callAPIFootball("teams", {search:nombre});
+    if (errorAPIFootball(r)) return "";
+    const lista = r.response||[], n = nombre.toLowerCase();
+    const t = lista.find((x:any) => String(x.team?.name||"").toLowerCase() === n) || lista[0];
+    return t?.team?.logo || "";
+  } catch { return ""; }
+}
+async function renumerarPartidos(db: any, fechaId: string) {
+  const {data: ps} = await db.from("partidos").select("id,numero,fecha_hora").eq("fecha_id", fechaId).order("fecha_hora").order("numero");
+  let i = 0;
+  for (const p of (ps||[])) { i++; if (p.numero !== i) await db.from("partidos").update({numero:i}).eq("id", p.id); }
+  await db.from("fechas").update({cant_partidos:i}).eq("id", fechaId);
+}
+function datosPartidoManual(data: any) {
+  const local = String(data.local||"").trim().slice(0,40), visita = String(data.visita||"").trim().slice(0,40);
+  if (!local || !visita) return {error:"Poné los dos equipos"};
+  const fh = new Date(data.fechaHora);
+  if (isNaN(fh.getTime())) return {error:"Fecha y hora inválidas"};
+  const tipo = ["Normal","Doble","Polla"].includes(data.tipo) ? data.tipo : "Normal";
+  return {local, visita, fecha_hora: fh.toISOString(), tipo};
+}
+async function adminAgregarPartido(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const d: any = datosPartidoManual(data);
+  if (d.error) return {ok:false, error:d.error};
+  const {data: f} = await db.from("fechas").select("id,liga,cant_partidos").eq("id", data.fechaId).single();
+  if (!f) return {ok:false, error:"Fecha no encontrada"};
+  if ((f.cant_partidos||0) >= 30) return {ok:false, error:"Máximo 30 partidos por fecha"};
+  if (d.tipo === "Polla") await db.from("partidos").update({tipo:"Normal"}).eq("fecha_id", f.id).eq("tipo","Polla"); // una sola Polla
+  const [ll, lv] = await Promise.all([data.localLogo ? data.localLogo : escudoDe(d.local), data.visitaLogo ? data.visitaLogo : escudoDe(d.visita)]);
+  const id = generarId("PAR");
+  const {error} = await db.from("partidos").insert({id, fecha_id:f.id, numero:(f.cant_partidos||0)+1, ...d, liga:data.liga||f.liga||"",
+    local_logo:String(ll||""), visita_logo:String(lv||""), estado:"Pendiente", tarjetas_rojas:0});
+  if (error) return {ok:false, error:error.message};
+  await renumerarPartidos(db, f.id);
+  return {ok:true, partidoId:id, conEscudo: !!(ll && lv)};
+}
+async function adminEditarPartido(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const {data: p} = await db.from("partidos").select("*").eq("id", data.partidoId).single();
+  if (!p) return {ok:false, error:"Partido no encontrado"};
+  const d: any = datosPartidoManual(data);
+  if (d.error) return {ok:false, error:d.error};
+  if (d.tipo === "Polla") await db.from("partidos").update({tipo:"Normal"}).eq("fecha_id", p.fecha_id).eq("tipo","Polla").neq("id", p.id);
+  const upd: any = {...d};
+  if (d.local !== p.local) upd.local_logo = data.localLogo || await escudoDe(d.local);
+  if (d.visita !== p.visita) upd.visita_logo = data.visitaLogo || await escudoDe(d.visita);
+  await db.from("partidos").update(upd).eq("id", p.id);
+  await renumerarPartidos(db, p.fecha_id);
+  return {ok:true};
+}
+async function adminBorrarPartido(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const {data: p} = await db.from("partidos").select("id,fecha_id,estado").eq("id", data.partidoId).single();
+  if (!p) return {ok:false, error:"Partido no encontrado"};
+  if (p.estado === "Finalizado") return {ok:false, error:"Ya tiene resultado: no se puede borrar"};
+  await db.from("cambios_pagos").delete().eq("partido_id", p.id);
+  const {error} = await db.from("partidos").delete().eq("id", p.id); // pronósticos, reglas y puntajes se van solos
+  if (error) return {ok:false, error:error.message};
+  await renumerarPartidos(db, p.fecha_id);
   return {ok:true};
 }

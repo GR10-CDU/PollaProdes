@@ -1921,6 +1921,33 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
 .ig[hidden],[hidden].ig{display:none!important}
 #rce-g .ll-emp{margin-bottom:6px}
 #rce-g>.ig,#rce-campos>.ig{margin-top:12px}
+/* Carga manual de partidos */
+.pm{display:grid;gap:16px}
+.pm-lista{display:grid;gap:6px;max-height:300px;overflow-y:auto}
+.pm-it{display:grid;grid-template-columns:34px auto 1fr auto auto;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);font-size:14px}
+.pm-n{font-family:var(--ff);font-weight:800;color:var(--ink-3)}
+.pm-it-eq{display:flex;align-items:center;gap:6px;min-width:0}
+.pm-it-eq b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.pm-it-eq i{font-style:normal;font-size:12px;color:var(--ink-3)}
+.pm-it-eq img,.pm-noesc{width:22px;height:22px;object-fit:contain;flex:none}
+.pm-noesc{border-radius:50%;background:var(--surface-3);display:inline-block}
+.pm-it small{color:var(--ink-3);white-space:nowrap;text-transform:capitalize}
+.pm-acc{display:flex;gap:10px}
+.pm-acc button{font-size:13px;font-weight:700;color:var(--accent-text)}
+.pm-acc button:last-child{color:var(--no)}
+.pm-fin{font-family:var(--ff);font-weight:800}
+.pm-form{display:grid;gap:10px;padding:14px;border-radius:16px;background:var(--surface-2);border:1px solid var(--line)}
+.pm-tit{font-family:var(--ff);font-size:20px;font-weight:800;text-transform:uppercase}
+.pm-eqs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.pm-eq{display:flex;align-items:center;gap:8px;min-width:0}
+.pm-eq .inp{flex:1;min-width:0}
+.pm-esc{width:34px;height:34px;flex:none;display:grid;place-items:center;border-radius:10px;background:var(--surface-3)}
+.pm-esc img{width:28px;height:28px;object-fit:contain}
+.pm-vs{font-size:13px;font-weight:800;color:var(--ink-3)}
+.pm-fila{display:grid;grid-template-columns:1fr 110px 1fr;gap:8px}
+.pm-nota{font-size:12.5px;color:var(--ink-3)}
+@media(max-width:560px){.pm-eqs{grid-template-columns:1fr}.pm-vs{text-align:center}.pm-fila{grid-template-columns:1fr 1fr}.pm-fila select{grid-column:span 2}.pm-it{grid-template-columns:30px auto 1fr;}.pm-it small,.pm-acc,.pm-fin{grid-column:2/-1}}
+.btn[hidden]{display:none!important}
 
 </style>
 </head>
@@ -3772,6 +3799,7 @@ async function loadAdminFechas(){
       </div>
       <div id="pozos-${f.id}" style="margin-bottom:8px"></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="partidosManual('${f.id}')">✍️ Cargar a mano</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-importar',{fechaId:'${f.id}'})">🔗 Importar</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-res',{fechaId:'${f.id}'})">⚽ Resultados</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showEditarFecha('${f.id}')">✏️ Editar</button>
@@ -4735,6 +4763,85 @@ window.copiarInvitacion=function(email){
   const e=window._edEmp,txt=`¡Hola! Te sumé como administrador de la Polla de ${e.nombre}. Registrate con tu correo ${email} acá: ${linkEmpresa(e)}`;
   navigator.clipboard?.writeText(txt).then(function(){toast("Mensaje copiado: pegalo en WhatsApp o en un mail");});
 };
+
+
+// ── Partidos cargados a mano (equipo, día, hora y tipo; el escudo si se encuentra) ──
+function _normEq(t){return String(t||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9 ]/g,"").trim();}
+function escudoLocal(nombre){const n=_normEq(nombre);if(n.length<3)return null;
+  const sin=function(t){return(" "+t+" ").replace(/ (club|atletico|ca|cd|fc|sc|deportivo|de|la|el) /g," ").trim();},ns=sin(n);
+  const e=ESCUDOS.find(function(x){return _normEq(x[0])===n;})||ESCUDOS.find(function(x){const k=sin(_normEq(x[0]));return k.length>=4&&(ns===k||ns.startsWith(k)||k.startsWith(ns)||(" "+ns+" ").includes(" "+k+" "));});
+  return e?{nombre:e[0],logo:"https://media.api-sports.io/football/teams/"+e[1]+".png"}:null;}
+window.partidosManual=async function(fechaId){
+  window._pm={fechaId,edit:null,logo:{l:"",v:""}};
+  const f=window._adminFechas[fechaId]||{};
+  const m=mkModal("Partidos · "+escH(f.nombre||""),`<div class="pm">
+    <div id="pm-lista" class="pm-lista"><div class="loading"><div class="spinner"></div></div></div>
+    <div class="pm-form">
+      <div class="pm-tit" id="pm-tit">Agregar partido</div>
+      <div class="pm-eqs">
+        <div class="pm-eq"><span class="pm-esc" id="pm-el"></span><input class="inp" id="pm-l" list="pm-equipos" placeholder="Local" maxlength="40" oninput="pmEscudo('l')"/></div>
+        <span class="pm-vs">vs</span>
+        <div class="pm-eq"><span class="pm-esc" id="pm-ev"></span><input class="inp" id="pm-v" list="pm-equipos" placeholder="Visitante" maxlength="40" oninput="pmEscudo('v')"/></div>
+      </div>
+      <datalist id="pm-equipos">${ESCUDOS.map(function(e){return`<option value="${escH(e[0])}">`;}).join("")}</datalist>
+      <div class="pm-fila"><input class="inp" id="pm-d" type="date"/><input class="inp" id="pm-h" type="time" value="${window._pmHora||"21:00"}"/>
+        <select class="inp" id="pm-t"><option value="Normal">Simple ×1</option><option value="Doble">Doble ×2</option><option value="Polla">Polla</option></select></div>
+      <div class="me-acc"><button class="btn btn-s" id="pm-cancel" hidden onclick="pmLimpiar()">Cancelar</button><button class="btn btn-p" id="pm-ok" onclick="pmGuardar()">+ Agregar partido</button></div>
+      <p class="pm-nota">El escudo aparece solo si conocemos al equipo. Si no, el partido queda sin escudo y funciona igual.</p>
+    </div></div>`);
+  document.body.appendChild(m);
+  const d=document.getElementById("pm-d");if(d)d.value=window._pmDia||(f.plazoLimite?new Date(new Date(f.plazoLimite).getTime()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10):"");
+  pmCargar();
+};
+async function pmCargar(){
+  const el=document.getElementById("pm-lista");if(!el)return;
+  const r=await api("getFecha",{fechaId:window._pm.fechaId});const ps=r.ok?(r.partidos||[]):[];window._pm.partidos=ps;
+  const TT={Normal:"×1",Doble:"×2",Polla:"P"},TC={Normal:"t-s",Doble:"t-d",Polla:"t-p"};
+  el.innerHTML=ps.length?ps.map(function(x){const fh=x.fechaHora?new Date(x.fechaHora).toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"";
+    return`<div class="pm-it"><span class="pm-n">#${x.numero}</span><span class="t-tag ${TC[x.tipo]||"t-s"}">${TT[x.tipo]||"×1"}</span>
+      <div class="pm-it-eq">${x.localLogo?`<img src="${escH(x.localLogo)}" alt="">`:`<span class="pm-noesc"></span>`}<b>${escH(x.local)}</b><i>vs</i><b>${escH(x.visita)}</b>${x.visitaLogo?`<img src="${escH(x.visitaLogo)}" alt="">`:`<span class="pm-noesc"></span>`}</div>
+      <small>${fh}</small>${x.estado==="Finalizado"?`<span class="pm-fin">${x.golesLocal}-${x.golesVisita}</span>`:`<div class="pm-acc"><button onclick="pmEditar('${x.id}')">Editar</button><button onclick="pmBorrar('${x.id}')">Borrar</button></div>`}</div>`;}).join("")
+    :`<p class="me-p">Todavía no hay partidos en esta fecha. Cargá el primero abajo.</p>`;
+}
+window.pmEscudo=function(lado){
+  clearTimeout(window["_pmT"+lado]);
+  window["_pmT"+lado]=setTimeout(async function(){
+    const nom=document.getElementById("pm-"+lado)?.value||"",box=document.getElementById("pm-e"+lado);if(!box)return;
+    let e=escudoLocal(nom);
+    if(!e&&nom.trim().length>=4){const r=await api("buscarEquipos",{q:nom.trim()});const t=r.ok&&(r.equipos||[])[0];if(t)e={nombre:t.nombre,logo:t.logo};}
+    window._pm.logo[lado]=e?e.logo:"";
+    box.innerHTML=e?`<img src="${escH(e.logo)}" alt="" title="${escH(e.nombre)}">`:"";
+  },350);
+};
+window.pmGuardar=async function(){
+  const g=function(i){return document.getElementById(i)?.value||"";};
+  const l=g("pm-l").trim(),v=g("pm-v").trim(),d=g("pm-d"),h=g("pm-h"),t=g("pm-t");
+  if(!l||!v){toast("Poné los dos equipos");return;}if(!d||!h){toast("Poné el día y la hora");return;}
+  const fh=new Date(d+"T"+h);if(isNaN(fh)){toast("Fecha u hora inválida");return;}
+  window._pmDia=d;window._pmHora=h;
+  const datos={fechaId:window._pm.fechaId,local:l,visita:v,fechaHora:fh.toISOString(),tipo:t,localLogo:window._pm.logo.l,visitaLogo:window._pm.logo.v};
+  const r=window._pm.edit?await api("adminEditarPartido",Object.assign({partidoId:window._pm.edit},datos)):await api("adminAgregarPartido",datos);
+  if(!r.ok){toast("❌ "+r.error);return;}
+  toast(window._pm.edit?"✅ Partido actualizado":"✅ Partido agregado");pmLimpiar();pmCargar();if(App.screen==="admin-fechas")loadAdminFechas();
+  document.getElementById("pm-l")?.focus();
+};
+window.pmEditar=function(id){
+  const x=(window._pm.partidos||[]).find(function(p){return p.id===id;});if(!x)return;window._pm.edit=id;
+  const loc=new Date(new Date(x.fechaHora).getTime()-new Date().getTimezoneOffset()*6e4).toISOString();
+  document.getElementById("pm-l").value=x.local;document.getElementById("pm-v").value=x.visita;
+  document.getElementById("pm-d").value=loc.slice(0,10);document.getElementById("pm-h").value=loc.slice(11,16);document.getElementById("pm-t").value=x.tipo||"Normal";
+  window._pm.logo={l:x.localLogo||"",v:x.visitaLogo||""};
+  document.getElementById("pm-el").innerHTML=x.localLogo?`<img src="${escH(x.localLogo)}" alt="">`:"";document.getElementById("pm-ev").innerHTML=x.visitaLogo?`<img src="${escH(x.visitaLogo)}" alt="">`:"";
+  document.getElementById("pm-tit").textContent="Editar partido #"+x.numero;document.getElementById("pm-ok").textContent="Guardar cambios";document.getElementById("pm-cancel").hidden=false;
+};
+window.pmLimpiar=function(){
+  window._pm.edit=null;window._pm.logo={l:"",v:""};
+  ["pm-l","pm-v"].forEach(function(i){const e=document.getElementById(i);if(e)e.value="";});
+  ["pm-el","pm-ev"].forEach(function(i){const e=document.getElementById(i);if(e)e.innerHTML="";});
+  const t=document.getElementById("pm-t");if(t)t.value="Normal";
+  const tt=document.getElementById("pm-tit");if(tt)tt.textContent="Agregar partido";const ok=document.getElementById("pm-ok");if(ok)ok.textContent="+ Agregar partido";const c=document.getElementById("pm-cancel");if(c)c.hidden=true;
+};
+window.pmBorrar=async function(id){if(!confirm("¿Borrar este partido? Se borran también los pronósticos que tenga."))return;const r=await api("adminBorrarPartido",{partidoId:id});if(!r.ok){toast("❌ "+r.error);return;}toast("Partido borrado");pmCargar();if(App.screen==="admin-fechas")loadAdminFechas();};
 
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
