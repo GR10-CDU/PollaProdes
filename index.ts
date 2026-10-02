@@ -525,6 +525,7 @@ async function inscribirse(db: any, data: any) {
   const {data: fecha} = await db.from("fechas").select("*").eq("id", fechaId).single();
   if (!fecha || fecha.estado !== "Abierta") return {ok:false, error:"Fecha cerrada"};
   if ((fecha.empresa_id || null) !== (auth.empresaId || null)) return {ok:false, error:"Esta fecha no es de tu grupo"};
+  if (fecha.codigo_grupo) return {ok:false, error:"Esta fecha es con código: ingresalo para jugar", pideCodigo:true};
   const {data: partsF} = await db.from("partidos").select("fecha_hora").eq("fecha_id", fechaId);
   if (minutosHasta(cierreFecha(fecha, partsF||[])) <= 0) return {ok:false, error:"La fecha ya cerró (1 hora antes del primer partido)"};
 
@@ -537,13 +538,17 @@ async function inscribirse(db: any, data: any) {
   if (yaInsc?.estado_pago === "Pendiente") return {ok:true, inscripcionId:yaInsc.id, habilitado:false};
 
   const {data: user} = await db.from("usuarios").select("usuario").eq("id", auth.userId).single();
+  const {data: pozo} = await db.from("pozos").select("monto,fecha_id").eq("id", pozoId).single();
+  if (!pozo || pozo.fecha_id !== fechaId) return {ok:false, error:"Pozo inválido"};
+  const gratis = !Number(pozo.monto);
   const id = generarId("INS");
   await db.from("inscripciones").insert({
     id, user_id:auth.userId, usuario:user?.usuario, fecha_id:fechaId, pozo_id:pozoId,
-    estado_pago:"Pendiente", habilitado:false,
+    estado_pago: gratis ? "Aprobado" : "Pendiente", habilitado: gratis, via_codigo: gratis,
+    pagado_at: gratis ? new Date().toISOString() : null,
   });
 
-  return {ok:true, inscripcionId:id, habilitado:false};
+  return {ok:true, inscripcionId:id, habilitado:gratis};
 }
 
 // ============================================================
@@ -966,8 +971,8 @@ async function adminCrearPozo(db: any, data: any) {
   if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
   const id = generarId("POZ");
   await db.from("pozos").insert({
-    id, fecha_id:data.fechaId, nombre:data.nombre||`Pozo $${data.monto}`,
-    monto:data.monto, comision_pct:COMISION_PCT,
+    id, fecha_id:data.fechaId, nombre:data.nombre||(Number(data.monto)>0?`Pozo $${data.monto}`:"Pozo gratis"),
+    monto:Number(data.monto)||0, comision_pct:Number(data.monto)>0?COMISION_PCT:0,
     premio_fijo: data.premioFijo ? Number(data.premioFijo) : null,
   });
   return {ok:true, pozoId:id};
@@ -1540,8 +1545,8 @@ async function solicitarCambio(db: any, data: any) {
     numero_cambio:info.proximoCambio, porcentaje:info.proximoPorcentaje, monto:info.proximoCosto,
   });
   if (error) return {ok:false, error:error.message};
-  // Empresas: no hay plata, el cambio es gratis y se aplica al instante (igual cuenta para el límite de 3)
-  if (fechaSC?.empresa_id) {
+  // Empresas y pozos gratis: el cambio no se paga y se aplica al instante (igual cuenta para el límite de 3)
+  if (fechaSC?.empresa_id || !Number(info.proximoCosto)) {
     await db.from("cambios_pagos").update({monto:0, porcentaje:0, estado:"Pagado", mp_status:"empresa", pagado_at:new Date().toISOString()}).eq("id",id);
     const {data: cam} = await db.from("cambios_pagos").select("*").eq("id",id).single();
     const r = await aplicarCambio(db, cam);

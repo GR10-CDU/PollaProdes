@@ -1956,6 +1956,7 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
 .fh{gap:10px 16px}
 .fh-g{display:flex;align-items:center;gap:6px}
 .fh .inp{padding:0 26px 0 12px;min-width:0}
+.pozo-card.info{cursor:default}
 
 </style>
 </head>
@@ -2617,23 +2618,26 @@ async function loadPozos(fid){
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
   window._pozos=r.pozos;window._fid=fid;window._selPozo=null;
   if(App.user?.empresa){renderPozoEmpresa(fid,r.pozos||[]);return;}
+  const rfc=await api("getFecha",{fechaId:fid});const conCodigo=!!(rfc.ok&&rfc.fecha&&rfc.fecha.tieneCodigo);
   if(!r.pozos?.length){el.innerHTML=emptyBox("💰","Sin pozos configurados");return;}
   el.innerHTML=`<div class="g2c" style="margin-bottom:10px">${r.pozos.map(p=>`
-    <div class="pozo-card${p.yaInscripto?" ya":""}" id="poz-${p.id}" onclick="${p.yaInscripto?"":"selPozo('"+p.id+"')"}">
+    <div class="pozo-card${p.yaInscripto?" ya":""}${conCodigo?" info":""}" id="poz-${p.id}" onclick="${p.yaInscripto||conCodigo?"":"selPozo('"+p.id+"')"}">
       ${p.enRevision?`<span class="bdg bgold" style="margin-bottom:8px;display:inline-flex">⏳ Pago en revisión · ya podés jugar</span><br>`:p.yaInscripto?`<span class="bdg bg" style="margin-bottom:8px;display:inline-flex">✓ Inscripto</span><br>`:p.rechazo?`<span class="bdg bred" style="margin-bottom:8px;display:inline-flex">❌ ${p.rechazo}</span><br>`:""}
-      <div class="pozo-monto">$${p.monto.toLocaleString("es-AR")}</div>
+      <div class="pozo-monto">${p.monto?"$"+p.monto.toLocaleString("es-AR"):"Gratis"}</div>
       <div style="font-size:14px;color:var(--txt3);margin-top:2px">${p.tipo==="Cerrado"?"🔒 Grupo cerrado":"Pozo abierto"}</div>
       <div class="divider"></div>
-      <div class="pozo-premio">$${p.premioGanador.toLocaleString("es-AR")}</div>
-      <div style="font-size:14px;color:var(--txt3)">${p.premioFijo?"🎁 Premio fijo":"Premio estimado"}</div>
+      <div class="pozo-premio">${p.premioGanador?"$"+p.premioGanador.toLocaleString("es-AR"):"Por la gloria"}</div>
+      <div style="font-size:14px;color:var(--txt3)">${p.premioFijo?"🎁 Premio fijo":p.monto?"Premio estimado":"Sin premio en plata"}</div>
       <div style="font-size:16px;color:var(--txt3);margin-top:8px">👥 ${p.inscriptos} inscripto${p.inscriptos!==1?"s":""}</div>
     </div>`).join("")}</div>
   <div style="margin-top:10px"><button class="btn btn-s" style="width:100%;padding:11px;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--bdr-l2)" onclick="toggleGrupo()">🔒 <span style="font-size:17px;font-weight:600">Tengo código de grupo cerrado</span></button><div id="gform" style="display:none;margin-top:10px;background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--r);padding:16px"><p style="font-size:17px;font-weight:600;margin-bottom:10px">Ingresá tu código</p><div style="display:flex;gap:8px"><input class="inp" id="gcod" placeholder="AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" onkeydown="if(event.key==='Enter')buscarGrupo()" style="flex:1;font-family:var(--ff);font-size:26px;font-weight:800;letter-spacing:4px;text-align:center"/><button class="btn btn-p" style="padding:10px 16px" onclick="buscarGrupo()">Buscar</button></div><div id="gres" style="margin-top:10px"></div></div></div>`;
   const ya=r.pozos.find(p=>p.yaInscripto);
+  if(conCodigo&&!ya){const gf=document.getElementById("gform");if(gf){gf.style.display="block";gf.previousElementSibling&&(gf.previousElementSibling.style.display="none");const t=gf.querySelector("p");if(t)t.innerHTML="🔒 Esta fecha es con código. Ingresalo para jugar";}}
   if(ya){const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=`<button class="btn btn-p btn-lg" onclick="go('jugar',{fechaId:'${fid}',pozoId:'${ya.id}'})">▶ Jugar fecha →</button>`;}}
   const top=document.getElementById("pjtop");
   if(top)top.innerHTML=ya
     ?`<div class="cta-top"><div class="cta-txt"><div class="cta-k">${ya.enRevision?"Pago en revisión · ya podés jugar":"Ya estás adentro"}</div><div class="cta-t">${ya.nombre||"Tu pozo"}</div></div><button class="btn btn-p btn-lg" onclick="go('jugar',{fechaId:'${fid}',pozoId:'${ya.id}'})">▶ Jugar fecha →</button></div>`
+    :conCodigo?`<div class="cta-top"><div class="cta-txt"><div class="cta-k">Fecha con código</div><div class="cta-t">Ingresá el código para jugar</div></div><button class="btn btn-p btn-lg" onclick="document.getElementById('gform')?.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){document.getElementById('gcod')?.focus();},400)">Ingresar código ↓</button></div>`
     :`<div class="cta-top"><div class="cta-txt"><div class="cta-k">Todavía no estás inscripto</div><div class="cta-t">Elegí un pozo o usá tu código</div></div><button class="btn btn-p btn-lg" onclick="document.getElementById('plist')?.scrollIntoView({behavior:'smooth',block:'start'})">Inscribirme ↓</button></div>`;
 }
 window.selPozo=id=>{window._selPozo=id;document.querySelectorAll(".pozo-card").forEach(c=>c.classList.remove("sel"));const e=document.getElementById("poz-"+id);if(e)e.classList.add("sel");const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=`<button class="btn btn-p btn-lg" onclick="inscribirse()">Inscribirme →</button>`;}};
@@ -2643,6 +2647,7 @@ window.unirseConCodigo=async(codigo,pozoId)=>{const b=document.getElementById("b
 window.inscribirse=async()=>{
   if(!window._selPozo){toast("Elegí un pozo");return;}
   const pozo=(window._pozos||[]).find(function(p){return p.id===window._selPozo;})||{};
+  if(!pozo.monto){const r=await api("inscribirse",{fechaId:window._fid,pozoId:window._selPozo});if(!r.ok){toast("❌ "+r.error);return;}toast("✅ ¡Adentro! Ya podés pronosticar");window._misFechasBadge=(window._misFechasBadge||0)+1;renderNav();go("jugar",{fechaId:window._fid,pozoId:window._selPozo});return;}
   modalTransferencia({titulo:"Inscripción",concepto:pozo.nombre||"Pozo",monto:pozo.monto,fechaId:window._fid,
     enviar:async function(img){return api("enviarComprobanteInscripcion",{fechaId:window._fid,pozoId:window._selPozo,imagen:img});},
     listo:function(){toast("✅ ¡Listo! Ya podés jugar. Tu pago queda en revisión",4500);go("jugar",{fechaId:window._fid,pozoId:window._selPozo});}});
@@ -2880,7 +2885,7 @@ function renderResumenCambios(){
   const dots=[0,1,2].map(function(i){return`<i class="${i<usados?"used":""}"></i>`;}).join("");
   const sub=cambiosRestantes<=0
     ?"Ya usaste los 3 cambios de esta fecha"
-    :App.user?.empresa?`Cambios <strong>gratis</strong> · se cierran 1 hora antes de cada partido`
+    :App.user?.empresa||!proximoCosto?`Cambios <strong>gratis</strong> · se cierran 1 hora antes de cada partido`
     :`Próximo cambio: <strong>$${(proximoCosto||0).toLocaleString("es-AR")}</strong>${proximoPct?` (${proximoPct}% del pozo)`:""} · se cierran 1 hora antes de cada partido`;
   el.innerHTML=`<div class="cambios-box${cambiosRestantes<=0?" agotados":""}">
     <div class="cb-dots" aria-hidden="true">${dots}</div>
@@ -3264,14 +3269,14 @@ window.showModalCambio=async function(pid,pronoAnterior,pronoNuevo,fid,poid){
           <div style="font-size:14px;color:var(--g2);font-weight:600">${labels[pronoNuevo]}</div>
         </div>
       </div>
-      ${App.user?.empresa?`<div style="background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:var(--r);padding:14px;margin-bottom:16px;font-size:15px;color:var(--txt2)">Cambio <strong>gratis</strong> · es el cambio #${numeroCambio} de 3</div>`:`<div style="background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--r);padding:16px;margin-bottom:16px">
+      ${App.user?.empresa||!costo?`<div style="background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:var(--r);padding:14px;margin-bottom:16px;font-size:15px;color:var(--txt2)">Cambio <strong>gratis</strong> · es el cambio #${numeroCambio} de 3</div>`:`<div style="background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--r);padding:16px;margin-bottom:16px">
         <div style="font-size:15px;color:var(--txt2);margin-bottom:4px">Costo del cambio #${numeroCambio} (${porcentaje}%)</div>
         <div style="font-family:var(--ff);font-size:42px;font-weight:900;color:var(--gold)">$${costo.toLocaleString("es-AR")}</div>
         <div style="font-size:14px;color:var(--txt3);margin-top:4px">Se suma al pozo del ganador</div>
       </div>`}
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn btn-p btn-lg" id="btn-pagar-cambio" onclick="pagarCambio('${pid}','${pronoNuevo}','${fid}','${poid}')">
-          ${App.user?.empresa?"✓ Confirmar cambio":"🏦 Pagar por transferencia"}
+          ${App.user?.empresa||!costo?"✓ Confirmar cambio":"🏦 Pagar por transferencia"}
         </button>
         <button class="btn btn-s" style="padding:12px" onclick="this.closest('.modal-bg').remove()">
           Cancelar
@@ -3866,7 +3871,7 @@ window.showGestionPozos=async function(fechaId){
   const f=window._adminFechas[fechaId];
   const rp=await api("getPozos",{fechaId});
   const pozosHTML=rp.ok&&rp.pozos?.length?rp.pozos.map(function(p){return`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bdr-l)"><div><span style="font-family:var(--ff);font-size:23px;font-weight:800">$${p.monto.toLocaleString("es-AR")}</span><span style="font-size:14px;color:var(--txt3);margin-left:8px">${p.tipo} · ${p.inscriptos} inscriptos · ${p.premioFijo?"Premio fijo":"Premio"}: $${p.premioGanador.toLocaleString("es-AR")}</span></div><span class="bdg ${p.estado==="Activo"?"bg":"bgr"}">${p.estado}</span></div>`;}).join(""):`<p style="font-size:17px;color:var(--txt3);padding:12px 0">Sin pozos aún</p>`;
-  const m=mkModal("💰 Pozos — "+(f?f.nombre:""),`<div>${pozosHTML}<div style="margin-top:14px;border-top:1px solid var(--bdr-l);padding-top:14px"><label class="lbl" style="margin-bottom:8px;display:block">Agregar pozos</label><div id="np-lista" style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;gap:8px;align-items:center"><input class="inp" placeholder="Monto ($)" type="number" min="1" style="flex:1" oninput="window._npMontos[0]=this.value"/><span style="font-size:16px;color:var(--txt3);width:60px">pozo 1</span></div></div><button class="btn btn-s" style="margin-top:8px;width:100%;padding:8px" onclick="agregarCampoPozo()">+ Agregar otro monto</button><div class="ig" style="margin-top:14px"><label class="lbl">🎁 Premio fijo (opcional)</label><input class="inp" placeholder="Ej: 50000" type="number" min="1" oninput="window._npPremio=this.value"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Para fechas con código (pruebas o invitaciones): el ganador se lleva este monto, sin importar cuántos entren. Si lo dejás vacío, el premio es el 75% de lo recaudado.</div></div><button class="btn btn-p" id="btn-crear-pozo" style="margin-top:8px;width:100%;padding:11px" onclick="crearPozos('${fechaId}')">💰 Crear pozos</button></div></div>`);
+  const m=mkModal("💰 Pozos — "+(f?f.nombre:""),`<div>${pozosHTML}<div style="margin-top:14px;border-top:1px solid var(--bdr-l);padding-top:14px"><label class="lbl" style="margin-bottom:4px;display:block">Agregar pozos</label><div style="font-size:13px;color:var(--txt3);margin-bottom:8px">Dejá el monto vacío para un pozo <b>gratis</b> (torneo de amigos).</div><div id="np-lista" style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;gap:8px;align-items:center"><input class="inp" placeholder="Monto ($)" type="number" min="1" style="flex:1" oninput="window._npMontos[0]=this.value"/><span style="font-size:16px;color:var(--txt3);width:60px">pozo 1</span></div></div><button class="btn btn-s" style="margin-top:8px;width:100%;padding:8px" onclick="agregarCampoPozo()">+ Agregar otro monto</button><div class="ig" style="margin-top:14px"><label class="lbl">🎁 Premio fijo (opcional)</label><input class="inp" placeholder="Ej: 50000" type="number" min="1" oninput="window._npPremio=this.value"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Para fechas con código (pruebas o invitaciones): el ganador se lleva este monto, sin importar cuántos entren. Si lo dejás vacío, el premio es el 75% de lo recaudado.</div></div><button class="btn btn-p" id="btn-crear-pozo" style="margin-top:8px;width:100%;padding:11px" onclick="crearPozos('${fechaId}')">💰 Crear pozos</button></div></div>`);
   window._npMontos=[""];window._npPremio="";
   document.body.appendChild(m);
 };
@@ -3880,13 +3885,14 @@ window.agregarCampoPozo=function(){
   lista.appendChild(div);
 };
 window.crearPozos=async function(fechaId){
-  const montos=(window._npMontos||[]).map(m=>+m).filter(m=>m>0);
-  if(!montos.length){toast("Ingresá al menos un monto");return;}
+  let montos=(window._npMontos||[]).map(m=>+m).filter(m=>m>0);
+  // Sin monto = pozo gratis (torneo de amigos), con premio fijo opcional
+  if(!montos.length){if(!confirm(+window._npPremio>0?`Se crea un pozo GRATIS con premio fijo de $${(+window._npPremio).toLocaleString("es-AR")}. ¿Seguimos?`:"Se crea un pozo GRATIS, sin premio en plata. ¿Seguimos?"))return;montos=[0];}
   const btn=document.getElementById("btn-crear-pozo");if(btn){btn.textContent="Creando...";btn.disabled=true;}
   let creados=0;
   for(const monto of montos){
     const r=await api("adminCrearPozo",{fechaId,monto,premioFijo:+window._npPremio>0?+window._npPremio:null});
-    if(r.ok)creados++;else toast("❌ Error en $"+monto.toLocaleString("es-AR")+": "+r.error);
+    if(r.ok)creados++;else toast("❌ Error en "+(monto?"$"+monto.toLocaleString("es-AR"):"el pozo gratis")+": "+r.error);
   }
   document.querySelector(".modal-bg")?.remove();
   toast("✅ "+creados+" pozo"+(creados!==1?"s":"")+" creado"+(creados!==1?"s":""));
