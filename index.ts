@@ -188,6 +188,13 @@ Deno.serve(async (req) => {
       case "getMisInscripciones": return resp(await getMisInscripciones(db, data));
       case "crearPreferencia": return resp(await crearPreferencia(db, data));
       case "verificarPagoInscripcion": return resp(await verificarPagoInscripcion(db, data));
+      case "getDatosPago": return resp(await getDatosPago(db, data));
+      case "enviarComprobanteInscripcion": return resp(await enviarComprobanteInscripcion(db, data));
+      case "enviarComprobanteCambio": return resp(await enviarComprobanteCambio(db, data));
+      case "adminGetPagos": return resp(await adminGetPagos(db, data));
+      case "adminResolverPago": return resp(await adminResolverPago(db, data));
+      case "adminGuardarDatosPago": return resp(await adminGuardarDatosPago(db, data));
+      case "getAvisos": return resp(await getAvisos(db, data));
 
       // ── PRONÓSTICOS ───────────────────────────────────────
       case "autoguardar": return resp(await autoguardar(db, data));
@@ -360,6 +367,7 @@ async function getFechas(db: any, data: any) {
       minutosRestantes: mins,
       tieneCodigo: !!f.codigo_grupo,
       codigoGrupo: esAdmin ? (f.codigo_grupo || "") : undefined,
+      pagoAlias: esAdmin ? (f.pago_alias || "") : undefined, pagoTitular: esAdmin ? (f.pago_titular || "") : undefined,
     };
   })};
 }
@@ -419,16 +427,22 @@ async function getPozos(db: any, data: any) {
 
   const {data: parts} = await db.from("partidos").select("id").eq("fecha_id", data.fechaId);
   const cantPartidos = parts?.length || 0;
+  const {data: misRechazos} = data.userId ? await db.from("inscripciones").select("pozo_id,rechazo_motivo").eq("fecha_id",data.fechaId).eq("user_id",data.userId).eq("estado_pago","Rechazado") : {data: []};
 
   return {ok:true, pozos: (pozos||[]).map((p:any) => {
     const insc = (inscripciones||[]).filter((i:any) => i.pozo_id === p.id && i.estado_pago === "Aprobado");
     const cantInscriptos = insc.length;
     const {totalRecaudado, totalCambios, premio} = calcPremio(p, insc, cambiosPagados||[]);
 
-    let yaInscripto = false, yaJugo = false, cambiosRestantesFecha = null;
+    let yaInscripto = false, yaJugo = false, cambiosRestantesFecha = null, enRevision = false, rechazo = null;
     if (data.userId) {
       const miInsc = insc.find((i:any) => i.user_id === data.userId);
       yaInscripto = !!miInsc;
+      const pend = (inscripciones||[]).find((i:any) => i.pozo_id === p.id && i.user_id === data.userId && i.estado_pago === "Pendiente");
+      enRevision = !!(pend && pend.comprobante_path);
+      if (enRevision) yaInscripto = true;
+      const rech = (misRechazos||[]).find((i:any) => i.pozo_id === p.id);
+      if (!yaInscripto && !enRevision && rech) rechazo = rech.rechazo_motivo || "Comprobante rechazado";
       
       // Calcular cambios restantes del usuario
       if (yaInscripto) {
@@ -445,7 +459,7 @@ async function getPozos(db: any, data: any) {
       totalCambios,
       premioGanador:premio,
       pozoActual: premio, // Alias más claro
-      cantPartidos, yaInscripto, yaJugo, cambiosRestantesFecha,
+      cantPartidos, yaInscripto, yaJugo, cambiosRestantesFecha, enRevision, rechazo,
     };
   })};
 }
@@ -493,7 +507,7 @@ async function getMisInscripciones(db: any, data: any) {
 
   const {data: insc} = await db.from("inscripciones")
     .select("*, pozos(monto)")
-    .eq("user_id", auth.userId).eq("estado_pago","Aprobado");
+    .eq("user_id", auth.userId).or("estado_pago.eq.Aprobado,and(estado_pago.eq.Pendiente,comprobante_path.not.is.null)");
 
   return {ok:true, inscripciones:(insc||[]).map((i:any) => ({
     inscripcionId:i.id, fechaId:i.fecha_id, pozoId:i.pozo_id, monto:i.pozos?.monto||0,
@@ -549,7 +563,7 @@ async function autoguardar(db: any, data: any) {
 
   // Verificar habilitación
   const {data: insc} = await db.from("inscripciones")
-    .select("id").eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId).eq("estado_pago","Aprobado").single();
+    .select("id").eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId).or("estado_pago.eq.Aprobado,and(estado_pago.eq.Pendiente,comprobante_path.not.is.null)").limit(1).maybeSingle();
   if (!insc) return {ok:false, error:"No habilitado"};
 
   // Leer partidos y pronósticos existentes en paralelo
@@ -633,6 +647,7 @@ async function getMiFecha(db: any, data: any) {
   const proximoCosto = Math.round(montoPozo * proximoPorcentaje / 100);
 
   // Cambios pendientes de ejecutar
+  const cambiosEnRevision = (cambios||[]).filter((c:any) => c.mp_status === "revision").map((c:any) => ({id:c.id, partidoId:c.partido_id, de:c.pronostico_anterior, a:c.pronostico_nuevo, monto:c.monto}));
   const cambiosPendientes = (cambios||[]).filter((c:any) => c.estado === "Pagado").map((c:any) => {
     const part = parts?.find((p:any) => p.id === c.partido_id);
     return {
@@ -690,6 +705,7 @@ async function getMiFecha(db: any, data: any) {
     proximoPorcentaje,
     proximoCosto,
     cambiosPendientes,
+    cambiosEnRevision,
     cambiosLibresHasta: libreHasta(parts||[], fechaMF)?.toISOString() || null,
     enPeriodoLibre: enPeriodoLibre(parts||[], fechaMF),
     // Legacy field
@@ -708,7 +724,7 @@ async function guardarReglas(db: any, data: any) {
   if (!reglas?.length) return {ok:true, guardadas:0};
 
   const {data: insc} = await db.from("inscripciones")
-    .select("id").eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId).eq("estado_pago","Aprobado").single();
+    .select("id").eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId).or("estado_pago.eq.Aprobado,and(estado_pago.eq.Pendiente,comprobante_path.not.is.null)").limit(1).maybeSingle();
   if (!insc) return {ok:false, error:"No habilitado"};
 
   const {data: user} = await db.from("usuarios").select("usuario").eq("id",auth.userId).single();
@@ -859,6 +875,7 @@ async function adminCrearFecha(db: any, data: any) {
     plazo_limite:data.plazoLimite, liga:data.liga||"",
     reglas_habilitadas:data.reglasHabilitadas||[],
     codigo_grupo: normalizarCodigo(data.codigoGrupo),
+    pago_alias: String(data.pagoAlias||"").trim() || null, pago_titular: String(data.pagoTitular||"").trim() || null,
   });
   if (error) return {ok:false, error: error.code === "23505" ? "Ese código ya lo usa otra fecha" : error.message};
   return {ok:true, fechaId:id};
@@ -874,6 +891,8 @@ async function adminEditarFecha(db: any, data: any) {
   if (data.estado) upd.estado = data.estado;
   if (data.reglasHabilitadas) upd.reglas_habilitadas = data.reglasHabilitadas;
   if (data.codigoGrupo !== undefined) upd.codigo_grupo = normalizarCodigo(data.codigoGrupo);
+  if (data.pagoAlias !== undefined) upd.pago_alias = String(data.pagoAlias||"").trim() || null;
+  if (data.pagoTitular !== undefined) upd.pago_titular = String(data.pagoTitular||"").trim() || null;
   const {error} = await db.from("fechas").update(upd).eq("id",data.fechaId);
   if (error) return {ok:false, error: error.code === "23505" ? "Ese código ya lo usa otra fecha" : error.message};
   return {ok:true};
@@ -1434,7 +1453,7 @@ async function solicitarCambio(db: any, data: any) {
   if (!fechaId || !pozoId || !partidoId || !["L","E","V"].includes(pronosticoNuevo)) return {ok:false, error:"Faltan datos"};
 
   const [{data: insc}, {data: part}, {data: prono}] = await Promise.all([
-    db.from("inscripciones").select("id").eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId).eq("estado_pago","Aprobado").single(),
+    db.from("inscripciones").select("id").eq("user_id",auth.userId).eq("fecha_id",fechaId).eq("pozo_id",pozoId).or("estado_pago.eq.Aprobado,and(estado_pago.eq.Pendiente,comprobante_path.not.is.null)").limit(1).maybeSingle(),
     db.from("partidos").select("*").eq("id",partidoId).eq("fecha_id",fechaId).single(),
     db.from("pronosticos").select("*").eq("user_id",auth.userId).eq("partido_id",partidoId).eq("pozo_id",pozoId).single(),
   ]);
@@ -1775,4 +1794,172 @@ async function verificarPagoInscripcion(db: any, data: any) {
   if (!pago) return {ok:true, aprobado:false};
   await aprobarInscripcionPagada(db, insc.id, pago);
   return {ok:true, aprobado:true, fechaId:insc.fecha_id, pozoId:insc.pozo_id};
+}
+
+// ============================================================
+//  PAGO POR TRANSFERENCIA CON COMPROBANTE
+//  La app no procesa pagos: el jugador transfiere al alias/CVU, sube el comprobante
+//  y el admin lo aprueba. Los comprobantes van a un bucket PRIVADO.
+// ============================================================
+const BUCKET_COMP = "comprobantes";
+async function asegurarBucketComp(db: any) {
+  const {data} = await db.storage.getBucket(BUCKET_COMP);
+  if (!data) await db.storage.createBucket(BUCKET_COMP, {public:false, fileSizeLimit: 3*1024*1024, allowedMimeTypes:["image/jpeg","image/png","image/webp"]});
+}
+async function subirComprobante(db: any, userId: string, imagen: string): Promise<{path?:string, error?:string}> {
+  const m = /^data:image\/(jpeg|png|webp);base64,(.+)$/.exec(String(imagen||""));
+  if (!m) return {error:"Imagen inválida"};
+  const bytes = Uint8Array.from(atob(m[2]), c => c.charCodeAt(0));
+  if (bytes.length > 3*1024*1024) return {error:"El comprobante es muy pesado (máximo 3 MB)"};
+  await asegurarBucketComp(db);
+  const path = `${userId}/${Date.now()}-${crypto.randomUUID().slice(0,8)}.${m[1]==="jpeg"?"jpg":m[1]}`;
+  const up = await db.storage.from(BUCKET_COMP).upload(path, bytes, {contentType:`image/${m[1]}`});
+  if (up.error) return {error:"No se pudo subir el comprobante: "+up.error.message};
+  return {path};
+}
+async function datosPagoDe(db: any, fechaId?: string) {
+  const {data: cfg} = await db.from("config").select("clave,valor").in("clave",["pago_alias","pago_titular","pago_cvu","pago_link"]);
+  const g = (k:string) => cfg?.find((c:any)=>c.clave===k)?.valor || "";
+  let alias = g("pago_alias"), titular = g("pago_titular"), cvu = g("pago_cvu"), link = g("pago_link");
+  if (fechaId) {
+    const {data: f} = await db.from("fechas").select("pago_alias,pago_titular").eq("id",fechaId).single();
+    if (f?.pago_alias) { alias = f.pago_alias; titular = f.pago_titular || titular; cvu = ""; link = ""; }
+  }
+  return {alias, titular, cvu, link};
+}
+
+async function getDatosPago(db: any, data: any) {
+  return {ok:true, ...(await datosPagoDe(db, data.fechaId))};
+}
+
+async function enviarComprobanteInscripcion(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  const {fechaId, pozoId} = data;
+  const [{data: fecha}, {data: partsF}, {data: pozo}] = await Promise.all([
+    db.from("fechas").select("*").eq("id",fechaId).single(),
+    db.from("partidos").select("fecha_hora").eq("fecha_id",fechaId),
+    db.from("pozos").select("*").eq("id",pozoId).eq("fecha_id",fechaId).single(),
+  ]);
+  if (!fecha || fecha.estado !== "Abierta") return {ok:false, error:"Fecha cerrada"};
+  if (!pozo) return {ok:false, error:"Pozo no encontrado"};
+  if (minutosHasta(cierreFecha(fecha, partsF||[])) <= 0) return {ok:false, error:"La fecha ya cerró (1 hora antes del primer partido)"};
+  const {data: ya} = await db.from("inscripciones").select("*").eq("user_id",auth.userId).eq("pozo_id",pozoId).in("estado_pago",["Pendiente","Aprobado"]).single();
+  if (ya?.estado_pago === "Aprobado") return {ok:false, error:"Ya estás inscripto en este pozo"};
+  const up = await subirComprobante(db, auth.userId!, data.imagen);
+  if (up.error) return {ok:false, error:up.error};
+  const ahora = new Date().toISOString();
+  if (ya) {
+    if (ya.comprobante_path) await db.storage.from(BUCKET_COMP).remove([ya.comprobante_path]);
+    await db.from("inscripciones").update({comprobante_path:up.path, comprobante_at:ahora, monto:pozo.monto, rechazo_motivo:null}).eq("id",ya.id);
+    return {ok:true, inscripcionId:ya.id};
+  }
+  const {data: user} = await db.from("usuarios").select("usuario").eq("id",auth.userId).single();
+  const id = generarId("INS");
+  const {error} = await db.from("inscripciones").insert({
+    id, user_id:auth.userId, usuario:user?.usuario, fecha_id:fechaId, pozo_id:pozoId, monto:pozo.monto,
+    estado_pago:"Pendiente", habilitado:false, comprobante_path:up.path, comprobante_at:ahora,
+  });
+  if (error) return {ok:false, error:error.message};
+  return {ok:true, inscripcionId:id};
+}
+
+async function enviarComprobanteCambio(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  const {data: cambio} = await db.from("cambios_pagos").select("*").eq("id",data.cambioId).eq("user_id",auth.userId).single();
+  if (!cambio) return {ok:false, error:"Cambio no encontrado"};
+  if (cambio.estado !== "Pendiente") return {ok:false, error:"Ese cambio ya no está pendiente"};
+  const {data: part} = await db.from("partidos").select("estado,fecha_hora").eq("id",cambio.partido_id).single();
+  if (part?.estado === "Finalizado" || (part?.fecha_hora && (new Date(part.fecha_hora).getTime() - Date.now()) / 60000 <= MINUTOS_CIERRE_CAMBIO))
+    return {ok:false, error:"Los cambios de este partido ya cerraron (1 hora antes del comienzo)"};
+  const up = await subirComprobante(db, auth.userId!, data.imagen);
+  if (up.error) return {ok:false, error:up.error};
+  if (cambio.comprobante_path) await db.storage.from(BUCKET_COMP).remove([cambio.comprobante_path]);
+  await db.from("cambios_pagos").update({comprobante_path:up.path, comprobante_at:new Date().toISOString(), rechazo_motivo:null, estado:"Pagado", mp_status:"revision"}).eq("id",cambio.id);
+  const r = await aplicarCambio(db, {...cambio, estado:"Pagado"});
+  return {ok:r.ok, mensaje:r.mensaje, error:r.error};
+}
+
+async function adminGetPagos(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const [{data: insc}, {data: cambios}] = await Promise.all([
+    db.from("inscripciones").select("*, usuarios(nombre,usuario,telefono,alias_mp), fechas(nombre), pozos(nombre,monto)").eq("estado_pago","Pendiente").order("comprobante_at",{ascending:true}),
+    db.from("cambios_pagos").select("*, usuarios(nombre,usuario,telefono,alias_mp), fechas(nombre)").eq("mp_status","revision").order("comprobante_at",{ascending:true}),
+  ]);
+  const firmar = async (path: string|null) => path ? (await db.storage.from(BUCKET_COMP).createSignedUrl(path, 3600)).data?.signedUrl || null : null;
+  const items: any[] = [];
+  for (const i of (insc||[]).filter((x:any) => x.comprobante_path)) items.push({tipo:"insc", id:i.id, usuario:i.usuarios?.usuario, nombre:i.usuarios?.nombre, telefono:i.usuarios?.telefono, alias:i.usuarios?.alias_mp,
+    concepto:`Inscripción · ${i.fechas?.nombre||""} · ${i.pozos?.nombre||""}`, monto:i.monto ?? i.pozos?.monto, enviado:i.comprobante_at || i.created_at, comprobante: await firmar(i.comprobante_path)});
+  for (const c of (cambios||[])) items.push({tipo:"cambio", id:c.id, usuario:c.usuarios?.usuario, nombre:c.usuarios?.nombre, telefono:c.usuarios?.telefono, alias:c.usuarios?.alias_mp,
+    concepto:`Cambio #${c.numero_cambio} · ${c.fechas?.nombre||""} · #${c.numero_partido} ${c.local} vs ${c.visita}: ${c.pronostico_anterior} → ${c.pronostico_nuevo}`, monto:c.monto, enviado:c.comprobante_at, comprobante: await firmar(c.comprobante_path)});
+  items.sort((a,b) => String(a.enviado).localeCompare(String(b.enviado)));
+  return {ok:true, pagos:items, ...(await datosPagoDe(db))};
+}
+
+async function avisar(db: any, userId: string, tipo: string, texto: string) {
+  await db.from("avisos").insert({id:generarId("AVI"), user_id:userId, tipo, texto});
+}
+
+async function adminResolverPago(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const {tipo, id, aprobar} = data;
+  const motivo = String(data.motivo || "").slice(0,200) || "No se encontró la transferencia";
+  const fmt = (n:any) => "$" + Number(n||0).toLocaleString("es-AR");
+  if (tipo === "insc") {
+    const {data: i} = await db.from("inscripciones").select("*, fechas(nombre), pozos(nombre,monto)").eq("id",id).single();
+    if (!i || i.estado_pago !== "Pendiente") return {ok:false, error:"Esa inscripción ya no está pendiente"};
+    if (aprobar) {
+      await db.from("inscripciones").update({estado_pago:"Aprobado", habilitado:true, pagado_at:new Date().toISOString(), rechazo_motivo:null}).eq("id",id);
+      await avisar(db, i.user_id, "ok", `✅ Pago de ${i.fechas?.nombre||"la fecha"} aprobado (${i.pozos?.nombre||fmt(i.monto)})`);
+    } else {
+      await db.from("inscripciones").update({estado_pago:"Rechazado", rechazo_motivo:motivo}).eq("id",id);
+      // Sin pago no juega: se borran sus pronósticos, reglas y puntos de ese pozo
+      await Promise.all([
+        db.from("pronosticos").delete().eq("user_id",i.user_id).eq("pozo_id",i.pozo_id),
+        db.from("reglas").delete().eq("user_id",i.user_id).eq("pozo_id",i.pozo_id),
+        db.from("puntajes").delete().eq("user_id",i.user_id).eq("pozo_id",i.pozo_id),
+      ]);
+      await avisar(db, i.user_id, "no", `❌ Pago de ${i.fechas?.nombre||"la fecha"} rechazado: ${motivo}. Podés volver a subir el comprobante.`);
+    }
+    return {ok:true};
+  }
+  if (tipo === "cambio") {
+    const {data: c} = await db.from("cambios_pagos").select("*, fechas(nombre)").eq("id",id).single();
+    if (!c || c.mp_status !== "revision") return {ok:false, error:"Ese cambio ya no está en revisión"};
+    if (aprobar) {
+      await db.from("cambios_pagos").update({mp_status:"transferencia_ok"}).eq("id",id);
+      await avisar(db, c.user_id, "ok", `✅ Pago del cambio #${c.numero_partido} ${c.local} vs ${c.visita} aprobado (${fmt(c.monto)})`);
+      return {ok:true};
+    }
+    // Rechazado: se deshace el cambio y vuelve el pronóstico anterior
+    const {data: pr} = await db.from("pronosticos").select("*").eq("user_id",c.user_id).eq("partido_id",c.partido_id).eq("pozo_id",c.pozo_id).single();
+    if (pr) await db.from("pronosticos").update({pronostico:c.pronostico_anterior, cambios_realizados:Math.max(0,(pr.cambios_realizados||1)-1), updated_at:new Date().toISOString()}).eq("id",pr.id);
+    await db.from("cambios_pagos").update({estado:"Cancelado", mp_status:"rechazado", rechazo_motivo:motivo}).eq("id",id);
+    const {data: part} = await db.from("partidos").select("estado").eq("id",c.partido_id).single();
+    if (part?.estado === "Finalizado") await calcularPuntajesPartido(db, c.partido_id);
+    await avisar(db, c.user_id, "no", `❌ Pago del cambio #${c.numero_partido} rechazado: ${motivo}. Tu pronóstico volvió a ${c.pronostico_anterior}.`);
+    return {ok:true};
+  }
+  return {ok:false, error:"Tipo inválido"};
+}
+
+async function getAvisos(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  const {data: av} = await db.from("avisos").select("id,tipo,texto,created_at").eq("user_id",auth.userId).eq("visto",false).order("created_at");
+  if (av?.length) await db.from("avisos").update({visto:true}).in("id", av.map((x:any) => x.id));
+  return {ok:true, avisos:av||[]};
+}
+
+async function adminGuardarDatosPago(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const alias = String(data.alias||"").trim().slice(0,60), titular = String(data.titular||"").trim().slice(0,80);
+  const cvu = String(data.cvu||"").replace(/\D/g,"").slice(0,22);
+  const link = /^https:\/\/(mpago\.la|link\.mercadopago\.com\.ar|www\.mercadopago\.com\.ar)\//.test(String(data.link||"")) ? String(data.link).trim() : "";
+  await db.from("config").upsert([{clave:"pago_alias", valor:alias},{clave:"pago_titular", valor:titular},{clave:"pago_cvu", valor:cvu},{clave:"pago_link", valor:link}], {onConflict:"clave"});
+  return {ok:true};
 }

@@ -46,6 +46,7 @@
     getGrilla:function(){return simGrilla(parseInt(q.get("n")||"20"));},
     getNoticias:function(){return{ok:true,noticias:[{texto:"¡Arranca la Fecha 12 con todos los clásicos! El pozo de $2.000 ya supera los $21.000.",fecha:"Hoy"},{texto:"Nueva regla disponible: La MK — acertá el resultado exacto y sumá 5 puntos.",fecha:"Ayer"}]};},
     getEstadisticas:function(){return{ok:true,totalUsuarios:42,totalInscripciones:58,fechas:fechas.map(function(f){return{id:f.id,nombre:f.nombre,estado:f.estado,inscriptos:14};}),ganadores:[{usuario:"LF221"},{usuario:"LF221"},{usuario:"MG104"},{usuario:"GR873"}]};},
+    getDatosPago:function(){return{ok:true,alias:"vanzatorii.mp",titular:"German Alberto Rodriguez",cvu:"0000003100002132336820",link:"https://mpago.la/1mo9Lyf"};},
     getGrupoPorCodigo:function(){return{ok:false,error:"Código inválido"};},
   };
 
@@ -142,7 +143,7 @@
     var t=setInterval(function(){
       if(typeof go==="function"&&App&&App.user){clearInterval(t);setTimeout(function(){
         var ctx={fechaId:"F1",pozoId:"Z1"};go(scr,ctx);
-        if(q.get("settings")==="1")setTimeout(openSettings,300);
+        if(q.get("settings")==="1")setTimeout(openSettings,300);if(q.get("pago")==="1")setTimeout(function(){window._selPozo="Z2";window._fid="F1";window._pozos=[{id:"Z2",nombre:"Pozo $5.000",monto:5000}];inscribirse();},600);
       },200);}
     },50);
   } else if(q.get("settings")==="1"){setTimeout(function(){openSettings();},900);}
@@ -1392,6 +1393,45 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
 .dhc-bar i{display:block;height:100%;background:color-mix(in srgb,var(--ink) 25%,transparent)}
 .dhc-bar i.yo{background:var(--accent)}
 
+/* Pago por transferencia */
+.tr-box{display:flex;flex-direction:column;gap:14px}
+.tr-monto{display:flex;flex-direction:column;align-items:center;padding:14px;border-radius:16px;background:var(--surface-2);border:1px solid var(--line);text-align:center}
+.tr-monto small{font-size:13px;font-weight:600;color:var(--ink-3)}
+.tr-monto b{font-family:var(--ff);font-size:48px;font-weight:800;line-height:1.05;color:var(--gold)}
+.tr-paso{display:flex;gap:12px;align-items:flex-start}
+.tr-paso>span{width:28px;height:28px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;background:var(--accent);color:var(--accent-ink)}
+.tr-paso>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+.tr-paso>div>b{font-size:15px}
+.tr-paso small{font-size:13px;color:var(--ink-3)}
+.tr-alias{display:flex;align-items:center;gap:8px}
+.tr-alias code{flex:1;min-width:0;overflow-wrap:anywhere;font-size:14px;font-weight:700;padding:10px 12px;border-radius:12px;background:var(--surface-2);border:1px dashed var(--line-2)}
+.tr-alias .btn{height:40px;padding:0 12px;font-size:13.5px}
+.tr-link{height:40px;font-size:14px}
+.tr-drop{padding:18px 12px}
+.tr-prev{max-height:220px;border-radius:12px;object-fit:contain;background:var(--surface-2);border:1px solid var(--line)}
+.tr-nota{font-size:12.5px;color:var(--ink-3);text-align:center}
+/* Admin: pagos */
+.pg-nota{font-size:13px;color:var(--ink-3);margin:-6px 0 12px}
+.pg-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+.pg-form .btn{grid-column:1/-1}
+.pg-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+.pg-card{display:flex;gap:14px;padding:14px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1)}
+.pg-img{width:110px;flex-shrink:0;border-radius:12px;overflow:hidden;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-size:12px;color:var(--ink-3)}
+.pg-img img{width:100%;height:100%;max-height:180px;object-fit:cover;display:block}
+.pg-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.pg-monto{font-family:var(--ff);font-size:32px;font-weight:800;line-height:1;color:var(--gold)}
+.pg-quien{font-size:14px;color:var(--ink-2)}
+.pg-conc{font-size:13px;color:var(--ink-2);line-height:1.4}
+.pg-hora{font-size:12px;color:var(--ink-3)}
+.pg-acts{display:flex;gap:8px;margin-top:6px}
+.pg-acts .btn{height:40px;padding:0 14px;font-size:14px}
+@media(max-width:600px){.pg-form{grid-template-columns:1fr}.pg-list{grid-template-columns:1fr}}
+/* Avisos */
+.av-list{display:flex;flex-direction:column;gap:8px}
+.av-item{padding:14px 16px;border-radius:14px;font-size:15.5px;font-weight:600;line-height:1.45;background:var(--surface-2);border:1px solid var(--line)}
+.av-item.ok{background:var(--ok-soft);border-color:var(--ok-line)}
+.av-item.no{background:var(--no-soft);border-color:var(--no-line)}
+
 /* ═══ MODAL ══════════════════════════════════════════════════ */
 .modal-bg{position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-end;justify-content:center;background:color-mix(in srgb,var(--hero-b) 55%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:fi .2s ease}
 .modal-box{
@@ -2092,7 +2132,7 @@ async function loadPozos(fid){
   if(!r.pozos?.length){el.innerHTML=emptyBox("💰","Sin pozos configurados");return;}
   el.innerHTML=`<div class="g2c" style="margin-bottom:10px">${r.pozos.map(p=>`
     <div class="pozo-card${p.yaInscripto?" ya":""}" id="poz-${p.id}" onclick="${p.yaInscripto?"":"selPozo('"+p.id+"')"}">
-      ${p.yaInscripto?`<span class="bdg bg" style="margin-bottom:8px;display:inline-flex">✓ Inscripto</span><br>`:""}
+      ${p.enRevision?`<span class="bdg bgold" style="margin-bottom:8px;display:inline-flex">⏳ Pago en revisión · ya podés jugar</span><br>`:p.yaInscripto?`<span class="bdg bg" style="margin-bottom:8px;display:inline-flex">✓ Inscripto</span><br>`:p.rechazo?`<span class="bdg bred" style="margin-bottom:8px;display:inline-flex">❌ ${p.rechazo}</span><br>`:""}
       <div class="pozo-monto">$${p.monto.toLocaleString("es-AR")}</div>
       <div style="font-size:14px;color:var(--txt3);margin-top:2px">${p.tipo==="Cerrado"?"🔒 Grupo cerrado":"Pozo abierto"}</div>
       <div class="divider"></div>
@@ -2105,14 +2145,53 @@ async function loadPozos(fid){
   if(ya){const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=`<button class="btn btn-p btn-lg" onclick="go('jugar',{fechaId:'${fid}',pozoId:'${ya.id}'})">▶ Jugar fecha →</button>`;}}
   const top=document.getElementById("pjtop");
   if(top)top.innerHTML=ya
-    ?`<div class="cta-top"><div class="cta-txt"><div class="cta-k">Ya estás adentro</div><div class="cta-t">${ya.nombre||"Tu pozo"}</div></div><button class="btn btn-p btn-lg" onclick="go('jugar',{fechaId:'${fid}',pozoId:'${ya.id}'})">▶ Jugar fecha →</button></div>`
+    ?`<div class="cta-top"><div class="cta-txt"><div class="cta-k">${ya.enRevision?"Pago en revisión · ya podés jugar":"Ya estás adentro"}</div><div class="cta-t">${ya.nombre||"Tu pozo"}</div></div><button class="btn btn-p btn-lg" onclick="go('jugar',{fechaId:'${fid}',pozoId:'${ya.id}'})">▶ Jugar fecha →</button></div>`
     :`<div class="cta-top"><div class="cta-txt"><div class="cta-k">Todavía no estás inscripto</div><div class="cta-t">Elegí un pozo o usá tu código</div></div><button class="btn btn-p btn-lg" onclick="document.getElementById('plist')?.scrollIntoView({behavior:'smooth',block:'start'})">Inscribirme ↓</button></div>`;
 }
-window.selPozo=id=>{window._selPozo=id;document.querySelectorAll(".pozo-card").forEach(c=>c.classList.remove("sel"));const e=document.getElementById("poz-"+id);if(e)e.classList.add("sel");const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=`<button class="btn btn-p btn-lg" onclick="inscribirse()">Pagar e inscribirse →</button>`;}};
+window.selPozo=id=>{window._selPozo=id;document.querySelectorAll(".pozo-card").forEach(c=>c.classList.remove("sel"));const e=document.getElementById("poz-"+id);if(e)e.classList.add("sel");const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=`<button class="btn btn-p btn-lg" onclick="inscribirse()">Inscribirme →</button>`;}};
 window.toggleGrupo=()=>{const e=document.getElementById("gform");if(e)e.style.display=e.style.display==="none"?"block":"none";};
 window.buscarGrupo=async()=>{const c=document.getElementById("gcod")?.value;if(!c||c.length<3){toast("Ingresá el código");return;}const r=await api("getGrupoPorCodigo",{codigo:c,pozoId:window._selPozo}),el=document.getElementById("gres");if(!el)return;if(!r.ok){el.innerHTML=`<div class="err-box" style="margin-top:10px">⚠ ${r.error}</div>`;return;}const g=r.grupo;el.innerHTML=`<div class="card" style="margin-top:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap"><div style="width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:var(--accent-soft)">🔓</div><div style="flex:1;min-width:160px"><div style="font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--g2)">Código válido</div><div style="font-family:var(--ff);font-size:24px;font-weight:800;text-transform:uppercase;line-height:1.1">${g.fechaNombre||g.nombre}</div><div style="font-size:13.5px;color:var(--txt3)">${g.pozoNombre||""}${g.cerrado?" · Entrás sin pagar":""}</div></div><button class="btn btn-p" id="btn-unirse" onclick="unirseConCodigo('${c}','${g.pozoId}')">Entrar al grupo →</button></div>`;};
 window.unirseConCodigo=async(codigo,pozoId)=>{const b=document.getElementById("btn-unirse");if(b){b.disabled=true;b.textContent="Entrando...";}const r=await api("unirseConCodigo",{codigo,pozoId});if(!r.ok){toast("❌ "+r.error);if(b){b.disabled=false;b.textContent="Entrar al grupo →";}return;}toast("✅ ¡Adentro! Ya podés pronosticar");window._misFechasBadge=(window._misFechasBadge||0)+1;renderNav();setTimeout(()=>go("jugar",{fechaId:r.fechaId,pozoId:r.pozoId}),700);};
-window.inscribirse=async()=>{if(!window._selPozo){toast("Seleccioná un pozo");return;}const r=await api("inscribirse",{fechaId:window._fid,pozoId:window._selPozo});if(!r.ok){toast("❌ "+r.error);return;}console.log("inscribirse ok, inscripcionId:",r.inscripcionId,"habilitado:",r.habilitado);if(r.habilitado){toast("✅ ¡Habilitado!");setTimeout(()=>go("jugar",{fechaId:window._fid,pozoId:window._selPozo}),800);}else{console.log("llamando crearPreferencia con:",r.inscripcionId);const mp=await api("crearPreferencia",{inscripcionId:r.inscripcionId});console.log("crearPreferencia resp:",JSON.stringify(mp));if(mp.ok&&(mp.initPoint||mp.sandboxUrl))window.location.href=mp.initPoint||mp.sandboxUrl;else toast("💡 "+(mp.error||"Error MP"));}};
+window.inscribirse=async()=>{
+  if(!window._selPozo){toast("Elegí un pozo");return;}
+  const pozo=(window._pozos||[]).find(function(p){return p.id===window._selPozo;})||{};
+  modalTransferencia({titulo:"Inscripción",concepto:pozo.nombre||"Pozo",monto:pozo.monto,fechaId:window._fid,
+    enviar:async function(img){return api("enviarComprobanteInscripcion",{fechaId:window._fid,pozoId:window._selPozo,imagen:img});},
+    listo:function(){toast("✅ ¡Listo! Ya podés jugar. Tu pago queda en revisión",4500);go("jugar",{fechaId:window._fid,pozoId:window._selPozo});}});
+};
+// Ventana de pago por transferencia: monto, alias para copiar y subir comprobante
+async function modalTransferencia(o){
+  const d=await api("getDatosPago",{fechaId:o.fechaId});
+  const alias=(d.ok&&d.alias)||"",tit=(d.ok&&d.titular)||"",cvu=(d.ok&&d.cvu)||"",link=(d.ok&&d.link)||"";
+  const m=mkModal(o.titulo,`<div class="tr-box">
+    <div class="tr-monto"><small>${o.concepto}</small><b>$${Number(o.monto||0).toLocaleString("es-AR")}</b></div>
+    ${alias?`<div class="tr-paso"><span>1</span><div><b>Transferí a este alias o CVU</b><div class="tr-alias"><code id="tr-alias">${alias}</code><button class="btn btn-s" onclick="navigator.clipboard?.writeText('${alias.replace(/'/g,"")}').then(function(){toast('Alias copiado')})">Copiar</button></div>${cvu?`<div class="tr-alias"><code>CVU ${cvu}</code><button class="btn btn-s" onclick="navigator.clipboard?.writeText('${cvu}').then(function(){toast('CVU copiado')})">Copiar</button></div>`:""}${tit?`<small>Titular: ${tit}</small>`:""}${link?`<a class="btn btn-s tr-link" href="${link}" target="_blank" rel="noopener">Transferir con Mercado Pago ↗</a>`:""}</div></div>`:`<div class="err-box">⚠ El administrador todavía no cargó el alias para transferir. Avisale.</div>`}
+    <div class="tr-paso"><span>2</span><div><b>Subí la captura del comprobante</b><label class="pf-drop tr-drop"><input type="file" accept="image/*" hidden onchange="trArchivo(this.files[0])"><span class="pf-drop-ico">🧾</span><b id="tr-lbl">Elegir comprobante</b><small>Foto o captura de pantalla de la transferencia</small></label><img id="tr-prev" class="tr-prev" alt="" hidden></div></div>
+    <button class="btn btn-p btn-lg" id="tr-env" disabled onclick="trEnviar()">Enviar comprobante</button>
+    <p class="tr-nota">Apenas lo enviás ya podés jugar. El administrador lo revisa y te avisamos cuando esté aprobado.</p>
+  </div>`);
+  document.body.appendChild(m);
+  window._trO=o;window._trImg=null;
+}
+window.trArchivo=function(file){
+  if(!file)return;if(!/^image\//.test(file.type)){toast("Elegí una imagen");return;}
+  const rd=new FileReader(),img=new Image();
+  rd.onload=function(){img.onload=function(){
+    const max=1400,k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");
+    c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    window._trImg=c.toDataURL("image/jpeg",.82);
+    const pv=document.getElementById("tr-prev");if(pv){pv.src=window._trImg;pv.hidden=false;}
+    const l=document.getElementById("tr-lbl");if(l)l.textContent="Cambiar comprobante";
+    const b=document.getElementById("tr-env");if(b)b.disabled=false;
+  };img.src=rd.result;};rd.readAsDataURL(file);
+};
+window.trEnviar=async function(){
+  const b=document.getElementById("tr-env");if(!window._trImg||!window._trO)return;
+  if(b){b.disabled=true;b.textContent="Enviando...";}
+  const r=await window._trO.enviar(window._trImg);
+  if(!r.ok){toast("❌ "+r.error,5000);if(b){b.disabled=false;b.textContent="Enviar comprobante";}return;}
+  document.querySelector(".modal-bg")?.remove();window._trO.listo(r);
+};
 
 
 // ── Catálogo de reglas (sin NPF) ──
@@ -2189,6 +2268,7 @@ async function loadJugar(ctx){
       window._proximoCosto=rm.proximoCosto||null;
       window._proximoPorcentaje=rm.proximoPorcentaje||null;
       window._cambiosFecha=window._cambiosRestantes;
+      window._enRevision={};(rm.cambiosEnRevision||[]).forEach(function(c){window._enRevision[c.partidoId]=c;});
       
       (rm.pronos||[]).forEach(function(p){
         window._pr[p.partidoId]={
@@ -2699,7 +2779,7 @@ window.showModalCambio=async function(pid,pronoAnterior,pronoNuevo,fid,poid){
       </div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn btn-p btn-lg" id="btn-pagar-cambio" onclick="pagarCambio('${pid}','${pronoNuevo}','${fid}','${poid}')">
-          💳 Pagar y cambiar
+          🏦 Pagar por transferencia
         </button>
         <button class="btn btn-s" style="padding:12px" onclick="this.closest('.modal-bg').remove()">
           Cancelar
@@ -2717,41 +2797,13 @@ window.showModalCambio=async function(pid,pronoAnterior,pronoNuevo,fid,poid){
 window.pagarCambio=async function(pid,pronoNuevo,fid,poid){
   const btn=document.getElementById("btn-pagar-cambio");
   if(btn){btn.textContent="⏳ Procesando...";btn.disabled=true;}
-  
-  // 1. Solicitar el cambio (crea registro pendiente)
   const r=await api("solicitarCambio",{fechaId:fid,pozoId:poid,partidoId:pid,pronosticoNuevo:pronoNuevo});
-  if(!r.ok){
-    toast("❌ "+r.error);
-    document.querySelector(".modal-bg")?.remove();
-    return;
-  }
-  
-  // 2. Crear preferencia de MercadoPago
-  const mp=await api("crearPreferenciaCambio",{cambioId:r.cambioId});
-  if(mp.ok&&mp.modoPrueba){
-    // MercadoPago todavía no está configurado: pago simulado
-    document.querySelector(".modal-bg")?.remove();
-    const part=(window._parts||[]).find(function(x){return x.id===pid;})||{};
-    const m=mkModal("Pago de prueba",`
-      <div class="pago-prueba">
-        <div class="pp-aviso">🧪 MercadoPago todavía no está configurado. Este pago es <b>simulado</b>: no se cobra nada.</div>
-        <div class="pp-tk">
-          <div class="pp-row"><span>Cambio #${mp.numeroCambio}</span><span>${mp.porcentaje}% del pozo</span></div>
-          <div class="pp-row"><span>#${part.numero||""} ${part.local||""} vs ${part.visita||""}</span><span class="prono-box ${pronoNuevo}" style="width:34px;height:34px;font-size:22px;border-radius:10px;animation:none">${pronoNuevo}</span></div>
-          <div class="pp-total"><span>Total</span><span>$${Number(mp.monto||0).toLocaleString("es-AR")}</span></div>
-        </div>
-        <button class="btn btn-p btn-lg" id="btn-pp-ok" onclick="aprobarPagoPrueba('${mp.cambioId}')">✓ Aprobar pago de prueba</button>
-        <button class="btn btn-s" style="width:100%;margin-top:8px" onclick="this.closest('.modal-bg').remove();toast('Pago cancelado: tu pronóstico no cambió')">Cancelar</button>
-      </div>`);
-    document.body.appendChild(m);
-    return;
-  }
-  if(mp.ok&&(mp.initPoint||mp.sandboxUrl)){
-    window.location.href=mp.initPoint||mp.sandboxUrl;
-  }else{
-    toast("❌ Error MP: "+(mp.error||"No se pudo crear el pago"));
-    document.querySelector(".modal-bg")?.remove();
-  }
+  document.querySelector(".modal-bg")?.remove();
+  if(!r.ok){toast("❌ "+r.error);return;}
+  const part=(window._parts||[]).find(function(x){return x.id===pid;})||{};
+  modalTransferencia({titulo:"Cambio #"+r.numeroCambio,concepto:`#${part.numero||""} ${part.local||""} vs ${part.visita||""}: pasa a ${pronoNuevo}`,monto:r.monto,fechaId:fid,
+    enviar:async function(img){return api("enviarComprobanteCambio",{cambioId:r.cambioId,imagen:img});},
+    listo:function(res){toast("✅ Cambio aplicado. El pago queda en revisión",4500);if(App.screen==="jugar")loadJugar(App.ctx);}});
 };
 
 // Pago simulado (modo prueba, sin MercadoPago)
@@ -3304,11 +3356,11 @@ async function loadPozosInline(fechaId){
 window.showCrearFecha=async function(){
   window._reglasSelAdmin=new Set();
   const reglasHTML=TODAS_LAS_REGLAS.map(function(r){return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer"><input type="checkbox" value="${r.codigo}" style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/><div><div style="font-size:17px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:14px">+${r.pts}pts</span></div></div></label>`;}).join("");
-  const m=mkModal("Nueva fecha",`<div class="fg"><div class="ig"><label class="lbl">Nombre</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div><div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="nfp" type="datetime-local"/></div><div class="ig"><label class="lbl">Descripción</label><input class="inp" id="nfd"/></div><div class="ig"><label class="lbl">🔒 Código de grupo cerrado (opcional)</label><input class="inp" id="nfc" placeholder="Ej: AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Quien tenga este código entra a la fecha sin pagar. Dejalo vacío para una fecha abierta con pago.</div></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" onclick="crearFecha()">Crear fecha</button></div>`);
+  const m=mkModal("Nueva fecha",`<div class="fg"><div class="ig"><label class="lbl">Nombre</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div><div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="nfp" type="datetime-local"/></div><div class="ig"><label class="lbl">Descripción</label><input class="inp" id="nfd"/></div><div class="ig"><label class="lbl">🔒 Código de grupo cerrado (opcional)</label><input class="inp" id="nfc" placeholder="Ej: AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Quien tenga este código entra a la fecha sin pagar. Dejalo vacío para una fecha abierta con pago.</div></div><div class="g2c"><div class="ig"><label class="lbl">🏦 Alias o CVU (opcional)</label><input class="inp" id="nfa" placeholder="Usa el general si está vacío"/></div><div class="ig"><label class="lbl">Titular</label><input class="inp" id="nft"/></div></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" onclick="crearFecha()">Crear fecha</button></div>`);
   document.body.appendChild(m);
 };
 window.crearFecha=async function(){
-  const r=await api("adminCrearFecha",{nombre:document.getElementById("nfn")?.value,liga:document.getElementById("nfl")?.value,plazoLimite:document.getElementById("nfp")?.value,descripcion:document.getElementById("nfd")?.value,codigoGrupo:document.getElementById("nfc")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
+  const r=await api("adminCrearFecha",{nombre:document.getElementById("nfn")?.value,liga:document.getElementById("nfl")?.value,plazoLimite:document.getElementById("nfp")?.value,descripcion:document.getElementById("nfd")?.value,codigoGrupo:document.getElementById("nfc")?.value||"",pagoAlias:document.getElementById("nfa")?.value||"",pagoTitular:document.getElementById("nft")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
   document.querySelector(".modal-bg")?.remove();
   if(r.ok){toast("✅ Fecha creada");loadAdminFechas();}else toast("❌ "+r.error);
 };
@@ -3318,12 +3370,12 @@ window.showEditarFecha=function(fechaId){
   window._reglasSelAdmin=new Set(reglasActuales);
   const reglasHTML=TODAS_LAS_REGLAS.map(function(r){const checked=reglasActuales.includes(r.codigo)?"checked":"";return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer"><input type="checkbox" value="${r.codigo}" ${checked} style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/><div><div style="font-size:17px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:14px">+${r.pts}pts</span></div></div></label>`;}).join("");
   let plazoFmt="";if(f.plazoLimite){try{const d=new Date(f.plazoLimite);const offset=d.getTimezoneOffset();const local=new Date(d.getTime()-offset*60000);plazoFmt=local.toISOString().slice(0,16);}catch(e){}}
-  const m=mkModal("✏️ Editar — "+(f.nombre||"Fecha"),`<div class="fg"><div class="ig"><label class="lbl">Nombre</label><input class="inp" id="ef-nom" value="${f.nombre||""}"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="ef-lig" value="${f.liga||""}"/></div><div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="ef-pla" type="datetime-local" value="${plazoFmt}"/></div><div class="ig"><label class="lbl">🔒 Código de grupo cerrado (opcional)</label><input class="inp" id="ef-cod" value="${f.codigoGrupo||""}" placeholder="Ej: AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Quien tenga este código entra a la fecha sin pagar. Dejalo vacío para una fecha abierta con pago.</div></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" id="btn-guardar-fecha" onclick="guardarEditarFecha('${fechaId}')">Guardar cambios</button></div>`);
+  const m=mkModal("✏️ Editar — "+(f.nombre||"Fecha"),`<div class="fg"><div class="ig"><label class="lbl">Nombre</label><input class="inp" id="ef-nom" value="${f.nombre||""}"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="ef-lig" value="${f.liga||""}"/></div><div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="ef-pla" type="datetime-local" value="${plazoFmt}"/></div><div class="ig"><label class="lbl">🔒 Código de grupo cerrado (opcional)</label><input class="inp" id="ef-cod" value="${f.codigoGrupo||""}" placeholder="Ej: AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Quien tenga este código entra a la fecha sin pagar. Dejalo vacío para una fecha abierta con pago.</div></div><div class="g2c"><div class="ig"><label class="lbl">🏦 Alias o CVU (opcional)</label><input class="inp" id="ef-pa" value="${f.pagoAlias||""}" placeholder="Usa el general si está vacío"/></div><div class="ig"><label class="lbl">Titular</label><input class="inp" id="ef-pt" value="${f.pagoTitular||""}"/></div></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" id="btn-guardar-fecha" onclick="guardarEditarFecha('${fechaId}')">Guardar cambios</button></div>`);
   document.body.appendChild(m);
 };
 window.guardarEditarFecha=async function(fechaId){
   const btn=document.getElementById("btn-guardar-fecha");if(btn){btn.textContent="Guardando...";btn.disabled=true;}
-  const r=await api("adminEditarFecha",{fechaId,nombre:document.getElementById("ef-nom")?.value,liga:document.getElementById("ef-lig")?.value,plazoLimite:document.getElementById("ef-pla")?.value,codigoGrupo:document.getElementById("ef-cod")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
+  const r=await api("adminEditarFecha",{fechaId,nombre:document.getElementById("ef-nom")?.value,liga:document.getElementById("ef-lig")?.value,plazoLimite:document.getElementById("ef-pla")?.value,codigoGrupo:document.getElementById("ef-cod")?.value||"",pagoAlias:document.getElementById("ef-pa")?.value||"",pagoTitular:document.getElementById("ef-pt")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
   document.querySelector(".modal-bg")?.remove();
   if(r.ok){toast("✅ Fecha actualizada");loadAdminFechas();}else toast("❌ "+r.error);
 };
@@ -3486,7 +3538,7 @@ function renderReglamento(){
         <tr><td>1.º</td><td>20% del monto del pozo</td><td>$4.000</td></tr>
         <tr><td>2.º</td><td>25% del monto del pozo</td><td>$5.000</td></tr>
         <tr><td>3.º</td><td>30% del monto del pozo</td><td>$6.000</td></tr></tbody></table>
-      <ul class="rg-ul"><li>La plata de los cambios va al pozo (75% al premio).</li><li>Si el pago llega con el partido ya cerrado, el cambio no se aplica y se te devuelve el pago.</li></ul>
+      <ul class="rg-ul"><li>Pagás por transferencia y subís el comprobante: el cambio se aplica en el momento.</li><li>La plata de los cambios va al pozo (75% al premio).</li><li>Si el administrador rechaza el comprobante, tu pronóstico vuelve al anterior.</li></ul>
     </section>
 
     <section class="rg-sec" id="rg-3"><h2>Reglas especiales</h2>
@@ -3511,7 +3563,7 @@ function renderReglamento(){
     </section>
 
     <section class="rg-sec" id="rg-6"><h2>Inscripción</h2>
-      <ul class="rg-ul"><li>Te podés inscribir hasta el cierre de la fecha.</li><li>Podés anotarte en varios pozos de la misma fecha; cada uno se juega por separado.</li><li>Formas de entrar: pago con MercadoPago, aprobación del administrador o código de grupo cerrado.</li></ul>
+      <ul class="rg-ul"><li>Te podés inscribir hasta el cierre de la fecha.</li><li>Podés anotarte en varios pozos de la misma fecha; cada uno se juega por separado.</li><li>Formas de entrar: transferencia al alias de la fecha subiendo el comprobante (jugás apenas lo subís y el administrador lo aprueba después) o código de grupo cerrado.</li><li>Si el comprobante se rechaza, se borran tus pronósticos de ese pozo y te avisamos el motivo.</li></ul>
     </section>
   </div>`;
 }
@@ -3531,16 +3583,39 @@ window.cambiarEstado=async(id,est)=>{if(!confirm(`¿${est==="Suspendido"?"Suspen
 
 /* ══ ADMIN PAGOS ═════════════════════════════════════════════ */
 async function loadPagos(){
-  const r=await api("adminGetInscripcionesPendientes"),el=document.getElementById("apl");if(!el)return;
-  if(!r.ok){el.innerHTML=errBox(r.error);return;}
-  if(!r.pendientes?.length){el.innerHTML=emptyBox("✅","Sin pagos pendientes");return;}
-  el.innerHTML=r.pendientes.map(p=>`<div class="pago-card">
-    <div style="flex:1;min-width:0"><div style="font-size:18px;font-weight:600">${p.usuario||p.userId}</div><div style="font-size:14px;color:var(--txt3)">$${(p.monto||0).toLocaleString("es-AR")} · ${new Date(p.fechaInsc).toLocaleDateString("es-AR")}</div></div>
-    <span class="bdg bred">Pendiente</span>
-    <button class="btn btn-p" style="padding:6px 14px;font-size:16px" onclick="habilitarPago('${p.id}')">✓ Habilitar</button>
-  </div>`).join("");
+  const el=document.getElementById("apl");if(!el)return;
+  const r=await api("adminGetPagos");if(!r.ok){el.innerHTML=errBox(r.error);return;}
+  const P=r.pagos||[];
+  el.innerHTML=`
+    <div class="card pg-datos">
+      <div class="pf-tit">Datos para transferir</div>
+      <p class="pg-nota">Es lo que ven los jugadores al pagar. Podés poner otros en cada fecha (Editar fecha).</p>
+      <div class="pg-form"><div class="ig"><label class="lbl">Alias o CVU</label><input class="inp" id="pg-alias" value="${r.alias||""}" placeholder="tu.alias.mp"/></div>
+      <div class="ig"><label class="lbl">Titular</label><input class="inp" id="pg-tit" value="${r.titular||""}" placeholder="Nombre y apellido"/></div>
+      <div class="ig"><label class="lbl">CVU (opcional)</label><input class="inp" id="pg-cvu" value="${r.cvu||""}" inputmode="numeric"/></div>
+      <div class="ig"><label class="lbl">Link de Mercado Pago (opcional)</label><input class="inp" id="pg-link" value="${r.link||""}" placeholder="https://mpago.la/..."/></div>
+      <button class="btn btn-p" onclick="guardarDatosPago()">Guardar</button></div>
+    </div>
+    <div class="pf-tit" style="margin:18px 0 10px">Comprobantes para revisar <span class="tt-n">${P.length}</span></div>
+    ${P.length?`<div class="pg-list">${P.map(function(p){return`<div class="pg-card">
+      ${p.comprobante?`<a href="${p.comprobante}" target="_blank" rel="noopener" class="pg-img"><img src="${p.comprobante}" alt="Comprobante"></a>`:`<div class="pg-img vacio">Sin imagen</div>`}
+      <div class="pg-info">
+        <span class="bdg ${p.tipo==="insc"?"bg":"bpur"}">${p.tipo==="insc"?"Inscripción":"Cambio"}</span>
+        <div class="pg-monto">$${Number(p.monto||0).toLocaleString("es-AR")}</div>
+        <div class="pg-quien"><b>${p.usuario||""}</b> · ${p.nombre||""}${p.telefono?` · ${p.telefono}`:""}</div>
+        <div class="pg-conc">${p.concepto}</div>
+        <div class="pg-hora">Enviado ${p.enviado?_fmtH(new Date(p.enviado)):""}</div>
+        <div class="pg-acts"><button class="btn btn-p" onclick="resolverPago('${p.tipo}','${p.id}',true)">✓ Aprobar</button><button class="btn btn-d" onclick="resolverPago('${p.tipo}','${p.id}',false)">✗ Rechazar</button></div>
+      </div></div>`;}).join("")}</div>`:emptyBox("✅","No hay comprobantes para revisar")}`;
 }
-window.habilitarPago=async id=>{if(!confirm("¿Habilitar esta inscripción?"))return;const r=await api("adminHabilitarManual",{inscripcionId:id});toast(r.ok?"✅ "+r.mensaje:"❌ "+r.error);if(r.ok)loadPagos();};
+window.guardarDatosPago=async function(){const r=await api("adminGuardarDatosPago",{alias:document.getElementById("pg-alias")?.value,titular:document.getElementById("pg-tit")?.value,cvu:document.getElementById("pg-cvu")?.value,link:document.getElementById("pg-link")?.value});toast(r.ok?"✅ Datos guardados":"❌ "+r.error);};
+window.resolverPago=async function(tipo,id,ok){
+  let motivo="";
+  if(!ok){motivo=prompt("¿Por qué lo rechazás? (le llega al jugador)","No encontré la transferencia");if(motivo===null)return;}
+  else if(!confirm("¿Aprobar este pago?"))return;
+  const r=await api("adminResolverPago",{tipo,id,aprobar:ok,motivo});
+  toast(r.ok?(ok?"✅ Pago aprobado":"Pago rechazado"):"❌ "+r.error);loadPagos();
+};
 
 /* ══ IMPORTAR ════════════════════════════════════════════════ */
 function renderImportar(){return`<div class="su">
@@ -3703,6 +3778,8 @@ function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
   if(App.user?.rol==="Admin"){
     go("admin-res");
   } else go("fechas");
+  setTimeout(procesarVueltaPago,600);
+  setTimeout(mostrarAvisos,1200);
 }
 
 /* ══ HELPERS ═════════════════════════════════════════════════ */
@@ -3711,37 +3788,44 @@ function errBox(msg){return`<div class="err-box">⚠ ${msg}</div>`;}
 function emptyBox(icon,msg){return`<div class="empty"><div class="ei">${icon}</div><p>${msg}</p></div>`;}
 function mkModal(title,body){const m=document.createElement("div");m.className="modal-bg";m.onclick=e=>{if(e.target===m)m.remove();};m.innerHTML=`<div class="modal-box"><div class="modal-head"><div class="modal-title">${title}</div><div class="modal-close" onclick="this.closest('.modal-bg').remove()">×</div></div>${body}</div>`;return m;}
 
+// ── VUELTA DE MERCADOPAGO ─────────────────────────────────
+// Se guarda al cargar y se procesa recién cuando la app recuperó la sesión del jugador.
 (()=>{
-  const params=new URLSearchParams(location.search);
-  const p=params.get("pago");
-  const c=params.get("cambio");
-  const cambioId=params.get("id");
-  
-  if(p||c)history.replaceState({},"",location.pathname);
-  
-  // Manejo de pago de inscripción
-  if(p==="ok")toast("✅ ¡Pago aprobado! Podés jugar");
-  else if(p==="error")toast("❌ Pago no procesado");
-  else if(p==="pendiente")toast("⏳ Pago pendiente");
-  
-  // Manejo de pago de cambio
-  if(c==="ok"&&cambioId){
-    toast("✅ ¡Cambio pagado! Ejecutando...");
-    // Ejecutar el cambio automáticamente
-    setTimeout(async function(){
-      const r=await api("ejecutarCambio",{cambioId:cambioId});
-      if(r.ok){
-        toast("✅ "+r.mensaje);
-      }else{
-        toast("❌ "+r.error);
-      }
-    },1000);
-  }else if(c==="error"){
-    toast("❌ Pago de cambio no procesado");
-  }else if(c==="pendiente"){
-    toast("⏳ Pago de cambio pendiente");
-  }
+  const q=new URLSearchParams(location.search);
+  const v={pago:q.get("pago"),insc:q.get("insc"),cambio:q.get("cambio"),id:q.get("id")};
+  if(v.pago||v.cambio){window._vueltaPago=v;history.replaceState({},"",location.pathname);}
 })();
+async function mostrarAvisos(){
+  const r=await api("getAvisos");if(!r.ok||!r.avisos?.length)return;
+  const m=mkModal(r.avisos.length>1?"Novedades":"Novedad",`<div class="av-list">${r.avisos.map(function(a){return`<div class="av-item ${a.tipo}">${a.texto}</div>`;}).join("")}</div><button class="btn btn-p btn-lg" style="margin-top:14px" onclick="this.closest('.modal-bg').remove()">Entendido</button>`);
+  document.body.appendChild(m);
+}
+async function procesarVueltaPago(){
+  const v=window._vueltaPago;if(!v)return;window._vueltaPago=null;
+  const esperar=function(ms){return new Promise(function(r){setTimeout(r,ms);});};
+  if(v.pago==="ok"&&v.insc){
+    toast("⏳ Verificando tu pago con MercadoPago...",6000);
+    for(let i=0;i<6;i++){
+      const r=await api("verificarPagoInscripcion",{inscripcionId:v.insc});
+      if(r.ok&&r.aprobado){toast("✅ ¡Pago aprobado! Ya podés pronosticar",4000);setTimeout(function(){go("jugar",{fechaId:r.fechaId,pozoId:r.pozoId});},800);return;}
+      if(!r.ok){toast("❌ "+r.error,5000);return;}
+      await esperar(2500);
+    }
+    toast("⏳ MercadoPago todavía no confirmó el pago. Apenas lo confirme vas a quedar habilitado solo.",6000);
+  }else if(v.pago==="pendiente")toast("⏳ Tu pago quedó pendiente. Apenas MercadoPago lo apruebe vas a quedar habilitado.",6000);
+  else if(v.pago==="error")toast("❌ El pago no se completó. Podés intentarlo de nuevo.",5000);
+  if(v.cambio==="ok"&&v.id){
+    toast("⏳ Verificando el pago del cambio...",6000);
+    for(let i=0;i<6;i++){
+      const r=await api("ejecutarCambio",{cambioId:v.id});
+      if(r.ok){toast("✅ "+(r.mensaje||"Cambio aplicado"),4000);if(App.screen==="jugar")loadJugar(App.ctx);return;}
+      if(!/todavía no vemos el pago/i.test(r.error||"")){toast("❌ "+r.error,6000);return;}
+      await esperar(2500);
+    }
+    toast("⏳ MercadoPago todavía no confirmó el pago del cambio. Apenas lo confirme se aplica solo.",6000);
+  }else if(v.cambio==="pendiente")toast("⏳ El pago del cambio quedó pendiente.",5000);
+  else if(v.cambio==="error")toast("❌ El pago del cambio no se completó.",5000);
+}
 
 // ── REALTIME ─────────────────────────────────────────────────
 let _realtimeChannel = null;
