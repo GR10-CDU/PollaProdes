@@ -1972,6 +1972,9 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
 .cod-tx small{font-size:13px;color:var(--ink-2)}
 .cod-in{display:flex;gap:8px;flex:1;min-width:240px;max-width:380px}
 .cod-in .inp{flex:1;font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em;text-align:center}
+.pd-mio:empty{display:none}
+.pd-mio .pcell{width:28px;height:28px;font-size:15px;border-radius:8px;margin-top:2px}
+.cta-top .cta-t{white-space:normal;overflow:visible;text-overflow:clip}
 
 </style>
 </head>
@@ -2556,7 +2559,7 @@ function partidoDet(p,v,etiqueta){
         <span class="pd-mid">${centro}</span>
         <span class="pd-eq vis">${esc(p.visitaLogo)}<b>${p.visita}</b></span>
       </div>
-      <div class="pd-a-side der"><span class="pd-meta">${dia}</span><span class="pd-meta">${jugado?"Final":hora}</span></div>
+      <div class="pd-a-side der"><span class="pd-meta">${dia}</span><span class="pd-meta">${jugado?"Final":hora}</span><span class="pd-mio" id="pdm-${p.id}"></span></div>
     </div>`;
 }
 
@@ -2651,6 +2654,7 @@ async function loadPozos(fid){
   <div style="margin-top:10px"><button class="btn btn-s" style="width:100%;padding:11px;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--bdr-l2)" onclick="toggleGrupo()">🔒 <span style="font-size:17px;font-weight:600">Tengo código de grupo cerrado</span></button><div id="gform" style="display:none;margin-top:10px;background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--r);padding:16px"><p style="font-size:17px;font-weight:600;margin-bottom:10px">Ingresá tu código</p><div style="display:flex;gap:8px"><input class="inp" id="gcod" placeholder="AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" onkeydown="if(event.key==='Enter')buscarGrupo()" style="flex:1;font-family:var(--ff);font-size:26px;font-weight:800;letter-spacing:4px;text-align:center"/><button class="btn btn-p" style="padding:10px 16px" onclick="buscarGrupo()">Buscar</button></div><div id="gres" style="margin-top:10px"></div></div></div>`;
   const ya=r.pozos.find(p=>p.yaInscripto);
   premioEnCabecera(r.pozos);
+  if(ya)setTimeout(function(){mejorarCtaJugar(fid,ya.id);},0);
   if(conCodigo&&!ya){const gf=document.getElementById("gform");if(gf){gf.style.display="block";gf.previousElementSibling&&(gf.previousElementSibling.style.display="none");const t=gf.querySelector("p");if(t)t.innerHTML="🔒 Esta fecha es con código. Ingresalo para jugar";}}
   if(ya){const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=`<button class="btn btn-p btn-lg" onclick="go('jugar',{fechaId:'${fid}',pozoId:'${ya.id}'})">▶ Jugar fecha →</button>`;}}
   const top=document.getElementById("pjtop");
@@ -4512,6 +4516,7 @@ function renderPozoEmpresa(fid,pozos){
   const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=btn;}
   const top=document.getElementById("pjtop");
   if(top)top.innerHTML=`<div class="cta-top"><div class="cta-txt"><div class="cta-k">${ya?"Ya estás adentro":"Gratis para "+escH(emp.nombre)}</div><div class="cta-t">${ya?"Seguí con tus pronósticos":"Entrá y pronosticá"}</div></div>${btn}</div>`;
+  if(ya)mejorarCtaJugar(fid,ya.id,true);
 }
 window.entrarEmpresa=async function(fid){
   const r=await api("jugarEmpresa",{fechaId:fid});
@@ -4944,6 +4949,24 @@ window.compartirFecha=function(id){
     <p style="font-size:14px;color:var(--txt3)">O que escriban el código <b style="font-family:var(--ff);font-size:20px;letter-spacing:.1em;color:var(--txt)">${escH(f.codigoGrupo||"")}</b> en Fechas.</p></div>`);
   document.body.appendChild(m);
 };
+
+
+// Si ya pronosticó: mostrar lo que puso en cada partido y ofrecer "Modificar" (mientras se pueda)
+async function mejorarCtaJugar(fid,pozoId,empresa){
+  const r=await api("getMiFecha",{fechaId:fid,pozoId:pozoId});if(!r.ok)return;
+  const pr=r.pronos||[],total=r.totalPartidos||pr.length,n=pr.filter(function(x){return x.pronostico;}).length;
+  pr.forEach(function(x){const e=document.getElementById("pdm-"+x.partidoId);if(e&&x.pronostico)e.innerHTML=`<span class="pcell ${x.pronostico}${x.acertado===true?" ok":x.acertado===false?" no":""}" title="Tu pronóstico">${x.pronostico}</span>`;});
+  if(!n)return;
+  const hasta=r.cambiosLibresHasta?new Date(r.cambiosLibresHasta):null,libre=hasta&&hasta>new Date();
+  const fmt=function(d){return d.toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","").replace(",", " a las");};
+  const falta=Math.max(0,total-n);
+  const titulo=falta?`Completar pronósticos`:libre?`✏️ Modificar pronósticos`:`Ver mis pronósticos`;
+  const k=falta?`Pusiste ${n} de ${total} · te falta${falta!==1?"n":""} ${falta}`:`Pusiste ${n} de ${total}`;
+  const t=libre?`Podés cambiarlos gratis hasta el ${fmt(hasta)}`:(r.cambiosRestantes>0?`Te quedan ${r.cambiosRestantes} cambio${r.cambiosRestantes!==1?"s":""} ${r.cambiosGratis||empresa?"gratis":"pagos"} · hasta 1 hora antes de cada partido`:"Ya no quedan cambios");
+  const go_=`go('jugar',{fechaId:'${fid}',pozoId:'${pozoId}'})`;
+  const top=document.getElementById("pjtop");if(top)top.innerHTML=`<div class="cta-top"><div class="cta-txt"><div class="cta-k">${k}</div><div class="cta-t">${t}</div></div><button class="btn btn-p btn-lg" onclick="${go_}">${titulo} →</button></div>`;
+  const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=`<button class="btn btn-p btn-lg" onclick="${go_}">${titulo} →</button>`;}
+}
 
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
