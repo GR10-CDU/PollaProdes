@@ -1448,6 +1448,124 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
 
+/* ═══ LANDING (portada) ══════════════════════════════════════ */
+#landing{position:fixed;inset:0;z-index:65;overflow-y:auto;overflow-x:hidden;background:var(--hero-b);color:#fff;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+#landing[hidden]{display:none}
+#landing .ld-pitch{position:absolute;inset:0;pointer-events:none;background:var(--pitch) center/min(1300px,160vw) no-repeat;opacity:.07;transform:perspective(900px) rotateX(60deg) translateY(22%) scale(1.5);transform-origin:50% 100%}
+#landing{--pitch:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400' fill='none' stroke='white' stroke-width='1.5'%3E%3Crect x='20' y='20' width='560' height='360' rx='4'/%3E%3Cline x1='300' y1='20' x2='300' y2='380'/%3E%3Ccircle cx='300' cy='200' r='58'/%3E%3Ccircle cx='300' cy='200' r='3' fill='white'/%3E%3Crect x='20' y='110' width='84' height='180'/%3E%3Crect x='20' y='158' width='30' height='84'/%3E%3Crect x='496' y='110' width='84' height='180'/%3E%3Crect x='550' y='158' width='30' height='84'/%3E%3Cpath d='M104 165a44 44 0 0 1 0 70M496 165a44 44 0 0 0 0 70'/%3E%3C/svg%3E")}
+.ld-hero{position:relative;min-height:100svh;display:flex;flex-direction:column;overflow:hidden;isolation:isolate;
+  background:radial-gradient(70% 55% at 50% -5%,var(--hero-glow),transparent 70%),radial-gradient(50% 40% at 100% 100%,color-mix(in srgb,var(--hero-glow) 45%,transparent),transparent 70%),linear-gradient(180deg,var(--hero-a),var(--hero-b) 70%)}
+.ld-hero .ld-pitch{z-index:-1}
+.ld-glow{position:absolute;left:50%;top:38%;width:min(900px,120vw);height:min(900px,120vw);transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--hero-accent) 18%,transparent),transparent 62%);z-index:-1;animation:ldPulse 6s ease-in-out infinite}
+@keyframes ldPulse{0%,100%{opacity:.7;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}}
+.ld-floats{position:absolute;inset:0;z-index:-1;pointer-events:none}
+.ld-floats span{position:absolute;display:grid;place-items:center;width:64px;height:64px;border-radius:18px;font-family:var(--ff);font-size:38px;font-weight:800;color:rgba(255,255,255,.75);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(2px);animation:ldFloat 9s ease-in-out infinite}
+.ld-floats span:nth-child(1){left:7%;top:24%;animation-delay:0s}
+.ld-floats span:nth-child(2){right:9%;top:18%;animation-delay:-2s;width:54px;height:54px;font-size:30px}
+.ld-floats span:nth-child(3){left:13%;bottom:22%;animation-delay:-4s;width:48px;height:48px;font-size:26px}
+.ld-floats span:nth-child(4){right:14%;bottom:26%;animation-delay:-6s}
+.ld-floats span:nth-child(5){left:44%;top:12%;animation-delay:-3s;width:40px;height:40px;font-size:22px;opacity:.6}
+.ld-floats span:nth-child(6){right:36%;bottom:12%;animation-delay:-5s;width:44px;height:44px;font-size:24px;opacity:.6}
+.ld-floats span:nth-child(odd){background:color-mix(in srgb,var(--hero-accent) 16%,transparent);border-color:color-mix(in srgb,var(--hero-accent) 35%,transparent);color:var(--hero-accent)}
+@keyframes ldFloat{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-22px) rotate(6deg)}}
+.ld-nav{display:flex;align-items:center;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top)) clamp(18px,4vw,48px) 0}
+.ld-brand{display:flex;align-items:center;gap:12px}
+.ld-brand img{border-radius:12px;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.ld-brand span{font-family:var(--ff);font-size:26px;font-weight:800;letter-spacing:.06em}
+.ld-brand b{color:var(--hero-accent);font-weight:800}
+.ld-ingresar{height:44px;padding:0 20px;border-radius:22px;font-size:15px;font-weight:700;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);transition:background .2s}
+.ld-ingresar:hover{background:rgba(255,255,255,.16)}
+.ld-hero-in{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px clamp(18px,5vw,48px) 90px;max-width:1000px;margin:0 auto}
+.ld-kicker{display:inline-flex;align-items:center;gap:10px;height:34px;padding:0 16px;border-radius:17px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.85);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);animation:su .7s var(--ease-out) both}
+.ld-kicker i{width:8px;height:8px;border-radius:50%;background:var(--hero-accent);box-shadow:0 0 0 0 var(--hero-accent);animation:livedot 1.6s infinite}
+.ld-title{font-family:var(--ff);font-size:clamp(56px,11vw,132px);font-weight:800;line-height:.88;letter-spacing:.005em;text-transform:uppercase;margin:24px 0 18px;animation:su .8s var(--ease-out) .1s both}
+.ld-title span{background:linear-gradient(180deg,#fff 10%,var(--hero-accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ld-sub{font-size:clamp(16px,2.2vw,20px);line-height:1.55;color:rgba(255,255,255,.72);max-width:640px;animation:su .8s var(--ease-out) .2s both}
+.ld-sub b{color:#fff}
+.ld-cta{position:relative;display:inline-flex;align-items:center;gap:14px;height:72px;padding:0 36px;margin-top:34px;border-radius:36px;font-family:var(--ff);font-size:clamp(24px,3vw,30px);font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--hero-b);background:var(--hero-accent);box-shadow:0 0 0 0 color-mix(in srgb,var(--hero-accent) 50%,transparent),0 18px 44px -10px color-mix(in srgb,var(--hero-accent) 80%,transparent);animation:su .8s var(--ease-out) .3s both,ldCta 2.6s ease-in-out 1.2s infinite;transition:transform .2s var(--ease-out)}
+.ld-cta svg{width:28px;height:28px;transition:transform .25s var(--ease-out)}
+.ld-cta:hover{transform:translateY(-3px) scale(1.02)}
+.ld-cta:hover svg{transform:translateX(5px)}
+@keyframes ldCta{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--hero-accent) 45%,transparent),0 18px 44px -10px color-mix(in srgb,var(--hero-accent) 80%,transparent)}60%{box-shadow:0 0 0 16px transparent,0 18px 44px -10px color-mix(in srgb,var(--hero-accent) 80%,transparent)}}
+.ld-cta-sub{margin-top:14px;font-size:13.5px;color:rgba(255,255,255,.55);animation:su .8s var(--ease-out) .35s both}
+.ld-live{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin-top:44px;width:min(820px,100%);border-radius:22px;overflow:hidden;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);animation:su .8s var(--ease-out) .45s both}
+.ld-live[hidden]{display:none}
+.ld-live-item{display:flex;flex-direction:column;gap:4px;padding:16px 12px;background:color-mix(in srgb,var(--hero-b) 80%,transparent);backdrop-filter:blur(8px)}
+.ld-live-item small{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+.ld-live-item b{font-family:var(--ff);font-size:26px;font-weight:800;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ld-live-item b.oro{color:#FFD268}
+.ld-scroll{position:absolute;left:50%;bottom:22px;width:26px;height:42px;margin-left:-13px;border-radius:13px;border:2px solid rgba(255,255,255,.3)}
+.ld-scroll i{position:absolute;left:50%;top:8px;width:4px;height:8px;margin-left:-2px;border-radius:2px;background:#fff;animation:ldScroll 1.8s ease-in-out infinite}
+@keyframes ldScroll{0%{opacity:0;transform:translateY(0)}40%{opacity:1}100%{opacity:0;transform:translateY(14px)}}
+/* Frase */
+.ld-quote{position:relative;max-width:1000px;margin:0 auto;padding:clamp(70px,10vw,130px) clamp(22px,6vw,60px);text-align:center}
+.ld-quote-mark{font-family:Georgia,serif;font-size:clamp(120px,18vw,220px);line-height:.6;color:var(--hero-accent);opacity:.35;height:.45em}
+.ld-quote blockquote{font-size:clamp(22px,3.4vw,38px);line-height:1.35;font-weight:500;letter-spacing:-.01em;color:rgba(255,255,255,.82)}
+.ld-quote strong{display:block;margin-top:18px;font-family:var(--ff);font-size:clamp(34px,6vw,68px);font-weight:800;line-height:1;text-transform:uppercase;letter-spacing:.01em;color:#fff}
+/* Secciones */
+.ld-sec{position:relative;max-width:1180px;margin:0 auto;padding:clamp(56px,8vw,96px) clamp(18px,4vw,40px)}
+.ld-dark{max-width:none;background:linear-gradient(180deg,transparent,rgba(0,0,0,.25),transparent)}
+.ld-dark>*{max-width:1180px;margin-left:auto;margin-right:auto}
+.ld-sec-head{text-align:center;margin-bottom:38px}
+.ld-k{display:inline-block;font-size:13px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--hero-accent);margin-bottom:10px}
+.ld-sec-head h2{font-family:var(--ff);font-size:clamp(36px,5.5vw,64px);font-weight:800;line-height:.95;text-transform:uppercase}
+.ld-steps{list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;counter-reset:s}
+.ld-steps li{position:relative;padding:26px 22px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+.ld-n{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;margin-bottom:16px;font-family:var(--ff);font-size:26px;font-weight:800;color:var(--hero-b);background:var(--hero-accent)}
+.ld-steps b{display:block;font-family:var(--ff);font-size:26px;font-weight:800;text-transform:uppercase;margin-bottom:6px}
+.ld-steps p{font-size:15px;line-height:1.5;color:rgba(255,255,255,.66)}
+.ld-pts{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.ld-pt{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:28px 18px;border-radius:24px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+.ld-pt .t-tag{height:26px;font-size:13px;padding:0 9px}
+.ld-pt b{font-family:var(--ff);font-size:84px;font-weight:800;line-height:.9}
+.ld-pt small{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.ld-pt p{font-size:14px;color:rgba(255,255,255,.6);line-height:1.45;margin-top:4px}
+.ld-pt.polla{background:linear-gradient(180deg,rgba(255,200,80,.16),rgba(255,255,255,.03));border-color:rgba(255,200,80,.35)}.ld-pt.polla b{color:#FFD268}
+.ld-pt.tole{background:linear-gradient(180deg,rgba(255,122,31,.16),rgba(255,255,255,.03));border-color:rgba(255,122,31,.4)}.ld-pt.tole b{color:#FF8A3D}
+.ld-pt .t-tag.t-s{background:rgba(255,255,255,.1);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.3)}
+.ld-feats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.ld-feat{padding:24px 22px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);transition:transform .3s var(--ease-out),border-color .3s}
+.ld-feat:hover{transform:translateY(-4px);border-color:color-mix(in srgb,var(--hero-accent) 40%,transparent)}
+.ld-feat.big{grid-column:span 4;display:grid;grid-template-columns:auto 1fr;column-gap:20px;align-items:center;background:linear-gradient(135deg,color-mix(in srgb,var(--hero-accent) 14%,transparent),rgba(255,255,255,.03))}
+.ld-feat.big .ld-feat-ic{grid-row:span 3;font-size:56px}
+.ld-feat-ic{font-size:34px;margin-bottom:10px}
+.ld-feat b{display:block;font-family:var(--ff);font-size:26px;font-weight:800;text-transform:uppercase;margin-bottom:6px}
+.ld-feat p{font-size:15px;line-height:1.5;color:rgba(255,255,255,.66)}
+.ld-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.ld-chips span{height:28px;padding:0 11px;border-radius:14px;display:inline-flex;align-items:center;font-size:12.5px;font-weight:800;color:#FFD268;background:rgba(255,200,80,.12);border:1px solid rgba(255,200,80,.3)}
+.ld-final{position:relative;overflow:hidden;isolation:isolate;text-align:center;padding:clamp(80px,12vw,150px) 22px;background:radial-gradient(60% 70% at 50% 100%,var(--hero-glow),transparent 70%)}
+.ld-final .ld-pitch{z-index:-1;opacity:.06}
+.ld-final h2{font-family:var(--ff);font-size:clamp(48px,9vw,110px);font-weight:800;line-height:.9;text-transform:uppercase}
+.ld-final h2 span{color:var(--hero-accent)}
+.ld-wa{display:inline-flex;align-items:center;gap:10px;margin-top:22px;height:48px;padding:0 20px;border-radius:24px;font-size:15px;font-weight:700;color:#fff;text-decoration:none;background:rgba(37,211,102,.14);border:1px solid rgba(37,211,102,.4);transition:background .2s}
+.ld-wa:hover{background:rgba(37,211,102,.24)}
+.ld-wa svg{width:22px;height:22px;color:#25D366}
+.ld-final .ld-cta{display:flex;margin:34px auto 0;width:fit-content}
+.ld-foot{display:flex;flex-direction:column;align-items:center;gap:14px;padding:36px 20px calc(30px + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,.1);text-align:center}
+.ld-foot-links{display:flex;gap:10px}
+.ld-foot-links button{height:40px;padding:0 16px;border-radius:20px;font-size:14px;font-weight:700;color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.18)}
+.ld-foot small{font-size:12.5px;color:rgba(255,255,255,.45)}
+.ld-rev{opacity:0;transform:translateY(26px);transition:opacity .7s var(--ease-out),transform .7s var(--ease-out)}
+.ld-rev.in{opacity:1;transform:none}
+@media(max-width:900px){.ld-steps,.ld-pts{grid-template-columns:1fr 1fr}.ld-feats{grid-template-columns:1fr 1fr}.ld-feat.big{grid-column:span 2}}
+@media(max-width:560px){
+  .ld-live{grid-template-columns:1fr 1fr}
+  .ld-steps,.ld-feats{grid-template-columns:1fr}.ld-feat.big{grid-column:auto;grid-template-columns:1fr}.ld-feat.big .ld-feat-ic{grid-row:auto;font-size:40px}
+  .ld-pt b{font-size:64px}
+  .ld-cta{height:64px;padding:0 26px}
+  .ld-brand span{font-size:22px}
+  .ld-floats span:nth-child(5),.ld-floats span:nth-child(6){display:none}
+}
+body:has(#landing:not([hidden])) #inst-banner{display:none}
+@media(max-width:560px){
+  .ld-kicker{font-size:11px;letter-spacing:.05em;padding:0 12px}
+  .ld-floats span{opacity:.35}
+  .ld-floats span:nth-child(1){left:-14px;top:30%}.ld-floats span:nth-child(2){right:-12px;top:14%}
+  .ld-floats span:nth-child(3){left:-10px;bottom:16%}.ld-floats span:nth-child(4){right:-14px;bottom:30%}
+  .ld-hero-in{padding-top:28px}
+}
+@media(prefers-reduced-motion:reduce){#landing *{animation:none!important;transition:none!important}.ld-rev{opacity:1;transform:none}}
+
 </style>
 </head>
 <body>
@@ -1512,6 +1630,91 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
 </div>
 <nav id="bn" aria-label="Menú"><div class="bn-wrap" id="bn-wrap"></div></nav>
 <div id="sl" style="display:none"></div>
+<div id="landing" hidden>
+  <!-- HERO -->
+  <header class="ld-hero">
+    <div class="ld-pitch" aria-hidden="true"></div>
+    <div class="ld-glow" aria-hidden="true"></div>
+    <div class="ld-floats" aria-hidden="true"><span>L</span><span>E</span><span>V</span><span>L</span><span>E</span><span>V</span></div>
+    <nav class="ld-nav">
+      <div class="ld-brand"><img src="icons/icon-192.png" alt="" width="40" height="40"><span>POLLA <b>PRODES</b></span></div>
+      <button class="ld-ingresar" onclick="landingIr('login')">Ingresar</button>
+    </nav>
+    <div class="ld-hero-in">
+      <div class="ld-kicker"><i></i> Temporada 2026 · El prode entre amigos</div>
+      <h1 class="ld-title">Demostrá que<br><span>sabés de fútbol.</span></h1>
+      <p class="ld-sub">Pronosticá <b>Local, Empate o Visitante</b> en cada partido de la fecha, sumá con las reglas especiales y llevate el pozo.</p>
+      <button class="ld-cta" onclick="landingIr('registro')"><span>Registrarse y jugar</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      <div class="ld-cta-sub">Gratis registrarse · Pagás solo el pozo en el que juegues</div>
+      <div class="ld-live" id="ld-live" hidden>
+        <div class="ld-live-item"><small>Próxima fecha</small><b id="ld-fecha">—</b></div>
+        <div class="ld-live-item"><small>Cierra en</small><b id="ld-cuenta">—</b></div>
+        <div class="ld-live-item"><small>Pozo para el ganador</small><b id="ld-pozo" class="oro">—</b></div>
+        <div class="ld-live-item"><small>Ya juegan</small><b id="ld-jug">—</b></div>
+      </div>
+    </div>
+    <div class="ld-scroll" aria-hidden="true"><i></i></div>
+  </header>
+
+  <!-- FRASE -->
+  <section class="ld-quote">
+    <div class="ld-quote-mark" aria-hidden="true">“</div>
+    <blockquote>Hay quienes sostienen que el fútbol no tiene nada que ver con la vida del hombre, con sus cosas más esenciales. Desconozco cuánto sabe esa gente de la vida. <strong>Pero de algo estoy seguro: no saben nada de fútbol.</strong></blockquote>
+  </section>
+
+  <!-- CÓMO SE JUEGA -->
+  <section class="ld-sec">
+    <div class="ld-sec-head"><span class="ld-k">Cómo se juega</span><h2>Cuatro pasos y a la cancha</h2></div>
+    <ol class="ld-steps">
+      <li><span class="ld-n">1</span><b>Registrate</b><p>Con tu teléfono y un PIN. Elegí tu escudo o tu foto.</p></li>
+      <li><span class="ld-n">2</span><b>Elegí tu pozo</b><p>Transferís, subís el comprobante y ya estás jugando.</p></li>
+      <li><span class="ld-n">3</span><b>Pronosticá</b><p>L, E o V en cada partido. Cambiás gratis hasta 1 hora antes del primero.</p></li>
+      <li><span class="ld-n">4</span><b>Ganá</b><p>El que más suma se lleva el pozo. En vivo, partido a partido.</p></li>
+    </ol>
+  </section>
+
+  <!-- PUNTOS -->
+  <section class="ld-sec ld-dark">
+    <div class="ld-sec-head"><span class="ld-k">Cada partido vale distinto</span><h2>No todos los goles pesan igual</h2></div>
+    <div class="ld-pts">
+      <div class="ld-pt"><span class="t-tag t-s">×1</span><b>1</b><small>Simple</small><p>El partido de todos los días.</p></div>
+      <div class="ld-pt"><span class="t-tag t-d">×2</span><b>2</b><small>Doble</small><p>Los que valen el doble.</p></div>
+      <div class="ld-pt polla"><span class="t-tag t-p">P</span><b>5</b><small>Polla</small><p>El partido de la fecha. Vale 5, siempre.</p></div>
+      <div class="ld-pt tole"><span class="t-tag t-tole">🔥</span><b>3</b><small>TOLE</small><p>Cuando el grupo está partido al medio, acertar vale 3.</p></div>
+    </div>
+  </section>
+
+  <!-- REGLAS + FEATURES -->
+  <section class="ld-sec">
+    <div class="ld-sec-head"><span class="ld-k">Más que un prode</span><h2>Reglas especiales, cara a cara y tabla en vivo</h2></div>
+    <div class="ld-feats">
+      <div class="ld-feat big">
+        <div class="ld-feat-ic">📏</div><b>8 reglas especiales</b>
+        <p>La Marea Roja, La Rachita, El Diego, La MK, Goles Son Amores, Lluvia de Goles, La Zapali, Empate Que Suma. Puntos extra para los que saben leer el partido.</p>
+        <div class="ld-chips"><span>LMR</span><span>LR</span><span>DIEGO</span><span>MK</span><span>GSA</span><span>LLDG</span><span>ZPL</span><span>EQS</span></div>
+      </div>
+      <div class="ld-feat"><div class="ld-feat-ic">⚔️</div><b>Cara a cara</b><p>Comparate con el puntero o con el Top 3 y mirá en qué partidos te podés despegar.</p></div>
+      <div class="ld-feat"><div class="ld-feat-ic">📊</div><b>Tabla en vivo</b><p>Cada gol mueve la tabla. Subís, bajás, y lo ves al instante.</p></div>
+      <div class="ld-feat"><div class="ld-feat-ic">🔄</div><b>Cambios</b><p>Gratis hasta el cierre. Después, 3 cambios más para salvar la fecha.</p></div>
+      <div class="ld-feat"><div class="ld-feat-ic">🔒</div><b>Grupos cerrados</b><p>Armá tu prode con amigos, la oficina o la familia con un código.</p></div>
+    </div>
+  </section>
+
+  <!-- CTA FINAL -->
+  <section class="ld-final">
+    <div class="ld-pitch" aria-hidden="true"></div>
+    <h2>¿Sabés de fútbol?<br><span>Demostralo.</span></h2>
+    <button class="ld-cta" onclick="landingIr('registro')"><span>Registrarse y jugar</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    <a class="ld-wa" id="ld-wa" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-3.2-.7-2.7-1.1-4.4-3.8-4.6-4-.1-.2-1.1-1.4-1.1-2.7s.7-1.9.9-2.2c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.1 1 2.1 1.3 2.4 1.4.3.2.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.1.1.7-.1 1.4z"/></svg> Consultas por WhatsApp</a>
+  </section>
+
+  <footer class="ld-foot">
+    <div class="ld-brand"><img src="icons/icon-192.png" alt="" width="30" height="30"><span>POLLA <b>PRODES</b></span></div>
+    <div class="ld-foot-links"><button onclick="landingIr('login')">Ingresar</button><button onclick="landingIr('registro')">Registrarse</button></div>
+    <small>Jugá con responsabilidad · Solo mayores de 18 años</small>
+  </footer>
+</div>
+
 <div id="page-loader"><div class="spinner"></div><span id="page-loader-txt">Cargando...</span></div>
 
 <div id="settings" role="dialog" aria-modal="true" aria-labelledby="st-title">
@@ -3621,6 +3824,7 @@ function stopAutoRefresh(){if(_refreshTimer){clearInterval(_refreshTimer);_refre
 function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
   document.body.classList.remove("login-active");
   document.getElementById("sl").style.display="none";
+  const ld=document.getElementById("landing");if(ld)ld.hidden=true;
   document.getElementById("app").classList.add("on");
   const ini=(App.user?.nombre||App.user?.usuario||"?").trim()[0].toUpperCase();
   const ch=document.getElementById("mh-chip");if(ch)ch.innerHTML=`${avatarHtml(App.user,"av")}${App.user?.usuario||""}`;
@@ -3764,6 +3968,46 @@ window.instalarApp=async function(){if(!_instalarEvt)return;_instalarEvt.prompt(
 window.cerrarInstalar=function(){document.getElementById("inst-banner")?.remove();try{localStorage.setItem("pp_inst_no","1");}catch(e){}};
 setTimeout(mostrarInstalar,2500);
 
+
+// ── LANDING (portada para quien no tiene sesión) ────────────
+const WHATSAPP="5491161630873";
+function showLanding(){
+  const l=document.getElementById("landing");if(!l)return;
+  document.getElementById("app")?.classList.remove("on");
+  document.getElementById("sl").style.display="none";
+  l.hidden=false;l.scrollTop=0;
+  const wa=document.getElementById("ld-wa");if(wa)wa.href="https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent("¡Hola! Quiero sumarme a Polla Prodes");
+  // Aparición de secciones al hacer scroll
+  if("IntersectionObserver" in window){
+    const io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}});},{root:l,threshold:.15});
+    l.querySelectorAll(".ld-quote,.ld-sec,.ld-final").forEach(function(x){x.classList.add("ld-rev");io.observe(x);});
+  }
+  landingEnVivo();
+}
+async function landingEnVivo(){
+  try{
+    const r=await api("getFechas");const f=(r.fechas||[]).filter(function(x){return x.estado==="Abierta"&&x.puedeJugar&&!x.tieneCodigo;}).sort(function(a,b){return a.minutosRestantes-b.minutosRestantes;})[0];
+    if(!f)return;
+    const p=await api("getPozos",{fechaId:f.id});const pozos=(p.pozos||[]);
+    const premio=pozos.reduce(function(m,x){return Math.max(m,x.premioGanador||0);},0);
+    const jug=pozos.reduce(function(t,x){return t+(x.inscriptos||0);},0);
+    document.getElementById("ld-fecha").textContent=f.nombre;
+    document.getElementById("ld-pozo").textContent=premio?"$"+premio.toLocaleString("es-AR"):"—";
+    document.getElementById("ld-jug").textContent=jug?jug+" jugador"+(jug!==1?"es":""):"Sé el primero";
+    const fin=Date.now()+f.minutosRestantes*6e4;
+    const tick=function(){const ms=fin-Date.now();const el=document.getElementById("ld-cuenta");if(!el)return;if(ms<=0){el.textContent="Cerrada";return;}
+      const d=Math.floor(ms/864e5),h=Math.floor(ms/36e5)%24,m=Math.floor(ms/6e4)%60,s=Math.floor(ms/1e3)%60;
+      el.textContent=d>0?`${d}d ${h}h ${m}m`:`${h}h ${String(m).padStart(2,"0")}m ${String(s).padStart(2,"0")}s`;};
+    tick();clearInterval(window._ldT);window._ldT=setInterval(tick,1000);
+    document.getElementById("ld-live").hidden=false;
+  }catch(e){}
+}
+window.landingIr=function(a){
+  document.getElementById("landing").hidden=true;clearInterval(window._ldT);
+  showLogin();
+  if(a==="registro"){const t=document.querySelectorAll(".ll-tab")[1];if(t)llTab("r",t);}
+};
+
 async function boot(){
   if(loadSession()){
     try{
@@ -3772,7 +4016,8 @@ async function boot(){
     }catch(e){console.warn("boot error:",e);}
     clearSession();
   }
-  showLogin();
+  // Portada para quien entra sin sesión (la app instalada va directo al ingreso)
+  if(!esApp()&&!new URLSearchParams(location.search).has("login"))showLanding();else showLogin();
 }
 boot();
 </script>
