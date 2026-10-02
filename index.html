@@ -1614,6 +1614,102 @@ body:has(#landing:not([hidden])) #inst-banner{display:none}
 .ld-strip span{font-size:15px;font-weight:600;color:rgba(255,255,255,.8)}
 @media(max-width:560px){.ld-strip{flex-direction:column;align-items:stretch;gap:8px;width:100%}.ld-strip div{justify-content:center;height:46px}}
 
+/* ═══ GRILLA v3: elegir rival + cara a cara + partido por partido ═══ */
+.gx{display:grid;gap:14px}
+.gx-tabs{max-width:520px}
+.gx-tabs button{height:46px;font-size:15px}
+.gx-pick{padding:16px}
+.gx-head{display:flex;flex-direction:column;gap:2px;margin-bottom:12px}
+.gx-head b{font-family:var(--ff);font-size:24px;font-weight:800;text-transform:uppercase;line-height:1.05}
+.gx-head small{font-size:13px;color:var(--ink-3)}
+.gx-seg{margin-bottom:10px}
+.gx-q{margin-bottom:10px;height:44px}
+.gx-scroll{max-height:340px;overflow-y:auto;margin:0 -6px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.gx-tbl{width:100%;border-collapse:separate;border-spacing:0 3px;font-size:14.5px}
+.gx-tbl th{position:sticky;top:0;z-index:1;background:var(--surface);padding:6px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);text-align:left}
+.gx-tbl td{padding:6px;background:var(--surface-2);transition:background .15s}
+.gx-tbl td:first-child{border-radius:12px 0 0 12px}.gx-tbl td:last-child{border-radius:0 12px 12px 0}
+.gx-tbl tr{cursor:pointer}
+.gx-tbl tr:hover td{background:var(--surface-3)}
+.gx-tbl tr.on td{background:var(--accent-soft)}
+.gx-tbl tr.yo{cursor:default}.gx-tbl tr.yo td{background:color-mix(in srgb,var(--gold-soft) 100%,var(--surface-2));font-weight:800}
+.gx-pos{width:34px;text-align:center;font-family:var(--ff);font-size:17px;font-weight:800;color:var(--ink-2)}
+.gx-jug div{display:flex;align-items:center;gap:8px;min-width:0}
+.gx-jug span:last-child{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+.gx-jug .g-av{width:28px;height:28px;flex:none;font-size:13px}
+.gx-n{width:48px;text-align:center!important;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.gx-pts{font-family:var(--ff);font-size:19px;font-weight:800;color:var(--ink)!important}
+.gx-d{font-family:var(--ff);font-size:16px;font-weight:800;color:var(--ink-3)}
+.gx-d.arriba{color:var(--no)}.gx-d.abajo{color:var(--ok)}
+.gx-ck{width:34px;text-align:center}
+.gx-box{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;border:2px solid var(--line-2);font-size:13px;font-weight:900;color:var(--accent-ink)}
+.gx-box.on{background:var(--accent);border-color:var(--accent)}
+.gx-duelos{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr));gap:14px;align-items:start}
+.gx-duelos .duelo{margin:0}
+.dx{display:grid;gap:10px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line-2)}
+.dx-row{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:10px}
+.dx-v{font-family:var(--ff);font-size:22px;font-weight:800;text-align:center;color:var(--ink-3)}
+.dx-v.gana{color:var(--ink)}
+.dx-mid small{display:block;text-align:center;font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+.dx-bar{display:flex;gap:3px;height:8px}
+.dx-bar i{display:block;height:100%;border-radius:4px;background:var(--line-2);min-width:4px}
+.dx-bar i:first-child{background:var(--accent)}
+.dx-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:14px}
+.dx-chips span{height:30px;padding:0 12px;border-radius:15px;display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line)}
+.dx-chips b{font-family:var(--ff);font-size:17px;color:var(--ink)}
+.dx-chips .dist{background:var(--accent-soft);border-color:var(--accent-line)}
+.dx-ver{text-align:center;font-size:14px;line-height:1.45;color:var(--ink-2);margin:10px 0 2px}
+.dx-ver b{color:var(--ink)}
+/* Partido por partido */
+.pp-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,440px),1fr));gap:10px;align-items:start}
+.pp{border-radius:var(--r);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1);overflow:hidden}
+.pp.abierto{grid-column:1/-1;border-color:var(--accent-line)}
+.pp-top{position:relative;display:grid;gap:10px;width:100%;padding:14px 16px;text-align:left;color:inherit}
+.pp-eq{display:flex;align-items:center;gap:8px;padding-right:24px}
+.pp-eq .dl-team{display:inline-flex;align-items:center;gap:6px}
+.pp-eq .dl-team img{width:30px;height:30px;object-fit:contain}
+.pp-eq .dl-team b{font-family:var(--ff);font-size:20px;font-weight:800}
+.pp-eq .dl-res{font-family:var(--ff);font-size:16px;font-weight:800;color:var(--ink-3);padding:0 4px}
+.pp-yo{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink-2)}
+.pp-yo-k{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.pp-yo .pcell{width:28px;height:28px;font-size:15px}
+.pp-igual b{font-family:var(--ff);font-size:18px;color:var(--ink)}
+.pp-bar{display:flex;gap:3px;height:30px}
+.pp-bar i{position:relative;display:flex;align-items:center;justify-content:center;min-width:34px;height:100%;border-radius:8px;background:var(--surface-3);color:var(--ink-2);font-style:normal}
+.pp-bar i b{font-size:12.5px;font-weight:800;white-space:nowrap}
+.pp-bar i.mio{background:var(--accent);color:var(--accent-ink)}
+.pp-bar i.ok{box-shadow:inset 0 0 0 2px var(--ok)}
+.pp-chev{position:absolute;right:14px;top:14px;font-size:16px;color:var(--ink-3)}
+.pp-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 12px 14px}
+.pp-col{padding:10px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
+.pp-col.mio{background:var(--accent-soft);border-color:var(--accent-line)}
+.pp-col.ok{box-shadow:inset 0 0 0 2px var(--ok)}
+.pp-col-h{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.pp-col-h b{font-family:var(--ff);font-size:22px;font-weight:800}
+.pp-col-h small{font-size:12.5px;color:var(--ink-3);font-weight:700}
+.pp-col-h em{font-style:normal;font-size:12px;font-weight:800;color:var(--ok)}
+.pp-gente{display:flex;flex-direction:column;gap:5px}
+.pp-p{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:700;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp-p .g-av{width:24px;height:24px;flex:none;font-size:11px}
+.pp-p.yo{color:var(--accent-text)}
+.pp-nadie{font-size:13px;color:var(--ink-3)}
+.pp-ayuda{text-align:center;font-size:13px;color:var(--ink-3)}
+@media(max-width:560px){
+  .gx-tbl{font-size:13.5px}.gx-n{width:40px}.gx-jug span:last-child{max-width:84px}
+  .gx-tbl th{font-size:10px;padding:6px 3px}.gx-tbl td{padding:6px 3px}
+  .pp-cols{grid-template-columns:1fr}
+  .gx-tabs button{font-size:14px}
+}
+/* Landing: íconos de fútbol */
+.ld-feat-ic{display:grid;place-items:center;width:54px;height:54px;border-radius:16px;margin-bottom:14px;color:var(--hero-accent);background:color-mix(in srgb,var(--hero-accent) 12%,transparent);border:1px solid color-mix(in srgb,var(--hero-accent) 28%,transparent)}
+.ld-feat-ic svg{width:30px;height:30px}
+.ld-feat.big .ld-feat-ic{width:72px;height:72px;font-size:0;margin-bottom:0}.ld-feat.big .ld-feat-ic svg{width:40px;height:40px}
+.ld-biz-it>span{flex:none;display:grid;place-items:center;width:48px;height:48px;border-radius:14px;color:#fff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14)}
+.ld-biz-it>span svg{width:27px;height:27px}
+.bz-copa{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;color:var(--bz);background:color-mix(in srgb,var(--bz) 12%,#fff)}
+.bz-copa svg{width:24px;height:24px}
+@media(max-width:560px){.ld-feat.big .ld-feat-ic{width:54px;height:54px;margin-bottom:14px}.ld-feat.big .ld-feat-ic svg{width:30px;height:30px}}
+
 </style>
 </head>
 <body>
@@ -1725,13 +1821,13 @@ body:has(#landing:not([hidden])) #inst-banner{display:none}
     <div class="ld-sec-head"><span class="ld-k">Por qué engancha</span><h2>Mucho más que un prode</h2></div>
     <div class="ld-feats">
       <div class="ld-feat big">
-        <div class="ld-feat-ic">📏</div><b>Reglas especiales</b>
+        <div class="ld-feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12a5 5 0 1 0 10 0h9V8H8A5 5 0 0 0 2.5 12z"/><circle cx="7.5" cy="12" r="1.6"/><path d="M15 8V5"/></svg></div><b>Reglas especiales</b>
         <p>Puntos extra para los que saben leer el partido. Ahí se definen las fechas.</p>
       </div>
-      <div class="ld-feat"><div class="ld-feat-ic">⚔️</div><b>Cara a cara</b><p>Mirá en qué te diferenciás del puntero.</p></div>
-      <div class="ld-feat"><div class="ld-feat-ic">📊</div><b>Tabla en vivo</b><p>Cada gol mueve la tabla, al instante.</p></div>
-      <div class="ld-feat"><div class="ld-feat-ic">🔄</div><b>Cambios</b><p>¿Te arrepentiste? Todavía podés salvar la fecha.</p></div>
-      <div class="ld-feat"><div class="ld-feat-ic">🔒</div><b>Grupos cerrados</b><p>Tu prode con amigos, la oficina o la familia.</p></div>
+      <div class="ld-feat"><div class="ld-feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z"/><path d="m7.5 10 1.6 4.5 1.6-4.5M16.5 10.3c-.4-.4-1-.5-1.6-.4-.7.2-1 .7-.8 1.3.3.8 2.6.7 2.6 2 0 .9-1.4 1.5-2.8.6"/></svg></div><b>Cara a cara</b><p>Mirá en qué te diferenciás del puntero.</p></div>
+      <div class="ld-feat"><div class="ld-feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21v-7h6v7M9 21V9h6v12M15 21v-5h6v5M2 21h20"/><path d="m12 3 .9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2L9.1 5.1l2-.3z"/></svg></div><b>Tabla en vivo</b><p>Cada gol mueve la tabla, al instante.</p></div>
+      <div class="ld-feat"><div class="ld-feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M8.5 16V8M5.5 11l3-3 3 3"/><path d="M15.5 8v8M12.5 13l3 3 3-3"/></svg></div><b>Cambios</b><p>¿Te arrepentiste? Todavía podés salvar la fecha.</p></div>
+      <div class="ld-feat"><div class="ld-feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z"/><rect x="9" y="11.5" width="6" height="4.5" rx="1"/><path d="M10.2 11.5V10a1.8 1.8 0 0 1 3.6 0v1.5"/></svg></div><b>Grupos cerrados</b><p>Tu prode con amigos, la oficina o la familia.</p></div>
     </div>
   </section>
 
@@ -1754,22 +1850,22 @@ body:has(#landing:not([hidden])) #inst-banner{display:none}
           </div>
           <div class="ld-biz-phone" id="bz-phone" style="--bz:#2F6BFF">
             <div class="bz-top"><span class="bz-logo" id="bz-ini">TE</span><div><b id="bz-tit">Polla Tu Empresa</b><small>Fecha 12 · Mundial</small></div></div>
-            <div class="bz-badges"><span>🔥 Racha ×3</span><span>🎯 Ojo de halcón</span><span>🏆 Top 10</span></div>
+            <div class="bz-badges"><span>Racha ×3</span><span>Ojo de halcón</span><span>Top 10</span></div>
             <div class="bz-k">Ranking por área</div>
             <div class="bz-row"><i>1</i><span>Ventas</span><div class="bz-bar"><em style="width:92%"></em></div><b>148</b></div>
             <div class="bz-row"><i>2</i><span>Sistemas</span><div class="bz-bar"><em style="width:80%"></em></div><b>131</b></div>
             <div class="bz-row"><i>3</i><span>Logística</span><div class="bz-bar"><em style="width:66%"></em></div><b>109</b></div>
             <div class="bz-row"><i>4</i><span>Marketing</span><div class="bz-bar"><em style="width:51%"></em></div><b>87</b></div>
-            <div class="bz-prize"><span>🎁</span><div><b>Premio de la fecha</b><small>Lo define tu empresa</small></div></div>
+            <div class="bz-prize"><span class="bz-copa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 2.6 3.5M16 6h2.5a2.5 2.5 0 0 1-2.6 3.5"/><path d="M12 13v3.5M8.5 21h7M9.5 21v-2.5h5V21"/></svg></span><div><b>Premio de la fecha</b><small>Lo define tu empresa</small></div></div>
           </div>
         </div>
         <div class="ld-biz-list">
-          <div class="ld-biz-it"><span>🎨</span><div><b>Con tu marca</b><p>Tu logo, tus colores y tu nombre. Para tu gente es la Polla de la empresa, no una app más.</p></div></div>
-          <div class="ld-biz-it"><span>🏢</span><div><b>Torneos internos</b><p>Por área, sucursal o equipo. Ranking individual y por equipos: Ventas contra Sistemas, cada fin de semana.</p></div></div>
-          <div class="ld-biz-it"><span>🎮</span><div><b>Gamificación</b><p>Insignias, rachas de aciertos, desafíos semanales y logros que se ven en el perfil. Engancha y vuelve cada fecha.</p></div></div>
-          <div class="ld-biz-it"><span>🤝</span><div><b>Para tus clientes</b><p>Campañas de fidelización en el Mundial, la Copa o la Liga. Tu marca presente toda la temporada, no un solo día.</p></div></div>
-          <div class="ld-biz-it"><span>🎁</span><div><b>Premios a medida</b><p>Sin poner plata de por medio: premios, días libres, productos o experiencias que elige la empresa.</p></div></div>
-          <div class="ld-biz-it"><span>📈</span><div><b>Reportes</b><p>Cuántos juegan, qué áreas participan más y cómo crece el uso fecha a fecha.</p></div></div>
+          <div class="ld-biz-it"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 3 6l2 5 2-1v11h10V10l2 1 2-5-5-3c0 1.8-1.6 3-4 3S8 4.8 8 3z"/><path d="M10 13h4"/></svg></span><div><b>Con tu marca</b><p>Tu logo, tus colores y tu nombre. Para tu gente es la Polla de la empresa, no una app más.</p></div></div>
+          <div class="ld-biz-it"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h5v4H3M3 15h5v4H3M8 7h3v10H8M11 12h4"/><path d="M15 9.5h6v5h-6z"/></svg></span><div><b>Torneos internos</b><p>Por área, sucursal o equipo. Ranking individual y por equipos: Ventas contra Sistemas, cada fin de semana.</p></div></div>
+          <div class="ld-biz-it"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="15.5" r="5"/><path d="M8.6 11.8 6 3h4l2 5 2-5h4l-2.6 8.8"/><path d="M12 13.3v4.4M10.6 14.2l1.4-.9"/></svg></span><div><b>Gamificación</b><p>Insignias, rachas de aciertos, desafíos semanales y logros que se ven en el perfil. Engancha y vuelve cada fecha.</p></div></div>
+          <div class="ld-biz-it"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="8" rx="9" ry="3"/><path d="M3 8v8c0 1.7 4 3 9 3s9-1.3 9-3V8"/><path d="M7 10.6v7.2M17 10.6v7.2M12 11v8"/></svg></span><div><b>Para tus clientes</b><p>Campañas de fidelización en el Mundial, la Copa o la Liga. Tu marca presente toda la temporada, no un solo día.</p></div></div>
+          <div class="ld-biz-it"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 2.6 3.5M16 6h2.5a2.5 2.5 0 0 1-2.6 3.5"/><path d="M12 13v3.5M8.5 21h7M9.5 21v-2.5h5V21"/></svg></span><div><b>Premios a medida</b><p>Sin poner plata de por medio: premios, días libres, productos o experiencias que elige la empresa.</p></div></div>
+          <div class="ld-biz-it"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M12 4v16"/><circle cx="12" cy="12" r="2.8"/><path d="m6 8 2 2m0-2-2 2M16 14l2 2m0-2-2 2"/><path d="M7.5 15.5c1.5 0 2.2-.8 3-2"/></svg></span><div><b>Reportes</b><p>Cuántos juegan, qué áreas participan más y cómo crece el uso fecha a fecha.</p></div></div>
         </div>
       </div>
       <div class="ld-biz-uses"><span>Mundial 2026</span><span>Copa Libertadores</span><span>Champions</span><span>Liga Profesional</span><span>Eliminatorias</span><span>Eventos y convenciones</span></div>
@@ -3160,12 +3256,13 @@ async function loadGrilla(ctx){
 
 // ── GRILLA: comparar con el puntero, los de arriba o cualquiera ──
 window.setGrilla=function(k,v){window._grilla[k]=v;renderGrilla();};
-window.toggleSelGrilla=function(uid){
-  const g=window._grilla;g.sel=g.sel||[];
-  if(uid===App.user?.id)return;
+window.elegirRival=function(uid){
+  const g=window._grilla;
+  // Si venía de un atajo (Top 3, etc.), arranca desde esos y suma/saca el tocado
+  if(g.cmp!=="sel")g.sel=(g.rivIds||[]).slice();
   const i=g.sel.indexOf(uid);
-  if(i>=0)g.sel.splice(i,1);else{if(g.sel.length>=3)g.sel.shift();g.sel.push(uid);}
-  g.cmp=g.sel.length?"sel":"puntero";renderGrilla();
+  if(i>=0)g.sel.splice(i,1);else{if(g.sel.length>=5)g.sel.shift();g.sel.push(uid);}
+  g.cmp="sel";renderGrilla();
 };
 const SIGLAS={"boca juniors":"BOC","river plate":"RIV","racing club":"RAC","independiente":"IND","san lorenzo":"SLO","huracan":"HUR","estudiantes":"EST","estudiantes l.p.":"EST","gimnasia lp":"GIM","gimnasia l.p.":"GIM","rosario central":"CEN","newell's":"NOB","newells old boys":"NOB","velez":"VEL","velez sarsfield":"VEL","talleres":"TAL","talleres cordoba":"TAL","lanus":"LAN","banfield":"BAN","argentinos jrs":"ARG","argentinos juniors":"ARG","belgrano":"BEL","belgrano cordoba":"BEL","godoy cruz":"GOD","union":"UNI","union santa fe":"UNI","tigre":"TIG","platense":"PLA","defensa y justicia":"DYJ","instituto":"INS","instituto cordoba":"INS","sarmiento":"SAR","sarmiento junin":"SAR","atl. tucuman":"ATU","atletico tucuman":"ATU","barracas central":"BAR","central cordoba":"CCO","central cordoba de santiago":"CCO","riestra":"RIE","deportivo riestra":"RIE","independ. rivadavia":"IRV","independiente rivadavia":"IRV","aldosivi":"ALD","san martin s.j.":"SMS","manchester united":"MUN","manchester city":"MCI","real madrid":"RMA","atletico madrid":"ATM","inter":"INT","ac milan":"MIL","bayern munich":"BAY","paris saint germain":"PSG","borussia dortmund":"BVB"};
 function sigla(n){
@@ -3188,152 +3285,125 @@ function avatarHtml(u,cls){
 const TIPO_INFO={Normal:{k:"×1",n:"Simple",pts:1,cls:"t-s"},Doble:{k:"×2",n:"Doble",pts:2,cls:"t-d"},Polla:{k:"P",n:"Polla",pts:5,cls:"t-p"}};
 function renderGrilla(){
   const el=document.getElementById("gc");if(!el||!window._grilla)return;
-  const g=window._grilla,todos=g.data.partidos||[],jug=g.data.jugadores||[];
-  g.ver=g.ver||"todos";g.q=g.q||"";g.sel=g.sel||[];g.tipo=g.tipo||"todos";
+  const g=window._grilla,parts=g.data.partidos||[],jug=g.data.jugadores||[];
+  g.sel=g.sel||[];g.q=g.q||"";
   if(!jug.length){el.innerHTML=emptyBox("📋","Todavía nadie cargó pronósticos en este pozo");return;}
   const me=App.user?.id,yo=jug.find(function(j){return j.userId===me;})||null;
   const otros=jug.filter(function(j){return j.userId!==me;});
-
-  // Votos del grupo por partido → mayoría, TOLE (ninguna opción llega al 45%) y jugadas distintas (<15%)
-  const st={};
-  todos.forEach(function(p){const c={L:0,E:0,V:0};jug.forEach(function(j){const v=(j.pronos[p.id]||{}).v;if(c[v]!==undefined)c[v]++;});
-    const t=c.L+c.E+c.V||1,pct={L:c.L/t*100,E:c.E/t*100,V:c.V/t*100};
-    const may=["L","E","V"].sort(function(a,b){return c[b]-c[a];})[0];
-    st[p.id]={c:c,t:t,pct:pct,may:may,tole:p.es_tole!==undefined?(p.tipo!=="Polla"&&!!p.es_tole):(p.tipo!=="Polla"&&t>=3&&pct.L<45&&pct.E<45&&pct.V<45)};});
-  // Valor del partido: Polla 5 siempre; TOLE reemplaza (Simple o Doble pasan a 3); si no, Doble 2 y Simple 1
-  const valor=function(p){return p.tipo==="Polla"?5:st[p.id].tole?3:(TIPO_INFO[p.tipo]||TIPO_INFO.Normal).pts;};
-  const parts=todos.filter(function(p){return g.tipo==="todos"||(g.tipo==="tole"?st[p.id].tole:p.tipo===g.tipo);});
-  const filtrado=g.tipo!=="todos";
-  const ptsEn=function(j){return parts.reduce(function(t,p){const x=j.pronos[p.id];return t+(x&&x.ok===true?valor(p):0);},0);};
-
-  // A quién comparamos
-  let rivales=[];
-  if(g.cmp==="puntero")rivales=otros.length?[otros[0]]:[];
-  else if(g.cmp==="top3")rivales=otros.slice(0,3);
-  else if(g.cmp==="sel")rivales=g.sel.map(function(id){return jug.find(function(j){return j.userId===id;});}).filter(Boolean);
-  else rivales=jug.filter(function(j){return j.userId===g.cmp;});
-  const resaltar=new Set(rivales.map(function(r){return r.userId;}));
   const base=yo||jug[0];
 
-  // Qué filas mostrar
-  let filas=otros;
-  if(g.ver==="top10")filas=otros.filter(function(j){return (j.posicion||99)<=10;});
-  if(g.ver==="cerca"&&yo){const mp=yo.posicion||0;filas=otros.filter(function(j){return Math.abs((j.posicion||99)-mp)<=3;});}
-  if(g.q){const q=g.q.toLowerCase();filas=filas.filter(function(j){return (j.siglas+" "+(j.nombre||"")).toLowerCase().includes(q);});}
-  rivales.forEach(function(r){if(!filas.includes(r)&&r!==yo)filas=[r].concat(filas);});
+  // Votos del grupo → TOLE (fijado al cierre) para saber cuánto vale cada partido
+  const st={};
+  parts.forEach(function(p){const c={L:0,E:0,V:0},quien={L:[],E:[],V:[]};jug.forEach(function(j){const v=(j.pronos[p.id]||{}).v;if(c[v]!==undefined){c[v]++;quien[v].push(j);}});
+    const t=c.L+c.E+c.V||1,pct={L:c.L/t*100,E:c.E/t*100,V:c.V/t*100};
+    st[p.id]={c:c,t:c.L+c.E+c.V,pct:pct,quien:quien,tole:p.es_tole!==undefined?(p.tipo!=="Polla"&&!!p.es_tole):(p.tipo!=="Polla"&&t>=3&&pct.L<45&&pct.E<45&&pct.V<45)};});
+  const valor=function(p){return p.tipo==="Polla"?5:st[p.id].tole?3:(TIPO_INFO[p.tipo]||TIPO_INFO.Normal).pts;};
 
-  const dots=function(n){return`<span class="cdots" title="${n} cambio${n!==1?"s":""} disponible${n!==1?"s":""}">${[0,1,2].map(function(i){return`<i class="${i<n?"on":""}"></i>`;}).join("")}</span>`;};
-  const av=function(j){return avatarHtml(j);};
-  const celda=function(j,p,esYo){
-    const pr=j.pronos[p.id],s=st[p.id],ti=TIPO_INFO[p.tipo]||TIPO_INFO.Normal;
-    const col=" c-"+ti.cls+(s.tole?" c-tole":"");
-    if(!pr||!pr.v)return`<td class="${col}"><span class="pcell vacio">–</span></td>`;
-    const solo=s.t>=5&&s.pct[pr.v]<15;
-    const igual=!esYo&&g.soloDif&&yo&&yo.pronos[p.id]&&yo.pronos[p.id].v===pr.v;
-    let extra="";
-    if(pr.ok===true){extra=`<sup class="g-pt">+${valor(p)}</sup>`;}
-    return`<td class="${col}${igual?" g-igual":""}"><span class="pcell ${pr.v}${pr.ok===true?" ok":pr.ok===false?" no":""}${solo?" solo":""}" title="${solo?"Jugada distinta: la eligió menos del 15% del grupo":""}">${pr.v}</span>${extra}</td>`;
-  };
-  const fila=function(j,cls){
-    const esYo=j.userId===me,esRival=resaltar.has(j.userId);
-    return`<tr class="${cls||""}${esYo?" g-yo":""}${esRival?" g-rival":""}" ${esYo?"":`onclick="toggleSelGrilla('${j.userId}')" title="Tocá para comparar"`}>
-      <td class="gcell-nm"><div class="g-who"><span class="g-pos">${j.posicion||"–"}</span>${av(j)}<div class="g-nmw"><div class="g-nm">${esYo?"Vos":j.siglas}${esRival?' <span class="g-vs">VS</span>':""}</div>${dots(j.cambiosRestantes)}</div>${filtrado?`<span class="g-ptsf" title="Puntos en los partidos filtrados">${ptsEn(j)}</span>`:""}<span class="g-ptsj">${j.ptsTotal||0}</span></div></td>
-      ${parts.map(function(p){return celda(j,p,esYo);}).join("")}
-    </tr>`;
-  };
+  // Contra quién: atajos o elegidos a mano
+  const top=function(n){return otros.filter(function(j){return (j.posicion||99)<=n;}).slice(0,n);};
+  const cerca=function(){if(!yo)return otros.slice(0,2);const i=jug.indexOf(yo);return [jug[i-1],jug[i+1]].filter(Boolean);};
+  const preset={puntero:function(){return otros.slice(0,1);},top3:function(){return top(3);},top5:function(){return top(5);},cerca:cerca};
+  let rivales=g.cmp==="sel"?g.sel.map(function(id){return jug.find(function(j){return j.userId===id;});}).filter(Boolean):(preset[g.cmp]||preset.top3)();
+  if(!rivales.length&&otros.length)rivales=otros.slice(0,1);
+  const elegidos=new Set(rivales.map(function(r){return r.userId;}));g.rivIds=[...elegidos];g.vista=g.vista||"cara";
 
-  window._dueloIdx=0;
   const nm=function(j){return j.userId===me?"Vos":j.siglas;};
+  const av=function(j){return avatarHtml(j);};
   const medal=function(j){const p=j.posicion;return p&&p<=3?["🥇","🥈","🥉"][p-1]:"";};
   const ptxt=function(j){return j.posicion?j.posicion+"º":"";};
-  const difTxt=function(d){return d>0?`Le sacás <b>${d}</b> punto${d!==1?"s":""}`:d<0?`Te saca <b>${-d}</b> punto${d!==-1?"s":""}`:"Están <b>empatados</b>";};
-  const duelHead=function(a,r,delta,i){
-    const v="A",lbl="";
-    const cls=delta>0?"up":delta<0?"down":"";
-    if(v==="B"){const filas=[a,r].sort(function(x,y){return (x.posicion||99)-(y.posicion||99)||(y.ptsTotal-x.ptsTotal);});
-      return`<div class="dh dh-b">${lbl}${filas.map(function(j){return`<div class="dhb-row${j===a?" yo":""}"><span class="dhb-pos">${medal(j)||ptxt(j)}</span>${av(j)}<span class="dhb-nm">${nm(j)}</span>${dots(j.cambiosRestantes)}<span class="dhb-pts">${j.ptsTotal||0}<small>pts</small></span></div>`;}).join("")}<div class="dh-dif ${cls}">${difTxt(delta)}</div></div>`;}
-    if(v==="C"){const ta=a.ptsTotal||0,tr=r.ptsTotal||0,tot=Math.max(1,ta+tr),pa=Math.round(ta/tot*100);
-      return`<div class="dh dh-c">${lbl}<div class="dhc-top"><div class="dhc-j yo">${av(a)}<div><b>${nm(a)}</b><small>${medal(a)} ${ptxt(a)}</small></div><span class="dhc-pts">${ta}</span></div><div class="dhc-j der"><span class="dhc-pts">${tr}</span><div><b>${nm(r)}</b><small>${medal(r)} ${ptxt(r)}</small></div>${av(r)}</div></div>
-        <div class="dhc-bar"><i class="yo" style="width:${pa}%"></i><i style="width:${100-pa}%"></i></div><div class="dh-dif ${cls}">${difTxt(delta)}</div></div>`;}
-    return`<div class="dh dh-a">${lbl}<div class="dha-j yo">${av(a)}<b>${nm(a)}</b><small>${medal(a)} ${ptxt(a)}</small></div>
-      <div class="dha-mid"><div class="dha-score"><span>${a.ptsTotal||0}</span><i>–</i><span>${r.ptsTotal||0}</span></div><div class="dh-dif ${cls}">${difTxt(delta)}</div></div>
-      <div class="dha-j">${av(r)}<b>${nm(r)}</b><small>${medal(r)} ${ptxt(r)}</small></div></div>`;
-  };
-  const posB=function(j){const p=j.posicion;if(!p)return"";return p<=3?`<span class="d-pos m${p}" title="${p}º puesto">${["🥇","🥈","🥉"][p-1]}</span>`:`<span class="d-pos" title="${p}º puesto">${p}º</span>`;};
-  // Cara a cara: compacto, un partido distinto por línea
+  const dif=function(j){return (j.ptsTotal||0)-(base.ptsTotal||0);};
+  const difHtml=function(j){if(j===base)return"";const d=dif(j);return`<span class="gx-d ${d>0?"arriba":d<0?"abajo":""}">${d>0?"+"+d:d<0?d:"="}</span>`;};
+
+  // ── Mini tabla para elegir
+  const q=g.q.toLowerCase();
+  const lista=jug.filter(function(j){return !q||j===yo||(j.siglas+" "+(j.nombre||"")).toLowerCase().includes(q);});
+  const filaMini=function(j){const esYo=j.userId===me,on=elegidos.has(j.userId);
+    return`<tr class="${esYo?"yo":""}${on?" on":""}" ${esYo?"":`onclick="elegirRival('${j.userId}')"`}>
+      <td class="gx-pos">${medal(j)||ptxt(j)||"–"}</td>
+      <td class="gx-jug"><div>${av(j)}<span>${nm(j)}</span></div></td>
+      <td class="gx-n gx-pts">${j.ptsTotal||0}</td>
+      <td class="gx-n">${j.acertados||0}</td>
+      <td class="gx-n">${j.ptsReglas||0}</td>
+      <td class="gx-n">${difHtml(j)}</td>
+      <td class="gx-ck">${esYo?"":`<span class="gx-box${on?" on":""}">${on?"✓":""}</span>`}</td>
+    </tr>`;};
+
+  // ── Cara a cara
+  const linea=function(p,r){const ti=TIPO_INFO[p.tipo]||TIPO_INFO.Normal,a=base.pronos[p.id].v,b=r.pronos[p.id].v,jugado=p.estado==="Finalizado";
+    return`<div class="dl${jugado?" jugado":""}">
+      <div class="dl-tags"><span class="t-tag ${ti.cls}">${ti.k}</span>${st[p.id].tole?'<span class="t-tag t-tole">🔥</span>':""}</div>
+      <span class="dl-n">#${p.numero}</span>
+      <div class="dl-eq"><span class="dl-team">${p.local_logo?`<img src="${p.local_logo}" alt="">`:""}<b>${sigla(p.local)}</b></span><span class="dl-res">${jugado?p.goles_local+"-"+p.goles_visita:"vs"}</span><span class="dl-team"><b>${sigla(p.visita)}</b>${p.visita_logo?`<img src="${p.visita_logo}" alt="">`:""}</span></div>
+      <div class="dl-picks"><span class="pcell ${a}${jugado?(a===p.resultado?" ok":" no"):""}">${a}</span><span class="dl-x">vs</span><span class="pcell ${b}${jugado?(b===p.resultado?" ok":" no"):""}">${b}</span></div>
+      <span class="dl-pts">${jugado?"":"+"+valor(p)+" pts"}</span>
+    </div>`;};
   const duelo=function(r){
-    const dif=parts.filter(function(p){const a=(base.pronos[p.id]||{}).v,b=(r.pronos[p.id]||{}).v;return a&&b&&a!==b;});
-    const pend=dif.filter(function(p){return p.estado!=="Finalizado";});
-    const peso=pend.reduce(function(t,p){return t+valor(p);},0);
-    const delta=(base.ptsTotal||0)-(r.ptsTotal||0);
-    const linea=function(p){const ti=TIPO_INFO[p.tipo]||TIPO_INFO.Normal,a=base.pronos[p.id].v,b=r.pronos[p.id].v,jugado=p.estado==="Finalizado";
-      return`<div class="dl${jugado?" jugado":""}">
-        <div class="dl-tags"><span class="t-tag ${ti.cls}">${ti.k}</span>${st[p.id].tole?'<span class="t-tag t-tole">🔥</span>':""}</div>
-        <span class="dl-n">#${p.numero}</span>
-        <div class="dl-eq"><span class="dl-team">${p.local_logo?`<img src="${p.local_logo}" alt="">`:""}<b>${sigla(p.local)}</b></span><span class="dl-res">${jugado?p.goles_local+"-"+p.goles_visita:"vs"}</span><span class="dl-team"><b>${sigla(p.visita)}</b>${p.visita_logo?`<img src="${p.visita_logo}" alt="">`:""}</span></div>
-        <div class="dl-picks"><span class="pcell ${a}${jugado?(a===p.resultado?" ok":" no"):""}">${a}</span><span class="dl-x">vs</span><span class="pcell ${b}${jugado?(b===p.resultado?" ok":" no"):""}">${b}</span></div>
-        <span class="dl-pts">${jugado?"":"+"+valor(p)+" pts"}</span>
-      </div>`;};
+    const ambos=parts.filter(function(p){return (base.pronos[p.id]||{}).v&&(r.pronos[p.id]||{}).v;});
+    const distintos=ambos.filter(function(p){return base.pronos[p.id].v!==r.pronos[p.id].v;});
+    const iguales=ambos.length-distintos.length;
+    const pend=distintos.filter(function(p){return p.estado!=="Finalizado";});
+    const enJuego=pend.reduce(function(t,p){return t+valor(p);},0);
+    const delta=(base.ptsTotal||0)-(r.ptsTotal||0),cls=delta>0?"up":delta<0?"down":"";
+    const difTxt=delta>0?`Le sacás <b>${delta}</b> punto${delta!==1?"s":""}`:delta<0?`Te saca <b>${-delta}</b> punto${delta!==-1?"s":""}`:"Están <b>empatados</b>";
+    let veredicto="";
+    if(!pend.length)veredicto=distintos.length?"Ya se jugaron todos los partidos donde se diferencian.":"Pusieron lo mismo en todo: se definen por las reglas.";
+    else if(delta<0)veredicto=enJuego>=-delta?`Lo podés alcanzar: hay <b>${enJuego}</b> pts en juego donde pensás distinto.`:`Aunque aciertes todos los distintos (<b>${enJuego}</b> pts), te faltan reglas para alcanzarlo.`;
+    else if(delta>0)veredicto=enJuego>=delta?`Te puede alcanzar: hay <b>${enJuego}</b> pts en juego donde piensan distinto.`:`Aunque acierte todos los distintos (<b>${enJuego}</b> pts), solo te alcanza con reglas.`;
+    else veredicto=`Hay <b>${enJuego}</b> pts en juego donde piensan distinto.`;
+    const barra=function(lbl,a,b){const t=Math.max(1,a+b);return`<div class="dx-row"><span class="dx-v${a>b?" gana":""}">${a}</span><div class="dx-mid"><small>${lbl}</small><div class="dx-bar"><i style="width:${a/t*100}%"></i><i style="width:${b/t*100}%"></i></div></div><span class="dx-v${b>a?" gana":""}">${b}</span></div>`;};
     return`<div class="duelo">
-      ${duelHead(base,r,delta,window._dueloIdx++)}
-      <div class="d-dif"><b>${dif.length}</b> partido${dif.length!==1?"s":""} distinto${dif.length!==1?"s":""}${filtrado?" en este filtro":""}${pend.length?` · <b>${pend.length}</b> por jugarse, hasta <b>${peso}</b> pts en juego`:""}</div>
-      ${dif.length?`<div class="d-lista">${pend.map(linea).join("")}${dif.filter(function(p){return p.estado==="Finalizado";}).map(linea).join("")}</div>`:""}
+      <div class="dh dh-a"><div class="dha-j yo">${av(base)}<b>${nm(base)}</b><small>${medal(base)} ${ptxt(base)}</small></div>
+        <div class="dha-mid"><div class="dha-score"><span>${base.ptsTotal||0}</span><i>–</i><span>${r.ptsTotal||0}</span></div><div class="dh-dif ${cls}">${difTxt}</div></div>
+        <div class="dha-j">${av(r)}<b>${nm(r)}</b><small>${medal(r)} ${ptxt(r)}</small></div></div>
+      <div class="dx">
+        ${barra("Partidos acertados",base.acertados||0,r.acertados||0)}
+        ${barra("Puntos por partidos",base.ptsPartidos||0,r.ptsPartidos||0)}
+        ${barra("Puntos por reglas",base.ptsReglas||0,r.ptsReglas||0)}
+      </div>
+      <div class="dx-chips"><span><b>${iguales}</b> iguales</span><span class="dist"><b>${distintos.length}</b> distintos</span>${pend.length?`<span><b>${pend.length}</b> por jugarse</span>`:""}</div>
+      <div class="dx-ver">${veredicto}</div>
+      ${distintos.length?`<div class="d-lista">${pend.map(function(p){return linea(p,r);}).join("")}${distintos.filter(function(p){return p.estado==="Finalizado";}).map(function(p){return linea(p,r);}).join("")}</div>`:""}
+    </div>`;
+  };
+
+  // ── Partido por partido: qué puso el grupo y cuántos igual que vos
+  const partido=function(p){
+    const x=st[p.id],ti=TIPO_INFO[p.tipo]||TIPO_INFO.Normal,mio=yo&&(yo.pronos[p.id]||{}).v,jugado=p.estado==="Finalizado",abierto=g.pAb===p.id;
+    const igual=mio?x.c[mio]-1:0,resto=Math.max(0,x.t-1);
+    const seg=function(k){const w=x.t?x.c[k]/x.t*100:0;return w?`<i class="pp-${k}${mio===k?" mio":""}${jugado&&p.resultado===k?" ok":""}" style="width:${w}%"><b>${k} ${x.c[k]}</b></i>`:"";};
+    const col=function(k){const gente=x.quien[k];return`<div class="pp-col${mio===k?" mio":""}${jugado&&p.resultado===k?" ok":""}">
+        <div class="pp-col-h"><span class="pcell ${k}">${k}</span><b>${x.c[k]}</b><small>${Math.round(x.pct[k]||0)}%</small>${jugado&&p.resultado===k?'<em>✓ salió</em>':""}</div>
+        <div class="pp-gente">${gente.map(function(j){return`<span class="pp-p${j.userId===me?" yo":""}">${av(j)}${nm(j)}</span>`;}).join("")||'<span class="pp-nadie">Nadie</span>'}</div></div>`;};
+    return`<div class="pp${abierto?" abierto":""}">
+      <button class="pp-top" onclick="window._grilla.pAb=window._grilla.pAb==='${p.id}'?null:'${p.id}';renderGrilla()">
+        <div class="pp-eq"><span class="t-tag ${ti.cls}">${ti.k}</span>${x.tole?'<span class="t-tag t-tole">🔥</span>':""}
+          <span class="dl-team">${p.local_logo?`<img src="${p.local_logo}" alt="">`:""}<b>${sigla(p.local)}</b></span>
+          <span class="dl-res">${jugado?p.goles_local+"-"+p.goles_visita:p.fecha_hora?new Date(p.fecha_hora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"vs"}</span>
+          <span class="dl-team"><b>${sigla(p.visita)}</b>${p.visita_logo?`<img src="${p.visita_logo}" alt="">`:""}</span></div>
+        <div class="pp-yo">${mio?`<span class="pp-yo-k">Vos</span><span class="pcell ${mio}${jugado?(mio===p.resultado?" ok":" no"):""}">${mio}</span><span class="pp-igual"><b>${igual}</b> de ${resto} igual que vos</span>`:`<span class="pp-igual">No jugaste este partido</span>`}</div>
+        <div class="pp-bar">${seg("L")}${seg("E")}${seg("V")}</div>
+        <span class="pp-chev">${abierto?"▴":"▾"}</span>
+      </button>
+      ${abierto?`<div class="pp-cols">${col("L")}${col("E")}${col("V")}</div>`:""}
     </div>`;
   };
 
   const ttG=document.getElementById("topbar-title");if(ttG)ttG.innerHTML=`Los Otros <span class="tt-n">${jug.length} jugadores</span>`;
-  const nTole=todos.filter(function(p){return st[p.id].tole;}).length;
+  const btn=function(k,t){return`<button aria-pressed="${g.cmp===k}" onclick="window._grilla.sel=[];setGrilla('cmp','${k}')">${t}</button>`;};
+  const tabs=`<div class="seg gx-tabs"><button aria-pressed="${g.vista==="cara"}" onclick="setGrilla('vista','cara')">Cara a cara</button><button aria-pressed="${g.vista==="partido"}" onclick="setGrilla('vista','partido')">Partido por partido</button></div>`;
+  if(g.vista==="partido"){el.innerHTML=`<div class="gx">${tabs}<div class="pp-lista">${parts.map(partido).join("")}</div><p class="pp-ayuda">Tocá un partido para ver quién puso cada cosa.</p></div>`;return;}
   el.innerHTML=`
-    <div class="g-top">
-      <div class="g-stat"><b>${todos.filter(function(p){return p.estado==="Finalizado";}).length}/${todos.length}</b><span>partidos jugados</span></div>
-      <div class="g-stat"><b>${nTole}</b><span>con TOLE 🔥</span></div>
-    </div>
-    <div class="g-bar">
-      <div class="seg g-seg">
-        <button aria-pressed="${g.cmp==="puntero"}" onclick="window._grilla.sel=[];setGrilla('cmp','puntero')">vs Puntero</button>
-        <button aria-pressed="${g.cmp==="top3"}" onclick="window._grilla.sel=[];setGrilla('cmp','top3')">vs Top 3</button>
-        <button aria-pressed="${g.cmp==="sel"}" onclick="${g.sel.length?"setGrilla('cmp','sel')":"toast('Tocá la fila de hasta 3 jugadores para compararlos')"}">Elegidos${g.sel.length?" ("+g.sel.length+")":""}</button>
+    <div class="gx">${tabs}
+      <div class="card gx-pick">
+        <div class="gx-head"><b>¿Contra quién te comparás?</b><small>Tocá jugadores para sumarlos o sacarlos (hasta 5)</small></div>
+        <div class="seg gx-seg">${btn("puntero","Puntero")}${btn("top3","Top 3")}${btn("top5","Top 5")}${yo?btn("cerca","Cerca mío"):""}</div>
+        ${jug.length>8?`<input class="inp gx-q" placeholder="Buscar jugador…" value="${g.q}" oninput="window._grilla.q=this.value;clearTimeout(window._gqT);window._gqT=setTimeout(function(){renderGrilla();var i=document.querySelector('.gx-q');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},250)"/>`:""}
+        <div class="gx-scroll"><table class="gx-tbl">
+          <thead><tr><th>#</th><th class="gx-jug">Jugador</th><th class="gx-n">Pts</th><th class="gx-n" title="Partidos acertados">Acert.</th><th class="gx-n" title="Puntos por reglas">Reglas</th><th class="gx-n" title="Diferencia con vos">Dif.</th><th></th></tr></thead>
+          <tbody>${lista.map(filaMini).join("")}</tbody>
+        </table></div>
       </div>
-      <div class="seg g-seg g-seg-tipo">
-        <button aria-pressed="${g.tipo==="todos"}" onclick="setGrilla('tipo','todos')">Todos los partidos</button>
-        <button aria-pressed="${g.tipo==="Doble"}" onclick="setGrilla('tipo','Doble')"><span class="t-tag t-d">×2</span> Dobles</button>
-        <button aria-pressed="${g.tipo==="Polla"}" onclick="setGrilla('tipo','Polla')"><span class="t-tag t-p">P</span> Polla</button>
-        <button aria-pressed="${g.tipo==="tole"}" onclick="setGrilla('tipo','tole')"><span class="t-tag t-tole">🔥</span> TOLE</button>
-      </div>
-      <input class="inp g-q" placeholder="Buscar jugador…" value="${g.q}" oninput="window._grilla.q=this.value;clearTimeout(window._gqT);window._gqT=setTimeout(function(){renderGrilla();var i=document.querySelector('.g-q');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},250)"/>
-      <label class="g-tog"><input type="checkbox" ${g.soloDif?"checked":""} onchange="setGrilla('soloDif',this.checked)"/> Atenuar lo que pusiste igual</label>
-    </div>
-    ${rivales.length?`<div class="duelos">${rivales.map(duelo).join("")}</div>`:""}
-    <div class="card g-card">
-      <div class="grilla-wrap g-scroll">
-        <table class="grilla-tbl g-tbl">
-          <thead>
-            <tr>
-              <th class="g-h-nm"><div class="g-h-nmw"><span>Jugador</span>${filtrado?'<span class="g-h-ptsf">Filtro</span>':""}<span>Pts</span></div></th>
-              ${parts.map(function(p){const ti=TIPO_INFO[p.tipo]||TIPO_INFO.Normal,s=st[p.id];return`<th class="g-h-p c-${ti.cls}${s.tole?" c-tole":""}" title="#${p.numero} ${p.local} vs ${p.visita}\nL ${s.c.L} · E ${s.c.E} · V ${s.c.V}${s.tole?"\\nTOLE (fijado al cierre): ninguna opción llegaba al 45%":""}">
-                <div class="g-tags"><span class="t-tag ${ti.cls}">${ti.k}</span>${s.tole?'<span class="t-tag t-tole">🔥</span>':""}</div>
-                <div class="g-esc"><span>${p.local_logo?`<img src="${p.local_logo}" alt="">`:""}<b>${sigla(p.local)}</b></span><span>${p.visita_logo?`<img src="${p.visita_logo}" alt="">`:""}<b>${sigla(p.visita)}</b></span></div>
-                <div class="g-num">#${p.numero}</div>
-                <div class="g-res">${p.resultado?`${p.goles_local}-${p.goles_visita}`:p.fecha_hora?new Date(p.fecha_hora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"&nbsp;"}</div>
-              </th>`;}).join("")}
-            </tr>
-            <tr class="g-cons">
-              <td class="gcell-nm"><div class="g-who"><span class="g-pos">%</span><div class="g-nmw"><div class="g-nm">El grupo</div><div class="g-cons-k">mayoría</div></div></div></td>
-              ${parts.map(function(p){const s=st[p.id],ti=TIPO_INFO[p.tipo]||TIPO_INFO.Normal;return`<td class="c-${ti.cls}${s.tole?" c-tole":""}"><div class="g-maj"><span class="pcell ${s.may}">${s.may}</span><span class="g-pct">${Math.round(s.pct[s.may])}%</span></div><div class="g-dist"><i class="L" style="width:${s.pct.L}%"></i><i class="E" style="width:${s.pct.E}%"></i><i class="V" style="width:${s.pct.V}%"></i></div></td>`;}).join("")}
-            </tr>
-            ${yo?fila(yo,"g-fija"):""}
-          </thead>
-          <tbody>${filas.map(function(j){return fila(j);}).join("")||`<tr><td colspan="${parts.length+1}" class="g-nada">Nadie coincide con el filtro</td></tr>`}</tbody>
-        </table>
-      </div>
-      <div class="g-ley">
-        <span><span class="pcell L">L</span><span class="pcell E">E</span><span class="pcell V">V</span> pronóstico</span>
-        <span><span class="pcell L ok">L</span><sup class="g-pt">+5</sup> acertó (y cuánto sumó)</span>
-        <span><span class="pcell V no">V</span> erró</span>
-        <span><span class="pcell E solo">E</span> jugada distinta (menos del 15% la eligió)</span>
-        <span>${dots(2)} cambios que le quedan</span>
-        <span>Tocá una fila para compararte (hasta 3)</span>
-      </div>
+      <div class="gx-duelos">${rivales.map(duelo).join("")}</div>
     </div>`;
 }
 

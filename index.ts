@@ -1266,7 +1266,7 @@ async function getGrilla(db: any, data: any) {
   const jugadores: Record<string,any> = {};
   for (const p of (pronos||[])) {
     const j = jugadores[p.user_id] ||= {userId:p.user_id, siglas:p.usuario||um[p.user_id]?.usuario, nombre:um[p.user_id]?.nombre||p.usuario, avatar:um[p.user_id]?.avatar||null,
-      pronos:{}, cambiosUsados:0, ptsTotal:pos[p.user_id]?.ptsTotal||0, acertados:pos[p.user_id]?.acertados||0, posicion:pos[p.user_id]?.posicion||null};
+      pronos:{}, cambiosUsados:0, ptsTotal:pos[p.user_id]?.ptsTotal||0, acertados:pos[p.user_id]?.acertados||0, ptsPartidos:pos[p.user_id]?.ptsPartidos||0, ptsReglas:pos[p.user_id]?.ptsReglas||0, posicion:pos[p.user_id]?.posicion||null};
     j.pronos[p.partido_id] = {v:p.pronostico, ok:p.acertado};
     j.cambiosUsados += p.cambios_realizados||0;
   }
