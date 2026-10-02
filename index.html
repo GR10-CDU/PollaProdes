@@ -878,6 +878,8 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
 .duelo{padding:16px 18px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1);animation:su .4s var(--ease-out) both}
 .d-head{display:flex;align-items:center;justify-content:center;gap:18px;max-width:640px;margin:0 auto}
 .d-lado{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.d-pos{flex-shrink:0;min-width:46px;height:46px;padding:0 8px;border-radius:14px;display:grid;place-items:center;font-family:var(--ff);font-size:26px;font-weight:800;line-height:1;background:var(--ink);color:var(--bg)}
+.d-pos.m1,.d-pos.m2,.d-pos.m3{background:none;font-size:38px;padding:0;min-width:40px}
 .d-lado.yo{justify-content:flex-end;text-align:right}
 .d-lado.yo>div{order:-1}
 .d-lado .g-av{width:42px;height:42px;font-size:17px}
@@ -1169,6 +1171,20 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
   .toast{bottom:calc(80px + env(safe-area-inset-bottom))}
   #inst-banner{bottom:calc(76px + env(safe-area-inset-bottom))}
   #reglas-badge{bottom:calc(80px + env(safe-area-inset-bottom))}
+}
+
+/* Cara a cara en el celular */
+@media(max-width:600px){
+  .duelo{padding:12px 10px}
+  .d-head{gap:6px}
+  .d-lado{gap:5px}
+  .d-lado .g-av{width:30px;height:30px;font-size:13px}
+  .d-pos{min-width:30px;height:30px;font-size:17px;border-radius:9px;padding:0 5px}
+  .d-pos.m1,.d-pos.m2,.d-pos.m3{font-size:26px;min-width:26px}
+  .d-nm{font-size:13.5px}
+  .d-pts{font-size:30px}
+  .d-score{gap:6px}
+  .d-mid{min-width:44px}.d-delta{font-size:22px}.d-k{font-size:9px}
 }
 
 /* ═══ MODAL ══════════════════════════════════════════════════ */
@@ -2746,7 +2762,7 @@ async function loadGrilla(ctx){
   
   const r=await api("getGrilla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
   if(!r.ok){el.innerHTML=emptyBox("🔒",r.abreEl?`La grilla se abre el ${_fmtH(new Date(r.abreEl))}, cuando cierra la fecha. Antes nadie puede ver los pronósticos de los demás.`:r.error);return;}
-  window._grilla={data:r,cmp:(window._grilla&&window._grilla.cmp)||"puntero",soloDif:!!(window._grilla&&window._grilla.soloDif)};
+  window._grilla={data:r,cmp:(window._grilla&&window._grilla.cmp)||"top3",soloDif:!!(window._grilla&&window._grilla.soloDif)};
   renderGrilla();
 }
 
@@ -2834,6 +2850,7 @@ function renderGrilla(){
     </tr>`;
   };
 
+  const posB=function(j){const p=j.posicion;if(!p)return"";return p<=3?`<span class="d-pos m${p}" title="${p}º puesto">${["🥇","🥈","🥉"][p-1]}</span>`:`<span class="d-pos" title="${p}º puesto">${p}º</span>`;};
   // Cara a cara: compacto, un partido distinto por línea
   const duelo=function(r){
     const dif=parts.filter(function(p){const a=(base.pronos[p.id]||{}).v,b=(r.pronos[p.id]||{}).v;return a&&b&&a!==b;});
@@ -2850,9 +2867,9 @@ function renderGrilla(){
       </div>`;};
     return`<div class="duelo">
       <div class="d-head">
-        <div class="d-lado yo">${av(base)}<div><div class="d-nm">${base.userId===me?"Vos":base.siglas}</div><div class="d-sub">${base.posicion?base.posicion+"º · ":""}${dots(base.cambiosRestantes)}</div></div></div>
+        <div class="d-lado yo">${posB(base)}${av(base)}<div><div class="d-nm">${base.userId===me?"Vos":base.siglas}</div><div class="d-sub">${dots(base.cambiosRestantes)}</div></div></div>
         <div class="d-score"><span class="d-pts">${base.ptsTotal||0}</span><div class="d-mid"><div class="d-delta ${delta>0?"up":delta<0?"down":""}">${delta>0?"+"+delta:delta}</div><div class="d-k">${delta>0?"le sacás":delta<0?"te saca":"empate"}</div></div><span class="d-pts">${r.ptsTotal||0}</span></div>
-        <div class="d-lado otro"><div><div class="d-nm">${r.siglas}</div><div class="d-sub">${r.posicion?r.posicion+"º · ":""}${dots(r.cambiosRestantes)}</div></div>${av(r)}</div>
+        <div class="d-lado otro"><div><div class="d-nm">${r.siglas}</div><div class="d-sub">${dots(r.cambiosRestantes)}</div></div>${av(r)}${posB(r)}</div>
       </div>
       <div class="d-dif"><b>${dif.length}</b> partido${dif.length!==1?"s":""} distinto${dif.length!==1?"s":""}${filtrado?" en este filtro":""}${pend.length?` · <b>${pend.length}</b> por jugarse, hasta <b>${peso}</b> pts en juego`:""}</div>
       ${dif.length?`<div class="d-lista">${pend.map(linea).join("")}${dif.filter(function(p){return p.estado==="Finalizado";}).map(linea).join("")}</div>`:""}
