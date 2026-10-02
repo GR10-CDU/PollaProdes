@@ -242,6 +242,7 @@ Deno.serve(async (req) => {
       case "eliminarNoticia": return resp(await eliminarNoticia(db, data));
       case "importarPartidos": return resp(await importarPartidos(db, data));
       case "adminAgregarPartido": return resp(await adminAgregarPartido(db, data));
+      case "adminGetInscriptos": return resp(await adminGetInscriptos(db, data));
       case "adminEditarPartido": return resp(await adminEditarPartido(db, data));
       case "adminBorrarPartido": return resp(await adminBorrarPartido(db, data));
       case "buscarEquipos": return resp(await buscarEquipos(db, data));
@@ -2443,4 +2444,23 @@ async function adminBorrarPartido(db: any, data: any) {
   if (error) return {ok:false, error:error.message};
   await renumerarPartidos(db, p.fecha_id);
   return {ok:true};
+}
+
+// Admin: quiénes están anotados en una fecha (con su pozo, cómo entraron y cuántos pronósticos cargaron)
+async function adminGetInscriptos(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const [{data: ins}, {data: pr}, {data: parts}] = await Promise.all([
+    db.from("inscripciones").select("id,user_id,pozo_id,estado_pago,via_codigo,comprobante_path,created_at, usuarios(nombre,usuario,telefono,email), pozos(nombre,monto)").eq("fecha_id", data.fechaId).in("estado_pago",["Pendiente","Aprobado"]).order("created_at"),
+    db.from("pronosticos").select("user_id,pozo_id").eq("fecha_id", data.fechaId),
+    db.from("partidos").select("id").eq("fecha_id", data.fechaId),
+  ]);
+  const cuenta: Record<string,number> = {};
+  for (const p of (pr||[])) { const k = p.user_id+"|"+p.pozo_id; cuenta[k] = (cuenta[k]||0)+1; }
+  return {ok:true, totalPartidos:(parts||[]).length, inscriptos:(ins||[]).map((i:any) => ({
+    id:i.id, nombre:i.usuarios?.nombre||"", usuario:i.usuarios?.usuario||"", telefono:i.usuarios?.telefono||"", email:i.usuarios?.email||"",
+    pozo:i.pozos?.nombre||"", monto:Number(i.pozos?.monto||0), fecha:i.created_at,
+    estado: !Number(i.pozos?.monto) ? "Gratis" : i.via_codigo ? "Con código" : i.estado_pago === "Aprobado" ? "Pagó" : i.comprobante_path ? "En revisión" : "Sin pagar",
+    pronosticos: cuenta[i.user_id+"|"+i.pozo_id]||0,
+  }))};
 }

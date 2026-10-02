@@ -1980,6 +1980,16 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
 .ico-silbato{width:1.15em;height:1.15em;flex:none;color:var(--gold)}
 .fd-regla.hecha{background:rgba(52,211,153,.16)!important;border-color:rgba(52,211,153,.45)!important}
 .fd-regla.hecha::before{content:"✓ ";color:#34D399;font-weight:900}
+/* Inscriptos de una fecha (admin) */
+.ins-res{font-size:14.5px;color:var(--ink-2);margin-bottom:10px}
+.ins-res b{font-family:var(--ff);font-size:22px;color:var(--ink)}
+.ins-lista{display:grid;gap:6px;max-height:60vh;overflow-y:auto}
+.ins-it{display:grid;grid-template-columns:1fr auto 52px;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.ins-who b{display:block;font-size:15px}.ins-who small{font-size:12.5px;color:var(--ink-3)}
+.ins-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.ins-meta small{font-size:12px;color:var(--ink-3)}
+.ins-pr{font-family:var(--ff);font-size:18px;font-weight:800;text-align:center;color:var(--ink-3)}
+.ins-pr.ok{color:var(--ok)}
 
 </style>
 </head>
@@ -3846,8 +3856,8 @@ async function loadAdminFechas(){
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-importar',{fechaId:'${f.id}'})">🔗 Importar</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-res',{fechaId:'${f.id}'})">⚽ Resultados</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showEditarFecha('${f.id}')">✏️ Editar</button>
-        ${f.empresaId?"":`<button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showGestionPozos('${f.id}')">💰 Pozos y premios</button>
-        <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-pagos',{fechaId:'${f.id}'})">👥 Inscriptos</button>`}
+        ${f.empresaId?"":`<button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showGestionPozos('${f.id}')">💰 Pozos y premios</button>`}
+        <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="verInscriptos('${f.id}')">👥 Inscriptos</button>
         ${f.estado==="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:16px" onclick="cerrarFecha('${f.id}')">🔒 Cerrar</button>`:""}
         ${f.estado==="Cerrada"?`<button class="btn btn-p" style="padding:6px 12px;font-size:16px" onclick="calcularFecha('${f.id}')">🏆 Calcular</button>`:""}
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="copiarFecha('${f.id}')">⧉ Copiar a…</button>
@@ -4979,6 +4989,23 @@ async function mejorarCtaJugar(fid,pozoId,empresa){
   const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=`<button class="btn btn-p btn-lg" onclick="${go_}">${titulo} →</button>`;}
 }
 
+
+// Admin: lista de inscriptos de una fecha
+window.verInscriptos=async function(fechaId){
+  const f=window._adminFechas[fechaId]||{};
+  const m=mkModal("Inscriptos · "+escH(f.nombre||""),`<div id="ins-box"><div class="loading"><div class="spinner"></div></div></div>`);
+  document.body.appendChild(m);
+  const r=await api("adminGetInscriptos",{fechaId});const el=document.getElementById("ins-box");if(!el)return;
+  if(!r.ok){el.innerHTML=errBox(r.error);return;}
+  const is=r.inscriptos||[],tot=r.totalPartidos||0;
+  const cls={"Pagó":"bg","Gratis":"bblue","Con código":"bpur","En revisión":"bgold","Sin pagar":"bred"};
+  const cuenta=function(k){return is.filter(function(i){return i.estado===k;}).length;};
+  el.innerHTML=is.length?`<div class="ins-res"><b>${is.length}</b> inscripto${is.length!==1?"s":""}${["Pagó","Gratis","Con código","En revisión","Sin pagar"].filter(cuenta).map(function(k){return` · ${cuenta(k)} ${k.toLowerCase()}`;}).join("")}</div>
+    <div class="ins-lista">${is.map(function(i){const comp=tot&&i.pronosticos>=tot;return`<div class="ins-it"><div class="ins-who"><b>${escH(i.nombre||i.usuario)}</b><small>${escH(i.usuario)}${i.telefono?" · "+escH(i.telefono):""}</small></div>
+      <div class="ins-meta"><span class="bdg ${cls[i.estado]||"bgr"}">${i.estado}</span>${i.pozo?`<small>${escH(i.pozo)}</small>`:""}</div>
+      <div class="ins-pr${comp?" ok":""}" title="Pronósticos cargados">${i.pronosticos}/${tot}</div></div>`;}).join("")}</div>`
+    :emptyBox("👥","Todavía no se anotó nadie en esta fecha");
+};
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
