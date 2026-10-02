@@ -1492,7 +1492,7 @@ async function solicitarCambio(db: any, data: any) {
   if (!part) return {ok:false, error:"Partido no encontrado"};
   if (!prono) return {ok:false, error:"No tenés pronóstico en ese partido para cambiar"};
   const {data: partsFecha} = await db.from("partidos").select("fecha_hora").eq("fecha_id",fechaId);
-  const {data: fechaSC} = await db.from("fechas").select("plazo_limite").eq("id",fechaId).single();
+  const {data: fechaSC} = await db.from("fechas").select("plazo_limite,empresa_id").eq("id",fechaId).single();
   if (enPeriodoLibre(partsFecha||[], fechaSC)) return {ok:false, error:"Todavía estás en el período de cambios gratis: tocá directamente el pronóstico nuevo"};
   if (prono.pronostico === pronosticoNuevo) return {ok:false, error:"Es el mismo pronóstico"};
   if (part.estado === "Finalizado" || part.estado === "Suspendido") return {ok:false, error:"Partido cerrado"};
@@ -1516,6 +1516,13 @@ async function solicitarCambio(db: any, data: any) {
     numero_cambio:info.proximoCambio, porcentaje:info.proximoPorcentaje, monto:info.proximoCosto,
   });
   if (error) return {ok:false, error:error.message};
+  // Empresas: no hay plata, el cambio es gratis y se aplica al instante (igual cuenta para el límite de 3)
+  if (fechaSC?.empresa_id) {
+    await db.from("cambios_pagos").update({monto:0, porcentaje:0, estado:"Pagado", mp_status:"empresa", pagado_at:new Date().toISOString()}).eq("id",id);
+    const {data: cam} = await db.from("cambios_pagos").select("*").eq("id",id).single();
+    const r = await aplicarCambio(db, cam);
+    return {ok:r.ok, aplicado:true, mensaje:r.mensaje, error:r.error, numeroCambio:info.proximoCambio};
+  }
   return {ok:true, cambioId:id, monto:info.proximoCosto, porcentaje:info.proximoPorcentaje, numeroCambio:info.proximoCambio};
 }
 

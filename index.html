@@ -2519,11 +2519,11 @@ async function loadMisPronoDet(fechaId,f){
   
   if(el)el.innerHTML=`
     <div class="card" style="padding:16px;margin-bottom:12px">
-      <!-- Pozo actual -->
+      ${App.user?.empresa?"":`      <!-- Pozo actual -->
       <div style="padding:12px 16px;background:linear-gradient(135deg,rgba(255,179,0,.15),rgba(255,179,0,.08));border:1px solid rgba(255,179,0,.25);border-radius:var(--r);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
         <div><div style="font-size:13px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:1px">💰 Pozo actual</div></div>
         <div style="font-family:var(--ff);font-size:32px;font-weight:900;color:var(--gold)">$${pozoActual.toLocaleString("es-AR")}</div>
-      </div>
+      </div>`}
       
       <!-- Cambios disponibles -->
       ${cf>0?`<div style="padding:12px 16px;background:var(--bluel);border:1px solid rgba(68,138,255,.2);border-radius:var(--rs);display:flex;align-items:center;gap:12px;margin-bottom:10px">
@@ -2828,6 +2828,7 @@ function renderResumenCambios(){
   const dots=[0,1,2].map(function(i){return`<i class="${i<usados?"used":""}"></i>`;}).join("");
   const sub=cambiosRestantes<=0
     ?"Ya usaste los 3 cambios de esta fecha"
+    :App.user?.empresa?`Cambios <strong>gratis</strong> · se cierran 1 hora antes de cada partido`
     :`Próximo cambio: <strong>$${(proximoCosto||0).toLocaleString("es-AR")}</strong>${proximoPct?` (${proximoPct}% del pozo)`:""} · se cierran 1 hora antes de cada partido`;
   el.innerHTML=`<div class="cambios-box${cambiosRestantes<=0?" agotados":""}">
     <div class="cb-dots" aria-hidden="true">${dots}</div>
@@ -2893,7 +2894,7 @@ function renderPartidos(parts,ctx,puede){
     let plazoHtml="";
     if(inicioOk&&!partidoFinalizado){
       const hasta=function(m){return fmtH(new Date(inicioP.getTime()-m*60000));};
-      const costo=window._proximoCosto?` · $${Number(window._proximoCosto).toLocaleString("es-AR")}`:"";
+      const costo=window._proximoCosto&&!App.user?.empresa?` · $${Number(window._proximoCosto).toLocaleString("es-AR")}`:"";
       let cls="",txt="";
       if(minRest<=0){cls="vivo";txt="En juego";}
       else if(!sel&&libre){cls="ok";txt="Pronosticá hasta "+_fmtH(_libreHasta(window._parts));}
@@ -3211,14 +3212,14 @@ window.showModalCambio=async function(pid,pronoAnterior,pronoNuevo,fid,poid){
           <div style="font-size:14px;color:var(--g2);font-weight:600">${labels[pronoNuevo]}</div>
         </div>
       </div>
-      <div style="background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--r);padding:16px;margin-bottom:16px">
+      ${App.user?.empresa?`<div style="background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:var(--r);padding:14px;margin-bottom:16px;font-size:15px;color:var(--txt2)">Cambio <strong>gratis</strong> · es el cambio #${numeroCambio} de 3</div>`:`<div style="background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--r);padding:16px;margin-bottom:16px">
         <div style="font-size:15px;color:var(--txt2);margin-bottom:4px">Costo del cambio #${numeroCambio} (${porcentaje}%)</div>
         <div style="font-family:var(--ff);font-size:42px;font-weight:900;color:var(--gold)">$${costo.toLocaleString("es-AR")}</div>
         <div style="font-size:14px;color:var(--txt3);margin-top:4px">Se suma al pozo del ganador</div>
-      </div>
+      </div>`}
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn btn-p btn-lg" id="btn-pagar-cambio" onclick="pagarCambio('${pid}','${pronoNuevo}','${fid}','${poid}')">
-          🏦 Pagar por transferencia
+          ${App.user?.empresa?"✓ Confirmar cambio":"🏦 Pagar por transferencia"}
         </button>
         <button class="btn btn-s" style="padding:12px" onclick="this.closest('.modal-bg').remove()">
           Cancelar
@@ -3239,6 +3240,7 @@ window.pagarCambio=async function(pid,pronoNuevo,fid,poid){
   const r=await api("solicitarCambio",{fechaId:fid,pozoId:poid,partidoId:pid,pronosticoNuevo:pronoNuevo});
   document.querySelector(".modal-bg")?.remove();
   if(!r.ok){toast("❌ "+r.error);return;}
+  if(r.aplicado){toast("✅ "+(r.mensaje||"Cambio aplicado"));if(App.screen==="jugar")loadJugar(App.ctx);return;}
   const part=(window._parts||[]).find(function(x){return x.id===pid;})||{};
   modalTransferencia({titulo:"Cambio #"+r.numeroCambio,concepto:`#${part.numero||""} ${part.local||""} vs ${part.visita||""}: pasa a ${pronoNuevo}`,monto:r.monto,fechaId:fid,
     enviar:async function(img){return api("enviarComprobanteCambio",{cambioId:r.cambioId,imagen:img});},
@@ -3312,7 +3314,7 @@ async function loadMisFechas(){
           <div style="flex:1">
             <div style="font-family:var(--ff);font-size:23px;font-weight:800">${f.nombre||i.fechaId}</div>
             <div style="font-size:15px;color:var(--txt3);margin-top:2px">${f.liga||""} · <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr"}" style="font-size:12px">${f.estado||""}</span></div>
-            <div style="font-size:14px;color:var(--gold);margin-top:4px">💰 Pozo: <strong>$${pozoActual.toLocaleString("es-AR")}</strong></div>
+            ${App.user?.empresa?"":`<div style="font-size:14px;color:var(--gold);margin-top:4px">💰 Pozo: <strong>$${pozoActual.toLocaleString("es-AR")}</strong></div>`}
           </div>
           <div style="text-align:right">
             <div style="font-family:var(--ff);font-size:32px;font-weight:900;color:var(--g2)">${pts}</div>
@@ -3344,7 +3346,7 @@ async function loadTabla(ctx){
     const inscripciones=ri.ok?(ri.inscripciones||[]):[];
     if(!inscripciones.length){el.innerHTML=emptyBox("🏆","No estás inscripto en ninguna fecha");return;}
     const fechas=rf.ok?(rf.fechas||[]):[];
-    el.innerHTML=`<div class="card" style="padding:20px"><p class="sec" style="margin-top:0;color:var(--txt)">Seleccioná fecha y pozo</p>${inscripciones.map(function(i){const f=fechas.find(function(x){return x.id===i.fechaId;});return`<div class="admin-btn" onclick="go('tabla',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})"><div><div class="abt">${f?f.nombre:i.fechaId}</div><div class="abd">Pozo $${(i.monto||0).toLocaleString("es-AR")} · ${f?f.liga||"":""}</div></div><span style="color:var(--g2);font-size:23px">→</span></div>`;}).join("")}</div>`;
+    el.innerHTML=`<div class="card" style="padding:20px"><p class="sec" style="margin-top:0;color:var(--txt)">${App.user?.empresa?"Seleccioná la fecha":"Seleccioná fecha y pozo"}</p>${inscripciones.map(function(i){const f=fechas.find(function(x){return x.id===i.fechaId;});return`<div class="admin-btn" onclick="go('tabla',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})"><div><div class="abt">${f?f.nombre:i.fechaId}</div><div class="abd">${App.user?.empresa?"":"Pozo $"+(i.monto||0).toLocaleString("es-AR")+" · "}${f?f.liga||"":""}</div></div><span style="color:var(--g2);font-size:23px">→</span></div>`;}).join("")}</div>`;
     return;
   }
   const r=await api("getTabla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});if(!r.ok){el.innerHTML=errBox(r.error);return;}
@@ -3448,7 +3450,7 @@ async function loadGrilla(ctx){
       ${inscHabilitadas.map(function(i){
         const f=fechas.find(function(x){return x.id===i.fechaId;})||{};
         return`<div class="admin-btn" onclick="go('grilla',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})">
-          <div><div class="abt">${f.nombre||i.fechaId}</div><div class="abd">Pozo $${(i.monto||0).toLocaleString("es-AR")} · ${f.liga||""}</div></div>
+          <div><div class="abt">${f.nombre||i.fechaId}</div><div class="abd">${App.user?.empresa?"":"Pozo $"+(i.monto||0).toLocaleString("es-AR")+" · "}${f.liga||""}</div></div>
           <span style="font-size:22px;color:var(--g2)">→</span>
         </div>`;
       }).join("")}
@@ -3755,8 +3757,8 @@ async function loadAdminFechas(){
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-importar',{fechaId:'${f.id}'})">🔗 Importar</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-res',{fechaId:'${f.id}'})">⚽ Resultados</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showEditarFecha('${f.id}')">✏️ Editar</button>
-        <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showGestionPozos('${f.id}')">💰 Pozos</button>
-        <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-pagos',{fechaId:'${f.id}'})">👥 Inscriptos</button>
+        ${f.empresaId?"":`<button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showGestionPozos('${f.id}')">💰 Pozos</button>
+        <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-pagos',{fechaId:'${f.id}'})">👥 Inscriptos</button>`}
         ${f.estado==="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:16px" onclick="cerrarFecha('${f.id}')">🔒 Cerrar</button>`:""}
         ${f.estado==="Cerrada"?`<button class="btn btn-p" style="padding:6px 12px;font-size:16px" onclick="calcularFecha('${f.id}')">🏆 Calcular</button>`:""}
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="copiarFecha('${f.id}')">⧉ Copiar a…</button>
@@ -3768,7 +3770,7 @@ async function loadAdminFechas(){
   el.innerHTML=`<div class="af-chips">${chips.map(function(c){return`<button class="af-chip${filtro===c[0]?" on":""}" onclick="window._afFiltro='${c[0]}';loadAdminFechas()">${escH(c[1])} <span>${cuenta(c[0])}</span></button>`;}).join("")}</div>
     ${visibles.length?visibles.map(card).join(""):emptyBox("📅","No hay fechas en este apartado")}
     ${ocultas.length?`<details class="af-ocultas"><summary>Ocultas (${ocultas.length})</summary>${ocultas.map(card).join("")}</details>`:""}`;
-  visibles.concat(ocultas).forEach(function(f){loadPozosInline(f.id);});
+  visibles.concat(ocultas).forEach(function(f){if(!f.empresaId)loadPozosInline(f.id);});
 }
 
 async function loadPozosInline(fechaId){
