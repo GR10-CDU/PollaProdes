@@ -275,7 +275,8 @@ html[data-mode="dark"] .tn-item.active{background:linear-gradient(135deg,rgba(25
 .tb-crumb .tc-k{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
 .tb-crumb .tc-t{font-size:16.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tb-spacer{flex:1}
-.tb-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.tb-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;position:relative;z-index:2;background:inherit}
+#topbar{overflow:visible}
 .tb-chip{display:flex;align-items:center;gap:8px;height:40px;padding:0 14px 0 6px;border-radius:20px;background:var(--surface);border:1px solid var(--line);font-size:13.5px;font-weight:700;white-space:nowrap}
 .tb-chip .av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-text);font-size:13px}
 .icon-btn{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);transition:all .25s var(--ease);flex-shrink:0}
@@ -1509,6 +1510,9 @@ function acomodarMenu(){
   mas.onclick=function(e){e.stopPropagation();mas.classList.toggle("open");};
 }
 window.addEventListener("resize",function(){clearTimeout(window._amT);window._amT=setTimeout(acomodarMenu,120);});
+// Volver a medir cuando terminan de cargar las tipografías y cuando cambia el ancho de la barra
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){acomodarMenu();});
+if(window.ResizeObserver){new ResizeObserver(function(){clearTimeout(window._amT);window._amT=setTimeout(acomodarMenu,60);}).observe(document.getElementById("topbar"));}
 document.addEventListener("click",function(){document.querySelector(".tn-mas.open")?.classList.remove("open");});
 
 // Helper logo pequeño sin reborde
@@ -3502,6 +3506,7 @@ function applyPrefs(p,animar){
   h.setAttribute("data-theme",p.theme);h.setAttribute("data-mode",modo);h.setAttribute("data-layout",p.layout);
   const tc=document.querySelector('meta[name="theme-color"]');
   if(tc)tc.setAttribute("content",getComputedStyle(h).getPropertyValue(modo==="dark"?"--bg":"--hero-b").trim()||"#050D1A");
+  if(typeof acomodarMenu==="function")setTimeout(acomodarMenu,50);
   document.querySelectorAll("#settings [data-pref]").forEach(g=>{
     g.querySelectorAll("[data-v]").forEach(b=>b.setAttribute("aria-pressed",String(p[g.dataset.pref]===b.dataset.v)));
   });
