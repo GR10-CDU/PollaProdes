@@ -1,0 +1,17 @@
+{
+  "name": "Polla Prodes",
+  "short_name": "Polla Prodes",
+  "description": "Pronósticos de fútbol con amigos",
+  "start_url": "./?app=1",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#072315",
+  "theme_color": "#072315",
+  "lang": "es-AR",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

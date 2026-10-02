@@ -3,6 +3,151 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
+<script>// Datos de ejemplo para previsualizar el diseño sin tocar la base real.
+(function(){
+  var q=new URLSearchParams(location.search);
+  var prefs={mode:q.get("mode")||"dark",theme:q.get("theme")||"cancha",layout:q.get("layout")||"side"};
+  localStorage.setItem("demo_prefs",JSON.stringify(prefs));
+  var admin=q.get("admin")==="1";
+  if(q.get("screen")==="login"){localStorage.removeItem("demo_tok");localStorage.removeItem("demo_usr");}
+  else{
+    localStorage.setItem("demo_tok","demo");
+    localStorage.setItem("demo_usr",JSON.stringify({id:"U1",usuario:"GR873",nombre:"German Rodriguez",rol:admin?"Admin":"Jugador"}));
+  }
+  var L="https://media.api-sports.io/football/teams/";
+  var en=function(h){return new Date(Date.now()+h*3600e3).toISOString();};
+  var partidos=[
+    {id:"P1",numero:1,local:"Boca Juniors",visita:"River Plate",localLogo:L+"451.png",visitaLogo:L+"435.png",fechaHora:en(-30),tipo:"Polla",estado:"Finalizado",golesLocal:2,golesVisita:1,resultado:"L",tarjetasRojas:1},
+    {id:"P2",numero:2,local:"Racing Club",visita:"Independiente",localLogo:L+"436.png",visitaLogo:L+"453.png",fechaHora:en(-20),tipo:"Doble",estado:"Finalizado",golesLocal:1,golesVisita:1,resultado:"E",tarjetasRojas:2,esToleTole:true},
+    {id:"P3",numero:3,local:"San Lorenzo",visita:"Huracán",localLogo:L+"460.png",visitaLogo:L+"445.png",fechaHora:en(-10),tipo:"Normal",estado:"Finalizado",golesLocal:2,golesVisita:0,resultado:"L"},
+    {id:"P4",numero:4,local:"Estudiantes",visita:"Gimnasia LP",localLogo:L+"450.png",visitaLogo:L+"434.png",fechaHora:en(44),tipo:"Normal",estado:"Pendiente",golesLocal:null,golesVisita:null},
+    {id:"P5",numero:5,local:"Rosario Central",visita:"Newell's",localLogo:L+"437.png",visitaLogo:L+"457.png",fechaHora:en(50),tipo:"Normal",estado:"Pendiente",golesLocal:null,golesVisita:null},
+  ];
+  var fechas=[
+    {id:"F1",nombre:"Fecha 12 · Clásicos",liga:"Liga Argentina",descripcion:"Fin de semana de clásicos",plazoLimite:en(18),estado:"Abierta",cantPartidos:5,reglasHabilitadas:["GSA","MK","EQS"],puedeJugar:true,minutosRestantes:18*60},
+    {id:"F2",nombre:"Champions · Jornada 3",liga:"Champions League",plazoLimite:en(70),estado:"Abierta",cantPartidos:8,reglasHabilitadas:["LLDG"],puedeJugar:true,minutosRestantes:70*60},
+    {id:"F3",nombre:"Fecha 11",liga:"Liga Argentina",plazoLimite:en(-120),estado:"Cerrada",cantPartidos:10,reglasHabilitadas:[],puedeJugar:false,minutosRestantes:-7200},
+  ];
+  var tabla=[["Lucía Fernández","LF221",31],["German Rodriguez","GR873",28],["Martín Gómez","MG104",26],["Sofía Ruiz","SR550",22],["Diego Pérez","DP019",19],["Valen Castro","VC777",15]]
+    .map(function(t,i){return{userId:i===1?"U1":"X"+i,nombre:t[0],siglas:t[1],ptsTotal:t[2],ptsPartidos:t[2]-4,ptsReglas:4,acertados:8-i,posicion:i+1};});
+  var R={
+    loginConToken:function(){return{ok:true,user:JSON.parse(localStorage.getItem("demo_usr")),sessionToken:"demo"};},
+    getFechas:function(){return{ok:true,fechas:fechas};},
+    getFecha:function(d){var f=fechas.find(function(x){return x.id===d.fechaId;})||fechas[0];return{ok:true,fecha:Object.assign({reglasDetalle:[{codigo:"GSA",nombre:"Goles Son Amores",pts:1,desc:"Ambos anotan → 1pt/gol."},{codigo:"MK",nombre:"La MK",pts:5,desc:"Resultado exacto → 5pts."}]},f),partidos:partidos};},
+    getPozos:function(){return{ok:true,pozos:[{id:"Z1",fechaId:"F1",nombre:"Pozo $2.000",monto:2000,comisionPct:25,inscriptos:14,totalRecaudado:28000,premioGanador:21000,pozoActual:21000,cantPartidos:5,yaInscripto:true},{id:"Z2",fechaId:"F1",nombre:"Pozo $5.000",monto:5000,comisionPct:25,inscriptos:6,totalRecaudado:30000,premioGanador:22500,pozoActual:22500,cantPartidos:5,yaInscripto:false}]};},
+    getMisInscripciones:function(){return{ok:true,inscripciones:[{inscripcionId:"I1",fechaId:"F1",pozoId:"Z1",monto:2000}]};},
+    getMiFecha:function(){return{ok:true,pronos:[
+      {id:"R1",partidoId:"P1",numero:1,pronostico:"L",acertado:true,cambiosRealizados:0,puedeCambiar:false,reglas:[{codigo:"GSA",puntos:3},{codigo:"LMR",puntos:1}],ptsGrilla:5,ptsToleTole:0,ptsReglas:4,ptsTotal:9,esToleTole:false,calculado:true},
+      {id:"R2",partidoId:"P2",numero:2,pronostico:"E",acertado:true,cambiosRealizados:0,reglas:[{codigo:"LMR",puntos:2}],ptsGrilla:0,ptsToleTole:3,esToleTole:true,ptsTotal:5,calculado:true},
+      {id:"R3",partidoId:"P3",numero:3,pronostico:"V",acertado:false,cambiosRealizados:0,reglas:[{codigo:"GSA",puntos:0}],ptsGrilla:0,ptsToleTole:0,ptsTotal:0,calculado:true}],
+      reglas:[],totalPartidos:5,totalCompletos:3,cambiosUsados:0,cambiosRestantes:3,proximoCambio:1,proximoPorcentaje:20,proximoCosto:400,cambiosPendientes:[],cambiosRestantesFecha:3};},
+    getMisCambios:function(){return{ok:true,cambiosUsados:0,cambiosRestantes:3,proximoCambio:1,proximoPorcentaje:20,proximoCosto:400,cambios:[]};},
+    getTabla:function(){return simTabla(parseInt(q.get("n")||"20"));},
+    getGrilla:function(){return simGrilla(parseInt(q.get("n")||"20"));},
+    getNoticias:function(){return{ok:true,noticias:[{texto:"¡Arranca la Fecha 12 con todos los clásicos! El pozo de $2.000 ya supera los $21.000.",fecha:"Hoy"},{texto:"Nueva regla disponible: La MK — acertá el resultado exacto y sumá 5 puntos.",fecha:"Ayer"}]};},
+    getEstadisticas:function(){return{ok:true,totalUsuarios:42,totalInscripciones:58,fechas:fechas.map(function(f){return{id:f.id,nombre:f.nombre,estado:f.estado,inscriptos:14};}),ganadores:[{usuario:"LF221"},{usuario:"LF221"},{usuario:"MG104"},{usuario:"GR873"}]};},
+    getGrupoPorCodigo:function(){return{ok:false,error:"Código inválido"};},
+  };
+
+  // ── Simulador: N jugadores, 14 partidos; resultados cargados por el usuario (localStorage "sim_res") ──
+  function rnd(seed){return function(){seed=(seed*16807)%2147483647;return (seed-1)/2147483646;};}
+  function simRes(){try{return JSON.parse(localStorage.getItem("sim_res")||"null");}catch(e){return null;}}
+  if(!simRes())localStorage.setItem("sim_res",JSON.stringify({G1:{gl:2,gv:1,r:1},G2:{gl:1,gv:1,r:0},G3:{gl:0,gv:2,r:2},G4:{gl:3,gv:0,r:0},G5:{gl:1,gv:2,r:0}}));
+  function simState(N){
+    var r=rnd(7+N);
+    var T=[["Boca Juniors",451],["River Plate",435],["Racing Club",436],["Independiente",453],["San Lorenzo",460],["Huracán",445],["Estudiantes",450],["Gimnasia LP",434],["Rosario Central",437],["Newell's",457],["Vélez",438],["Talleres",456],["Lanús",446],["Banfield",449],["Argentinos Jrs",458],["Belgrano",440],["Godoy Cruz",439],["Unión",441],["Tigre",452],["Platense",1064],["Defensa y Justicia",442],["Instituto",478],["Sarmiento",474],["Atl. Tucumán",455],["Barracas Central",2432],["Central Córdoba",1065],["Riestra",2424],["Independ. Rivadavia",473]];
+    var sesgo=[[.62,.22,.16],[.40,.30,.30],[.34,.33,.33],[.70,.20,.10],[.20,.25,.55],[.45,.35,.20],[.38,.30,.32],[.55,.25,.20],[.30,.40,.30],[.50,.20,.30],[.25,.20,.55],[.36,.32,.32],[.60,.25,.15],[.42,.28,.30]];
+    var tipos={3:"Doble",7:"Doble",10:"Polla"},R=simRes()||{},base=Date.now();
+    var parts=sesgo.map(function(sg,i){var n=i+1,a=T[(i*2)%T.length],b=T[(i*2+1)%T.length],x=R["G"+n],fin=!!(x&&x.gl!==""&&x.gl!=null&&x.gv!==""&&x.gv!=null&&!x.susp);
+      var res=fin?(+x.gl>+x.gv?"L":+x.gl===+x.gv?"E":"V"):null;
+      return{id:"G"+n,numero:n,local:a[0],visita:b[0],local_logo:"https://media.api-sports.io/football/teams/"+a[1]+".png",visita_logo:"https://media.api-sports.io/football/teams/"+b[1]+".png",
+        tipo:tipos[n]||"Normal",estado:x&&x.susp?"Suspendido":fin?"Finalizado":"Pendiente",resultado:res,goles_local:fin?+x.gl:null,goles_visita:fin?+x.gv:null,rojas:fin?(+x.r||0):0,
+        fecha_hora:new Date(base+(2+i*3)*3600e3).toISOString()};});
+    var nombres=["Lucía Fernández","Martín Gómez","Sofía Ruiz","Diego Pérez","Valentina Castro","Joaquín López","Camila Díaz","Tomás Romero","Julieta Sosa","Nicolás Álvarez","Agustina Torres","Facundo Ruiz","Micaela Benítez","Santiago Medina","Florencia Herrera","Lautaro Aguirre","Rocío Molina","Matías Giménez","Paula Ríos","Federico Acosta","Carolina Peralta","Bruno Vega","Milagros Ortiz","Gonzalo Navarro","Antonella Silva","Ezequiel Rojas","Daniela Luna","Franco Cabrera","Victoria Ponce","Emiliano Suárez","Abril Godoy","Ignacio Ferreyra","Luciana Paz","Ramiro Correa","Brenda Morales","Leandro Ibáñez","Sol Figueroa","Maximiliano Ledesma","Candela Vera","Patricio Quiroga","Belén Farías","Kevin Arias","Morena Domínguez","Thiago Castillo","Pilar Gutiérrez","Alan Funes","Aldana Villalba","Cristian Toledo","Ailén Bustos","Hernán Juárez"];
+    var pick=function(n){var ids=[];while(ids.length<n){var k="G"+(1+Math.floor(r()*14));if(ids.indexOf(k)<0)ids.push(k);}return ids;};
+    var jug=[];
+    for(var k=0;k<N;k++){
+      var nm=k===1?"German Rodriguez":nombres[k%nombres.length];
+      var sig=k===1?"GR873":(nm.split(" ")[0][0]+nm.split(" ")[1][0]).toUpperCase()+String(100+Math.floor(r()*899));
+      var pr={};
+      parts.forEach(function(p,i){if(r()<0.04)return;var x=r(),sg=sesgo[i];pr[p.id]={v:x<sg[0]?"L":x<sg[0]+sg[1]?"E":"V"};});
+      // Reglas de la fecha: LMR (3), GSA, ZPL, DIEGO (3), MK con un resultado exacto
+      var reglas={LMR:pick(3),GSA:pick(1),ZPL:pick(1),DIEGO:pick(3),MK:{p:pick(1)[0],gl:Math.floor(r()*3),gv:1+Math.floor(r()*2)}};
+      jug.push({userId:k===1?"U1":"S"+k,siglas:sig,nombre:nm,pronos:pr,reglas:reglas,cambiosRestantes:Math.floor(r()*4)});
+    }
+    // TOLE fijado al cierre (con todos los pronósticos); la Polla nunca es TOLE
+    parts.forEach(function(p){var c={L:0,E:0,V:0},t=0;jug.forEach(function(j){var v=(j.pronos[p.id]||{}).v;if(v){c[v]++;t++;}});
+      p.es_tole=p.tipo!=="Polla"&&t>=3&&c.L/t*100<45&&c.E/t*100<45&&c.V/t*100<45;});
+    var P={};parts.forEach(function(p){P[p.id]=p;});
+    jug.forEach(function(j){
+      var pp=0,pr_=0,ac=0,acE=0,acV=0;
+      parts.forEach(function(p){var x=j.pronos[p.id];if(!x)return;
+        if(p.estado==="Finalizado"){x.ok=x.v===p.resultado;if(x.ok){pp+=p.tipo==="Polla"?5:p.es_tole?3:p.tipo==="Doble"?2:1;ac++;if(p.resultado==="E")acE++;if(p.resultado==="V")acV++;}}else x.ok=null;});
+      var fin=function(id){return P[id]&&P[id].estado==="Finalizado";};
+      j.reglas.LMR.forEach(function(id){if(fin(id))pr_+=P[id].rojas;});
+      j.reglas.GSA.forEach(function(id){var p=P[id];if(fin(id)&&p.goles_local>0&&p.goles_visita>0)pr_+=p.goles_local+p.goles_visita;});
+      j.reglas.ZPL.forEach(function(id){var p=P[id];if(fin(id)&&Math.abs(p.goles_local-p.goles_visita)>=3)pr_+=4;});
+      var emp=j.reglas.DIEGO.filter(function(id){return fin(id)&&P[id].resultado==="E";}).length;pr_+=[0,1,3,5][emp];
+      var mk=j.reglas.MK,pm=P[mk.p];if(fin(mk.p)&&pm.goles_local===mk.gl&&pm.goles_visita===mk.gv)pr_+=5;
+      j.ptsPartidos=pp;j.ptsReglas=pr_;j.ptsTotal=pp+pr_;j.acertados=ac;j.empatesAcertados=acE;j.visitantesAcertados=acV;
+    });
+    var cmp=function(a,b){return b.ptsTotal-a.ptsTotal||b.acertados-a.acertados||b.empatesAcertados-a.empatesAcertados||b.visitantesAcertados-a.visitantesAcertados;};
+    jug.sort(cmp);
+    jug.forEach(function(j,i){j.posicion=i>0&&cmp(jug[i-1],j)===0?jug[i-1].posicion:i+1;});
+    var finalizados=parts.filter(function(p){return p.estado==="Finalizado";});
+    return{parts:parts,jug:jug,ultimo:finalizados.length?Math.max.apply(null,finalizados.map(function(p){return p.numero;})):0};
+  }
+  function simGrilla(N){var s=simState(N);return{ok:true,cerrada:true,partidos:s.parts,jugadores:s.jug};}
+  function simTabla(N){var s=simState(N);return{ok:true,tabla:s.jug.map(function(j){return{userId:j.userId,siglas:j.siglas,nombre:j.nombre,ptsTotal:j.ptsTotal,ptsPartidos:j.ptsPartidos,ptsReglas:j.ptsReglas,acertados:j.acertados,empatesAcertados:j.empatesAcertados,visitantesAcertados:j.visitantesAcertados,posicion:j.posicion};}),ultimoPartidoCalculado:s.ultimo,totalPartidos:14};}
+
+  // Barrita del simulador + panel para cargar resultados (grilla y tabla)
+  var scrQ=q.get("screen");
+  if(scrQ==="grilla"||scrQ==="tabla"){
+    document.addEventListener("DOMContentLoaded",function(){
+      var n=q.get("n")||"20";
+      var b=document.createElement("div");
+      b.style.cssText="position:fixed;left:50%;top:calc(8px + env(safe-area-inset-top));transform:translateX(-50%);z-index:3000;display:flex;gap:6px;align-items:center;padding:6px 8px 6px 12px;border-radius:16px;background:#111;color:#fff;font:700 12.5px system-ui;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:calc(100vw - 16px);overflow-x:auto;white-space:nowrap;scrollbar-width:none";
+      var link=function(k,v,txt,act){var u=new URLSearchParams(location.search);u.set(k,v);return '<a href="?'+u+'" style="color:'+(act?"#111":"#fff")+';background:'+(act?"#fff":"rgba(255,255,255,.12)")+';padding:6px 12px;border-radius:10px;text-decoration:none">'+txt+'</a>';};
+      b.innerHTML="🧪 SIMULACIÓN&nbsp;"+["10","20","50"].map(function(x){return link("n",x,x+" jugadores",x===n);}).join("")+'<span style="width:10px"></span>'+link("screen","tabla","Tabla",scrQ==="tabla")+link("screen","grilla","Grilla",scrQ==="grilla");
+      document.body.appendChild(b);
+      // Panel de resultados
+      var pn=document.createElement("div");pn.id="sim-panel";
+      var movil=window.innerWidth<700;if(movil&&localStorage.getItem("sim_open")===null)localStorage.setItem("sim_open","0");
+      pn.style.cssText="position:fixed;right:12px;bottom:"+(movil?"calc(92px + env(safe-area-inset-bottom))":"16px")+";z-index:2999;width:min(340px,calc(100vw - 24px));max-height:"+(movil?"62vh":"78vh")+";overflow:auto;border-radius:18px;background:#111;color:#fff;font:600 13px system-ui;box-shadow:0 20px 50px rgba(0,0,0,.45)";
+      document.body.appendChild(pn);
+      window.simRender=function(){
+        var s=simState(parseInt(n)),R=simRes()||{},abierto=localStorage.getItem("sim_open")!=="0";
+        pn.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;position:sticky;top:0;background:#111;border-bottom:1px solid #333"><b style="font-size:14px">⚽ Cargar resultados</b><span><button onclick="simAzar()" style="background:#2a2a2a;color:#fff;border-radius:8px;padding:5px 9px;margin-right:4px">🎲 Azar</button><button onclick="simBorrar()" style="background:#2a2a2a;color:#fff;border-radius:8px;padding:5px 9px;margin-right:4px">Borrar</button><button onclick="localStorage.setItem(\'sim_open\',\''+(abierto?"0":"1")+'\');simRender()" style="background:#2a2a2a;color:#fff;border-radius:8px;padding:5px 9px">'+(abierto?"–":"+")+'</button></span></div>'+
+        (abierto?'<div style="padding:6px 10px 12px">'+s.parts.map(function(p){var x=R[p.id]||{};var tag=p.tipo==="Polla"?'<span style="background:#E8A100;color:#000;border-radius:5px;padding:0 5px">P</span>':p.tipo==="Doble"?'<span style="background:#8B5CF6;border-radius:5px;padding:0 5px">×2</span>':'<span style="border:1px solid #555;border-radius:5px;padding:0 4px">×1</span>';
+          var inp=function(k,w){return '<input value="'+(x[k]==null?"":x[k])+'" onchange="simSet(\''+p.id+'\',\''+k+'\',this.value)" style="width:'+w+'px;height:28px;border-radius:7px;border:1px solid #444;background:#1d1d1d;color:#fff;text-align:center;font:700 14px system-ui" inputmode="numeric">';};
+          return '<div style="display:flex;align-items:center;gap:6px;padding:5px 2px;border-bottom:1px solid #222'+(x.susp?";opacity:.45":"")+'"><span style="width:22px;color:#888">#'+p.numero+'</span>'+tag+(p.es_tole?'🔥':'')+'<span style="flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.local.split(" ")[0]+' – '+p.visita.split(" ")[0]+'</span>'+inp("gl",30)+'<span>-</span>'+inp("gv",30)+'<span title="Rojas" style="color:#ff6b6e">🟥</span>'+inp("r",24)+'<label title="Suspendido" style="cursor:pointer"><input type="checkbox" '+(x.susp?"checked":"")+' onchange="simSet(\''+p.id+'\',\'susp\',this.checked)">⛔</label></div>';}).join("")+'<div style="color:#888;font-size:11.5px;margin-top:8px">Goles de los 90\'. 🟥 = rojas · ⛔ = suspendido (no suma). Se recalcula al instante.</div></div>':"");
+      };
+      var refrescar=function(){simRender();if(typeof App!=="undefined"){if(App.screen==="tabla")loadTabla(App.ctx);if(App.screen==="grilla")loadGrilla(App.ctx);}};
+      window.simSet=function(id,k,v){var R=simRes()||{};R[id]=R[id]||{};R[id][k]=(k==="susp")?v:(v===""?null:Math.max(0,parseInt(v)||0));localStorage.setItem("sim_res",JSON.stringify(R));refrescar();};
+      window.simBorrar=function(){localStorage.setItem("sim_res","{}");refrescar();};
+      window.simAzar=function(){var R={};for(var i=1;i<=14;i++){var g=function(){var x=Math.random();return x<.3?0:x<.65?1:x<.85?2:x<.95?3:4;};R["G"+i]={gl:g(),gv:g(),r:Math.random()<.25?1:0};}localStorage.setItem("sim_res",JSON.stringify(R));refrescar();};
+      simRender();
+    });
+  }
+  var realFetch=window.fetch;
+  window.fetch=function(url,opt){
+    if(String(url).indexOf("/functions/v1/api")<0)return realFetch.apply(this,arguments);
+    var d=JSON.parse(opt.body||"{}"),fn=R[d.action];
+    var res=fn?fn(d):{ok:true};
+    return new Promise(function(ok){setTimeout(function(){ok(new Response(JSON.stringify(res),{status:200,headers:{"Content-Type":"application/json"}}));},40);});
+  };
+  // Navegar a la pantalla pedida una vez que arranca la app
+  var scr=q.get("screen");
+  if(scr&&scr!=="login"&&scr!=="fechas"){
+    var t=setInterval(function(){
+      if(typeof go==="function"&&App&&App.user){clearInterval(t);setTimeout(function(){
+        var ctx={fechaId:"F1",pozoId:"Z1"};go(scr,ctx);
+        if(q.get("settings")==="1")setTimeout(openSettings,300);
+      },200);}
+    },50);
+  } else if(q.get("settings")==="1"){setTimeout(function(){openSettings();},900);}
+})();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#050D1A"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -12,7 +157,7 @@
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
-<title>POLLA PRODES</title>
+<title>Polla Prodes · Simulador</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -20,7 +165,7 @@
 <script>
 /* Preferencias de apariencia: se aplican antes de pintar para que no haya parpadeo */
 (function(){var d={mode:"auto",theme:"cancha",layout:"side"},p=d;
-try{p=Object.assign({},d,JSON.parse(localStorage.getItem("pp_prefs")||"{}"));}catch(e){}
+try{p=Object.assign({},d,JSON.parse(localStorage.getItem("demo_prefs")||"{}"));}catch(e){}
 var h=document.documentElement,m=p.mode==="auto"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):p.mode;
 h.setAttribute("data-theme",p.theme);h.setAttribute("data-mode",m);h.setAttribute("data-layout",p.layout);window.__prefs=p;})();
 </script>
@@ -1444,7 +1589,7 @@ function getSupabase(){
 }
 const SUPABASE_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6bm1xcWR4ZmdxY25uY2JhenZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4OTI1NzksImV4cCI6MjEwNjQ2ODU3OX0.fGXI7Cp2UgcoMlAJVUgMKnkxOK73Nv_rxrBS8CcXzE8";
 const API_SECRET="PP2026-e45d713bae82f7a471245b7dae206f3b";
-const SK="pp_tok",UK="pp_usr";
+const SK="demo_tok",UK="demo_usr";
 const App={user:null,token:null,screen:null,ctx:{}};
 
 function showLoader(txt){const el=document.getElementById("page-loader");if(el){el.classList.add("show");const t=document.getElementById("page-loader-txt");if(t)t.textContent=txt||"Cargando...";}}
@@ -3562,7 +3707,7 @@ function applyPrefs(p,animar){
 }
 window.setPref=function(k,v){
   window.__prefs=Object.assign({},window.__prefs,{[k]:v});
-  try{localStorage.setItem("pp_prefs",JSON.stringify(window.__prefs));}catch(e){}
+  try{localStorage.setItem("demo_prefs",JSON.stringify(window.__prefs));}catch(e){}
   applyPrefs(window.__prefs,true);
 };
 window.openSettings=function(){
@@ -3576,13 +3721,13 @@ _mqDark.addEventListener?.("change",()=>{if(window.__prefs.mode==="auto")applyPr
 applyPrefs(window.__prefs,false);
 
 // ── INSTALAR COMO APP (celular) ──────────────────────────────
-if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});
+
 let _instalarEvt=null;
 window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();_instalarEvt=e;mostrarInstalar();});
 function esApp(){return window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;}
 function mostrarInstalar(){
   if(esApp()||window.innerWidth>880||document.getElementById("inst-banner"))return;
-  try{if(localStorage.getItem("pp_inst_no")==="1")return;}catch(e){}
+  try{if(localStorage.getItem("demo_inst_no")==="1")return;}catch(e){}
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
   const b=document.createElement("div");b.id="inst-banner";
   b.innerHTML=`<div class="ib-ico"><img src="icons/icon-192.png" alt=""></div>
@@ -3592,8 +3737,8 @@ function mostrarInstalar(){
   document.body.appendChild(b);
 }
 window.instalarApp=async function(){if(!_instalarEvt)return;_instalarEvt.prompt();await _instalarEvt.userChoice;_instalarEvt=null;document.getElementById("inst-banner")?.remove();};
-window.cerrarInstalar=function(){document.getElementById("inst-banner")?.remove();try{localStorage.setItem("pp_inst_no","1");}catch(e){}};
-setTimeout(mostrarInstalar,2500);
+window.cerrarInstalar=function(){document.getElementById("inst-banner")?.remove();try{localStorage.setItem("demo_inst_no","1");}catch(e){}};
+
 
 async function boot(){
   if(loadSession()){
