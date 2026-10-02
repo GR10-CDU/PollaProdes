@@ -1972,7 +1972,7 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
   <aside id="sidebar">
     <div class="sb-head">
       <div class="sb-logo"><img src="icons/icon-192.png" alt="Polla Prodes" width="53" height="53"></div>
-      <div class="sb-brand"><div class="name">Polla<br>Prodes</div><div class="sub">pollaprodes.com</div></div>
+      <div class="sb-brand"><div class="name">Polla<br>Prodes</div><div class="sub">pollaprodes.ar</div></div>
     </div>
     <nav id="sb-nav" aria-label="Menú principal"></nav>
     <div id="sb-foot"></div>
@@ -4436,7 +4436,7 @@ function aplicarMarca(emp){
   try{if(emp)localStorage.setItem("pp_marca",JSON.stringify({tema:emp.tema||"marca",css:(emp.tema||"marca")==="marca"?marcaCSS(emp.color):""}));else localStorage.removeItem("pp_marca");}catch(e){}
   applyPrefs(window.__prefs,false);
   document.querySelectorAll(".sb-logo,.tb-logo").forEach(function(x){x.classList.toggle("emp-logo",!!emp);x.innerHTML=emp?logoEmpHtml(emp):'<img src="icons/icon-192.png" alt="Polla Prodes">';});
-  const sb=document.querySelector(".sb-brand");if(sb)sb.innerHTML=emp?`<div class="name emp">${escH(emp.nombre)}</div><div class="sub">${escH(emp.slogan||"Polla Prodes")}</div>`:`<div class="name">Polla<br>Prodes</div><div class="sub">pollaprodes.com</div>`;
+  const sb=document.querySelector(".sb-brand");if(sb)sb.innerHTML=emp?`<div class="name emp">${escH(emp.nombre)}</div><div class="sub">${escH(emp.slogan||"Polla Prodes")}</div>`:`<div class="name">Polla<br>Prodes</div><div class="sub">pollaprodes.ar</div>`;
   const tb=document.querySelector(".tb-name");if(tb)tb.innerHTML=emp?escH(emp.nombre):"Polla <b>Prodes</b>";
   const tk=document.querySelector(".tc-k");if(tk)tk.textContent=emp?emp.nombre:"Polla Prodes";
   document.title=emp?"Polla "+emp.nombre:"Polla Prodes";

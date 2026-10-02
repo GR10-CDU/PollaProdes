@@ -101,7 +101,7 @@ async function enviarMail(para: string, asunto: string, html: string) {
     const r = await fetch("https://api.resend.com/emails", {
       method:"POST",
       headers:{"Authorization":`Bearer ${KEY}`, "Content-Type":"application/json"},
-      body: JSON.stringify({from: Deno.env.get("MAIL_FROM") || "Polla Prodes <hola@pollaprodes.com>", to:[para], subject:asunto, html}),
+      body: JSON.stringify({from: Deno.env.get("MAIL_FROM") || "Polla Prodes <hola@pollaprodes.ar>", to:[para], subject:asunto, html}),
     });
     return {ok:r.ok};
   } catch (e) { console.error("mail", e); return {ok:false}; }
