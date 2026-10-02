@@ -1145,7 +1145,7 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
 .ib-btn{height:40px;padding:0 14px;font-size:14px;flex-shrink:0}
 .ib-x{width:32px;height:32px;border-radius:10px;font-size:22px;line-height:1;color:var(--ink-3);flex-shrink:0}
 /* Abierta como app instalada: respetar la barra de estado del teléfono */
-@media (display-mode: standalone){#bn{bottom:calc(8px + env(safe-area-inset-bottom))}}
+
 
 /* Tabla y grilla en el celular */
 @media(max-width:600px){
@@ -1157,6 +1157,18 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
   .g-q{flex:1;min-width:0;width:auto}
   .g-types{gap:8px;font-size:11.5px}
   .podio-item .pnm{font-size:13px}
+}
+
+/* Celular: barra de abajo apoyada en el borde y barra de arriba nítida (sin desenfoque) */
+@media(max-width:880px){
+  #topbar{background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none}
+  #bn{left:0;right:0;bottom:0;height:calc(64px + env(safe-area-inset-bottom));padding:0 6px env(safe-area-inset-bottom);
+      border-radius:20px 20px 0 0;border-width:1px 0 0;background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none;
+      box-shadow:0 -8px 24px -12px rgba(0,0,0,.25)}
+  .page{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+  .toast{bottom:calc(80px + env(safe-area-inset-bottom))}
+  #inst-banner{bottom:calc(76px + env(safe-area-inset-bottom))}
+  #reglas-badge{bottom:calc(80px + env(safe-area-inset-bottom))}
 }
 
 /* ═══ MODAL ══════════════════════════════════════════════════ */
