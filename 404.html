@@ -1,0 +1,10 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Polla Prodes</title>
+<script>
+/* Dirección de empresa: pollaprodes.ar/norte → abre la Polla de esa empresa (?e=NORTE).
+   Sirve igual en gr10-cdu.github.io/PollaProdes/norte */
+(function(){
+  var p=location.pathname,base=p.indexOf("/PollaProdes/")===0?"/PollaProdes/":"/";
+  var seg=decodeURIComponent(p.slice(base.length).split("/")[0]||"");
+  location.replace(base+(/^[A-Za-z0-9_-]{3,16}$/.test(seg)?"?e="+encodeURIComponent(seg):""));
+})();
+</script></head><body style="background:#072315"></body></html>

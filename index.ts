@@ -190,6 +190,10 @@ Deno.serve(async (req) => {
       case "adminGetEmpresas": return resp(await adminGetEmpresas(db, data));
       case "adminGuardarEmpresa": return resp(await adminGuardarEmpresa(db, data));
       case "adminSetRol": return resp(await adminSetRol(db, data));
+      case "adminInvitarAdmin": return resp(await adminInvitarAdmin(db, data));
+      case "adminQuitarInvitacion": return resp(await adminQuitarInvitacion(db, data));
+      case "empresaGetEmpleados": return resp(await empresaGetEmpleados(db, data));
+      case "guardarMisDatosEmpresa": return resp(await guardarMisDatosEmpresa(db, data));
       case "adminOcultarFecha": return resp(await adminOcultarFecha(db, data));
       case "adminEliminarFecha": return resp(await adminEliminarFecha(db, data));
       case "adminCopiarFecha": return resp(await adminCopiarFecha(db, data));
@@ -287,19 +291,35 @@ async function registro(db: any, data: any) {
     empresa = await empresaPorCodigo(db, data.codigoEmpresa);
     if (!empresa) return {ok:false, error:"El código de empresa no existe"};
   }
+  // ¿Lo invitaron por correo como admin de una empresa?
+  const email = String(data.email||"").trim().toLowerCase();
+  let invitacion: any = null;
+  if (email) {
+    const {data: inv} = await db.from("empresa_invitaciones").select("*").ilike("email", email);
+    invitacion = (inv||[]).find((i:any) => !empresa || i.empresa_id === empresa.id) || null;
+    if (invitacion && !empresa) { const {data: e} = await db.from("empresas").select("*").eq("id", invitacion.empresa_id).maybeSingle(); empresa = e; }
+  }
+  let datosExtra: any = {};
+  if (empresa) {
+    const v = validarDatosEmpresa(empresa, data.datosExtra || {});
+    if (v.error) return {ok:false, error:v.error};
+    datosExtra = v.datos;
+  }
 
   const usuario = generarUsuario(nombre, tel);
   const id = generarId("USR");
 
   const {error} = await db.from("usuarios").insert({
     id, telefono: tel, pin_hash: pinHash, usuario, nombre,
-    alias_mp: data.alias || "", email: data.email || "", empresa_id: empresa?.id || null,
+    alias_mp: empresa ? "" : (data.alias || ""), email: email || "", empresa_id: empresa?.id || null,
+    datos_extra: datosExtra, rol: invitacion ? "AdminEmpresa" : "Jugador",
   });
   if (error) return {ok:false, error: error.message};
 
   const token = await crearSesion(db, id);
   if (data.email) await enviarMail(data.email, "¡Bienvenido a Polla Prodes!", mailBienvenida(nombre, usuario, tel, data.alias || ""));
-  return {ok:true, user:{id, usuario, nombre, rol:"Jugador", empresa: empresaOut(empresa)}, sessionToken: token};
+  if (invitacion) await db.from("empresa_invitaciones").delete().eq("id", invitacion.id);
+  return {ok:true, user:{id, usuario, nombre, rol: invitacion ? "AdminEmpresa" : "Jugador", empresa: empresaOut(empresa), datosExtra}, sessionToken: token};
 }
 
 // ============================================================
@@ -2015,7 +2035,7 @@ async function adminGuardarDatosPago(db: any, data: any) {
 const TEMAS_EMPRESA = ["cancha","copa","pasion","marca"];
 function empresaOut(e: any) {
   if (!e) return null;
-  return {id:e.id, nombre:e.nombre, codigo:e.codigo, slogan:e.slogan||"", logo:e.logo_url||"", color:e.color||"#2F6BFF", tema:e.tema||"marca"};
+  return {id:e.id, nombre:e.nombre, codigo:e.codigo, slogan:e.slogan||"", logo:e.logo_url||"", color:e.color||"#2F6BFF", tema:e.tema||"marca", campos:Array.isArray(e.campos)?e.campos:[]};
 }
 async function empresaPorCodigo(db: any, codigo: any) {
   const c = normalizarCodigo(codigo);
@@ -2027,7 +2047,7 @@ async function userOut(db: any, user: any) {
   let empresa = null;
   if (user.empresa_id) { const {data} = await db.from("empresas").select("*").eq("id", user.empresa_id).maybeSingle(); empresa = empresaOut(data); }
   return {id:user.id, usuario:user.usuario, nombre:user.nombre, alias:user.alias_mp, email:user.email, telefono:user.telefono,
-    avatar:user.avatar, fotoPendiente:user.foto_pendiente||null, rol:user.rol, cupones:user.cupones, empresa};
+    avatar:user.avatar, fotoPendiente:user.foto_pendiente||null, rol:user.rol, cupones:user.cupones, empresa, datosExtra:user.datos_extra||{}};
 }
 
 // Pública: para mostrar la marca en la pantalla de ingreso cuando entran con el link de la empresa
@@ -2117,6 +2137,7 @@ async function camposMarca(db: any, empresaId: string, data: any) {
   if (data.color !== undefined) { if (!/^#[0-9a-fA-F]{6}$/.test(String(data.color))) return {error:"Color inválido"}; upd.color = String(data.color).toUpperCase(); }
   if (data.logo) { const r: any = await subirLogoEmpresa(db, empresaId, data.logo); if (!r.ok) return {error:r.error}; upd.logo_url = r.url; }
   if (data.quitarLogo) upd.logo_url = null;
+  if (data.campos !== undefined) { const c = limpiarCampos(data.campos); if (c.error) return {error:c.error}; upd.campos = c.campos; }
   return {upd};
 }
 async function guardarMarcaEmpresa(db: any, data: any) {
@@ -2136,10 +2157,12 @@ async function adminGetEmpresas(db: any, data: any) {
   if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
   const [{data: emps}, {data: users}] = await Promise.all([
     db.from("empresas").select("*").order("created_at"),
-    db.from("usuarios").select("id,usuario,nombre,telefono,rol,empresa_id").not("empresa_id","is",null),
+    db.from("usuarios").select("id,usuario,nombre,telefono,email,rol,empresa_id,datos_extra").not("empresa_id","is",null),
   ]);
+  const {data: invs} = await db.from("empresa_invitaciones").select("*").order("created_at");
   return {ok:true, empresas:(emps||[]).map((e:any) => ({...empresaOut(e), estado:e.estado,
-    usuarios:(users||[]).filter((u:any) => u.empresa_id === e.id).map((u:any) => ({id:u.id, usuario:u.usuario, nombre:u.nombre, telefono:u.telefono, rol:u.rol}))}))};
+    usuarios:(users||[]).filter((u:any) => u.empresa_id === e.id).map((u:any) => ({id:u.id, usuario:u.usuario, nombre:u.nombre, telefono:u.telefono, email:u.email||"", rol:u.rol, datos:u.datos_extra||{}})),
+    invitaciones:(invs||[]).filter((i:any) => i.empresa_id === e.id).map((i:any) => ({id:i.id, email:i.email}))}))};
 }
 async function adminGuardarEmpresa(db: any, data: any) {
   const auth = await requireAuth(db, data);
@@ -2245,4 +2268,82 @@ async function adminCopiarFecha(db: any, data: any) {
     creadas.push(id);
   }
   return {ok:true, creadas: creadas.length};
+}
+
+// ── Preguntas propias de la empresa ──────────────────────────
+// campos: [{id, label, tipo:"texto"|"opciones", opciones:[...], obligatorio}]
+function limpiarCampos(campos: any) {
+  if (!Array.isArray(campos)) return {error:"Preguntas inválidas"};
+  if (campos.length > 10) return {error:"Máximo 10 preguntas"};
+  const out: any[] = [];
+  for (const c of campos) {
+    const label = String(c?.label||"").trim().slice(0,60);
+    if (!label) return {error:"Hay una pregunta sin texto"};
+    const tipo = c.tipo === "opciones" ? "opciones" : "texto";
+    const opciones = tipo === "opciones" ? (Array.isArray(c.opciones)?c.opciones:[]).map((o:any) => String(o||"").trim().slice(0,40)).filter(Boolean).slice(0,30) : [];
+    if (tipo === "opciones" && opciones.length < 2) return {error:`"${label}": poné al menos 2 opciones`};
+    out.push({id: String(c.id || ("c"+crypto.randomUUID().slice(0,8))).slice(0,20), label, tipo, opciones, obligatorio: !!c.obligatorio});
+  }
+  return {campos: out};
+}
+function validarDatosEmpresa(empresa: any, datos: any) {
+  const campos = Array.isArray(empresa?.campos) ? empresa.campos : [];
+  const out: any = {};
+  for (const c of campos) {
+    let v = String(datos?.[c.id] ?? "").trim().slice(0,80);
+    if (c.tipo === "opciones" && v && !c.opciones.includes(v)) v = "";
+    if (c.obligatorio && !v) return {error:`Completá: ${c.label}`};
+    if (v) out[c.id] = v;
+  }
+  return {datos: out};
+}
+// El empleado completa/actualiza sus respuestas (desde el Perfil o cuando se agregan preguntas nuevas)
+async function guardarMisDatosEmpresa(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  if (!auth.empresaId) return {ok:false, error:"Tu cuenta no es de ninguna empresa"};
+  const {data: e} = await db.from("empresas").select("*").eq("id", auth.empresaId).single();
+  const v = validarDatosEmpresa(e, data.datos || {});
+  if (v.error) return {ok:false, error:v.error};
+  await db.from("usuarios").update({datos_extra: v.datos}).eq("id", auth.userId);
+  return {ok:true, datosExtra: v.datos};
+}
+// Admin de la empresa: ver a su gente (con sus respuestas)
+async function empresaGetEmpleados(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  const empresaId = auth.rol === "Admin" ? data.empresaId : auth.empresaId;
+  if (!empresaId || !empresaEditable(auth, empresaId)) return {ok:false, error:"Sin permisos"};
+  const {data: us} = await db.from("usuarios").select("id,usuario,nombre,email,rol,datos_extra,created_at").eq("empresa_id", empresaId).order("created_at");
+  return {ok:true, empleados:(us||[]).map((u:any) => ({id:u.id, usuario:u.usuario, nombre:u.nombre, email:u.email||"", rol:u.rol, datos:u.datos_extra||{}}))};
+}
+
+// ── Admins de empresa por correo ──────────────────────────────
+async function adminInvitarAdmin(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const email = String(data.email||"").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return {ok:false, error:"Ese correo no parece válido"};
+  const {data: emp} = await db.from("empresas").select("*").eq("id", data.empresaId).single();
+  if (!emp) return {ok:false, error:"Empresa no encontrada"};
+  const {data: us} = await db.from("usuarios").select("id,nombre,usuario,rol,empresa_id").ilike("email", email);
+  const u = (us||[])[0];
+  if (u) {
+    if (u.rol === "Admin") return {ok:false, error:"Ese correo es del administrador general"};
+    if (u.empresa_id && u.empresa_id !== emp.id) return {ok:false, error:`${u.nombre||u.usuario} ya pertenece a otra empresa`};
+    await db.from("usuarios").update({empresa_id: emp.id, rol:"AdminEmpresa", alias_mp:""}).eq("id", u.id);
+    return {ok:true, estado:"asignado", nombre: u.nombre || u.usuario};
+  }
+  const {error} = await db.from("empresa_invitaciones").upsert({id:generarId("INV"), empresa_id:emp.id, email}, {onConflict:"empresa_id,email", ignoreDuplicates:true});
+  if (error) return {ok:false, error:error.message};
+  const APP_URL = Deno.env.get("APP_URL") || "https://gr10-cdu.github.io/PollaProdes/";
+  const link = `${APP_URL.replace(/\/?$/,"/")}${encodeURIComponent(String(emp.codigo).toLowerCase())}`;
+  const m = await enviarMail(email, `Sos administrador de la Polla de ${emp.nombre}`,
+    `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px"><h2>¡Hola!</h2><p>Te sumaron como <b>administrador de la Polla de ${esc(emp.nombre)}</b>.</p><p>Registrate con este correo (<b>${esc(email)}</b>) y vas a poder publicar novedades y premios para tu gente.</p><p><a href="${link}" style="display:inline-block;background:#0FA958;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:bold">Entrar a la Polla</a></p></div>`);
+  return {ok:true, estado:"invitado", link, mailEnviado: !!m.ok};
+}
+async function adminQuitarInvitacion(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  await db.from("empresa_invitaciones").delete().eq("id", data.id);
+  return {ok:true};
 }

@@ -1904,6 +1904,23 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
   .dl-team b{font-size:16px}
   .dl-pts{font-size:12px}
 }
+/* Preguntas de la empresa + administradores */
+.pq-lista{display:grid;gap:8px;margin-bottom:12px}
+.pq-it{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.pq-it b{display:block;font-size:15px}.pq-it small{font-size:12.5px;color:var(--ink-3)}
+.pq-x{width:32px;height:32px;border-radius:10px;font-size:20px;color:var(--ink-3);flex:none}
+.pq-x:hover{background:var(--danger-soft,rgba(220,38,38,.1));color:var(--no)}
+.pq-nueva{display:grid;gap:8px;padding-top:12px;border-top:1px dashed var(--line-2)}
+.pq-fila{display:flex;gap:10px;align-items:center}
+.pq-fila .inp{flex:1}
+.me-u.pend{background:var(--gold-soft);border:1px dashed var(--gold-line)}
+.dx-datos{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.dx-dato{font-size:12px;padding:2px 8px;border-radius:9px;background:var(--surface-3);color:var(--ink)}
+.dx-dato small{color:var(--ink-3);font-size:11px}
+#rf select.ll-inp{appearance:auto}
+.ig[hidden],[hidden].ig{display:none!important}
+#rce-g .ll-emp{margin-bottom:6px}
+#rce-g>.ig,#rce-campos>.ig{margin-top:12px}
 
 </style>
 </head>
@@ -3667,11 +3684,12 @@ async function loadPerfil(){
     <div class="pf-tit">Tus datos</div>
     <div class="fg">
       <div class="ig"><label class="lbl">Teléfono</label><input class="inp" value="${u.telefono||""}" disabled/></div>
-      <div class="ig"><label class="lbl">Alias MercadoPago</label><input class="inp" id="pal" value="${u.alias||""}" placeholder="tu.alias.mp"/></div>
+      <div class="ig"${u.empresa?" hidden":""}><label class="lbl">Alias MercadoPago</label><input class="inp" id="pal" value="${u.alias||""}" placeholder="tu.alias.mp"/></div>
       <div class="ig"><label class="lbl">Email</label><input class="inp" id="pem" type="email" value="${u.email||""}" placeholder="tu@email.com"/></div>
       <button class="btn btn-p" onclick="guardarPerfil()">Guardar cambios</button>
     </div>
   </div>
+  ${u.empresa&&(u.empresa.campos||[]).length?`<div class="card pf-sec" id="pf-emp"><div class="pf-tit">Tus datos para ${escH(u.empresa.nombre)}</div><div class="fg">${camposEmpresaHtml(u.empresa,u.datosExtra||{},"inp")}<button class="btn btn-p" onclick="guardarDatosEmp(document.getElementById('pf-emp'))">Guardar</button></div></div>`:""}
   <button class="btn btn-d" style="width:100%" onclick="if(confirm('¿Cerrar sesión?'))logout()">⎋ Cerrar sesión</button>`;
 }
 window.elegirAvatar=async function(val){
@@ -3696,7 +3714,7 @@ window.subirFoto=function(file){
   };img.src=rd.result;};rd.readAsDataURL(file);
 };
 window.cancelarFoto=async function(){const r=await api("cancelarFoto");if(r.ok){App.user.fotoPendiente=null;saveSession(App.user,App.token);toast("Envío cancelado");loadPerfil();}else toast("❌ "+r.error);};
-window.guardarPerfil=async()=>{const r=await api("editarPerfil",{alias:document.getElementById("pal")?.value,email:document.getElementById("pem")?.value});toast(r.ok?"✅ Guardado":"❌ "+r.error);};
+window.guardarPerfil=async()=>{const r=await api("editarPerfil",{alias:App.user?.empresa?"":document.getElementById("pal")?.value,email:document.getElementById("pem")?.value});toast(r.ok?"✅ Guardado":"❌ "+r.error);};
 
 async function loadFotos(){
   const el=document.getElementById("afo");if(!el)return;
@@ -4121,7 +4139,7 @@ function showLogin(){
           <div class="ig"><label class="ll-lbl">PIN (4-8 números)</label><div class="pin-wrap"><input class="ll-inp" id="rp" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" placeholder="Elegí un PIN" oninput="this.value=this.value.replace(/\D/g,'');chkPin()"/><button type="button" class="pin-eye" onclick="togglePin(this)" aria-label="Mostrar PIN">👁</button></div></div>
           <div class="ig"><label class="ll-lbl">Repetí el PIN</label><div class="pin-wrap"><input class="ll-inp" id="rp2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" placeholder="Escribilo de nuevo" oninput="this.value=this.value.replace(/\D/g,'');chkPin()"/><button type="button" class="pin-eye" onclick="togglePin(this)" aria-label="Mostrar PIN">👁</button></div><div id="rp-msg" class="pin-msg"></div></div>
           <div class="ig" id="ra-g"><label class="ll-lbl">Alias MercadoPago</label><input class="ll-inp" id="ra" placeholder="tu.alias.mp"/></div>
-          <div class="ig" id="rce-g"><button type="button" class="ll-emp-link" onclick="this.nextElementSibling.hidden=false;this.remove()">¿Tu empresa te dio un código?</button><div hidden><label class="ll-lbl">Código de empresa</label><input class="ll-inp" id="rce" placeholder="Ej: ACME" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')"/></div></div>
+          <div class="ig" id="rce-g"><button type="button" class="ll-emp-link" onclick="this.nextElementSibling.hidden=false;this.remove()">¿Tu empresa te dio un código?</button><div hidden><label class="ll-lbl">Código de empresa</label><input class="ll-inp" id="rce" placeholder="Ej: ACME" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" onchange="buscarEmpresaReg(this.value)"/><div id="rce-campos"></div></div></div>
           <div class="ig"><label class="ll-lbl">Email (opcional)</label><input class="ll-inp" id="rem" type="email" placeholder="tu@email.com"/></div>
           <div id="re"></div>
           <button class="btn btn-p btn-lg" onclick="doReg()" style="margin-top:6px">Crear cuenta →</button>
@@ -4149,8 +4167,11 @@ window.doReg=async()=>{
   if(!n||!t||!p){err("Completá los campos obligatorios");return;}
   if(!/^\d{4,8}$/.test(p)){err("El PIN tiene que tener entre 4 y 8 números");return;}
   if(p!==p2){err("Los dos PIN no coinciden");return;}
-  const ce=(window._empLogin&&window._empLogin.codigo)||document.getElementById("rce")?.value||"";
-  const r=await api("registro",{nombre:n,telefono:t,pin:p,pin2:p2,alias:a,email:e,codigoEmpresa:ce});
+  const empR=window._empLogin||window._empReg||null;
+  const ce=(empR&&empR.codigo)||document.getElementById("rce")?.value||"";
+  const dx=leerCamposEmpresa(document.getElementById("rf"));
+  if(empR){const falta=(empR.campos||[]).find(function(c){return c.obligatorio&&!dx[c.id];});if(falta){err("Completá: "+falta.label);return;}}
+  const r=await api("registro",{nombre:n,telefono:t,pin:p,pin2:p2,alias:empR?"":a,email:e,codigoEmpresa:ce,datosExtra:dx});
   if(!r.ok){if(er)er.innerHTML=`<div class="ll-err">⚠ ${r.error}</div>`;return;}
   saveSession(r.user,r.sessionToken);toast(`✅ Bienvenido, ${r.user.usuario}`);initApp();
 };
@@ -4215,6 +4236,7 @@ function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
   } else go("fechas");
   setTimeout(procesarVueltaPago,600);
   setTimeout(mostrarAvisos,1200);
+  setTimeout(pedirDatosEmpresa,900);
 }
 
 /* ══ HELPERS ═════════════════════════════════════════════════ */
@@ -4385,6 +4407,7 @@ async function loginEmpresa(){
   const r=await api("getEmpresaPublica",{codigo:cod});
   if(!r.ok){try{localStorage.removeItem("pp_emp_cod");}catch(e){}window._empLogin=null;if(qs.get("e"))toast("⚠ "+r.error);return;}
   const emp=r.empresa;window._empLogin=emp;
+  if(qs.get("e")){try{history.replaceState(null,"",linkEmpresa(emp).replace(location.origin,""));}catch(e){}}
   try{localStorage.setItem("pp_emp_cod",emp.codigo);}catch(e){}
   aplicarMarca(emp);
   const lg=document.querySelector(".ll-logo");if(lg){lg.classList.add("emp-logo");lg.innerHTML=logoEmpHtml(emp);}
@@ -4392,7 +4415,7 @@ async function loginEmpresa(){
   const sb=document.querySelector(".ll-sub");if(sb)sb.textContent=emp.slogan||("La Polla de "+emp.nombre);
   const ft=document.querySelector(".ll-foot");if(ft)ft.innerHTML=`${escH(emp.nombre).toUpperCase()} · CON POLLA PRODES · <a href="#" onclick="salirDeEmpresa();return false">No soy de ${escH(emp.nombre)}</a>`;
   const ra=document.getElementById("ra-g");if(ra)ra.hidden=true;
-  const ce=document.getElementById("rce-g");if(ce)ce.innerHTML=`<div class="ll-emp">${logoEmpHtml(emp)}<span>Te sumás a <b>${escH(emp.nombre)}</b> · jugás gratis</span></div>`;
+  const ce=document.getElementById("rce-g");if(ce)ce.innerHTML=`<div class="ll-emp">${logoEmpHtml(emp)}<span>Te sumás a <b>${escH(emp.nombre)}</b> · jugás gratis</span></div>${camposEmpresaHtml(emp,{},"ll-inp")}`;
 }
 window.salirDeEmpresa=function(){try{localStorage.removeItem("pp_emp_cod");}catch(e){}window._empLogin=null;aplicarMarca(null);history.replaceState(null,"",location.pathname+"?login");showLogin();};
 
@@ -4448,20 +4471,23 @@ async function loadAdminEmpresas(){
 window.nuevaEmpresa=function(){
   const m=mkModal("Nueva empresa",`<div class="fg"><div class="ig"><label class="lbl">Nombre de la empresa</label><input class="inp" id="ne-n" placeholder="Distribuidora Norte" maxlength="40"/></div>
     <div class="ig"><label class="lbl">Código para sus empleados</label><input class="inp" id="ne-c" placeholder="NORTE" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\\s/g,'')" style="font-family:var(--ff);font-size:24px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Con este código (o con el link que te doy después) los empleados se registran y quedan en la empresa.</div></div>
+    <div class="ig"><label class="lbl">Correo del administrador de la empresa (opcional)</label><input class="inp" id="ne-m" type="email" placeholder="rrhh@empresa.com"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Si ya tiene cuenta queda como admin al instante; si no, cuando se registre con ese correo.</div></div>
     <button class="btn btn-p btn-lg" onclick="crearEmpresa()">Crear empresa</button></div>`);
   document.body.appendChild(m);
 };
 window.crearEmpresa=async function(){
   const r=await api("adminGuardarEmpresa",{nombre:document.getElementById("ne-n")?.value,codigo:document.getElementById("ne-c")?.value});
   if(!r.ok){toast("❌ "+r.error);return;}
+  const mail=document.getElementById("ne-m")?.value.trim();
   document.querySelector(".modal-bg")?.remove();toast("✅ Empresa creada. Ahora cargale el logo y los colores");
+  if(mail)await invitarAdmin(mail,r.empresa.id);
   window._empEdit=r.empresa.id;loadAdminEmpresas();
 };
-function linkEmpresa(e){return location.origin+location.pathname+"?e="+encodeURIComponent(e.codigo);}
+function linkEmpresa(e){return location.origin+location.pathname.replace(/[^/]*$/,"")+encodeURIComponent(String(e.codigo).toLowerCase());}
 function renderEditorEmpresa(el,emp,esAdminGeneral){
   window._edEmp=emp;window._edAdmin=esAdminGeneral;
   window._mk={tema:emp.tema||"marca",color:emp.color||"#2F5BEA",logoColor:null,logo:null,quitarLogo:false,logoUrl:emp.logo||"",modo:(emp.tema||"marca")!=="marca"?"juego":"paleta"};
-  window._nvTipo="novedad";window._nvEdit=null;
+  window._nvTipo="novedad";window._nvEdit=null;window._edCampos=(emp.campos||[]).map(function(c){return Object.assign({},c);});
   const link=linkEmpresa(emp);
   el.innerHTML=`${esAdminGeneral?`<div class="back" onclick="window._empEdit=null;loadAdminEmpresas()">← Todas las empresas</div>`:""}
   <div class="me-grid">
@@ -4483,7 +4509,9 @@ function renderEditorEmpresa(el,emp,esAdminGeneral){
         <div class="me-acc"><button class="btn btn-s" onclick="navigator.clipboard?.writeText('${link}').then(function(){toast('Link copiado')})">Copiar link</button><a class="btn btn-p" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("¡Sumate a la Polla de "+emp.nombre+"! Registrate acá: "+link)}">Compartir por WhatsApp</a></div>
         <p class="me-p">O que pongan el código <b class="me-cod">${escH(emp.codigo)}</b> al registrarse.</p>
       </div>
-      ${esAdminGeneral?`<div class="card me-sec"><div class="me-tit">Empleados (${emp.usuarios.length})</div>${emp.usuarios.length?`<div class="me-users">${emp.usuarios.map(function(u){return`<div class="me-u"><div><b>${escH(u.nombre||u.usuario)}</b><small>${escH(u.usuario)} · ${escH(u.telefono||"")}</small></div><label class="me-sw"><input type="checkbox" ${u.rol==="AdminEmpresa"?"checked":""} onchange="setRolEmp('${u.id}',this.checked)"/><span>Admin</span></label></div>`;}).join("")}</div>`:`<p class="me-p">Todavía nadie se registró con el código.</p>`}
+      <div class="card me-sec"><div class="me-tit">Preguntas al registrarse</div><div id="pq-box">${preguntasHtml()}</div></div>
+      ${esAdminGeneral?`<div class="card me-sec"><div class="me-tit">Administradores</div>${adminsHtml(emp)}</div>`:`<div class="card me-sec"><div class="me-tit">Tu gente</div><div id="me-emp"><div class="loading"><div class="spinner"></div></div></div></div>`}
+      ${esAdminGeneral?`<div class="card me-sec"><div class="me-tit">Empleados (${emp.usuarios.length})</div>${emp.usuarios.length?`<div class="me-users">${emp.usuarios.map(function(u){return`<div class="me-u"><div><b>${escH(u.nombre||u.usuario)}</b><small>${escH(u.usuario)} · ${escH(u.telefono||"")}${u.email?" · "+escH(u.email):""}</small><div class="dx-datos">${datosTxt(emp,u.datos)}</div></div><label class="me-sw"><input type="checkbox" ${u.rol==="AdminEmpresa"?"checked":""} onchange="setRolEmp('${u.id}',this.checked)"/><span>Admin</span></label></div>`;}).join("")}</div>`:`<p class="me-p">Todavía nadie se registró con el código.</p>`}
         <div class="me-acc"><button class="btn btn-s" onclick="window._fechaParaEmpresa='${emp.id}';go('admin-fechas');setTimeout(showCrearFecha,300)">+ Crear fecha para ${escH(emp.nombre)}</button></div></div>`:""}
     </div>
     <div class="me-col">
@@ -4505,7 +4533,7 @@ function renderEditorEmpresa(el,emp,esAdminGeneral){
       </div>
     </div>
   </div>`;
-  nvCargar();
+  nvCargar();if(!esAdminGeneral)cargarEmpleadosEmp();
   if(emp.logo)colorDeLogo(emp.logo).then(function(c){window._mk.logoColor=c;if(window._mk.modo==="logo")mkOpts();});
   mkModo(window._mk.modo);
 }
@@ -4528,7 +4556,7 @@ window.nvEditar=function(id){const n=(window._nvs||[]).find(function(x){return x
   document.getElementById("nv-t").value=n.titulo;document.getElementById("nv-x").value=n.texto||"";document.getElementById("nv-btn").textContent="Guardar cambios";document.getElementById("nv-cancel").hidden=false;document.getElementById("nv-t").focus();};
 window.nvCancelar=function(){window._nvEdit=null;const t=document.getElementById("nv-t"),x=document.getElementById("nv-x");if(t)t.value="";if(x)x.value="";const b=document.getElementById("nv-btn");if(b)b.textContent="Publicar";const c=document.getElementById("nv-cancel");if(c)c.hidden=true;};
 window.nvBorrar=async function(id){if(!confirm("¿Borrar esta publicación?"))return;const r=await api("borrarNovedad",{id});if(!r.ok){toast("❌ "+r.error);return;}toast("Borrado");nvCargar();};
-window.setRolEmp=async function(uid,admin){const r=await api("adminSetRol",{userId:uid,rol:admin?"AdminEmpresa":"Jugador"});toast(r.ok?(admin?"✅ Ahora es admin de la empresa":"Ya no es admin"):"❌ "+r.error);};
+window.setRolEmp=async function(uid,admin){const r=await api("adminSetRol",{userId:uid,rol:admin?"AdminEmpresa":"Jugador"});toast(r.ok?(admin?"✅ Ahora es admin de la empresa":"Ya no es admin"):"❌ "+r.error);return r;};
 // Colores
 window.mkModo=function(m){
   const k=window._mk;k.modo=m;
@@ -4622,6 +4650,90 @@ window.copiarFechaOk=async function(id){
   const r=await api("adminCopiarFecha",{fechaId:id,destinos:dest,nombre:document.getElementById("cf-n")?.value});
   if(!r.ok){toast("❌ "+r.error);return;}
   document.querySelector(".modal-bg")?.remove();toast(`✅ Copiada a ${r.creadas} destino${r.creadas!==1?"s":""}`);loadAdminFechas();
+};
+
+
+// ── Preguntas propias de la empresa (registro, perfil y editor) ──
+function camposEmpresaHtml(emp,valores,cls){
+  const cs=(emp&&emp.campos)||[];if(!cs.length)return"";
+  return cs.map(function(c){const v=valores&&valores[c.id]||"",lb=`<label class="${cls==="ll-inp"?"ll-lbl":"lbl"}">${escH(c.label)}${c.obligatorio?"":" (opcional)"}</label>`;
+    return`<div class="ig">${lb}${c.tipo==="opciones"?`<select class="${cls}" data-campo="${c.id}"><option value="">Elegí…</option>${c.opciones.map(function(o){return`<option${o===v?" selected":""}>${escH(o)}</option>`;}).join("")}</select>`:`<input class="${cls}" data-campo="${c.id}" maxlength="80" value="${escH(v)}"/>`}</div>`;}).join("");
+}
+function leerCamposEmpresa(root){const d={};(root||document).querySelectorAll("[data-campo]").forEach(function(i){const v=i.value.trim();if(v)d[i.dataset.campo]=v;});return d;}
+function datosTxt(emp,datos){return((emp&&emp.campos)||[]).filter(function(c){return datos&&datos[c.id];}).map(function(c){return`<span class="dx-dato"><small>${escH(c.label)}</small> ${escH(datos[c.id])}</span>`;}).join("");}
+window.buscarEmpresaReg=async function(cod){
+  const box=document.getElementById("rce-campos");window._empReg=null;
+  const ra=document.getElementById("ra-g");if(ra)ra.hidden=false;
+  if(!box)return;box.innerHTML="";if(!cod||cod.length<3)return;
+  const r=await api("getEmpresaPublica",{codigo:cod});
+  if(!r.ok){box.innerHTML=`<div class="ll-err">⚠ ${escH(r.error)}</div>`;return;}
+  window._empReg=r.empresa;if(ra)ra.hidden=true;
+  box.innerHTML=`<div class="ll-emp" style="margin-top:10px">${logoEmpHtml(r.empresa)}<span>Te sumás a <b>${escH(r.empresa.nombre)}</b> · jugás gratis</span></div>${camposEmpresaHtml(r.empresa,{},"ll-inp")}`;
+};
+window.guardarDatosEmp=async function(root){
+  const r=await api("guardarMisDatosEmpresa",{datos:leerCamposEmpresa(root)});
+  if(!r.ok){toast("❌ "+r.error);return false;}
+  App.user.datosExtra=r.datosExtra;saveSession(App.user,App.token);toast("✅ Datos guardados");return true;
+};
+function pedirDatosEmpresa(){
+  const u=App.user,e=u&&u.empresa;if(!e||!(e.campos||[]).length)return;
+  const falta=e.campos.filter(function(c){return c.obligatorio&&!(u.datosExtra||{})[c.id];});if(!falta.length)return;
+  const m=mkModal(`Datos para ${escH(e.nombre)}`,`<div class="fg" id="pde"><p style="font-size:15px;color:var(--txt3)">${escH(e.nombre)} te pide estos datos para la Polla.</p>${camposEmpresaHtml(e,u.datosExtra||{},"inp")}<button class="btn btn-p btn-lg" onclick="guardarDatosEmp(document.getElementById('pde')).then(function(ok){if(ok)document.querySelector('.modal-bg')?.remove();})">Guardar</button></div>`);
+  document.body.appendChild(m);
+}
+// Editor de preguntas (en "Mi empresa" y en Empresas)
+function preguntasHtml(){
+  const cs=window._edCampos||[];
+  return`${cs.length?`<div class="pq-lista">${cs.map(function(c,i){return`<div class="pq-it"><div><b>${escH(c.label)}</b><small>${c.tipo==="opciones"?"Opciones: "+c.opciones.map(escH).join(", "):"Texto libre"}${c.obligatorio?" · Obligatoria":" · Opcional"}</small></div><button class="pq-x" onclick="window._edCampos.splice(${i},1);pqRender()" aria-label="Quitar">×</button></div>`;}).join("")}</div>`:`<p class="me-p">Todavía no pedís datos extra. Ejemplos: "¿De qué sector sos?", "¿De qué equipo sos hincha?".</p>`}
+  <div class="pq-nueva">
+    <input class="inp" id="pq-l" maxlength="60" placeholder="Pregunta: ej. ¿De qué sector sos?"/>
+    <div class="pq-fila"><select class="inp" id="pq-t" onchange="document.getElementById('pq-o').hidden=this.value!=='opciones'"><option value="texto">Respuesta libre</option><option value="opciones">Elegir de una lista</option></select>
+      <label class="me-sw"><input type="checkbox" id="pq-ob" checked/><span>Obligatoria</span></label></div>
+    <input class="inp" id="pq-o" hidden placeholder="Opciones separadas por coma: Ventas, Sistemas, Logística"/>
+    <div class="me-acc"><button class="btn btn-s" onclick="pqAgregar()">+ Agregar pregunta</button><button class="btn btn-p" onclick="pqGuardar()">Guardar preguntas</button></div>
+  </div>`;
+}
+window.pqRender=function(){const el=document.getElementById("pq-box");if(el)el.innerHTML=preguntasHtml();};
+window.pqAgregar=function(){
+  const l=document.getElementById("pq-l").value.trim(),t=document.getElementById("pq-t").value,ob=document.getElementById("pq-ob").checked;
+  const op=document.getElementById("pq-o").value.split(",").map(function(x){return x.trim();}).filter(Boolean);
+  if(!l){toast("Escribí la pregunta");return;}
+  if(t==="opciones"&&op.length<2){toast("Poné al menos 2 opciones separadas por coma");return;}
+  if((window._edCampos||[]).length>=10){toast("Máximo 10 preguntas");return;}
+  window._edCampos.push({label:l,tipo:t,opciones:t==="opciones"?op:[],obligatorio:ob});pqRender();
+};
+window.pqGuardar=async function(){
+  const emp=window._edEmp,datos={campos:window._edCampos};
+  const r=window._edAdmin?await api("adminGuardarEmpresa",Object.assign({id:emp.id},datos)):await api("guardarMarcaEmpresa",datos);
+  if(!r.ok){toast("❌ "+r.error);return;}
+  toast("✅ Preguntas guardadas");window._edCampos=(r.empresa.campos||[]).slice();window._edEmp=Object.assign(emp,{campos:r.empresa.campos});pqRender();
+  if(App.user?.empresa&&App.user.empresa.id===r.empresa.id){App.user.empresa=r.empresa;saveSession(App.user,App.token);}
+};
+// Empleados de la empresa (admin de la empresa: solo lectura, con sus respuestas)
+async function cargarEmpleadosEmp(){
+  const el=document.getElementById("me-emp");if(!el)return;
+  const r=await api("empresaGetEmpleados",{empresaId:window._edEmp.id});
+  if(!r.ok){el.innerHTML=errBox(r.error);return;}
+  const es=r.empleados||[];
+  el.innerHTML=es.length?`<div class="me-users">${es.map(function(u){return`<div class="me-u"><div><b>${escH(u.nombre||u.usuario)}${u.rol==="AdminEmpresa"?' <span class="bdg bblue">Admin</span>':""}</b><small>${escH(u.usuario)}</small><div class="dx-datos">${datosTxt(window._edEmp,u.datos)}</div></div></div>`;}).join("")}</div>`:`<p class="me-p">Todavía nadie se registró.</p>`;
+}
+// Admins por correo (solo el admin general)
+function adminsHtml(emp){
+  const adms=emp.usuarios.filter(function(u){return u.rol==="AdminEmpresa";}),inv=emp.invitaciones||[];
+  return`${adms.length||inv.length?`<div class="me-users">${adms.map(function(u){return`<div class="me-u"><div><b>${escH(u.nombre||u.usuario)}</b><small>${escH(u.email||u.usuario)}</small></div><button class="btn btn-s" onclick="setRolEmp('${u.id}',false).then(loadAdminEmpresas)">Quitar</button></div>`;}).join("")}${inv.map(function(i){return`<div class="me-u pend"><div><b>${escH(i.email)}</b><small>Invitado · se activa cuando se registre con este correo</small></div><div class="me-acc"><button class="btn btn-s" onclick="copiarInvitacion('${escH(i.email)}')">Copiar mensaje</button><button class="btn btn-s" onclick="quitarInvitacion('${i.id}')">Cancelar</button></div></div>`;}).join("")}</div>`:`<p class="me-p">Todavía no tiene administradores.</p>`}
+  <div class="pq-fila" style="margin-top:10px"><input class="inp" id="adm-mail" type="email" placeholder="correo@empresa.com"/><button class="btn btn-p" onclick="invitarAdmin()">Asignar</button></div>`;
+}
+window.invitarAdmin=async function(mail,empId){
+  const email=(mail||document.getElementById("adm-mail")?.value||"").trim();if(!email){toast("Escribí el correo");return;}
+  const r=await api("adminInvitarAdmin",{empresaId:empId||window._edEmp.id,email});
+  if(!r.ok){toast("❌ "+r.error);return;}
+  toast(r.estado==="asignado"?`✅ ${r.nombre} ya es admin de la empresa`:r.mailEnviado?"✅ Invitación enviada por correo":"✅ Invitado. Mandale el mensaje con el link (Copiar mensaje)",4500);
+  if(!mail)loadAdminEmpresas();
+};
+window.quitarInvitacion=async function(id){const r=await api("adminQuitarInvitacion",{id});toast(r.ok?"Invitación cancelada":"❌ "+r.error);loadAdminEmpresas();};
+window.copiarInvitacion=function(email){
+  const e=window._edEmp,txt=`¡Hola! Te sumé como administrador de la Polla de ${e.nombre}. Registrate con tu correo ${email} acá: ${linkEmpresa(e)}`;
+  navigator.clipboard?.writeText(txt).then(function(){toast("Mensaje copiado: pegalo en WhatsApp o en un mail");});
 };
 
 // ── LANDING (portada para quien no tiene sesión) ────────────
