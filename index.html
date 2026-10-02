@@ -1207,7 +1207,7 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
 }
 
 /* Encabezado del cara a cara: 3 variantes */
-.dh{position:relative;max-width:640px;margin:0 auto;padding-top:14px}
+.dh{position:relative;max-width:640px;margin:0 auto}
 .dh .pd-lbl{top:-8px;left:0}
 .dh-dif{font-size:14px;font-weight:600;color:var(--ink-2);text-align:center}
 .dh-dif b{font-family:var(--ff);font-size:19px;font-weight:800}
@@ -2913,8 +2913,7 @@ function renderGrilla(){
   const ptxt=function(j){return j.posicion?j.posicion+"º":"";};
   const difTxt=function(d){return d>0?`Le sacás <b>${d}</b> punto${d!==1?"s":""}`:d<0?`Te saca <b>${-d}</b> punto${d!==-1?"s":""}`:"Están <b>empatados</b>";};
   const duelHead=function(a,r,delta,i){
-    const v=g.cmp==="top3"?(["A","B","C"][i]||"A"):"A";
-    const lbl=g.cmp==="top3"?`<span class="pd-lbl">Opción ${v}</span>`:"";
+    const v="A",lbl="";
     const cls=delta>0?"up":delta<0?"down":"";
     if(v==="B"){const filas=[a,r].sort(function(x,y){return (x.posicion||99)-(y.posicion||99)||(y.ptsTotal-x.ptsTotal);});
       return`<div class="dh dh-b">${lbl}${filas.map(function(j){return`<div class="dhb-row${j===a?" yo":""}"><span class="dhb-pos">${medal(j)||ptxt(j)}</span>${av(j)}<span class="dhb-nm">${nm(j)}</span>${dots(j.cambiosRestantes)}<span class="dhb-pts">${j.ptsTotal||0}<small>pts</small></span></div>`;}).join("")}<div class="dh-dif ${cls}">${difTxt(delta)}</div></div>`;}
