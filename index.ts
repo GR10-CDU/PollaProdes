@@ -137,7 +137,7 @@ function generarUsuario(nombre: string, tel: string): string {
   return letras + digitos;
 }
 
-async function requireAuth(db: any, data: any): Promise<{ok:boolean, userId?:string, rol?:string, error?:string}> {
+async function requireAuth(db: any, data: any): Promise<{ok:boolean, userId?:string, rol?:string, empresaId?:string|null, error?:string}> {
   if (!data.sessionToken) return {ok:false, error:"Sin sesión"};
   const { data: sesion } = await db.from("sesiones")
     .select("user_id, expira")
@@ -148,8 +148,8 @@ async function requireAuth(db: any, data: any): Promise<{ok:boolean, userId?:str
     await db.from("sesiones").delete().eq("token", data.sessionToken);
     return {ok:false, error:"Sesión expirada"};
   }
-  const { data: user } = await db.from("usuarios").select("rol").eq("id", sesion.user_id).single();
-  return {ok:true, userId: sesion.user_id, rol: user?.rol || "Jugador"};
+  const { data: user } = await db.from("usuarios").select("rol,empresa_id").eq("id", sesion.user_id).single();
+  return {ok:true, userId: sesion.user_id, rol: user?.rol || "Jugador", empresaId: user?.empresa_id || null};
 }
 
 // ── ROUTER ──────────────────────────────────────────────────
@@ -180,6 +180,19 @@ Deno.serve(async (req) => {
 
       // ── FECHAS Y PARTIDOS ─────────────────────────────────
       case "getFechas": return resp(await getFechas(db, data));
+      // ── EMPRESAS ──────────────────────────────────────────
+      case "getEmpresaPublica": return resp(await getEmpresaPublica(db, data));
+      case "jugarEmpresa": return resp(await jugarEmpresa(db, data));
+      case "getNovedades": return resp(await getNovedades(db, data));
+      case "guardarNovedad": return resp(await guardarNovedad(db, data));
+      case "borrarNovedad": return resp(await borrarNovedad(db, data));
+      case "guardarMarcaEmpresa": return resp(await guardarMarcaEmpresa(db, data));
+      case "adminGetEmpresas": return resp(await adminGetEmpresas(db, data));
+      case "adminGuardarEmpresa": return resp(await adminGuardarEmpresa(db, data));
+      case "adminSetRol": return resp(await adminSetRol(db, data));
+      case "adminOcultarFecha": return resp(await adminOcultarFecha(db, data));
+      case "adminEliminarFecha": return resp(await adminEliminarFecha(db, data));
+      case "adminCopiarFecha": return resp(await adminCopiarFecha(db, data));
       case "getFecha": return resp(await getFecha(db, data));
 
       // ── POZOS E INSCRIPCIONES ─────────────────────────────
@@ -268,18 +281,25 @@ async function registro(db: any, data: any) {
   const {data: existe} = await db.from("usuarios").select("id").eq("telefono", tel).single();
   if (existe) return {ok:false, error:"Teléfono ya registrado"};
 
+  // Código de empresa (opcional): la cuenta queda atada a esa empresa
+  let empresa: any = null;
+  if (data.codigoEmpresa) {
+    empresa = await empresaPorCodigo(db, data.codigoEmpresa);
+    if (!empresa) return {ok:false, error:"El código de empresa no existe"};
+  }
+
   const usuario = generarUsuario(nombre, tel);
   const id = generarId("USR");
 
   const {error} = await db.from("usuarios").insert({
     id, telefono: tel, pin_hash: pinHash, usuario, nombre,
-    alias_mp: data.alias || "", email: data.email || "",
+    alias_mp: data.alias || "", email: data.email || "", empresa_id: empresa?.id || null,
   });
   if (error) return {ok:false, error: error.message};
 
   const token = await crearSesion(db, id);
   if (data.email) await enviarMail(data.email, "¡Bienvenido a Polla Prodes!", mailBienvenida(nombre, usuario, tel, data.alias || ""));
-  return {ok:true, user:{id, usuario, nombre, rol:"Jugador"}, sessionToken: token};
+  return {ok:true, user:{id, usuario, nombre, rol:"Jugador", empresa: empresaOut(empresa)}, sessionToken: token};
 }
 
 // ============================================================
@@ -315,7 +335,7 @@ async function login(db: any, data: any) {
   if (v.viejo) upd.pin_hash = await hashPinSeguro(String(data.pin)); // actualizar al formato seguro
   await db.from("usuarios").update(upd).eq("id", user.id);
   const token = await crearSesion(db, user.id);
-  return {ok:true, user:{id:user.id, usuario:user.usuario, nombre:user.nombre, alias:user.alias_mp, email:user.email, telefono:user.telefono, avatar:user.avatar, fotoPendiente:user.foto_pendiente||null, rol:user.rol, cupones:user.cupones}, sessionToken: token};
+  return {ok:true, user: await userOut(db, user), sessionToken: token};
 }
 
 // ============================================================
@@ -326,7 +346,7 @@ async function loginConToken(db: any, data: any) {
   if (!auth.ok) return auth;
   const {data: user} = await db.from("usuarios").select("*").eq("id", auth.userId).single();
   if (!user) return {ok:false, error:"Usuario no encontrado"};
-  return {ok:true, user:{id:user.id, usuario:user.usuario, nombre:user.nombre, alias:user.alias_mp, email:user.email, telefono:user.telefono, avatar:user.avatar, fotoPendiente:user.foto_pendiente||null, rol:user.rol, cupones:user.cupones}, sessionToken: data.sessionToken};
+  return {ok:true, user: await userOut(db, user), sessionToken: data.sessionToken};
 }
 
 async function logout(db: any, data: any) {
@@ -347,11 +367,12 @@ async function crearSesion(db: any, userId: string): Promise<string> {
 //  GET FECHAS
 // ============================================================
 async function getFechas(db: any, data: any) {
-  const esAdmin = data.sessionToken ? (await requireAuth(db, data)).rol === "Admin" : false;
-  const {data: fechas} = await db.from("fechas")
-    .select("*")
-    .in("estado", ["Abierta","Cerrada","Jugada"])
-    .order("plazo_limite");
+  const quien: any = data.sessionToken ? await requireAuth(db, data) : {ok:false};
+  const esAdmin = quien.ok && quien.rol === "Admin";
+  let q = db.from("fechas").select("*").in("estado", ["Abierta","Cerrada","Jugada"]).order("plazo_limite");
+  if (!esAdmin) q = quien.ok && quien.empresaId ? q.eq("empresa_id", quien.empresaId) : q.is("empresa_id", null);
+  const {data: fechas} = await q;
+  const {data: emps} = esAdmin ? await db.from("empresas").select("id,nombre") : {data: []};
 
   const ids = (fechas||[]).map((f:any) => f.id);
   const {data: pts} = ids.length ? await db.from("partidos").select("fecha_id,fecha_hora").in("fecha_id", ids) : {data: []};
@@ -366,6 +387,8 @@ async function getFechas(db: any, data: any) {
       puedeJugar: f.estado === "Abierta" && mins > 0,
       minutosRestantes: mins,
       tieneCodigo: !!f.codigo_grupo,
+      empresaId: f.empresa_id || null, oculta: esAdmin ? !!f.oculta : undefined,
+      empresaNombre: esAdmin && f.empresa_id ? ((emps||[]).find((e:any) => e.id === f.empresa_id)?.nombre || "") : undefined,
       codigoGrupo: esAdmin ? (f.codigo_grupo || "") : undefined,
       pagoAlias: esAdmin ? (f.pago_alias || "") : undefined, pagoTitular: esAdmin ? (f.pago_titular || "") : undefined,
     };
@@ -477,6 +500,7 @@ async function inscribirse(db: any, data: any) {
   // Verificar fecha abierta
   const {data: fecha} = await db.from("fechas").select("*").eq("id", fechaId).single();
   if (!fecha || fecha.estado !== "Abierta") return {ok:false, error:"Fecha cerrada"};
+  if ((fecha.empresa_id || null) !== (auth.empresaId || null)) return {ok:false, error:"Esta fecha no es de tu grupo"};
   const {data: partsF} = await db.from("partidos").select("fecha_hora").eq("fecha_id", fechaId);
   if (minutosHasta(cierreFecha(fecha, partsF||[])) <= 0) return {ok:false, error:"La fecha ya cerró (1 hora antes del primer partido)"};
 
@@ -876,8 +900,13 @@ async function adminCrearFecha(db: any, data: any) {
     reglas_habilitadas:data.reglasHabilitadas||[],
     codigo_grupo: normalizarCodigo(data.codigoGrupo),
     pago_alias: String(data.pagoAlias||"").trim() || null, pago_titular: String(data.pagoTitular||"").trim() || null,
+    empresa_id: data.empresaId || null,
   });
   if (error) return {ok:false, error: error.code === "23505" ? "Ese código ya lo usa otra fecha" : error.message};
+  if (data.empresaId) {
+    const {data: emp} = await db.from("empresas").select("nombre").eq("id", data.empresaId).single();
+    await db.from("pozos").insert({id:generarId("POZ"), fecha_id:id, nombre:`Polla ${emp?.nombre||"Empresa"}`, monto:0, comision_pct:0, premio_fijo:0});
+  }
   return {ok:true, fechaId:id};
 }
 
@@ -931,16 +960,18 @@ async function adminIngresarResultado(db: any, data: any) {
   if (isNaN(gL)||isNaN(gV)) return {ok:false, error:"Goles inválidos"};
   const resultado = gL>gV?"L":gL===gV?"E":"V";
 
-  await db.from("partidos").update({
-    estado:"Finalizado", goles_local:gL, goles_visita:gV,
-    resultado, tarjetas_rojas:data.tarjetasRojas||0,
-    ultimo_update:new Date().toISOString(),
-  }).eq("id",data.partidoId);
+  const ids = await partidosGemelos(db, data.partidoId);
+  for (const id of ids) {
+    await db.from("partidos").update({
+      estado:"Finalizado", goles_local:gL, goles_visita:gV,
+      resultado, tarjetas_rojas:data.tarjetasRojas||0,
+      ultimo_update:new Date().toISOString(),
+    }).eq("id",id);
+    // Calcular puntajes
+    await calcularPuntajesPartido(db, id);
+  }
 
-  // Calcular puntajes
-  await calcularPuntajesPartido(db, data.partidoId);
-
-  return {ok:true, resultado};
+  return {ok:true, resultado, enOtrasFechas: ids.length - 1};
 }
 
 // ============================================================
@@ -1041,7 +1072,7 @@ async function buscarPorRonda(db: any, data: any) {
 async function adminGetUsuarios(db: any, data: any) {
   const auth = await requireAuth(db, data);
   if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
-  const {data: users} = await db.from("usuarios").select("id,telefono,usuario,nombre,alias_mp,email,estado,rol,created_at").order("created_at");
+  const {data: users} = await db.from("usuarios").select("id,telefono,usuario,nombre,alias_mp,email,estado,rol,empresa_id,created_at").order("created_at");
   return {ok:true, usuarios:users||[]};
 }
 
@@ -1663,8 +1694,13 @@ async function adminEstadoPartido(db: any, data: any) {
   if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
   const {partidoId, estado} = data;
   if (!["Suspendido","Postergado","Pendiente"].includes(estado)) return {ok:false, error:"Estado inválido"};
+  const ids = await partidosGemelos(db, partidoId);
+  for (const id of ids) await estadoPartidoUno(db, id, estado);
+  return {ok:true, estado, enOtrasFechas: ids.length - 1};
+}
+async function estadoPartidoUno(db: any, partidoId: string, estado: string) {
   const {data: part} = await db.from("partidos").select("id,fecha_id").eq("id",partidoId).single();
-  if (!part) return {ok:false, error:"Partido no encontrado"};
+  if (!part) return;
   await db.from("partidos").update({
     estado, resultado:null, goles_local:null, goles_visita:null, tarjetas_rojas:0, ultimo_update:new Date().toISOString(),
   }).eq("id",partidoId);
@@ -1675,7 +1711,6 @@ async function adminEstadoPartido(db: any, data: any) {
     db.from("reglas").update({puntos_obtenidos:0}).eq("partido_id",partidoId),
   ]);
   await calcularReglasMultiples(db, part.fecha_id);
-  return {ok:true, estado};
 }
 
 // ============================================================
@@ -1962,4 +1997,245 @@ async function adminGuardarDatosPago(db: any, data: any) {
   const link = /^https:\/\/(mpago\.la|link\.mercadopago\.com\.ar|www\.mercadopago\.com\.ar)\//.test(String(data.link||"")) ? String(data.link).trim() : "";
   await db.from("config").upsert([{clave:"pago_alias", valor:alias},{clave:"pago_titular", valor:titular},{clave:"pago_cvu", valor:cvu},{clave:"pago_link", valor:link}], {onConflict:"clave"});
   return {ok:true};
+}
+
+// ============================================================
+//  EMPRESAS
+//  Cada empresa tiene su código, su marca (logo, eslogan, colores) y sus fechas.
+//  Rol "AdminEmpresa": escribe novedades/premios y cambia la marca de SU empresa.
+//  Los empleados juegan gratis (paga la empresa) y solo ven las fechas de su empresa.
+// ============================================================
+const TEMAS_EMPRESA = ["cancha","copa","pasion","marca"];
+function empresaOut(e: any) {
+  if (!e) return null;
+  return {id:e.id, nombre:e.nombre, codigo:e.codigo, slogan:e.slogan||"", logo:e.logo_url||"", color:e.color||"#2F6BFF", tema:e.tema||"marca"};
+}
+async function empresaPorCodigo(db: any, codigo: any) {
+  const c = normalizarCodigo(codigo);
+  if (!c) return null;
+  const {data} = await db.from("empresas").select("*").eq("codigo", c).eq("estado","Activa").maybeSingle();
+  return data || null;
+}
+async function userOut(db: any, user: any) {
+  let empresa = null;
+  if (user.empresa_id) { const {data} = await db.from("empresas").select("*").eq("id", user.empresa_id).maybeSingle(); empresa = empresaOut(data); }
+  return {id:user.id, usuario:user.usuario, nombre:user.nombre, alias:user.alias_mp, email:user.email, telefono:user.telefono,
+    avatar:user.avatar, fotoPendiente:user.foto_pendiente||null, rol:user.rol, cupones:user.cupones, empresa};
+}
+
+// Pública: para mostrar la marca en la pantalla de ingreso cuando entran con el link de la empresa
+async function getEmpresaPublica(db: any, data: any) {
+  const e = await empresaPorCodigo(db, data.codigo);
+  if (!e) return {ok:false, error:"El código de empresa no existe"};
+  return {ok:true, empresa: empresaOut(e)};
+}
+
+// Empleado: entrar a jugar una fecha de su empresa (gratis, sin comprobante)
+async function jugarEmpresa(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  const {data: fecha} = await db.from("fechas").select("*").eq("id", data.fechaId).single();
+  if (!fecha || !fecha.empresa_id || fecha.empresa_id !== auth.empresaId) return {ok:false, error:"Esta fecha no es de tu empresa"};
+  const {data: pozos} = await db.from("pozos").select("id").eq("fecha_id", fecha.id).eq("estado","Activo").order("monto");
+  const pozo = pozos?.[0];
+  if (!pozo) return {ok:false, error:"La fecha todavía no está lista"};
+  const {data: ya} = await db.from("inscripciones").select("id").eq("user_id",auth.userId).eq("pozo_id",pozo.id).in("estado_pago",["Pendiente","Aprobado"]).maybeSingle();
+  if (ya) return {ok:true, fechaId:fecha.id, pozoId:pozo.id};
+  if (fecha.estado !== "Abierta") return {ok:false, error:"Esta fecha ya está cerrada"};
+  const {data: partsF} = await db.from("partidos").select("fecha_hora").eq("fecha_id", fecha.id);
+  if (minutosHasta(cierreFecha(fecha, partsF||[])) <= 0) return {ok:false, error:"La fecha ya cerró (1 hora antes del primer partido)"};
+  const {data: user} = await db.from("usuarios").select("usuario").eq("id",auth.userId).single();
+  const {error} = await db.from("inscripciones").insert({
+    id:generarId("INS"), user_id:auth.userId, usuario:user?.usuario, fecha_id:fecha.id, pozo_id:pozo.id,
+    estado_pago:"Aprobado", habilitado:true, pagado_at:new Date().toISOString(), via_codigo:true,
+  });
+  if (error) return {ok:false, error:error.message};
+  return {ok:true, fechaId:fecha.id, pozoId:pozo.id};
+}
+
+// Novedades y premios de la empresa
+async function getNovedades(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  const empresaId = auth.rol === "Admin" ? (data.empresaId || auth.empresaId) : auth.empresaId;
+  if (!empresaId) return {ok:true, novedades:[]};
+  const {data: n} = await db.from("novedades").select("*").eq("empresa_id", empresaId).order("created_at", {ascending:false}).limit(50);
+  return {ok:true, novedades:(n||[]).map((x:any) => ({id:x.id, tipo:x.tipo, titulo:x.titulo, texto:x.texto, autor:x.autor, fecha:x.created_at}))};
+}
+// Quién puede tocar la empresa: el admin general (cualquiera) o el admin de esa empresa
+function empresaEditable(auth: any, empresaId: string) {
+  return auth.ok && (auth.rol === "Admin" || (auth.rol === "AdminEmpresa" && auth.empresaId === empresaId));
+}
+async function guardarNovedad(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  const empresaId = auth.rol === "Admin" ? data.empresaId : auth.empresaId;
+  if (!empresaId || !empresaEditable(auth, empresaId)) return {ok:false, error:"Sin permisos"};
+  const titulo = String(data.titulo||"").trim();
+  if (!titulo) return {ok:false, error:"Escribí un título"};
+  const {data: u} = await db.from("usuarios").select("usuario").eq("id", auth.userId).single();
+  const fila = {empresa_id:empresaId, tipo:data.tipo === "premio" ? "premio" : "novedad", titulo:titulo.slice(0,120), texto:String(data.texto||"").trim().slice(0,1500), autor:u?.usuario||""};
+  const {error} = data.id
+    ? await db.from("novedades").update(fila).eq("id", data.id).eq("empresa_id", empresaId)
+    : await db.from("novedades").insert({id:generarId("NOV"), ...fila});
+  if (error) return {ok:false, error:error.message};
+  return {ok:true};
+}
+async function borrarNovedad(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  const {data: n} = await db.from("novedades").select("empresa_id").eq("id", data.id).maybeSingle();
+  if (!n || !empresaEditable(auth, n.empresa_id)) return {ok:false, error:"Sin permisos"};
+  await db.from("novedades").delete().eq("id", data.id);
+  return {ok:true};
+}
+
+// Logo: data URL (png/jpg/webp/svg) → bucket público, devuelve la URL
+async function subirLogoEmpresa(db: any, empresaId: string, imagen: string) {
+  const m = /^data:image\/(jpeg|png|webp|svg\+xml);base64,(.+)$/.exec(String(imagen||""));
+  if (!m) return {ok:false, error:"Logo inválido"};
+  const bytes = Uint8Array.from(atob(m[2]), c => c.charCodeAt(0));
+  if (bytes.length > 600*1024) return {ok:false, error:"El logo es muy pesado (máximo 600 KB)"};
+  await asegurarBucket(db);
+  const ext = m[1] === "jpeg" ? "jpg" : m[1] === "svg+xml" ? "svg" : m[1];
+  const ruta = `empresas/${empresaId}-${Date.now()}.${ext}`;
+  const up = await db.storage.from(BUCKET).upload(ruta, bytes, {contentType:`image/${m[1]}`, upsert:true});
+  if (up.error) return {ok:false, error:"No se pudo subir el logo: "+up.error.message};
+  return {ok:true, url: db.storage.from(BUCKET).getPublicUrl(ruta).data.publicUrl};
+}
+// Campos de marca que pueden cambiar tanto el admin general como el de la empresa
+async function camposMarca(db: any, empresaId: string, data: any) {
+  const upd: any = {};
+  if (data.nombre !== undefined) { const n = String(data.nombre||"").trim(); if (n.length < 2) return {error:"Poné el nombre de la empresa"}; upd.nombre = n.slice(0,40); }
+  if (data.slogan !== undefined) upd.slogan = String(data.slogan||"").trim().slice(0,80);
+  if (data.tema !== undefined) { if (!TEMAS_EMPRESA.includes(data.tema)) return {error:"Tema inválido"}; upd.tema = data.tema; }
+  if (data.color !== undefined) { if (!/^#[0-9a-fA-F]{6}$/.test(String(data.color))) return {error:"Color inválido"}; upd.color = String(data.color).toUpperCase(); }
+  if (data.logo) { const r: any = await subirLogoEmpresa(db, empresaId, data.logo); if (!r.ok) return {error:r.error}; upd.logo_url = r.url; }
+  if (data.quitarLogo) upd.logo_url = null;
+  return {upd};
+}
+async function guardarMarcaEmpresa(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  const empresaId = auth.rol === "Admin" ? data.empresaId : auth.empresaId;
+  if (!empresaId || !empresaEditable(auth, empresaId)) return {ok:false, error:"Sin permisos"};
+  const c: any = await camposMarca(db, empresaId, data);
+  if (c.error) return {ok:false, error:c.error};
+  if (Object.keys(c.upd).length) await db.from("empresas").update(c.upd).eq("id", empresaId);
+  const {data: e} = await db.from("empresas").select("*").eq("id", empresaId).single();
+  return {ok:true, empresa: empresaOut(e)};
+}
+
+// Admin general: listar, crear y editar empresas
+async function adminGetEmpresas(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const [{data: emps}, {data: users}] = await Promise.all([
+    db.from("empresas").select("*").order("created_at"),
+    db.from("usuarios").select("id,usuario,nombre,telefono,rol,empresa_id").not("empresa_id","is",null),
+  ]);
+  return {ok:true, empresas:(emps||[]).map((e:any) => ({...empresaOut(e), estado:e.estado,
+    usuarios:(users||[]).filter((u:any) => u.empresa_id === e.id).map((u:any) => ({id:u.id, usuario:u.usuario, nombre:u.nombre, telefono:u.telefono, rol:u.rol}))}))};
+}
+async function adminGuardarEmpresa(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  let id = data.id;
+  if (!id) {
+    const codigo = normalizarCodigo(data.codigo);
+    if (!codigo || codigo.length < 3) return {ok:false, error:"El código tiene que tener al menos 3 letras o números"};
+    if (!String(data.nombre||"").trim()) return {ok:false, error:"Poné el nombre de la empresa"};
+    id = generarId("EMP");
+    const {error} = await db.from("empresas").insert({id, nombre:String(data.nombre).trim().slice(0,40), codigo});
+    if (error) return {ok:false, error: error.code === "23505" ? "Ese código ya lo usa otra empresa" : error.message};
+  } else if (data.codigo !== undefined) {
+    const codigo = normalizarCodigo(data.codigo);
+    if (!codigo || codigo.length < 3) return {ok:false, error:"El código tiene que tener al menos 3 letras o números"};
+    const {error} = await db.from("empresas").update({codigo}).eq("id", id);
+    if (error) return {ok:false, error: error.code === "23505" ? "Ese código ya lo usa otra empresa" : error.message};
+  }
+  if (data.estado) await db.from("empresas").update({estado: data.estado === "Pausada" ? "Pausada" : "Activa"}).eq("id", id);
+  const c: any = await camposMarca(db, id, data);
+  if (c.error) return {ok:false, error:c.error};
+  if (Object.keys(c.upd).length) await db.from("empresas").update(c.upd).eq("id", id);
+  const {data: e} = await db.from("empresas").select("*").eq("id", id).single();
+  return {ok:true, empresa: empresaOut(e)};
+}
+// Admin general: hacer (o sacar) admin de su empresa a un empleado
+async function adminSetRol(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  if (!["Jugador","AdminEmpresa"].includes(data.rol)) return {ok:false, error:"Rol inválido"};
+  const {data: u} = await db.from("usuarios").select("empresa_id,rol").eq("id", data.userId).single();
+  if (!u?.empresa_id) return {ok:false, error:"Ese usuario no es de ninguna empresa"};
+  if (u.rol === "Admin") return {ok:false, error:"No se puede cambiar al administrador general"};
+  await db.from("usuarios").update({rol:data.rol}).eq("id", data.userId);
+  return {ok:true};
+}
+
+// ============================================================
+//  FECHAS: ocultar, eliminar, copiar a empresas
+// ============================================================
+// El mismo partido copiado en varias fechas (mismo id de la API, o mismos equipos y horario)
+async function partidosGemelos(db: any, partidoId: string): Promise<string[]> {
+  const {data: p} = await db.from("partidos").select("id,partido_api_id,local,visita,fecha_hora").eq("id", partidoId).single();
+  if (!p) return [partidoId];
+  const q = p.partido_api_id
+    ? db.from("partidos").select("id").eq("partido_api_id", p.partido_api_id)
+    : db.from("partidos").select("id").eq("local", p.local).eq("visita", p.visita).eq("fecha_hora", p.fecha_hora);
+  const {data} = await q;
+  const ids = (data||[]).map((x:any) => x.id);
+  return ids.includes(partidoId) ? [partidoId, ...ids.filter((i:string) => i !== partidoId)] : [partidoId, ...ids];
+}
+async function adminOcultarFecha(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  await db.from("fechas").update({oculta: !!data.oculta}).eq("id", data.fechaId);
+  return {ok:true};
+}
+async function adminEliminarFecha(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const id = data.fechaId;
+  const {data: f} = await db.from("fechas").select("id,estado").eq("id", id).single();
+  if (!f) return {ok:false, error:"Fecha no encontrada"};
+  const {count} = await db.from("inscripciones").select("id", {count:"exact", head:true}).eq("fecha_id", id);
+  if (f.estado === "Abierta" && (count||0) > 0) return {ok:false, error:"Tiene jugadores anotados y sigue abierta: cerrala primero"};
+  // Borrar todo lo que cuelga de la fecha (en orden, por las referencias)
+  for (const t of ["cambios_pagos","puntajes","reglas","pronosticos","ganadores","grupos","inscripciones"]) {
+    const {error} = await db.from(t).delete().eq("fecha_id", id);
+    if (error && !/does not exist|column/.test(error.message)) return {ok:false, error:`No se pudo borrar (${t}): ${error.message}`};
+  }
+  const {error} = await db.from("fechas").delete().eq("id", id); // pozos y partidos se van solos
+  if (error) return {ok:false, error:error.message};
+  return {ok:true};
+}
+// Copia la fecha (partidos y tipos, sin resultados ni pronósticos) a una o varias empresas, o como pública ("")
+async function adminCopiarFecha(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const destinos: string[] = Array.isArray(data.destinos) ? data.destinos : [];
+  if (!destinos.length) return {ok:false, error:"Elegí al menos un destino"};
+  const [{data: f}, {data: parts}, {data: emps}] = await Promise.all([
+    db.from("fechas").select("*").eq("id", data.fechaId).single(),
+    db.from("partidos").select("*").eq("fecha_id", data.fechaId).order("numero"),
+    db.from("empresas").select("id,nombre"),
+  ]);
+  if (!f) return {ok:false, error:"Fecha no encontrada"};
+  const creadas: string[] = [];
+  for (const dest of destinos) {
+    const emp = dest ? (emps||[]).find((e:any) => e.id === dest) : null;
+    if (dest && !emp) continue;
+    const id = generarId("FECHA");
+    const {error} = await db.from("fechas").insert({
+      id, nombre: String(data.nombre||f.nombre).slice(0,80), descripcion:f.descripcion||"", liga:f.liga||"",
+      plazo_limite:f.plazo_limite, reglas_habilitadas:f.reglas_habilitadas||[], cant_partidos:(parts||[]).length,
+      estado:"Abierta", empresa_id: emp ? emp.id : null,
+    });
+    if (error) return {ok:false, error:error.message};
+    if ((parts||[]).length) await db.from("partidos").insert((parts||[]).map((p:any) => ({
+      id:generarId("PAR"), fecha_id:id, numero:p.numero, local:p.local, visita:p.visita, local_logo:p.local_logo, visita_logo:p.visita_logo,
+      fecha_hora:p.fecha_hora, liga:p.liga, liga_id:p.liga_id, partido_api_id:p.partido_api_id, tipo:p.tipo, estado:"Pendiente", tarjetas_rojas:0,
+    })));
+    if (emp) await db.from("pozos").insert({id:generarId("POZ"), fecha_id:id, nombre:`Polla ${emp.nombre}`, monto:0, comision_pct:0, premio_fijo:0});
+    creadas.push(id);
+  }
+  return {ok:true, creadas: creadas.length};
 }

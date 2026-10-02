@@ -22,7 +22,9 @@
 (function(){var d={mode:"auto",theme:"cancha",layout:"side"},p=d;
 try{p=Object.assign({},d,JSON.parse(localStorage.getItem("pp_prefs")||"{}"));}catch(e){}
 var h=document.documentElement,m=p.mode==="auto"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):p.mode;
-h.setAttribute("data-theme",p.theme);h.setAttribute("data-mode",m);h.setAttribute("data-layout",p.layout);window.__prefs=p;})();
+var mk=null;try{mk=JSON.parse(localStorage.getItem("pp_marca")||"null");}catch(e){}
+h.setAttribute("data-theme",mk?mk.tema:p.theme);h.setAttribute("data-mode",m);h.setAttribute("data-layout",p.layout);window.__prefs=p;
+if(mk&&mk.css){var st=document.createElement("style");st.id="marca-css";st.textContent=mk.css;document.head.appendChild(st);}})();
 </script>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -95,6 +97,29 @@ h.setAttribute("data-theme",p.theme);h.setAttribute("data-mode",m);h.setAttribut
   --line:rgba(255,255,255,.07);--line-2:rgba(255,255,255,.13);
   --ink:#F9EEEA;--ink-2:#C2A9A2;--ink-3:#8A706A;
   --hero-a:#5C130B;--hero-b:#120504;--hero-glow:rgba(255,90,67,.34);--hero-accent:#FF9A80;
+}
+
+
+/* ── TEMA: MARCA (empresas) · grises sobrios, el acento lo define la empresa ── */
+[data-theme="marca"]{
+  --accent:#2F5BEA;--accent-2:#2549C4;--accent-text:#2549C4;--accent-ink:#FFFFFF;
+  --accent-soft:rgba(47,91,234,.10);--accent-line:rgba(47,91,234,.28);
+  --gold:#A9781A;--gold-soft:rgba(214,166,60,.14);--gold-line:rgba(169,120,26,.32);
+  --bg:#F3F4F6;--bg-2:#E9EBEF;
+  --surface:#FFFFFF;--surface-2:#F7F8FA;--surface-3:#ECEEF2;
+  --line:#E3E6EB;--line-2:#CDD2DA;
+  --ink:#0F172A;--ink-2:#475569;--ink-3:#7C8796;
+  --hero-a:#1E2A44;--hero-b:#0B1020;--hero-glow:rgba(47,91,234,.30);--hero-accent:#93A9F5;
+}
+[data-theme="marca"][data-mode="dark"]{
+  --accent:#5B7CF0;--accent-2:#4B6BE0;--accent-text:#9FB2F7;--accent-ink:#0B0F17;
+  --accent-soft:rgba(91,124,240,.14);--accent-line:rgba(91,124,240,.34);
+  --gold:#E3C27A;--gold-soft:rgba(227,194,122,.12);--gold-line:rgba(227,194,122,.30);
+  --bg:#0B0D12;--bg-2:#0F1218;
+  --surface:#13161D;--surface-2:#181C24;--surface-3:#20252F;
+  --line:rgba(255,255,255,.07);--line-2:rgba(255,255,255,.13);
+  --ink:#EDF0F5;--ink-2:#A3ACBA;--ink-3:#6E7787;
+  --hero-a:#1A2236;--hero-b:#07090E;--hero-glow:rgba(91,124,240,.28);--hero-accent:#A9BAF8;
 }
 
 /* ── TOKENS COMUNES + ALIAS (los usa el JS en estilos inline) ── */
@@ -1710,6 +1735,129 @@ body:has(#landing:not([hidden])) #inst-banner{display:none}
 .bz-copa svg{width:24px;height:24px}
 @media(max-width:560px){.ld-feat.big .ld-feat-ic{width:54px;height:54px;margin-bottom:14px}.ld-feat.big .ld-feat-ic svg{width:30px;height:30px}}
 
+/* ═══ EMPRESAS ═══════════════════════════════════════════════ */
+.bblue{background:var(--accent-soft);color:var(--accent-text);border:1px solid var(--accent-line)}
+.emp-logo{display:grid;place-items:center;background:#fff}
+.emp-logo img{object-fit:contain!important;padding:6px}
+.emp-ini{display:grid;place-items:center;width:100%;height:100%;font-family:var(--ff);font-weight:800;font-size:22px;letter-spacing:.02em;color:var(--accent-ink);background:var(--accent)}
+.ll-logo .emp-ini{font-size:36px}
+.sb-brand .name.emp{font-size:26px;line-height:1;word-break:break-word}
+.ll-emp-link{font-size:14px;font-weight:700;color:var(--hero-accent,#fff);opacity:.85;text-decoration:underline;text-underline-offset:3px;padding:4px 0}
+.ll-emp{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);font-size:14px;color:rgba(255,255,255,.85)}
+.ll-emp img,.ll-emp .emp-ini{width:34px;height:34px;border-radius:9px;background:#fff;object-fit:contain;flex:none;font-size:14px}
+.ll-foot a{color:inherit;opacity:.75}
+/* Novedades arriba de las fechas */
+.nv-wrap{display:grid;gap:12px;margin-bottom:16px}
+.nv-premios{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px}
+.nv-premio{display:flex;gap:14px;align-items:flex-start;padding:16px;border-radius:var(--r);background:linear-gradient(135deg,var(--gold-soft),var(--surface));border:1px solid var(--gold-line)}
+.nv-ic{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:13px;color:var(--gold);background:var(--gold-soft)}
+.nv-ic svg{width:26px;height:26px}
+.nv-premio small{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.nv-premio b{display:block;font-family:var(--ff);font-size:22px;font-weight:800;line-height:1.1;margin-top:2px}
+.nv-premio p{font-size:14px;color:var(--ink-2);margin-top:4px;line-height:1.45}
+.nv-card{padding:16px 18px}
+.nv-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.nv-h b{font-family:var(--ff);font-size:22px;font-weight:800;text-transform:uppercase}
+.nv-it{padding:10px 0;border-top:1px solid var(--line)}
+.nv-it:first-of-type{border-top:0}
+.nv-it-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.nv-it-h b{font-size:16px}.nv-it-h small{font-size:12.5px;color:var(--ink-3);white-space:nowrap}
+.nv-it p{font-size:14.5px;color:var(--ink-2);margin-top:3px;line-height:1.5;white-space:pre-line}
+.nv-mas{margin-top:6px;font-size:14px;font-weight:700;color:var(--accent-text)}
+.nv-vacia{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.nv-vacia p{font-size:14px;color:var(--ink-2);margin-top:2px}
+.emp-pozo{display:flex;align-items:center;gap:16px;padding:18px}
+.emp-pozo-logo{flex:none;width:64px;height:64px;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 0 0 1px var(--line)}
+.emp-pozo-logo img{width:100%;height:100%;object-fit:contain;padding:6px}
+.emp-pozo b{font-family:var(--ff);font-size:26px;font-weight:800;text-transform:uppercase}
+.emp-pozo p{font-size:14.5px;color:var(--ink-2);margin-top:2px}
+/* Admin general: lista de empresas */
+.em-top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.em-top p{font-size:15px;color:var(--ink-2);max-width:560px}
+.em-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:12px}
+.em-card{display:flex;align-items:center;gap:14px;padding:16px;text-align:left;width:100%;border-left:5px solid var(--pv);transition:transform .2s var(--ease-out)}
+.em-card:hover{transform:translateY(-2px)}
+.em-logo{flex:none;width:58px;height:58px;border-radius:15px;overflow:hidden;background:#fff;box-shadow:0 0 0 1px var(--line);display:grid;place-items:center}
+.em-logo img{width:100%;height:100%;object-fit:contain;padding:5px}
+.em-logo .emp-ini{background:var(--pv);color:#fff}
+.em-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.em-info b{font-family:var(--ff);font-size:24px;font-weight:800;text-transform:uppercase;line-height:1.05}
+.em-info small{font-size:13.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.em-meta{font-size:13px;color:var(--ink-2)}
+.em-meta code{font-family:var(--ff);font-size:15px;font-weight:800;letter-spacing:.08em;color:var(--ink)}
+.em-chev{font-size:26px;color:var(--ink-3)}
+/* Editor de empresa (Mi empresa) */
+.me-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.me-col{display:grid;gap:16px}
+.me-sec{padding:18px}
+.me-tit{font-family:var(--ff);font-size:26px;font-weight:800;text-transform:uppercase;margin-bottom:12px}
+.me-tit2{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin:18px 0 8px}
+.me-p{font-size:14px;color:var(--ink-2);line-height:1.5;margin:6px 0}
+.me-tipo,.me-modo{margin-bottom:12px}
+.me-modo button{font-size:13px}
+.me-txt{min-height:90px;resize:vertical;padding-top:12px;line-height:1.5;font-family:inherit}
+.me-acc{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.me-acc .btn{text-decoration:none}
+.me-lista{display:grid;gap:8px;margin-top:14px}
+.me-nv{padding:12px 14px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
+.me-nv.premio{background:var(--gold-soft);border-color:var(--gold-line)}
+.me-nv-h{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.me-nv-h small{font-size:12px;color:var(--ink-3)}
+.me-nv b{font-size:15.5px}.me-nv p{font-size:14px;color:var(--ink-2);margin-top:2px;white-space:pre-line}
+.me-nv-acc{display:flex;gap:14px;margin-top:6px}
+.me-nv-acc button{font-size:13px;font-weight:700;color:var(--accent-text)}
+.me-nv-acc button:last-child{color:var(--no)}
+.me-link{padding:10px 12px;border-radius:12px;background:var(--surface-2);border:1px dashed var(--line-2);margin:8px 0;overflow-x:auto}
+.me-link code{font-size:13.5px;white-space:nowrap;color:var(--ink)}
+.me-cod{font-family:var(--ff);font-size:20px;letter-spacing:.1em}
+.me-users{display:grid;gap:6px}
+.me-u{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:12px;background:var(--surface-2)}
+.me-u b{display:block;font-size:15px}.me-u small{font-size:12.5px;color:var(--ink-3)}
+.me-sw{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700;cursor:pointer}
+.me-sw input{width:18px;height:18px;accent-color:var(--accent)}
+.me-logo-row{display:flex;align-items:center;gap:14px;justify-content:space-between;margin-bottom:12px}
+.me-logo{width:84px;height:84px;border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 0 0 1px var(--line);display:grid;place-items:center;flex:none}
+.me-logo img{width:100%;height:100%;object-fit:contain;padding:8px}
+.me-logo .emp-ini{font-size:30px}
+.me-pal{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.me-sw{width:100%;aspect-ratio:1;max-width:46px;border-radius:50%;background:var(--c);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line-2);transition:transform .2s var(--ease-out)}
+label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;background:none;border:0;box-shadow:none}
+.me-sw.on{transform:scale(1.12);box-shadow:0 0 0 2px var(--c),0 0 0 5px color-mix(in srgb,var(--c) 30%,transparent)}
+.me-logocol{display:flex;align-items:center;gap:14px}
+.me-logocol .me-sw{width:46px;flex:none}
+.me-logocol p{font-size:14px;color:var(--ink-2);line-height:1.45}
+.me-temas{display:grid;gap:8px}
+.me-temas .theme-opt{border:1px solid var(--line)}
+.me-pv{border-radius:20px;overflow:hidden;border:1px solid var(--line);background:#F3F4F6;box-shadow:var(--shadow-1)}
+.me-pv-top{display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,color-mix(in srgb,var(--pv) 52%,#0B1220),color-mix(in srgb,var(--pv) 16%,#05070C));color:#fff}
+.me-pv:not(.sobrio) .me-pv-top{background:linear-gradient(135deg,color-mix(in srgb,var(--pv) 60%,#000),color-mix(in srgb,var(--pv) 25%,#000))}
+.me-pv-logo{flex:none;width:42px;height:42px;border-radius:11px;background:#fff;overflow:hidden;display:grid;place-items:center}
+.me-pv-logo img{width:100%;height:100%;object-fit:contain;padding:4px}
+.me-pv-logo span{font-family:var(--ff);font-weight:800;font-size:18px;color:var(--pv)}
+.me-pv-top b{display:block;font-family:var(--ff);font-size:22px;font-weight:800;text-transform:uppercase;line-height:1}
+.me-pv-top small{font-size:12.5px;opacity:.8}
+.me-pv-body{padding:14px 16px;display:grid;gap:8px;background:#fff;color:#0F172A}
+.me-pv-row{display:grid;grid-template-columns:28px 80px 1fr 30px;align-items:center;gap:8px;font-size:14px}
+.me-pv-row span{font-family:var(--ff);font-weight:800;color:var(--pv)}
+.me-pv-row i{height:8px;border-radius:4px;background:var(--pv)}
+.me-pv-row em{font-style:normal;font-family:var(--ff);font-weight:800;font-size:17px;text-align:right}
+.me-pv-btn{margin-top:4px;height:42px;border-radius:12px;display:grid;place-items:center;font-weight:800;background:var(--pv);color:var(--pv-ink)}
+.me-guardar{margin-top:16px}
+.me-guardar .btn{width:100%}
+@media(max-width:900px){.me-grid{grid-template-columns:1fr}}
+/* Admin fechas: apartados por empresa + ocultas */
+.af-chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none}
+.af-chip{flex:none;height:40px;padding:0 14px;border-radius:20px;font-size:14.5px;font-weight:700;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.af-chip span{min-width:22px;height:22px;padding:0 6px;border-radius:11px;display:grid;place-items:center;font-size:12px;background:var(--surface-3);color:var(--ink-2)}
+.af-chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.af-chip.on span{background:rgba(255,255,255,.25);color:inherit}
+.af-ocultas{margin-top:18px}
+.af-ocultas summary{cursor:pointer;padding:12px 16px;border-radius:14px;background:var(--surface-2);border:1px dashed var(--line-2);font-size:14.5px;font-weight:700;color:var(--ink-2);margin-bottom:10px}
+.af-ocultas .card{opacity:.72}
+.cf-dest{display:grid;gap:8px;padding:10px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.cf-dest label{display:flex;align-items:center;gap:10px;font-size:15.5px;font-weight:600;cursor:pointer}
+.cf-dest input{width:18px;height:18px;accent-color:var(--accent)}
+
 </style>
 </head>
 <body>
@@ -1982,6 +2130,8 @@ const _ico={
 };
 const _svg=(d,w)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w||2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 const ICO={
+  empresa:_svg('<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9a3 3 0 0 1 0 6M18 6a7 7 0 0 1 0 12"/>'),
+  empresas:_svg('<path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M15 9h4a2 2 0 0 1 2 2v10"/><path d="M8 7h4M8 11h4M8 15h4"/>'),
   fechas:_svg('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>'),
   mias:_svg('<path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2M13 17v2M13 11v2"/>'),
   tabla:_svg('<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2Z"/>'),
@@ -1999,9 +2149,10 @@ const ICO={
   gear:_svg('<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>'),
 };
 const NAV_J=[{k:"fechas",i:ICO.fechas,l:"Fechas",t:"Fechas"},{k:"mis-fechas",i:ICO.mias,l:"F. Jugadas",t:"Fechas Jugadas"},{k:"tabla",i:ICO.tabla,l:"Tabla",t:"Tabla"},{k:"grilla",i:ICO.grilla,l:"Grilla",t:"Los Otros"},{k:"reglamento",i:ICO.reglamento,l:"Reglamento",t:"Reglamento"},{k:"perfil",i:ICO.perfil,l:"Perfil",t:"Perfil"}];
-const NAV_A=[{k:"admin-res",i:ICO.resultados,l:"Resultados",t:"Cargar resultados"},{k:"admin-dash",i:ICO.dash,l:"Inicio",t:"Dashboard"},{k:"admin-fechas",i:ICO.fechas,l:"Fechas",t:"Fechas"},{k:"admin-pagos",i:ICO.pagos,l:"Pagos",t:"Pagos Pendientes"},{k:"admin-users",i:ICO.jugadores,l:"Jugadores",t:"Jugadores"},{k:"admin-fotos",i:ICO.foto,l:"Fotos",t:"Fotos para aprobar"},{k:"admin-importar",i:ICO.importar,l:"Importar",t:"Importar Partidos"},{k:"admin-noticias",i:ICO.noticias,l:"Noticias",t:"Noticias"},{k:"reglamento",i:ICO.reglamento,l:"Reglamento",t:"Reglamento"},{k:"perfil",i:ICO.perfil,l:"Perfil",t:"Perfil"}];
-const KICKER={"fechas":"Elegí y jugá","mis-fechas":"Tus inscripciones","tabla":"Posiciones","grilla":"Pronósticos de todos","perfil":"Tu cuenta","fecha-det":"Fecha","jugar":"Tus pronósticos","admin-dash":"Administración","admin-fechas":"Administración","admin-res":"Administración","admin-pagos":"Administración","admin-users":"Administración","admin-importar":"Administración","admin-noticias":"Administración","admin-fotos":"Administración","stats":"Estadísticas","reglamento":"Cómo se juega"};
-function getNav(){return App.user?.rol==="Admin"?NAV_A:NAV_J;}
+const NAV_A=[{k:"admin-res",i:ICO.resultados,l:"Resultados",t:"Cargar resultados"},{k:"admin-dash",i:ICO.dash,l:"Inicio",t:"Dashboard"},{k:"admin-fechas",i:ICO.fechas,l:"Fechas",t:"Fechas"},{k:"admin-empresas",i:ICO.empresas,l:"Empresas",t:"Empresas"},{k:"admin-pagos",i:ICO.pagos,l:"Pagos",t:"Pagos Pendientes"},{k:"admin-users",i:ICO.jugadores,l:"Jugadores",t:"Jugadores"},{k:"admin-fotos",i:ICO.foto,l:"Fotos",t:"Fotos para aprobar"},{k:"admin-importar",i:ICO.importar,l:"Importar",t:"Importar Partidos"},{k:"admin-noticias",i:ICO.noticias,l:"Noticias",t:"Noticias"},{k:"reglamento",i:ICO.reglamento,l:"Reglamento",t:"Reglamento"},{k:"perfil",i:ICO.perfil,l:"Perfil",t:"Perfil"}];
+const KICKER={"fechas":"Elegí y jugá","mis-fechas":"Tus inscripciones","tabla":"Posiciones","grilla":"Pronósticos de todos","perfil":"Tu cuenta","fecha-det":"Fecha","jugar":"Tus pronósticos","admin-dash":"Administración","admin-fechas":"Administración","admin-res":"Administración","admin-pagos":"Administración","admin-users":"Administración","admin-importar":"Administración","admin-noticias":"Administración","admin-fotos":"Administración","stats":"Estadísticas","reglamento":"Cómo se juega","mi-empresa":"Novedades, premios y marca","admin-empresas":"Administración"};
+const NAV_EA=[NAV_J[0],{k:"mi-empresa",i:ICO.empresa,l:"Mi empresa",t:"Mi empresa"}].concat(NAV_J.slice(1));
+function getNav(){const r=App.user?.rol;return r==="Admin"?NAV_A:r==="AdminEmpresa"?NAV_EA:NAV_J;}
 
 function go(k,ctx={}){
   if(k!=="jugar"){const b=document.getElementById("reglas-badge");if(b)b.style.display="none";}
@@ -2023,7 +2174,7 @@ function go(k,ctx={}){
     "fechas":"fl","fecha-det":"fdc","jugar":"jc","tabla":"tc",
     "mis-fechas":"mfc","grilla":"gc","perfil":"pc","stats":"sc",
     "admin-dash":"adc","admin-fechas":"afl","admin-res":"arf",
-    "admin-users":"aul","admin-pagos":"apl","admin-noticias":"anl"
+    "admin-users":"aul","admin-pagos":"apl","admin-noticias":"anl","mi-empresa":"mec","admin-empresas":"aec"
   }[k];
   function waitAndRender(attempts){
     if(!keyEl){afterRender(k,ctx);return;}
@@ -2096,6 +2247,8 @@ function renderScreen(k,ctx){
     case"admin-res":return`<div class="su"><div id="arf"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"admin-users":return`<div class="su"><div id="aul"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"admin-pagos":return`<div class="su"><div id="apl"><div class="loading"><div class="spinner"></div></div></div></div>`;
+    case"mi-empresa":return`<div class="su"><div id="mec"><div class="loading"><div class="spinner"></div></div></div></div>`;
+    case"admin-empresas":return`<div class="su"><div id="aec"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"admin-noticias":return`<div class="su"><div id="anl"><div class="loading"><div class="spinner"></div></div></div></div>`;
     default:return`<div class="empty"><div class="ei">🔧</div><p>En construcción</p></div>`;
   }
@@ -2124,6 +2277,8 @@ function afterRender(k,ctx){
     case"admin-pagos":loadPagos();break;
     case"admin-noticias":loadAdminNoticias();break;
     case"admin-fotos":loadFotos();break;
+    case"mi-empresa":loadMiEmpresa();break;
+    case"admin-empresas":loadAdminEmpresas();break;
   }
 }
 
@@ -2131,10 +2286,10 @@ function afterRender(k,ctx){
 async function loadFechas(){
   const r=await api("getFechas"),el=document.getElementById("fl");if(!el)return;
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
-  if(!r.fechas?.length){el.innerHTML=emptyBox("📅","No hay fechas disponibles");return;}
+  if(!r.fechas?.length){el.innerHTML=emptyBox("📅","No hay fechas disponibles");mostrarNovedadesEn(el);return;}
   const ICONS={"Liga Argentina":"🇦🇷","Premier League":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","La Liga":"🇪🇸","Serie A":"🇮🇹","Champions League":"🏆","Copa Libertadores":"🌎","Ligue 1":"🇫🇷"};
-  var fechasVis=App.user&&App.user.rol==="Admin"?r.fechas:r.fechas.filter(function(f){return["Abierta","Cerrada","Finalizada"].includes(f.estado);});
-  if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas disponibles");return;}
+  var fechasVis=App.user&&App.user.rol==="Admin"?r.fechas:r.fechas.filter(function(f){return f.estado==="Abierta";});
+  if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas abiertas por ahora. Tus fechas jugadas están en F. Jugadas");mostrarNovedadesEn(el);return;}
   el.innerHTML=fechasVis.map(function(f){
     const mins=f.minutosRestantes,urg=mins<120&&mins>0;
     const urgente=mins>0&&mins<=30;
@@ -2162,11 +2317,13 @@ async function loadFechas(){
     </div>`;
   }).join("");
   fechasVis.forEach(function(f){cargarExtraFecha(f);});
+  mostrarNovedadesEn(el);
 }
 
 async function cargarExtraFecha(f){
   try{
   const el=document.getElementById("fecha-extra-"+f.id);if(!el)return;
+  if(App.user?.empresa)return;
   const uid=App.user?.id||"";
   const rp=await api("getPozos",{fechaId:f.id,userId:uid});
   if(!rp.ok||!rp.pozos?.length){
@@ -2360,6 +2517,7 @@ async function loadPozos(fid){
   const r=await api("getPozos",{fechaId:fid,userId:App.user?.id}),el=document.getElementById("plist");if(!el)return;
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
   window._pozos=r.pozos;window._fid=fid;window._selPozo=null;
+  if(App.user?.empresa){renderPozoEmpresa(fid,r.pozos||[]);return;}
   if(!r.pozos?.length){el.innerHTML=emptyBox("💰","Sin pozos configurados");return;}
   el.innerHTML=`<div class="g2c" style="margin-bottom:10px">${r.pozos.map(p=>`
     <div class="pozo-card${p.yaInscripto?" ya":""}" id="poz-${p.id}" onclick="${p.yaInscripto?"":"selPozo('"+p.id+"')"}">
@@ -2453,12 +2611,15 @@ async function loadSRFechas(){
 }
 async function loadSRNoticias(){
   const el=document.getElementById("sr-noticias-list");if(!el)return;
+  if(App.user?.empresa){const rn=await api("getNovedades");const ns=rn.ok?(rn.novedades||[]):[];
+    el.innerHTML=ns.length?ns.slice(0,4).map(function(n){return`<div class="noticia-item"><div class="noticia-fecha">${n.tipo==="premio"?"Premio":nvFecha(n.fecha)}</div>${escH(n.titulo)}</div>`;}).join(""):`<div style="font-size:16px;color:var(--txt3)">Sin novedades</div>`;return;}
   const r=await api("getNoticias");
   if(!r.ok||!r.noticias?.length){el.innerHTML=`<div style="font-size:16px;color:var(--txt3)">Sin novedades</div>`;return;}
   el.innerHTML=r.noticias.map(function(n){return`<div class="noticia-item">${n.fecha?`<div class="noticia-fecha">${n.fecha}</div>`:""}${n.texto}</div>`;}).join("");
 }
 async function loadSRHoF(){
   const el=document.getElementById("sr-hof-list");if(!el)return;
+  const card=el.closest(".sr-card")||el.parentElement;if(card)card.style.display=App.user?.empresa?"none":"";if(App.user?.empresa)return;
   const r=await api("getEstadisticas");
   if(!r.ok||!r.ganadores?.length){el.innerHTML=`<div style="font-size:16px;color:var(--txt3)">Sin ganadores aún</div>`;return;}
   const medals=["🥇","🥈","🥉"];
@@ -3523,7 +3684,13 @@ async function loadAdminFechas(){
   const todas=r.fechas||[];
   if(!todas.length){el.innerHTML=emptyBox("📅","Sin fechas");return;}
   todas.forEach(function(f){window._adminFechas[f.id]=f;});
-  el.innerHTML=todas.map(function(f){
+  const re=await api("adminGetEmpresas");window._empresas=re.ok?(re.empresas||[]):[];
+  const filtro=window._afFiltro||"todas";
+  const deFiltro=function(f){return filtro==="todas"||(filtro==="pub"?!f.empresaId:f.empresaId===filtro);};
+  const cuenta=function(k){return todas.filter(function(f){return !f.oculta&&(k==="todas"||(k==="pub"?!f.empresaId:f.empresaId===k));}).length;};
+  const chips=[["todas","Todas"],["pub","Públicas"]].concat(window._empresas.map(function(e){return[e.id,e.nombre];}));
+  const visibles=todas.filter(function(f){return deFiltro(f)&&!f.oculta;}),ocultas=todas.filter(function(f){return deFiltro(f)&&f.oculta;});
+  const card=function(f){
     const reglas=f.reglasHabilitadas||[];
     const estadoBdg=f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr";
     const plazoStr=f.plazoLimite?new Date(f.plazoLimite).toLocaleString("es-AR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"America/Argentina/Buenos_Aires"}):"";
@@ -3532,7 +3699,7 @@ async function loadAdminFechas(){
         <div>
           <div style="font-family:var(--ff);font-size:26px;font-weight:800">${f.nombre||"Sin nombre"}</div>
           <div style="font-size:14px;color:var(--txt3);margin-top:2px">⚽ ${f.cantPartidos||0}${f.liga?" · "+f.liga:""}${plazoStr?" · Plazo: "+plazoStr:""}</div>
-          ${reglas.length||f.codigoGrupo?`<div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap">${f.codigoGrupo?`<span class="bdg bpur" title="Código de grupo cerrado">🔒 ${f.codigoGrupo}</span>`:""}${reglas.map(function(cod){return`<span class="bdg bgold">${cod}</span>`;}).join("")}</div>`:""}
+          ${reglas.length||f.codigoGrupo||f.empresaNombre?`<div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap">${f.empresaNombre?`<span class="bdg bblue" title="Fecha de empresa">🏢 ${f.empresaNombre}</span>`:""}${f.codigoGrupo?`<span class="bdg bpur" title="Código de grupo cerrado">🔒 ${f.codigoGrupo}</span>`:""}${reglas.map(function(cod){return`<span class="bdg bgold">${cod}</span>`;}).join("")}</div>`:""}
         </div>
         <span class="bdg ${estadoBdg}">${f.estado}</span>
       </div>
@@ -3545,10 +3712,16 @@ async function loadAdminFechas(){
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-pagos',{fechaId:'${f.id}'})">👥 Inscriptos</button>
         ${f.estado==="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:16px" onclick="cerrarFecha('${f.id}')">🔒 Cerrar</button>`:""}
         ${f.estado==="Cerrada"?`<button class="btn btn-p" style="padding:6px 12px;font-size:16px" onclick="calcularFecha('${f.id}')">🏆 Calcular</button>`:""}
+        <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="copiarFecha('${f.id}')">⧉ Copiar a…</button>
+        <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="ocultarFecha('${f.id}',${!f.oculta})">${f.oculta?"👁 Mostrar":"🙈 Ocultar"}</button>
+        ${f.estado!=="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:16px" onclick="eliminarFecha('${f.id}')">🗑 Eliminar</button>`:""}
       </div>
     </div>`;
-  }).join("");
-  todas.forEach(function(f){loadPozosInline(f.id);});
+  };
+  el.innerHTML=`<div class="af-chips">${chips.map(function(c){return`<button class="af-chip${filtro===c[0]?" on":""}" onclick="window._afFiltro='${c[0]}';loadAdminFechas()">${escH(c[1])} <span>${cuenta(c[0])}</span></button>`;}).join("")}</div>
+    ${visibles.length?visibles.map(card).join(""):emptyBox("📅","No hay fechas en este apartado")}
+    ${ocultas.length?`<details class="af-ocultas"><summary>Ocultas (${ocultas.length})</summary>${ocultas.map(card).join("")}</details>`:""}`;
+  visibles.concat(ocultas).forEach(function(f){loadPozosInline(f.id);});
 }
 
 async function loadPozosInline(fechaId){
@@ -3561,11 +3734,13 @@ async function loadPozosInline(fechaId){
 window.showCrearFecha=async function(){
   window._reglasSelAdmin=new Set();
   const reglasHTML=TODAS_LAS_REGLAS.map(function(r){return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer"><input type="checkbox" value="${r.codigo}" style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/><div><div style="font-size:17px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:14px">+${r.pts}pts</span></div></div></label>`;}).join("");
-  const m=mkModal("Nueva fecha",`<div class="fg"><div class="ig"><label class="lbl">Nombre</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div><div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="nfp" type="datetime-local"/></div><div class="ig"><label class="lbl">Descripción</label><input class="inp" id="nfd"/></div><div class="ig"><label class="lbl">🔒 Código de grupo cerrado (opcional)</label><input class="inp" id="nfc" placeholder="Ej: AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Quien tenga este código entra a la fecha sin pagar. Dejalo vacío para una fecha abierta con pago.</div></div><div class="g2c"><div class="ig"><label class="lbl">🏦 Alias o CVU (opcional)</label><input class="inp" id="nfa" placeholder="Usa el general si está vacío"/></div><div class="ig"><label class="lbl">Titular</label><input class="inp" id="nft"/></div></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" onclick="crearFecha()">Crear fecha</button></div>`);
+  const re=await api("adminGetEmpresas");const emps=re.ok?(re.empresas||[]):[];const pre=window._fechaParaEmpresa||(window._afFiltro&&!["todas","pub"].includes(window._afFiltro)?window._afFiltro:"");window._fechaParaEmpresa="";
+  const selEmp=emps.length?`<div class="ig"><label class="lbl">🏢 ¿Para quién es?</label><select class="inp" id="nfe">${'<option value="">Pública (Polla Prodes)</option>'}${emps.map(function(e){return`<option value="${e.id}"${e.id===pre?" selected":""}>Empresa: ${escH(e.nombre)}</option>`;}).join("")}</select><div style="font-size:13px;color:var(--txt3);margin-top:6px">Si es de una empresa, solo la ven sus empleados, juegan gratis y se arma sola su Polla (no hace falta crear pozos).</div></div>`:"";
+  const m=mkModal("Nueva fecha",`<div class="fg">${selEmp}<div class="ig"><label class="lbl">Nombre</label><input class="inp" id="nfn" placeholder="Fecha 1 — Liga Argentina"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="nfl" placeholder="Liga Argentina"/></div><div class="ig"><label class="lbl">Plazo límite</label><input class="inp" id="nfp" type="datetime-local"/></div><div class="ig"><label class="lbl">Descripción</label><input class="inp" id="nfd"/></div><div class="ig"><label class="lbl">🔒 Código de grupo cerrado (opcional)</label><input class="inp" id="nfc" placeholder="Ej: AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Quien tenga este código entra a la fecha sin pagar. Dejalo vacío para una fecha abierta con pago.</div></div><div class="g2c"><div class="ig"><label class="lbl">🏦 Alias o CVU (opcional)</label><input class="inp" id="nfa" placeholder="Usa el general si está vacío"/></div><div class="ig"><label class="lbl">Titular</label><input class="inp" id="nft"/></div></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" onclick="crearFecha()">Crear fecha</button></div>`);
   document.body.appendChild(m);
 };
 window.crearFecha=async function(){
-  const r=await api("adminCrearFecha",{nombre:document.getElementById("nfn")?.value,liga:document.getElementById("nfl")?.value,plazoLimite:document.getElementById("nfp")?.value,descripcion:document.getElementById("nfd")?.value,codigoGrupo:document.getElementById("nfc")?.value||"",pagoAlias:document.getElementById("nfa")?.value||"",pagoTitular:document.getElementById("nft")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
+  const r=await api("adminCrearFecha",{empresaId:document.getElementById("nfe")?.value||"",nombre:document.getElementById("nfn")?.value,liga:document.getElementById("nfl")?.value,plazoLimite:document.getElementById("nfp")?.value,descripcion:document.getElementById("nfd")?.value,codigoGrupo:document.getElementById("nfc")?.value||"",pagoAlias:document.getElementById("nfa")?.value||"",pagoTitular:document.getElementById("nft")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
   document.querySelector(".modal-bg")?.remove();
   if(r.ok){toast("✅ Fecha creada");loadAdminFechas();}else toast("❌ "+r.error);
 };
@@ -3896,7 +4071,8 @@ function showLogin(){
           <div class="ig"><label class="ll-lbl">Teléfono</label><input class="ll-inp" id="rt" type="tel" placeholder="+5493442xxxxxx"/></div>
           <div class="ig"><label class="ll-lbl">PIN (4-8 números)</label><div class="pin-wrap"><input class="ll-inp" id="rp" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" placeholder="Elegí un PIN" oninput="this.value=this.value.replace(/\D/g,'');chkPin()"/><button type="button" class="pin-eye" onclick="togglePin(this)" aria-label="Mostrar PIN">👁</button></div></div>
           <div class="ig"><label class="ll-lbl">Repetí el PIN</label><div class="pin-wrap"><input class="ll-inp" id="rp2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" placeholder="Escribilo de nuevo" oninput="this.value=this.value.replace(/\D/g,'');chkPin()"/><button type="button" class="pin-eye" onclick="togglePin(this)" aria-label="Mostrar PIN">👁</button></div><div id="rp-msg" class="pin-msg"></div></div>
-          <div class="ig"><label class="ll-lbl">Alias MercadoPago</label><input class="ll-inp" id="ra" placeholder="tu.alias.mp"/></div>
+          <div class="ig" id="ra-g"><label class="ll-lbl">Alias MercadoPago</label><input class="ll-inp" id="ra" placeholder="tu.alias.mp"/></div>
+          <div class="ig" id="rce-g"><button type="button" class="ll-emp-link" onclick="this.nextElementSibling.hidden=false;this.remove()">¿Tu empresa te dio un código?</button><div hidden><label class="ll-lbl">Código de empresa</label><input class="ll-inp" id="rce" placeholder="Ej: ACME" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')"/></div></div>
           <div class="ig"><label class="ll-lbl">Email (opcional)</label><input class="ll-inp" id="rem" type="email" placeholder="tu@email.com"/></div>
           <div id="re"></div>
           <button class="btn btn-p btn-lg" onclick="doReg()" style="margin-top:6px">Crear cuenta →</button>
@@ -3905,6 +4081,7 @@ function showLogin(){
     </div>
     <div class="ll-foot">POLLA PRODES · TEMPORADA 2026</div>
   </div>`;
+  loginEmpresa();
 }
 window.llTab=(t,el)=>{document.querySelectorAll(".ll-tab").forEach(x=>x.classList.remove("active"));el.classList.add("active");document.getElementById("lf").style.display=t==="l"?"block":"none";document.getElementById("rf").style.display=t==="r"?"block":"none";};
 window.doLogin=async()=>{
@@ -3923,7 +4100,8 @@ window.doReg=async()=>{
   if(!n||!t||!p){err("Completá los campos obligatorios");return;}
   if(!/^\d{4,8}$/.test(p)){err("El PIN tiene que tener entre 4 y 8 números");return;}
   if(p!==p2){err("Los dos PIN no coinciden");return;}
-  const r=await api("registro",{nombre:n,telefono:t,pin:p,pin2:p2,alias:a,email:e});
+  const ce=(window._empLogin&&window._empLogin.codigo)||document.getElementById("rce")?.value||"";
+  const r=await api("registro",{nombre:n,telefono:t,pin:p,pin2:p2,alias:a,email:e,codigoEmpresa:ce});
   if(!r.ok){if(er)er.innerHTML=`<div class="ll-err">⚠ ${r.error}</div>`;return;}
   saveSession(r.user,r.sessionToken);toast(`✅ Bienvenido, ${r.user.usuario}`);initApp();
 };
@@ -3970,6 +4148,8 @@ function startAutoRefresh(){
 function stopAutoRefresh(){if(_refreshTimer){clearInterval(_refreshTimer);_refreshTimer=null;}}
 
 function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
+  aplicarMarca(App.user?.empresa||null);
+  try{if(App.user?.empresa)localStorage.setItem("pp_emp_cod",App.user.empresa.codigo);else if(App.user?.rol!=="Admin")localStorage.removeItem("pp_emp_cod");}catch(e){}
   document.body.classList.remove("login-active");
   document.getElementById("sl").style.display="none";
   const ld=document.getElementById("landing");if(ld)ld.hidden=true;
@@ -4073,7 +4253,8 @@ function applyPrefs(p,animar){
   const h=document.documentElement;
   if(animar){h.classList.add("theming");clearTimeout(window._thT);window._thT=setTimeout(()=>h.classList.remove("theming"),450);}
   const modo=p.mode==="auto"?(_mqDark.matches?"dark":"light"):p.mode;
-  h.setAttribute("data-theme",p.theme);h.setAttribute("data-mode",modo);h.setAttribute("data-layout",p.layout);
+  h.setAttribute("data-theme",window.__marca?(window.__marca.tema||"marca"):p.theme);h.setAttribute("data-mode",modo);h.setAttribute("data-layout",p.layout);
+  const tg=document.querySelector('#settings [data-pref="theme"]');if(tg)tg.closest(".st-group").style.display=window.__marca?"none":"";
   const tc=document.querySelector('meta[name="theme-color"]');
   if(tc)tc.setAttribute("content",getComputedStyle(h).getPropertyValue(modo==="dark"?"--bg":"--hero-b").trim()||"#050D1A");
   if(typeof acomodarMenu==="function")setTimeout(acomodarMenu,50);
@@ -4117,6 +4298,283 @@ window.cerrarInstalar=function(){document.getElementById("inst-banner")?.remove(
 setTimeout(mostrarInstalar,2500);
 
 
+
+// ── EMPRESAS: marca propia (logo, eslogan y colores) ────────
+function escH(t){return String(t==null?"":t).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+// Paleta curada: colores que combinan con el juego
+const PALETA_EMP=[["#2F5BEA","Cobalto"],["#1E3A8A","Marino"],["#0284C7","Celeste"],["#0F8B8D","Turquesa"],["#15803D","Verde"],["#9F1239","Bordó"],["#DC2626","Rojo"],["#EA580C","Naranja"],["#B7791F","Dorado"],["#6D28D9","Violeta"],["#334155","Grafito"],["#111827","Negro"]];
+const TEMAS_JUEGO=[["cancha","Cancha","#0FA958"],["copa","Noche de Copa","#5B47E0"],["pasion","Pasión","#DB2F1C"]];
+function _rgb(h){h=String(h||"#2F5BEA").replace("#","");return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function _lum(h){const c=_rgb(h).map(function(v){v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);});return .2126*c[0]+.7152*c[1]+.0722*c[2];}
+// Tema "marca": fondos grises sobrios + el color de la empresa como acento (legible en claro y oscuro)
+function marcaCSS(color){
+  const c=/^#[0-9a-f]{6}$/i.test(color||"")?color:"#2F5BEA",rgb=_rgb(c),L=_lum(c),a=function(x){return`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${x})`;};
+  const accL=L>.45?`color-mix(in srgb,${c} 72%,#000)`:c,inkL=L>.45?"#0B0F17":"#FFFFFF";
+  const accD=L<.08?`color-mix(in srgb,${c} 45%,#fff)`:L<.2?`color-mix(in srgb,${c} 72%,#fff)`:c,inkD=(L<.2||L>.4)?"#0B0F17":"#FFFFFF";
+  return`[data-theme="marca"]{--accent:${accL};--accent-2:color-mix(in srgb,${accL} 86%,#000);--accent-text:color-mix(in srgb,${accL} 90%,#000);--accent-ink:${inkL};--accent-soft:${a(.10)};--accent-line:${a(.28)};--hero-a:color-mix(in srgb,${c} 48%,#0B1220);--hero-b:color-mix(in srgb,${c} 14%,#05070C);--hero-glow:${a(.34)};--hero-accent:color-mix(in srgb,${c} 55%,#fff)}
+[data-theme="marca"][data-mode="dark"]{--accent:${accD};--accent-2:color-mix(in srgb,${accD} 88%,#000);--accent-text:color-mix(in srgb,${c} 42%,#fff);--accent-ink:${inkD};--accent-soft:${a(.14)};--accent-line:${a(.34)};--hero-a:color-mix(in srgb,${c} 40%,#0B1220);--hero-b:color-mix(in srgb,${c} 10%,#04060A);--hero-glow:${a(.30)};--hero-accent:color-mix(in srgb,${c} 50%,#fff)}`;
+}
+function iniciales(n){const w=String(n||"?").trim().split(/\s+/);return((w[0]||"?")[0]+(w[1]?w[1][0]:(w[0]||"")[1]||"")).toUpperCase();}
+function logoEmpHtml(emp,cls){return emp&&emp.logo?`<img src="${escH(emp.logo)}" alt="${escH(emp.nombre)}">`:`<span class="${cls||"emp-ini"}">${escH(iniciales(emp&&emp.nombre))}</span>`;}
+function aplicarMarca(emp){
+  window.__marca=emp||null;
+  let st=document.getElementById("marca-css");
+  if(emp&&(emp.tema||"marca")==="marca"){if(!st){st=document.createElement("style");st.id="marca-css";document.head.appendChild(st);}st.textContent=marcaCSS(emp.color);}else if(st)st.remove();
+  try{if(emp)localStorage.setItem("pp_marca",JSON.stringify({tema:emp.tema||"marca",css:(emp.tema||"marca")==="marca"?marcaCSS(emp.color):""}));else localStorage.removeItem("pp_marca");}catch(e){}
+  applyPrefs(window.__prefs,false);
+  document.querySelectorAll(".sb-logo,.tb-logo").forEach(function(x){x.classList.toggle("emp-logo",!!emp);x.innerHTML=emp?logoEmpHtml(emp):'<img src="icons/icon-192.png" alt="Polla Prodes">';});
+  const sb=document.querySelector(".sb-brand");if(sb)sb.innerHTML=emp?`<div class="name emp">${escH(emp.nombre)}</div><div class="sub">${escH(emp.slogan||"Polla Prodes")}</div>`:`<div class="name">Polla<br>Prodes</div><div class="sub">pollaprodes.com</div>`;
+  const tb=document.querySelector(".tb-name");if(tb)tb.innerHTML=emp?escH(emp.nombre):"Polla <b>Prodes</b>";
+  const tk=document.querySelector(".tc-k");if(tk)tk.textContent=emp?emp.nombre:"Polla Prodes";
+  document.title=emp?"Polla "+emp.nombre:"Polla Prodes";
+}
+// Pantalla de ingreso con la marca de la empresa (link ?e=CODIGO o última empresa usada)
+async function loginEmpresa(){
+  const qs=new URLSearchParams(location.search);let cod=qs.get("e");
+  if(!cod){try{cod=localStorage.getItem("pp_emp_cod");}catch(e){}}
+  if(!cod){window._empLogin=null;return;}
+  const r=await api("getEmpresaPublica",{codigo:cod});
+  if(!r.ok){try{localStorage.removeItem("pp_emp_cod");}catch(e){}window._empLogin=null;if(qs.get("e"))toast("⚠ "+r.error);return;}
+  const emp=r.empresa;window._empLogin=emp;
+  try{localStorage.setItem("pp_emp_cod",emp.codigo);}catch(e){}
+  aplicarMarca(emp);
+  const lg=document.querySelector(".ll-logo");if(lg){lg.classList.add("emp-logo");lg.innerHTML=logoEmpHtml(emp);}
+  const tt=document.querySelector(".ll-title");if(tt)tt.innerHTML=escH(emp.nombre);
+  const sb=document.querySelector(".ll-sub");if(sb)sb.textContent=emp.slogan||("La Polla de "+emp.nombre);
+  const ft=document.querySelector(".ll-foot");if(ft)ft.innerHTML=`${escH(emp.nombre).toUpperCase()} · CON POLLA PRODES · <a href="#" onclick="salirDeEmpresa();return false">No soy de ${escH(emp.nombre)}</a>`;
+  const ra=document.getElementById("ra-g");if(ra)ra.hidden=true;
+  const ce=document.getElementById("rce-g");if(ce)ce.innerHTML=`<div class="ll-emp">${logoEmpHtml(emp)}<span>Te sumás a <b>${escH(emp.nombre)}</b> · jugás gratis</span></div>`;
+}
+window.salirDeEmpresa=function(){try{localStorage.removeItem("pp_emp_cod");}catch(e){}window._empLogin=null;aplicarMarca(null);history.replaceState(null,"",location.pathname+"?login");showLogin();};
+
+// Novedades y premios de la empresa (arriba de las fechas)
+async function mostrarNovedadesEn(el){
+  if(!App.user?.empresa||!el)return;
+  const r=await api("getNovedades");if(!r.ok)return;
+  const ns=r.novedades||[],adm=App.user.rol==="AdminEmpresa";
+  if(!ns.length&&!adm)return;
+  const premios=ns.filter(function(n){return n.tipo==="premio";}),novs=ns.filter(function(n){return n.tipo!=="premio";});
+  const box=document.createElement("div");box.className="nv-wrap";
+  box.innerHTML=`${premios.length?`<div class="nv-premios">${premios.slice(0,3).map(function(n){return`<div class="nv-premio"><span class="nv-ic">${ICO_COPA}</span><div><small>Premio</small><b>${escH(n.titulo)}</b>${n.texto?`<p>${escH(n.texto)}</p>`:""}</div></div>`;}).join("")}</div>`:""}
+    ${novs.length?`<div class="card nv-card"><div class="nv-h"><b>Novedades de ${escH(App.user.empresa.nombre)}</b>${adm?`<button class="btn btn-s" onclick="go('mi-empresa')">+ Publicar</button>`:""}</div>${novs.slice(0,3).map(nvItem).join("")}${novs.length>3?`<button class="nv-mas" onclick="this.outerHTML=window._nvResto">Ver ${novs.length-3} más</button>`:""}</div>`
+      :adm?`<div class="card nv-card nv-vacia"><div><b>Todavía no publicaste novedades</b><p>Contale a tu gente los premios, las fechas y lo que pasa en la Polla.</p></div><button class="btn btn-p" onclick="go('mi-empresa')">+ Publicar</button></div>`:""}`;
+  window._nvResto=novs.slice(3).map(nvItem).join("");
+  el.prepend(box);
+}
+const ICO_COPA='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 2.6 3.5M16 6h2.5a2.5 2.5 0 0 1-2.6 3.5"/><path d="M12 13v3.5M8.5 21h7M9.5 21v-2.5h5V21"/></svg>';
+function nvFecha(f){try{return new Date(f).toLocaleDateString("es-AR",{day:"numeric",month:"short",timeZone:"America/Argentina/Buenos_Aires"});}catch(e){return"";}}
+function nvItem(n){return`<div class="nv-it"><div class="nv-it-h"><b>${escH(n.titulo)}</b><small>${nvFecha(n.fecha)}</small></div>${n.texto?`<p>${escH(n.texto)}</p>`:""}</div>`;}
+
+// Detalle de fecha para empleados: juegan gratis, un solo botón
+function renderPozoEmpresa(fid,pozos){
+  const el=document.getElementById("plist"),emp=App.user.empresa,ya=pozos.find(function(p){return p.yaInscripto;});
+  if(el)el.innerHTML=`<div class="card emp-pozo"><div class="emp-pozo-logo">${logoEmpHtml(emp)}</div><div><b>Polla ${escH(emp.nombre)}</b><p>Jugás gratis. Los premios los pone ${escH(emp.nombre)}: mirá las novedades.</p></div></div>`;
+  const btn=`<button class="btn btn-p btn-lg" onclick="entrarEmpresa('${fid}')">▶ ${ya?"Jugar fecha":"Jugar esta fecha"} →</button>`;
+  const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=btn;}
+  const top=document.getElementById("pjtop");
+  if(top)top.innerHTML=`<div class="cta-top"><div class="cta-txt"><div class="cta-k">${ya?"Ya estás adentro":"Gratis para "+escH(emp.nombre)}</div><div class="cta-t">${ya?"Seguí con tus pronósticos":"Entrá y pronosticá"}</div></div>${btn}</div>`;
+}
+window.entrarEmpresa=async function(fid){
+  const r=await api("jugarEmpresa",{fechaId:fid});
+  if(!r.ok){toast("❌ "+r.error);return;}
+  go("jugar",{fechaId:r.fechaId,pozoId:r.pozoId});
+};
+
+// ── MI EMPRESA (admin de la empresa) y EMPRESAS (admin general) ──
+async function loadMiEmpresa(){
+  const el=document.getElementById("mec");if(!el)return;
+  const emp=App.user?.empresa;if(!emp){el.innerHTML=emptyBox("🏢","Tu cuenta no es de ninguna empresa");return;}
+  renderEditorEmpresa(el,emp,false);
+}
+async function loadAdminEmpresas(){
+  const el=document.getElementById("aec");if(!el)return;
+  const r=await api("adminGetEmpresas");if(!r.ok){el.innerHTML=errBox(r.error);return;}
+  window._empresas=r.empresas||[];
+  if(window._empEdit){const e=window._empresas.find(function(x){return x.id===window._empEdit;});if(e){renderEditorEmpresa(el,e,true);return;}window._empEdit=null;}
+  el.innerHTML=`<div class="em-top"><p>Cada empresa tiene su código, su marca y sus propias fechas. Sus empleados juegan gratis.</p><button class="btn btn-p" onclick="nuevaEmpresa()">+ Nueva empresa</button></div>
+    ${window._empresas.length?`<div class="em-lista">${window._empresas.map(function(e){const adm=e.usuarios.filter(function(u){return u.rol==="AdminEmpresa";}).length;return`<button class="card em-card" style="--pv:${e.tema==="marca"?e.color:(TEMAS_JUEGO.find(function(t){return t[0]===e.tema;})||[,,"#2F5BEA"])[2]}" onclick="window._empEdit='${e.id}';loadAdminEmpresas()">
+      <span class="em-logo">${logoEmpHtml(e)}</span><span class="em-info"><b>${escH(e.nombre)}</b><small>${escH(e.slogan||"Sin eslogan")}</small><span class="em-meta"><code>${escH(e.codigo)}</code> · ${e.usuarios.length} empleado${e.usuarios.length!==1?"s":""}${adm?` · ${adm} admin`:""}${e.estado!=="Activa"?" · ⏸ Pausada":""}</span></span><span class="em-chev">›</span></button>`;}).join("")}</div>`
+      :emptyBox("🏢","Todavía no hay empresas. Creá la primera.")}`;
+}
+window.nuevaEmpresa=function(){
+  const m=mkModal("Nueva empresa",`<div class="fg"><div class="ig"><label class="lbl">Nombre de la empresa</label><input class="inp" id="ne-n" placeholder="Distribuidora Norte" maxlength="40"/></div>
+    <div class="ig"><label class="lbl">Código para sus empleados</label><input class="inp" id="ne-c" placeholder="NORTE" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\\s/g,'')" style="font-family:var(--ff);font-size:24px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Con este código (o con el link que te doy después) los empleados se registran y quedan en la empresa.</div></div>
+    <button class="btn btn-p btn-lg" onclick="crearEmpresa()">Crear empresa</button></div>`);
+  document.body.appendChild(m);
+};
+window.crearEmpresa=async function(){
+  const r=await api("adminGuardarEmpresa",{nombre:document.getElementById("ne-n")?.value,codigo:document.getElementById("ne-c")?.value});
+  if(!r.ok){toast("❌ "+r.error);return;}
+  document.querySelector(".modal-bg")?.remove();toast("✅ Empresa creada. Ahora cargale el logo y los colores");
+  window._empEdit=r.empresa.id;loadAdminEmpresas();
+};
+function linkEmpresa(e){return location.origin+location.pathname+"?e="+encodeURIComponent(e.codigo);}
+function renderEditorEmpresa(el,emp,esAdminGeneral){
+  window._edEmp=emp;window._edAdmin=esAdminGeneral;
+  window._mk={tema:emp.tema||"marca",color:emp.color||"#2F5BEA",logoColor:null,logo:null,quitarLogo:false,logoUrl:emp.logo||"",modo:(emp.tema||"marca")!=="marca"?"juego":"paleta"};
+  window._nvTipo="novedad";window._nvEdit=null;
+  const link=linkEmpresa(emp);
+  el.innerHTML=`${esAdminGeneral?`<div class="back" onclick="window._empEdit=null;loadAdminEmpresas()">← Todas las empresas</div>`:""}
+  <div class="me-grid">
+    <div class="me-col">
+      <div class="card me-sec">
+        <div class="me-tit">Publicar</div>
+        <div class="seg me-tipo"><button aria-pressed="true" data-t="novedad" onclick="nvTipo('novedad')">Novedad</button><button aria-pressed="false" data-t="premio" onclick="nvTipo('premio')">Premio</button></div>
+        <div class="fg">
+          <div class="ig"><input class="inp" id="nv-t" maxlength="120" placeholder="Título: ej. ¡Arranca la Polla del Mundial!"/></div>
+          <div class="ig"><textarea class="inp me-txt" id="nv-x" maxlength="1500" placeholder="Contá los detalles (opcional)"></textarea></div>
+          <div class="me-acc"><button class="btn btn-s" id="nv-cancel" hidden onclick="nvCancelar()">Cancelar</button><button class="btn btn-p" id="nv-btn" onclick="nvPublicar()">Publicar</button></div>
+        </div>
+        <div id="nv-lista" class="me-lista"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+      <div class="card me-sec">
+        <div class="me-tit">Invitá a tu gente</div>
+        <p class="me-p">Compartí este link: entran con la marca de ${escH(emp.nombre)} y quedan en la empresa al registrarse.</p>
+        <div class="me-link"><code>${escH(link)}</code></div>
+        <div class="me-acc"><button class="btn btn-s" onclick="navigator.clipboard?.writeText('${link}').then(function(){toast('Link copiado')})">Copiar link</button><a class="btn btn-p" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("¡Sumate a la Polla de "+emp.nombre+"! Registrate acá: "+link)}">Compartir por WhatsApp</a></div>
+        <p class="me-p">O que pongan el código <b class="me-cod">${escH(emp.codigo)}</b> al registrarse.</p>
+      </div>
+      ${esAdminGeneral?`<div class="card me-sec"><div class="me-tit">Empleados (${emp.usuarios.length})</div>${emp.usuarios.length?`<div class="me-users">${emp.usuarios.map(function(u){return`<div class="me-u"><div><b>${escH(u.nombre||u.usuario)}</b><small>${escH(u.usuario)} · ${escH(u.telefono||"")}</small></div><label class="me-sw"><input type="checkbox" ${u.rol==="AdminEmpresa"?"checked":""} onchange="setRolEmp('${u.id}',this.checked)"/><span>Admin</span></label></div>`;}).join("")}</div>`:`<p class="me-p">Todavía nadie se registró con el código.</p>`}
+        <div class="me-acc"><button class="btn btn-s" onclick="window._fechaParaEmpresa='${emp.id}';go('admin-fechas');setTimeout(showCrearFecha,300)">+ Crear fecha para ${escH(emp.nombre)}</button></div></div>`:""}
+    </div>
+    <div class="me-col">
+      <div class="card me-sec">
+        <div class="me-tit">Tu marca</div>
+        <div class="me-logo-row"><div class="me-logo" id="mk-logo">${logoEmpHtml(emp)}</div>
+          <div class="me-acc"><label class="btn btn-s">Subir logo<input type="file" accept="image/*" hidden onchange="mkLogo(this.files[0])"></label><button class="btn btn-s" id="mk-quitar" ${emp.logo?"":"hidden"} onclick="mkQuitarLogo()">Quitar</button></div></div>
+        <div class="fg">
+          <div class="ig"><label class="lbl">Nombre</label><input class="inp" id="mk-n" maxlength="40" value="${escH(emp.nombre)}" oninput="mkPreview()"/></div>
+          <div class="ig"><label class="lbl">Eslogan</label><input class="inp" id="mk-s" maxlength="80" value="${escH(emp.slogan||"")}" placeholder="Ej: El que más sabe de la oficina" oninput="mkPreview()"/></div>
+          ${esAdminGeneral?`<div class="ig"><label class="lbl">Código</label><input class="inp" id="mk-c" maxlength="16" value="${escH(emp.codigo)}" oninput="this.value=this.value.toUpperCase().replace(/\\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/></div>`:""}
+        </div>
+        <div class="me-tit2">Colores</div>
+        <div class="seg me-modo"><button data-m="logo" onclick="mkModo('logo')">Sobrio con tu logo</button><button data-m="paleta" onclick="mkModo('paleta')">Paleta</button><button data-m="juego" onclick="mkModo('juego')">Temas del juego</button></div>
+        <div id="mk-opts"></div>
+        <div class="me-tit2">Así se ve</div>
+        <div id="mk-pv"></div>
+        <div class="me-acc me-guardar"><button class="btn btn-p btn-lg" onclick="mkGuardar()">Guardar marca</button></div>
+      </div>
+    </div>
+  </div>`;
+  nvCargar();
+  if(emp.logo)colorDeLogo(emp.logo).then(function(c){window._mk.logoColor=c;if(window._mk.modo==="logo")mkOpts();});
+  mkModo(window._mk.modo);
+}
+// Publicar novedades / premios
+window.nvTipo=function(t){window._nvTipo=t;document.querySelectorAll(".me-tipo button").forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.t===t));});const i=document.getElementById("nv-t");if(i)i.placeholder=t==="premio"?"Premio: ej. Camiseta oficial para el ganador de la fecha":"Título: ej. ¡Arranca la Polla del Mundial!";};
+async function nvCargar(){
+  const el=document.getElementById("nv-lista");if(!el)return;
+  const r=await api("getNovedades",{empresaId:window._edEmp.id});
+  const ns=r.ok?(r.novedades||[]):[];window._nvs=ns;
+  el.innerHTML=ns.length?ns.map(function(n){return`<div class="me-nv${n.tipo==="premio"?" premio":""}"><div class="me-nv-h"><span class="bdg ${n.tipo==="premio"?"bgold":"bblue"}">${n.tipo==="premio"?"Premio":"Novedad"}</span><small>${nvFecha(n.fecha)}${n.autor?" · "+escH(n.autor):""}</small></div><b>${escH(n.titulo)}</b>${n.texto?`<p>${escH(n.texto)}</p>`:""}<div class="me-nv-acc"><button onclick="nvEditar('${n.id}')">Editar</button><button onclick="nvBorrar('${n.id}')">Borrar</button></div></div>`;}).join(""):`<p class="me-p">Todavía no publicaste nada. Lo que publiques aparece arriba de las fechas para todos.</p>`;
+}
+window.nvPublicar=async function(){
+  const t=document.getElementById("nv-t")?.value.trim(),x=document.getElementById("nv-x")?.value.trim();
+  if(!t){toast("Escribí un título");return;}
+  const r=await api("guardarNovedad",{empresaId:window._edEmp.id,id:window._nvEdit||undefined,tipo:window._nvTipo,titulo:t,texto:x});
+  if(!r.ok){toast("❌ "+r.error);return;}
+  toast(window._nvEdit?"✅ Actualizado":"✅ Publicado: ya lo ven todos");nvCancelar();nvCargar();
+};
+window.nvEditar=function(id){const n=(window._nvs||[]).find(function(x){return x.id===id;});if(!n)return;window._nvEdit=id;nvTipo(n.tipo);
+  document.getElementById("nv-t").value=n.titulo;document.getElementById("nv-x").value=n.texto||"";document.getElementById("nv-btn").textContent="Guardar cambios";document.getElementById("nv-cancel").hidden=false;document.getElementById("nv-t").focus();};
+window.nvCancelar=function(){window._nvEdit=null;const t=document.getElementById("nv-t"),x=document.getElementById("nv-x");if(t)t.value="";if(x)x.value="";const b=document.getElementById("nv-btn");if(b)b.textContent="Publicar";const c=document.getElementById("nv-cancel");if(c)c.hidden=true;};
+window.nvBorrar=async function(id){if(!confirm("¿Borrar esta publicación?"))return;const r=await api("borrarNovedad",{id});if(!r.ok){toast("❌ "+r.error);return;}toast("Borrado");nvCargar();};
+window.setRolEmp=async function(uid,admin){const r=await api("adminSetRol",{userId:uid,rol:admin?"AdminEmpresa":"Jugador"});toast(r.ok?(admin?"✅ Ahora es admin de la empresa":"Ya no es admin"):"❌ "+r.error);};
+// Colores
+window.mkModo=function(m){
+  const k=window._mk;k.modo=m;
+  if(m==="juego"&&k.tema==="marca")k.tema="cancha";
+  if(m!=="juego")k.tema="marca";
+  if(m==="logo"&&k.logoColor)k.color=k.logoColor;
+  document.querySelectorAll(".me-modo button").forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.m===m));});
+  mkOpts();
+};
+function mkOpts(){
+  const k=window._mk,el=document.getElementById("mk-opts");if(!el)return;
+  if(k.modo==="logo"){
+    if(k.logoColor)k.color=k.logoColor;
+    el.innerHTML=k.logoColor?`<div class="me-logocol"><span class="me-sw on" style="--c:${k.logoColor}"></span><p>Tomamos el color de tu logo y lo combinamos con fondos grises sobrios. Ideal para una imagen profesional.</p></div>`
+      :`<p class="me-p">${k.logoUrl||k.logo?"Analizando los colores del logo…":"Subí el logo y tomamos su color automáticamente."}</p>`;
+  }else if(k.modo==="paleta"){
+    el.innerHTML=`<div class="me-pal">${PALETA_EMP.map(function(c){return`<button class="me-sw${k.color.toUpperCase()===c[0]?" on":""}" style="--c:${c[0]}" title="${c[1]}" aria-label="${c[1]}" onclick="window._mk.color='${c[0]}';mkOpts()"></button>`;}).join("")}</div><p class="me-p">Colores elegidos para que combinen con el juego, sobre fondos grises sobrios.</p>`;
+  }else{
+    el.innerHTML=`<div class="me-temas">${TEMAS_JUEGO.map(function(t){return`<button class="theme-opt${k.tema===t[0]?" on":""}" aria-pressed="${k.tema===t[0]}" onclick="window._mk.tema='${t[0]}';mkOpts()"><span class="theme-sw ${t[0]}"><i></i><i></i></span><span><div class="theme-nm">${t[1]}</div></span></button>`;}).join("")}</div>`;
+  }
+  mkPreview();
+}
+window.mkPreview=function(){
+  const k=window._mk,el=document.getElementById("mk-pv");if(!el)return;
+  const c=k.tema==="marca"?k.color:(TEMAS_JUEGO.find(function(t){return t[0]===k.tema;})||[,,"#0FA958"])[2];
+  const nombre=document.getElementById("mk-n")?.value||window._edEmp.nombre,slogan=document.getElementById("mk-s")?.value||"";
+  const logo=k.quitarLogo?"":(k.logo||k.logoUrl);
+  const L=_lum(c),ink=L>.45?"#0B0F17":"#fff";
+  el.innerHTML=`<div class="me-pv${k.tema==="marca"?" sobrio":""}" style="--pv:${c};--pv-ink:${ink}">
+    <div class="me-pv-top"><span class="me-pv-logo">${logo?`<img src="${escH(logo)}" alt="">`:`<span>${escH(iniciales(nombre))}</span>`}</span><div><b>${escH(nombre)}</b><small>${escH(slogan||"Polla Prodes")}</small></div></div>
+    <div class="me-pv-body"><div class="me-pv-row"><span>1º</span><b>Ventas</b><i style="width:78%"></i><em>48</em></div><div class="me-pv-row"><span>2º</span><b>Sistemas</b><i style="width:62%"></i><em>41</em></div><div class="me-pv-row"><span>3º</span><b>Logística</b><i style="width:45%"></i><em>33</em></div>
+    <div class="me-pv-btn">Jugar fecha →</div></div></div>`;
+};
+// Logo: se achica en el navegador y se toma su color principal
+window.mkLogo=function(file){
+  if(!file)return;if(!/^image\//.test(file.type)){toast("Elegí una imagen");return;}
+  const rd=new FileReader();
+  rd.onload=function(){
+    const img=new Image();img.onload=function(){const max=512,f=Math.min(1,max/Math.max(img.width,img.height)),cv=document.createElement("canvas");cv.width=Math.round(img.width*f);cv.height=Math.round(img.height*f);cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);mkLogoListo(cv.toDataURL("image/png"));};img.src=rd.result;
+  };rd.readAsDataURL(file);
+};
+function mkLogoListo(data){
+  const k=window._mk;k.logo=data;k.quitarLogo=false;
+  const l=document.getElementById("mk-logo");if(l)l.innerHTML=`<img src="${data}" alt="">`;
+  const q=document.getElementById("mk-quitar");if(q)q.hidden=false;
+  colorDeLogo(data).then(function(c){k.logoColor=c;mkModo("logo");});
+}
+window.mkQuitarLogo=function(){const k=window._mk;k.logo=null;k.logoUrl="";k.quitarLogo=true;k.logoColor=null;const l=document.getElementById("mk-logo");if(l)l.innerHTML=`<span class="emp-ini">${escH(iniciales(window._edEmp.nombre))}</span>`;const q=document.getElementById("mk-quitar");if(q)q.hidden=true;if(k.modo==="logo")mkModo("paleta");else mkPreview();};
+// Color principal del logo: el más presente entre los que tienen color (ignora blancos, negros y grises)
+function colorDeLogo(src){return new Promise(function(res){
+  const img=new Image();img.crossOrigin="anonymous";
+  img.onload=function(){try{const cv=document.createElement("canvas"),n=64;cv.width=cv.height=n;const x=cv.getContext("2d");x.drawImage(img,0,0,n,n);const d=x.getImageData(0,0,n,n).data,b={};
+    for(let i=0;i<d.length;i+=4){if(d[i+3]<140)continue;const r=d[i],g=d[i+1],bl=d[i+2],mx=Math.max(r,g,bl),mn=Math.min(r,g,bl);if(mx-mn<38||mx<35||mn>225)continue;const k=(r>>4)+","+(g>>4)+","+(bl>>4);(b[k]=b[k]||{n:0,r:0,g:0,b:0,s:0});b[k].n++;b[k].r+=r;b[k].g+=g;b[k].b+=bl;b[k].s+=(mx-mn);}
+    let best=null;Object.values(b).forEach(function(v){const sc=v.n*(1+v.s/v.n/255);if(!best||sc>best.sc)best={sc,v};});
+    if(!best){res("#334155");return;}const h=function(t){return Math.round(t/best.v.n).toString(16).padStart(2,"0");};res(("#"+h(best.v.r)+h(best.v.g)+h(best.v.b)).toUpperCase());
+  }catch(e){res("#334155");}};
+  img.onerror=function(){res("#334155");};img.src=src;});}
+window.mkGuardar=async function(){
+  const k=window._mk,emp=window._edEmp,datos={nombre:document.getElementById("mk-n")?.value,slogan:document.getElementById("mk-s")?.value,tema:k.tema,color:k.color};
+  if(k.logo)datos.logo=k.logo;if(k.quitarLogo)datos.quitarLogo=true;
+  let r;
+  if(window._edAdmin){datos.id=emp.id;const c=document.getElementById("mk-c")?.value;if(c&&c!==emp.codigo)datos.codigo=c;r=await api("adminGuardarEmpresa",datos);}
+  else r=await api("guardarMarcaEmpresa",datos);
+  if(!r.ok){toast("❌ "+r.error);return;}
+  toast("✅ Marca guardada");
+  if(App.user?.empresa&&App.user.empresa.id===r.empresa.id){App.user.empresa=r.empresa;saveSession(App.user,App.token);aplicarMarca(r.empresa);}
+  if(window._edAdmin)loadAdminEmpresas();else{window._edEmp=r.empresa;}
+};
+
+
+// ── Admin: ocultar, eliminar y copiar fechas ──
+window.ocultarFecha=async function(id,ocultar){const r=await api("adminOcultarFecha",{fechaId:id,oculta:ocultar});toast(r.ok?(ocultar?"Oculta: los jugadores ya no la ven":"Visible de nuevo"):"❌ "+r.error);if(r.ok)loadAdminFechas();};
+window.eliminarFecha=async function(id){
+  const f=window._adminFechas[id]||{};
+  const t=prompt(`Vas a ELIMINAR "${f.nombre}" con todos sus pronósticos, puntos y pagos. No se puede deshacer.\n\nEscribí BORRAR para confirmar:`);
+  if((t||"").trim().toUpperCase()!=="BORRAR")return;
+  const r=await api("adminEliminarFecha",{fechaId:id});toast(r.ok?"🗑 Fecha eliminada":"❌ "+r.error);if(r.ok)loadAdminFechas();
+};
+window.copiarFecha=function(id){
+  const f=window._adminFechas[id]||{},emps=window._empresas||[];
+  const opc=[["","Pública (Polla Prodes)"]].concat(emps.map(function(e){return[e.id,"Empresa: "+e.nombre];})).filter(function(o){return o[0]!==(f.empresaId||"");});
+  const m=mkModal("Copiar fecha",`<div class="fg"><p style="font-size:15px;color:var(--txt3)">Se copian los partidos, los tipos (×1, ×2, Polla) y las reglas. Sin resultados ni pronósticos. Los resultados los cargás una sola vez y se cargan en todas las copias.</p>
+    <div class="ig"><label class="lbl">Nombre</label><input class="inp" id="cf-n" value="${escH(f.nombre||"")}"/></div>
+    <div class="ig"><label class="lbl">Copiar a</label><div class="cf-dest">${opc.length?opc.map(function(o){return`<label><input type="checkbox" value="${o[0]}"/> ${escH(o[1])}</label>`;}).join(""):"<p>No hay otros destinos: creá una empresa primero.</p>"}</div></div>
+    <button class="btn btn-p btn-lg" onclick="copiarFechaOk('${id}')">Copiar</button></div>`);
+  document.body.appendChild(m);
+};
+window.copiarFechaOk=async function(id){
+  const dest=[...document.querySelectorAll(".cf-dest input:checked")].map(function(i){return i.value;});
+  if(!dest.length){toast("Elegí al menos un destino");return;}
+  const r=await api("adminCopiarFecha",{fechaId:id,destinos:dest,nombre:document.getElementById("cf-n")?.value});
+  if(!r.ok){toast("❌ "+r.error);return;}
+  document.querySelector(".modal-bg")?.remove();toast(`✅ Copiada a ${r.creadas} destino${r.creadas!==1?"s":""}`);loadAdminFechas();
+};
+
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
@@ -4159,7 +4617,8 @@ async function boot(){
     clearSession();
   }
   // Portada para quien entra sin sesión (la app instalada va directo al ingreso)
-  if(!esApp()&&!new URLSearchParams(location.search).has("login"))showLanding();else showLogin();
+  const qs=new URLSearchParams(location.search);let codEmp=null;try{codEmp=localStorage.getItem("pp_emp_cod");}catch(e){}
+  if(!esApp()&&!qs.has("login")&&!qs.has("e")&&!codEmp)showLanding();else showLogin();
 }
 boot();
 </script>
