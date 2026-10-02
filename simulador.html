@@ -112,8 +112,8 @@
       document.body.appendChild(b);
       // Panel de resultados
       var pn=document.createElement("div");pn.id="sim-panel";
-      var movil=window.innerWidth<700;if(movil&&localStorage.getItem("sim_open")===null)localStorage.setItem("sim_open","0");
-      pn.style.cssText="position:fixed;right:12px;bottom:"+(movil?"calc(78px + env(safe-area-inset-bottom))":"16px")+";z-index:2999;width:min(340px,calc(100vw - 24px));max-height:"+(movil?"62vh":"78vh")+";overflow:auto;border-radius:18px;background:#111;color:#fff;font:600 13px system-ui;box-shadow:0 20px 50px rgba(0,0,0,.45)";
+      var movil=window.innerWidth<700;if(localStorage.getItem("sim_open2")===null){localStorage.setItem("sim_open","0");localStorage.setItem("sim_open2","1");}
+      pn.style.cssText="position:fixed;right:12px;top:calc(58px + env(safe-area-inset-top));z-index:2999;width:min(340px,calc(100vw - 24px));max-height:"+(movil?"60vh":"75vh")+";overflow:auto;border-radius:18px;background:#111;color:#fff;font:600 13px system-ui;box-shadow:0 20px 50px rgba(0,0,0,.45)";
       document.body.appendChild(pn);
       window.simRender=function(){
         var s=simState(parseInt(n)),R=simRes()||{},abierto=localStorage.getItem("sim_open")!=="0";
