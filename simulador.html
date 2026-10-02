@@ -51,6 +51,8 @@
     getGrupoPorCodigo:function(){return{ok:false,error:"Código inválido"};},
     getNovedades:function(){return{ok:true,novedades:[{id:"N1",tipo:"premio",titulo:"Camiseta oficial para el ganador de la fecha",texto:"Y una cena para dos al mejor del mes.",fecha:new Date().toISOString(),autor:"RRHH"},{id:"N2",tipo:"novedad",titulo:"¡Arranca la Polla del Mundial!",texto:"Desde esta semana jugamos todas las fechas. Sumate y defendé a tu área.",fecha:new Date().toISOString(),autor:"RRHH"},{id:"N3",tipo:"novedad",titulo:"Ventas va primero en el ranking por áreas",texto:"",fecha:new Date(Date.now()-864e5*3).toISOString()}]};},
     getEmpresaPublica:function(){return{ok:true,empresa:window.__EMP};},
+    registro:function(d){var emp=d.codigoEmpresa?window.__EMP:null;var u={id:"U1",usuario:"NU"+String(d.telefono||"").slice(-3),nombre:d.nombre||"Nuevo",rol:"Jugador",empresa:emp};localStorage.setItem("demo_tok","demo");localStorage.setItem("demo_usr",JSON.stringify(u));return{ok:true,user:u,sessionToken:"demo"};},
+    login:function(d){var emp=localStorage.getItem("demo_emp_cod")?window.__EMP:null;var u={id:"U1",usuario:"GR873",nombre:"German Rodriguez",rol:"Jugador",empresa:emp};localStorage.setItem("demo_tok","demo");localStorage.setItem("demo_usr",JSON.stringify(u));return{ok:true,user:u,sessionToken:"demo"};},
     adminGetEmpresas:function(){return{ok:true,empresas:[Object.assign({estado:"Activa",usuarios:[{id:"U7",usuario:"LF221",nombre:"Lucía Fernández",telefono:"1155550000",rol:"AdminEmpresa"},{id:"U8",usuario:"MG104",nombre:"Martín Gómez",telefono:"1155551111",rol:"Jugador"}]},window.__EMP),{id:"E2",nombre:"Estudio Contable Ruiz",codigo:"RUIZ",slogan:"",logo:"",color:"#1E3A8A",tema:"marca",estado:"Activa",usuarios:[]}]};},
   };
 
