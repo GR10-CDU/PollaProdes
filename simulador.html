@@ -356,7 +356,7 @@ html[data-layout="top"] #sidebar{display:none!important}
 .sb-head::before{content:"";position:absolute;inset:-30% -60%;background:var(--pitch) center/cover no-repeat;opacity:.09;z-index:-1;transform:rotate(-8deg)}
 .sb-head::after{content:"";position:absolute;width:160px;height:160px;right:-60px;top:-70px;background:radial-gradient(circle,var(--hero-glow),transparent 70%);z-index:-1}
 .sb-logo{width:53px;height:53px;border-radius:13px;overflow:hidden;flex-shrink:0;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.2)}
-.sb-logo svg{width:100%;height:100%}
+.sb-logo svg,.sb-logo img{width:100%;height:100%;display:block;object-fit:cover}
 .sb-brand .name{font-family:var(--ff);font-size:30px;font-weight:800;letter-spacing:.06em;line-height:.95;text-transform:uppercase}
 .sb-brand .sub{font-size:11px;font-weight:600;color:rgba(255,255,255,.55);margin-top:4px;letter-spacing:.08em}
 #sb-nav{flex:1;overflow-y:auto;padding:12px 12px}
@@ -393,7 +393,7 @@ html[data-layout="top"] #sidebar{display:none!important}
 }
 .tb-brand{display:none;align-items:center;gap:11px;flex-shrink:0;margin-right:10px}
 .tb-brand .tb-logo{width:46px;height:46px;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 0 0 1px var(--line),0 4px 12px rgba(0,0,0,.12)}
-.tb-brand .tb-logo svg{width:100%;height:100%}
+.tb-brand .tb-logo svg,.tb-brand .tb-logo img{width:100%;height:100%;display:block;object-fit:cover}
 .tb-brand .tb-name{font-family:var(--ff);font-size:29px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;line-height:1}
 .tb-brand .tb-name b{color:var(--accent-text);font-weight:800}
 #tb-nav{display:none;align-items:center;gap:2px;height:100%;overflow-x:auto;scrollbar-width:none}
@@ -590,7 +590,7 @@ textarea.inp{height:auto;padding:12px 15px;line-height:1.5}
 .lb{width:100%;max-width:430px;position:relative;margin:auto}
 .ll-head{text-align:center;margin-bottom:26px;color:#fff}
 .ll-logo{width:84px;height:84px;border-radius:24px;overflow:hidden;margin:0 auto 18px;background:#fff;box-shadow:0 0 0 6px rgba(255,255,255,.06),0 20px 50px rgba(0,0,0,.5)}
-.ll-logo svg{width:100%;height:100%}
+.ll-logo svg,.ll-logo img{width:100%;height:100%;display:block;object-fit:cover}
 .ll-title{font-family:var(--ff);font-size:74px;font-weight:800;letter-spacing:.02em;line-height:.84;text-transform:uppercase;
   background:linear-gradient(180deg,#fff 30%,color-mix(in srgb,#fff 55%,var(--hero-accent)) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .ll-green{color:var(--hero-accent)}
@@ -830,7 +830,7 @@ textarea.inp{height:auto;padding:12px 15px;line-height:1.5}
 .cb-s{font-size:13px;color:var(--ink-3);margin-top:2px}
 .cb-s strong{color:var(--ink-2)}
 .cambios-box>span,.cambios-box>button{flex-shrink:0}
-@media(max-width:560px){.cambios-box{flex-wrap:wrap}}
+@media(max-width:560px){.cambios-box{flex-wrap:wrap;gap:10px 12px;padding:12px 14px}.cb-txt{flex:1 1 calc(100% - 56px)}.cambios-box>span{margin-left:50px!important}.cb-t{font-size:15px}.cb-s{font-size:12.5px}}
 /* Ventana de pago de prueba */
 .pp-aviso{font-size:14px;line-height:1.5;padding:12px 14px;border-radius:14px;background:var(--info-soft);color:var(--ink-2);border:1px solid var(--info-line);margin-bottom:14px}
 .pp-tk{border-radius:16px;border:1px dashed var(--line-2);background:var(--surface-2);padding:6px 16px;margin-bottom:16px}
@@ -1306,13 +1306,16 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
 /* Celular: barra de abajo apoyada en el borde y barra de arriba nítida (sin desenfoque) */
 @media(max-width:880px){
   #topbar{background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none}
-  #bn{left:0;right:0;bottom:0;height:calc(64px + env(safe-area-inset-bottom));padding:0 6px env(safe-area-inset-bottom);
+  #bn{left:0;right:0;bottom:0;height:auto;padding:4px 6px max(4px,calc(env(safe-area-inset-bottom) - 14px));
       border-radius:20px 20px 0 0;border-width:1px 0 0;background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none;
       box-shadow:0 -8px 24px -12px rgba(0,0,0,.25)}
-  .page{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
-  .toast{bottom:calc(80px + env(safe-area-inset-bottom))}
-  #inst-banner{bottom:calc(76px + env(safe-area-inset-bottom))}
-  #reglas-badge{bottom:calc(80px + env(safe-area-inset-bottom))}
+  #bn .bn-wrap{height:56px}
+  #bn::after{content:"";position:absolute;left:0;right:0;top:100%;height:120px;background:var(--surface)}
+  html{background:var(--surface)}
+  .page{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+  .toast{bottom:calc(72px + env(safe-area-inset-bottom))}
+  #inst-banner{bottom:calc(68px + env(safe-area-inset-bottom))}
+  #reglas-badge{bottom:calc(72px + env(safe-area-inset-bottom))}
 }
 
 /* Cara a cara en el celular */
@@ -1564,7 +1567,7 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
 <div id="app">
   <aside id="sidebar">
     <div class="sb-head">
-      <div class="sb-logo"><svg width="44" height="44"><use href="#logo"/></svg></div>
+      <div class="sb-logo"><img src="icons/icon-192.png" alt="Polla Prodes" width="53" height="53"></div>
       <div class="sb-brand"><div class="name">Polla<br>Prodes</div><div class="sub">pollaprodes.com</div></div>
     </div>
     <nav id="sb-nav" aria-label="Menú principal"></nav>
@@ -1573,7 +1576,7 @@ html:is([data-screen="grilla"],[data-screen="tabla"]) #sidebar-right{display:non
   <div id="main">
     <header id="topbar">
       <div class="tb-brand">
-        <div class="tb-logo"><svg width="38" height="38"><use href="#logo"/></svg></div>
+        <div class="tb-logo"><img src="icons/icon-192.png" alt="Polla Prodes" width="46" height="46"></div>
         <div class="tb-name">Polla <b>Prodes</b></div>
       </div>
       <div class="tb-crumb"><span class="tc-k">Polla Prodes</span><span class="tc-t" id="tb-crumb">—</span></div>
@@ -3590,7 +3593,7 @@ function showLogin(){
   const el=document.getElementById("sl");el.style.display="flex";
   el.innerHTML=`<button class="icon-btn sl-gear gear" onclick="openSettings()" aria-label="Ajustes de apariencia">${ICO.gear}</button><div class="lb su">
     <div class="ll-head">
-      <div class="ll-logo"><svg width="96" height="96"><use href="#logo"/></svg></div>
+      <div class="ll-logo"><img src="icons/icon-512.png" alt="Polla Prodes" width="84" height="84"></div>
       <div class="ll-title">POLLA<br>PRODES</div>
       <div class="ll-sub">Sé parte de Polla Prodes y demostrá todo lo que sabés de Fútbol!</div>
     </div>
