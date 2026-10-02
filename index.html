@@ -1565,6 +1565,54 @@ body:has(#landing:not([hidden])) #inst-banner{display:none}
   .ld-hero-in{padding-top:28px}
 }
 @media(prefers-reduced-motion:reduce){#landing *{animation:none!important;transition:none!important}.ld-rev{opacity:1;transform:none}}
+/* Landing · Empresas */
+.ld-nav-r{display:flex;align-items:center;gap:8px}
+.ld-nav-biz{height:44px;padding:0 16px;border-radius:22px;font-size:15px;font-weight:700;color:rgba(255,255,255,.8);display:inline-flex;align-items:center;text-decoration:none}
+.ld-nav-biz:hover{color:#fff}
+.ld-biz{position:relative;padding:clamp(70px,10vw,120px) clamp(18px,4vw,40px);background:linear-gradient(180deg,transparent,rgba(255,255,255,.035) 20%,rgba(255,255,255,.035) 80%,transparent);border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08)}
+.ld-biz-in{max-width:1180px;margin:0 auto}
+.ld-biz-sub{max-width:640px;margin:16px auto 0;font-size:clamp(16px,2vw,19px);line-height:1.55;color:rgba(255,255,255,.7)}
+.ld-biz-grid{display:grid;grid-template-columns:minmax(0,420px) 1fr;gap:clamp(24px,4vw,56px);align-items:start;margin-top:10px}
+.ld-biz-demo{padding:22px;border-radius:28px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12)}
+.ld-biz-lbl{display:block;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:10px}
+.ld-biz-input{width:100%;height:50px;padding:0 16px;border-radius:14px;font:inherit;font-size:16px;font-weight:600;color:#fff;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.18);outline:none}
+.ld-biz-input:focus{border-color:var(--hero-accent)}
+.ld-biz-sw{display:flex;gap:10px;margin:14px 0 18px}
+.ld-biz-sw button{width:34px;height:34px;border-radius:50%;background:var(--c);border:2px solid rgba(255,255,255,.25);transition:transform .2s var(--ease-out)}
+.ld-biz-sw button.on{transform:scale(1.15);border-color:#fff;box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 45%,transparent)}
+.ld-biz-phone{border-radius:24px;padding:16px;background:#fff;color:#0F172A;box-shadow:0 30px 60px -20px rgba(0,0,0,.6),0 0 0 6px rgba(255,255,255,.06)}
+.bz-top{display:flex;align-items:center;gap:12px;margin:-16px -16px 14px;padding:16px;border-radius:24px 24px 0 0;background:var(--bz);color:#fff}
+.bz-logo{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#fff;color:var(--bz);font-family:var(--ff);font-size:22px;font-weight:800}
+.bz-top b{display:block;font-family:var(--ff);font-size:22px;font-weight:800;line-height:1.05;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px}
+.bz-top small{font-size:12.5px;opacity:.85}
+.bz-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.bz-badges span{height:28px;padding:0 10px;border-radius:14px;display:inline-flex;align-items:center;font-size:12px;font-weight:800;color:var(--bz);background:color-mix(in srgb,var(--bz) 12%,#fff);border:1px solid color-mix(in srgb,var(--bz) 30%,#fff)}
+.bz-k{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#64748B;margin-bottom:8px}
+.bz-row{display:grid;grid-template-columns:22px 82px 1fr 40px;align-items:center;gap:8px;height:34px;font-size:14px;font-weight:700}
+.bz-row i{font-style:normal;font-family:var(--ff);font-size:18px;font-weight:800;color:var(--bz)}
+.bz-row b{font-family:var(--ff);font-size:19px;text-align:right}
+.bz-bar{height:8px;border-radius:4px;background:#EEF2F7;overflow:hidden}
+.bz-bar em{display:block;height:100%;border-radius:4px;background:var(--bz)}
+.bz-prize{display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px;border-radius:14px;background:#F6F8FB;border:1px dashed color-mix(in srgb,var(--bz) 45%,#fff)}
+.bz-prize span{font-size:26px}.bz-prize b{display:block;font-size:14px}.bz-prize small{font-size:12.5px;color:#64748B}
+.ld-biz-list{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ld-biz-it{display:flex;gap:14px;padding:20px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09)}
+.ld-biz-it>span{font-size:30px;line-height:1}
+.ld-biz-it b{display:block;font-family:var(--ff);font-size:23px;font-weight:800;text-transform:uppercase;margin-bottom:4px}
+.ld-biz-it p{font-size:14.5px;line-height:1.5;color:rgba(255,255,255,.66)}
+.ld-biz-uses{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:34px}
+.ld-biz-uses span{height:34px;padding:0 14px;border-radius:17px;display:inline-flex;align-items:center;font-size:13.5px;font-weight:700;color:rgba(255,255,255,.8);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14)}
+.ld-biz-cta{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:30px}
+.ld-biz-cta .ld-cta{margin-top:0;text-decoration:none;animation:none}
+.ld-cta-biz{background:#fff;color:#0F172A;box-shadow:0 18px 44px -12px rgba(255,255,255,.35)}
+.ld-biz-cta small{font-size:13.5px;color:rgba(255,255,255,.55)}
+@media(max-width:900px){.ld-biz-grid{grid-template-columns:1fr}.ld-biz-demo{max-width:460px;margin:0 auto;width:100%}}
+@media(max-width:560px){.ld-biz-list{grid-template-columns:1fr}.ld-nav-biz{display:none}.bz-top b{max-width:200px}}
+.ld-strip{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin-top:40px;animation:su .8s var(--ease-out) .45s both}
+.ld-strip div{display:flex;align-items:baseline;gap:8px;height:52px;padding:0 22px;border-radius:26px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);align-items:center}
+.ld-strip b{font-family:var(--ff);font-size:24px;font-weight:800;text-transform:uppercase;color:var(--hero-accent)}
+.ld-strip span{font-size:15px;font-weight:600;color:rgba(255,255,255,.8)}
+@media(max-width:560px){.ld-strip{flex-direction:column;align-items:stretch;gap:8px;width:100%}.ld-strip div{justify-content:center;height:46px}}
 
 </style>
 </head>
@@ -1638,19 +1686,18 @@ body:has(#landing:not([hidden])) #inst-banner{display:none}
     <div class="ld-floats" aria-hidden="true"><span>L</span><span>E</span><span>V</span><span>L</span><span>E</span><span>V</span></div>
     <nav class="ld-nav">
       <div class="ld-brand"><img src="icons/icon-192.png" alt="" width="40" height="40"><span>POLLA <b>PRODES</b></span></div>
-      <button class="ld-ingresar" onclick="landingIr('login')">Ingresar</button>
+      <div class="ld-nav-r"><a class="ld-nav-biz" href="#empresas">Empresas</a><button class="ld-ingresar" onclick="landingIr('login')">Ingresar</button></div>
     </nav>
     <div class="ld-hero-in">
       <div class="ld-kicker"><i></i> Temporada 2026 · El prode entre amigos</div>
       <h1 class="ld-title">Demostrá que<br><span>sabés de fútbol.</span></h1>
-      <p class="ld-sub">Pronosticá <b>Local, Empate o Visitante</b> en cada partido de la fecha, sumá con las reglas especiales y llevate el pozo.</p>
+      <p class="ld-sub">Pronosticá la fecha, competí con tus amigos y <b>llevate el pozo</b>.</p>
       <button class="ld-cta" onclick="landingIr('registro')"><span>Registrarse y jugar</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       <div class="ld-cta-sub">Gratis registrarse · Pagás solo el pozo en el que juegues</div>
-      <div class="ld-live" id="ld-live" hidden>
-        <div class="ld-live-item"><small>Próxima fecha</small><b id="ld-fecha">—</b></div>
-        <div class="ld-live-item"><small>Cierra en</small><b id="ld-cuenta">—</b></div>
-        <div class="ld-live-item"><small>Pozo para el ganador</small><b id="ld-pozo" class="oro">—</b></div>
-        <div class="ld-live-item"><small>Ya juegan</small><b id="ld-jug">—</b></div>
+      <div class="ld-strip">
+        <div><b>Fechas</b><span>todas las semanas</span></div>
+        <div><b>Tabla</b><span>en vivo, gol a gol</span></div>
+        <div><b>Pozos</b><span>para todos los bolsillos</span></div>
       </div>
     </div>
     <div class="ld-scroll" aria-hidden="true"><i></i></div>
@@ -1666,37 +1713,68 @@ body:has(#landing:not([hidden])) #inst-banner{display:none}
   <section class="ld-sec">
     <div class="ld-sec-head"><span class="ld-k">Cómo se juega</span><h2>Cuatro pasos y a la cancha</h2></div>
     <ol class="ld-steps">
-      <li><span class="ld-n">1</span><b>Registrate</b><p>Con tu teléfono y un PIN. Elegí tu escudo o tu foto.</p></li>
-      <li><span class="ld-n">2</span><b>Elegí tu pozo</b><p>Transferís, subís el comprobante y ya estás jugando.</p></li>
-      <li><span class="ld-n">3</span><b>Pronosticá</b><p>L, E o V en cada partido. Cambiás gratis hasta 1 hora antes del primero.</p></li>
-      <li><span class="ld-n">4</span><b>Ganá</b><p>El que más suma se lleva el pozo. En vivo, partido a partido.</p></li>
+      <li><span class="ld-n">1</span><b>Registrate</b><p>En un minuto, con tu teléfono.</p></li>
+      <li><span class="ld-n">2</span><b>Elegí tu pozo</b><p>Entrás y ya estás jugando.</p></li>
+      <li><span class="ld-n">3</span><b>Pronosticá</b><p>Cada partido de la fecha. Vos sabés quién gana.</p></li>
+      <li><span class="ld-n">4</span><b>Ganá</b><p>El que más sabe se lleva el pozo.</p></li>
     </ol>
-  </section>
-
-  <!-- PUNTOS -->
-  <section class="ld-sec ld-dark">
-    <div class="ld-sec-head"><span class="ld-k">Cada partido vale distinto</span><h2>No todos los goles pesan igual</h2></div>
-    <div class="ld-pts">
-      <div class="ld-pt"><span class="t-tag t-s">×1</span><b>1</b><small>Simple</small><p>El partido de todos los días.</p></div>
-      <div class="ld-pt"><span class="t-tag t-d">×2</span><b>2</b><small>Doble</small><p>Los que valen el doble.</p></div>
-      <div class="ld-pt polla"><span class="t-tag t-p">P</span><b>5</b><small>Polla</small><p>El partido de la fecha. Vale 5, siempre.</p></div>
-      <div class="ld-pt tole"><span class="t-tag t-tole">🔥</span><b>3</b><small>TOLE</small><p>Cuando el grupo está partido al medio, acertar vale 3.</p></div>
-    </div>
   </section>
 
   <!-- REGLAS + FEATURES -->
   <section class="ld-sec">
-    <div class="ld-sec-head"><span class="ld-k">Más que un prode</span><h2>Reglas especiales, cara a cara y tabla en vivo</h2></div>
+    <div class="ld-sec-head"><span class="ld-k">Por qué engancha</span><h2>Mucho más que un prode</h2></div>
     <div class="ld-feats">
       <div class="ld-feat big">
-        <div class="ld-feat-ic">📏</div><b>8 reglas especiales</b>
-        <p>La Marea Roja, La Rachita, El Diego, La MK, Goles Son Amores, Lluvia de Goles, La Zapali, Empate Que Suma. Puntos extra para los que saben leer el partido.</p>
-        <div class="ld-chips"><span>LMR</span><span>LR</span><span>DIEGO</span><span>MK</span><span>GSA</span><span>LLDG</span><span>ZPL</span><span>EQS</span></div>
+        <div class="ld-feat-ic">📏</div><b>Reglas especiales</b>
+        <p>Puntos extra para los que saben leer el partido. Ahí se definen las fechas.</p>
       </div>
-      <div class="ld-feat"><div class="ld-feat-ic">⚔️</div><b>Cara a cara</b><p>Comparate con el puntero o con el Top 3 y mirá en qué partidos te podés despegar.</p></div>
-      <div class="ld-feat"><div class="ld-feat-ic">📊</div><b>Tabla en vivo</b><p>Cada gol mueve la tabla. Subís, bajás, y lo ves al instante.</p></div>
-      <div class="ld-feat"><div class="ld-feat-ic">🔄</div><b>Cambios</b><p>Gratis hasta el cierre. Después, 3 cambios más para salvar la fecha.</p></div>
-      <div class="ld-feat"><div class="ld-feat-ic">🔒</div><b>Grupos cerrados</b><p>Armá tu prode con amigos, la oficina o la familia con un código.</p></div>
+      <div class="ld-feat"><div class="ld-feat-ic">⚔️</div><b>Cara a cara</b><p>Mirá en qué te diferenciás del puntero.</p></div>
+      <div class="ld-feat"><div class="ld-feat-ic">📊</div><b>Tabla en vivo</b><p>Cada gol mueve la tabla, al instante.</p></div>
+      <div class="ld-feat"><div class="ld-feat-ic">🔄</div><b>Cambios</b><p>¿Te arrepentiste? Todavía podés salvar la fecha.</p></div>
+      <div class="ld-feat"><div class="ld-feat-ic">🔒</div><b>Grupos cerrados</b><p>Tu prode con amigos, la oficina o la familia.</p></div>
+    </div>
+  </section>
+
+  <!-- EMPRESAS -->
+  <section class="ld-biz" id="empresas">
+    <div class="ld-biz-in">
+      <div class="ld-sec-head"><span class="ld-k">Para empresas</span><h2>Tu empresa,<br>tu Polla.</h2>
+        <p class="ld-biz-sub">Un prode con tu marca para tu equipo o tus clientes. Más charla en la oficina, más vínculo con la marca, y todos hablando de lo mismo durante toda la temporada.</p></div>
+      <div class="ld-biz-grid">
+        <div class="ld-biz-demo">
+          <label class="ld-biz-lbl" for="bz-nombre">Probalo con tu empresa</label>
+          <input id="bz-nombre" class="ld-biz-input" maxlength="22" placeholder="Nombre de tu empresa" oninput="bizPreview()">
+          <div class="ld-biz-sw" role="radiogroup" aria-label="Color de la marca">
+            <button style="--c:#2F6BFF" class="on" onclick="bizColor(this)" aria-label="Azul"></button>
+            <button style="--c:#E5332A" onclick="bizColor(this)" aria-label="Rojo"></button>
+            <button style="--c:#FF8A00" onclick="bizColor(this)" aria-label="Naranja"></button>
+            <button style="--c:#12B886" onclick="bizColor(this)" aria-label="Verde"></button>
+            <button style="--c:#8B5CF6" onclick="bizColor(this)" aria-label="Violeta"></button>
+            <button style="--c:#111827" onclick="bizColor(this)" aria-label="Negro"></button>
+          </div>
+          <div class="ld-biz-phone" id="bz-phone" style="--bz:#2F6BFF">
+            <div class="bz-top"><span class="bz-logo" id="bz-ini">TE</span><div><b id="bz-tit">Polla Tu Empresa</b><small>Fecha 12 · Mundial</small></div></div>
+            <div class="bz-badges"><span>🔥 Racha ×3</span><span>🎯 Ojo de halcón</span><span>🏆 Top 10</span></div>
+            <div class="bz-k">Ranking por área</div>
+            <div class="bz-row"><i>1</i><span>Ventas</span><div class="bz-bar"><em style="width:92%"></em></div><b>148</b></div>
+            <div class="bz-row"><i>2</i><span>Sistemas</span><div class="bz-bar"><em style="width:80%"></em></div><b>131</b></div>
+            <div class="bz-row"><i>3</i><span>Logística</span><div class="bz-bar"><em style="width:66%"></em></div><b>109</b></div>
+            <div class="bz-row"><i>4</i><span>Marketing</span><div class="bz-bar"><em style="width:51%"></em></div><b>87</b></div>
+            <div class="bz-prize"><span>🎁</span><div><b>Premio de la fecha</b><small>Lo define tu empresa</small></div></div>
+          </div>
+        </div>
+        <div class="ld-biz-list">
+          <div class="ld-biz-it"><span>🎨</span><div><b>Con tu marca</b><p>Tu logo, tus colores y tu nombre. Para tu gente es la Polla de la empresa, no una app más.</p></div></div>
+          <div class="ld-biz-it"><span>🏢</span><div><b>Torneos internos</b><p>Por área, sucursal o equipo. Ranking individual y por equipos: Ventas contra Sistemas, cada fin de semana.</p></div></div>
+          <div class="ld-biz-it"><span>🎮</span><div><b>Gamificación</b><p>Insignias, rachas de aciertos, desafíos semanales y logros que se ven en el perfil. Engancha y vuelve cada fecha.</p></div></div>
+          <div class="ld-biz-it"><span>🤝</span><div><b>Para tus clientes</b><p>Campañas de fidelización en el Mundial, la Copa o la Liga. Tu marca presente toda la temporada, no un solo día.</p></div></div>
+          <div class="ld-biz-it"><span>🎁</span><div><b>Premios a medida</b><p>Sin poner plata de por medio: premios, días libres, productos o experiencias que elige la empresa.</p></div></div>
+          <div class="ld-biz-it"><span>📈</span><div><b>Reportes</b><p>Cuántos juegan, qué áreas participan más y cómo crece el uso fecha a fecha.</p></div></div>
+        </div>
+      </div>
+      <div class="ld-biz-uses"><span>Mundial 2026</span><span>Copa Libertadores</span><span>Champions</span><span>Liga Profesional</span><span>Eliminatorias</span><span>Eventos y convenciones</span></div>
+      <div class="ld-biz-cta"><a class="ld-cta ld-cta-biz" id="ld-wa-biz" href="#" target="_blank" rel="noopener"><span>Quiero una demo</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <small>Te escribimos por WhatsApp y armamos la Polla de tu empresa.</small></div>
     </div>
   </section>
 
@@ -3982,26 +4060,20 @@ function showLanding(){
     const io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}});},{root:l,threshold:.15});
     l.querySelectorAll(".ld-quote,.ld-sec,.ld-final").forEach(function(x){x.classList.add("ld-rev");io.observe(x);});
   }
-  landingEnVivo();
+  const wb=document.getElementById("ld-wa-biz");if(wb)wb.href="https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent("¡Hola! Quiero una Polla Prodes para mi empresa");
+  l.querySelector(".ld-nav-biz")?.addEventListener("click",function(e){e.preventDefault();document.getElementById("empresas").scrollIntoView({behavior:"smooth"});});
 }
-async function landingEnVivo(){
-  try{
-    const r=await api("getFechas");const f=(r.fechas||[]).filter(function(x){return x.estado==="Abierta"&&x.puedeJugar&&!x.tieneCodigo;}).sort(function(a,b){return a.minutosRestantes-b.minutosRestantes;})[0];
-    if(!f)return;
-    const p=await api("getPozos",{fechaId:f.id});const pozos=(p.pozos||[]);
-    const premio=pozos.reduce(function(m,x){return Math.max(m,x.premioGanador||0);},0);
-    const jug=pozos.reduce(function(t,x){return t+(x.inscriptos||0);},0);
-    document.getElementById("ld-fecha").textContent=f.nombre;
-    document.getElementById("ld-pozo").textContent=premio?"$"+premio.toLocaleString("es-AR"):"—";
-    document.getElementById("ld-jug").textContent=jug?jug+" jugador"+(jug!==1?"es":""):"Sé el primero";
-    const fin=Date.now()+f.minutosRestantes*6e4;
-    const tick=function(){const ms=fin-Date.now();const el=document.getElementById("ld-cuenta");if(!el)return;if(ms<=0){el.textContent="Cerrada";return;}
-      const d=Math.floor(ms/864e5),h=Math.floor(ms/36e5)%24,m=Math.floor(ms/6e4)%60,s=Math.floor(ms/1e3)%60;
-      el.textContent=d>0?`${d}d ${h}h ${m}m`:`${h}h ${String(m).padStart(2,"0")}m ${String(s).padStart(2,"0")}s`;};
-    tick();clearInterval(window._ldT);window._ldT=setInterval(tick,1000);
-    document.getElementById("ld-live").hidden=false;
-  }catch(e){}
-}
+// Vista previa "Tu empresa, tu Polla"
+window.bizPreview=function(){
+  const n=(document.getElementById("bz-nombre").value.trim())||"Tu Empresa";
+  document.getElementById("bz-tit").textContent="Polla "+n;
+  const w=n.split(/\s+/).filter(Boolean);
+  document.getElementById("bz-ini").textContent=(w.length>1?w[0][0]+w[1][0]:n.slice(0,2)).toUpperCase();
+};
+window.bizColor=function(btn){
+  document.querySelectorAll(".ld-biz-sw button").forEach(function(x){x.classList.toggle("on",x===btn);});
+  document.getElementById("bz-phone").style.setProperty("--bz",getComputedStyle(btn).getPropertyValue("--c"));
+};
 window.landingIr=function(a){
   document.getElementById("landing").hidden=true;clearInterval(window._ldT);
   showLogin();
