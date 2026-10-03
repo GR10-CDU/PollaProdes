@@ -1990,6 +1990,18 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
 .ins-meta small{font-size:12px;color:var(--ink-3)}
 .ins-pr{font-family:var(--ff);font-size:18px;font-weight:800;text-align:center;color:var(--ink-3)}
 .ins-pr.ok{color:var(--ok)}
+/* Admin: anotados en la tarjeta de la fecha */
+.af-anot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:6px}
+.af-n{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:17px;font-size:15px;font-weight:700;background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--ink)}
+.af-n b{font-family:var(--ff);font-size:22px}
+.af-pozo{font-size:13.5px;padding:5px 10px;border-radius:12px;background:var(--gold-soft);border:1px solid var(--gold-line);color:var(--ink-2)}
+.af-pozo b{color:var(--ink)}
+.af-pozo.sin{background:var(--surface-2);border-style:dashed;border-color:var(--line-2)}
+/* Avisos push */
+.av-banner{display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:12px;position:relative}
+.av-ic{font-size:26px}
+.av-banner div{flex:1;min-width:0}.av-banner b{display:block;font-size:15.5px}.av-banner small{font-size:13px;color:var(--ink-2)}
+.av-x{width:30px;height:30px;font-size:20px;color:var(--ink-3);border-radius:9px}
 
 </style>
 </head>
@@ -2452,6 +2464,7 @@ async function loadFechas(){
   fechasVis.forEach(function(f){cargarExtraFecha(f);});
   cajaCodigoEn(el);
   mostrarNovedadesEn(el);
+  if(App.user?.rol!=="Admin")pintarAvisos();
 }
 
 async function cargarExtraFecha(f){
@@ -3769,7 +3782,9 @@ async function loadPerfil(){
     </div>
   </div>
   ${u.empresa&&(u.empresa.campos||[]).length?`<div class="card pf-sec" id="pf-emp"><div class="pf-tit">Tus datos para ${escH(u.empresa.nombre)}</div><div class="fg">${camposEmpresaHtml(u.empresa,u.datosExtra||{},"inp")}<button class="btn btn-p" onclick="guardarDatosEmp(document.getElementById('pf-emp'))">Guardar</button></div></div>`:""}
+  <div class="card pf-sec" id="pf-avisos"></div>
   <button class="btn btn-d" style="width:100%" onclick="if(confirm('¿Cerrar sesión?'))logout()">⎋ Cerrar sesión</button>`;
+  pintarAvisos();
 }
 window.elegirAvatar=async function(val){
   const r=await api("editarPerfil",{avatar:val});
@@ -3839,12 +3854,12 @@ async function loadAdminFechas(){
   const card=function(f){
     const reglas=f.reglasHabilitadas||[];
     const estadoBdg=f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr";
-    const plazoStr=f.plazoLimite?new Date(f.plazoLimite).toLocaleString("es-AR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"America/Argentina/Buenos_Aires"}):"";
+    const plazoStr=f.plazoLimite?new Date(f.plazoLimite).toLocaleString("es-AR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"";
     return`<div class="card" style="margin-bottom:10px;padding:16px" id="fcard-${f.id}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div>
           <div style="font-family:var(--ff);font-size:26px;font-weight:800">${f.nombre||"Sin nombre"}</div>
-          <div style="font-size:14px;color:var(--txt3);margin-top:2px">⚽ ${f.cantPartidos||0}${f.liga?" · "+f.liga:""}${plazoStr?" · Plazo: "+plazoStr:""}</div>
+          <div style="font-size:14px;color:var(--txt3);margin-top:2px">⚽ ${f.cantPartidos||0} partido${f.cantPartidos!==1?"s":""}${f.liga?" · "+f.liga:""}${plazoStr?" · Cierra: "+plazoStr+" hs":""}</div>
           ${reglas.length||f.codigoGrupo||f.empresaNombre?`<div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap">${f.empresaNombre?`<span class="bdg bblue" title="Fecha de empresa">🏢 ${f.empresaNombre}</span>`:""}${f.codigoGrupo?`<span class="bdg bpur" title="Código de grupo cerrado">🔒 ${f.codigoGrupo}</span>`:""}${reglas.map(function(cod){return`<span class="bdg bgold">${cod}</span>`;}).join("")}</div>`:""}
         </div>
         <span class="bdg ${estadoBdg}">${f.estado}</span>
@@ -3869,14 +3884,16 @@ async function loadAdminFechas(){
   el.innerHTML=`<div class="af-chips">${chips.map(function(c){return`<button class="af-chip${filtro===c[0]?" on":""}" onclick="window._afFiltro='${c[0]}';loadAdminFechas()">${escH(c[1])} <span>${cuenta(c[0])}</span></button>`;}).join("")}</div>
     ${visibles.length?visibles.map(card).join(""):emptyBox("📅","No hay fechas en este apartado")}
     ${ocultas.length?`<details class="af-ocultas"><summary>Ocultas (${ocultas.length})</summary>${ocultas.map(card).join("")}</details>`:""}`;
-  visibles.concat(ocultas).forEach(function(f){if(!f.empresaId)loadPozosInline(f.id);});
+  visibles.concat(ocultas).forEach(function(f){loadPozosInline(f.id,!!f.empresaId);});
 }
 
-async function loadPozosInline(fechaId){
+async function loadPozosInline(fechaId,soloAnotados){
   const el=document.getElementById("pozos-"+fechaId);if(!el)return;
   const r=await api("getPozos",{fechaId});
-  if(!r.ok||!r.pozos?.length){return;}
-  el.innerHTML=`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">${r.pozos.map(function(p){return`<span style="padding:3px 8px;background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);font-size:14px"><span style="font-family:var(--ff);font-weight:800">$${p.monto.toLocaleString("es-AR")}</span><span style="color:var(--txt3);margin-left:3px">· ${p.inscriptos}</span></span>`;}).join("")}</div>`;
+  if(!r.ok)return;
+  const ps=r.pozos||[],tot=ps.reduce(function(t,p){return t+(p.inscriptos||0);},0);
+  const fmt=function(n){return"$"+Number(n||0).toLocaleString("es-AR");};
+  el.innerHTML=`<div class="af-anot"><span class="af-n">👥 <b>${tot}</b> anotado${tot!==1?"s":""}</span>${soloAnotados?"":ps.length?ps.map(function(p){return`<span class="af-pozo">${p.monto?"Pozo "+fmt(p.monto):"Gratis"} · ${p.inscriptos} anotado${p.inscriptos!==1?"s":""}${p.premioGanador?` · premio <b>${fmt(p.premioGanador)}</b>`:""}</span>`;}).join(""):`<span class="af-pozo sin">Sin pozos: creá uno en "Pozos y premios"</span>`}</div>`;
 }
 
 window.showCrearFecha=async function(){
@@ -5006,6 +5023,48 @@ window.verInscriptos=async function(fechaId){
       <div class="ins-pr${comp?" ok":""}" title="Pronósticos cargados">${i.pronosticos}/${tot}</div></div>`;}).join("")}</div>`
     :emptyBox("👥","Todavía no se anotó nadie en esta fecha");
 };
+
+// ── Avisos push (gratis): activar en este celular/navegador ──
+const VAPID_PUBLIC="BHpCQ35Sw9nRq7nfTIo2HP3782GHHTnhyy17gfdiNzOTR9xmxOKfktFXdlNUPNe1mP0tKKkNYppKYafHsvNCwvA";
+function pushSoportado(){return"serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;}
+function esIOS(){return/iphone|ipad|ipod/i.test(navigator.userAgent);}
+function _b64(u){const p="=".repeat((4-u.length%4)%4),b=(u+p).replace(/-/g,"+").replace(/_/g,"/"),r=atob(b),o=new Uint8Array(r.length);for(let i=0;i<r.length;i++)o[i]=r.charCodeAt(i);return o;}
+async function pushEstado(){
+  if(!pushSoportado())return esIOS()&&!esApp()?"ios-instalar":"no";
+  if(Notification.permission==="denied")return"bloqueado";
+  try{const reg=await navigator.serviceWorker.getRegistration();const sub=reg&&await reg.pushManager.getSubscription();return sub?"activo":"apagado";}catch(e){return"apagado";}
+}
+window.activarAvisos=async function(){
+  if(!pushSoportado()){toast(esIOS()?"En iPhone: primero instalá la app (Compartir → Agregar a inicio) y abrila desde ahí":"Este navegador no permite avisos",5000);return;}
+  const perm=await Notification.requestPermission();
+  if(perm!=="granted"){toast("Para recibir avisos tenés que permitir las notificaciones",4500);pintarAvisos();return;}
+  try{
+    const reg=await navigator.serviceWorker.register("sw.js");await navigator.serviceWorker.ready;
+    const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_b64(VAPID_PUBLIC)});
+    const r=await api("guardarPush",{sub:sub.toJSON()});
+    if(!r.ok){toast("❌ "+r.error);return;}
+    api("probarPush");toast("✅ ¡Listo! Te mandamos un aviso de prueba");
+  }catch(e){console.error(e);toast("❌ No se pudieron activar los avisos");}
+  pintarAvisos();
+};
+window.desactivarAvisos=async function(){
+  try{const reg=await navigator.serviceWorker.getRegistration();const sub=reg&&await reg.pushManager.getSubscription();if(sub){await api("borrarPush",{endpoint:sub.endpoint});await sub.unsubscribe();}}catch(e){}
+  toast("Avisos desactivados en este dispositivo");pintarAvisos();
+};
+// Tarjeta en el Perfil + cartelito en Fechas (si todavía no los activó)
+async function pintarAvisos(){
+  const est=await pushEstado();
+  const pf=document.getElementById("pf-avisos");
+  if(pf){const T={activo:["🔔 Avisos activados","Te avisamos cuando pegás una regla, acertás la Polla o se está por cerrar una fecha.",`<button class="btn btn-s" onclick="desactivarAvisos()">Desactivar</button>`],
+      apagado:["🔕 Avisos apagados","Activalos y te avisamos cuando pegás una regla, acertás la Polla o se está por cerrar una fecha.",`<button class="btn btn-p" onclick="activarAvisos()">Activar avisos</button>`],
+      bloqueado:["🔕 Notificaciones bloqueadas","Las bloqueaste en este navegador. Habilitalas desde el candadito de la barra de direcciones → Notificaciones → Permitir.",""],
+      "ios-instalar":["📲 Instalá la app para recibir avisos","En iPhone los avisos llegan solo con la app instalada: Compartir → Agregar a inicio, y abrila desde el ícono.",""],
+      no:["Avisos no disponibles","Este navegador no permite notificaciones.",""]}[est];
+    pf.innerHTML=`<div class="pf-tit">${T[0]}</div><p class="me-p">${T[1]}</p>${T[2]}`;}
+  const fb=document.getElementById("fl");
+  if(fb&&est==="apagado"&&!document.getElementById("av-banner")){let no=false;try{no=localStorage.getItem("pp_av_no")==="1";}catch(e){}
+    if(!no){const d=document.createElement("div");d.id="av-banner";d.className="card av-banner";d.innerHTML=`<span class="av-ic">🔔</span><div><b>Activá los avisos</b><small>Enterate al toque cuando pegás una regla o se cierra una fecha.</small></div><button class="btn btn-p" onclick="activarAvisos()">Activar</button><button class="av-x" onclick="this.parentElement.remove();try{localStorage.setItem('pp_av_no','1')}catch(e){}" aria-label="Cerrar">×</button>`;fb.prepend(d);}}
+}
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){

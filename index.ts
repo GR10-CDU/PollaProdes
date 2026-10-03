@@ -5,6 +5,7 @@
 // ============================================================
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import webpush from "npm:web-push@3.6.7";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -176,6 +177,11 @@ Deno.serve(async (req) => {
       case "registro": return resp(await registro(db, data));
       case "login": return resp(await login(db, data));
       case "loginConToken": return resp(await loginConToken(db, data));
+      // ── AVISOS PUSH ───────────────────────────────────────
+      case "guardarPush": return resp(await guardarPush(db, data));
+      case "borrarPush": return resp(await borrarPush(db, data));
+      case "probarPush": return resp(await probarPush(db, data));
+      case "cronAvisos": return resp(await cronAvisos(db));
       case "logout": return resp(await logout(db, data));
 
       // ── FECHAS Y PARTIDOS ─────────────────────────────────
@@ -1003,6 +1009,7 @@ async function adminIngresarResultado(db: any, data: any) {
     // Calcular puntajes
     await calcularPuntajesPartido(db, id);
   }
+  try { for (const id of ids) await avisosResultado(db, id); } catch (e) { console.error("push", e); }
 
   return {ok:true, resultado, enOtrasFechas: ids.length - 1};
 }
@@ -2463,4 +2470,95 @@ async function adminGetInscriptos(db: any, data: any) {
     estado: !Number(i.pozos?.monto) ? "Gratis" : i.via_codigo ? "Con código" : i.estado_pago === "Aprobado" ? "Pagó" : i.comprobante_path ? "En revisión" : "Sin pagar",
     pronosticos: cuenta[i.user_id+"|"+i.pozo_id]||0,
   }))};
+}
+
+// ============================================================
+//  AVISOS PUSH (Web Push, gratis)
+//  - Pegaste una regla · Acertaste el partido Polla · La fecha está por cerrar
+// ============================================================
+const VAPID_PUBLIC = Deno.env.get("VAPID_PUBLIC") || "";
+const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE") || "";
+if (VAPID_PUBLIC && VAPID_PRIVATE) webpush.setVapidDetails(Deno.env.get("VAPID_SUBJECT") || "mailto:pollaprodes@gmail.com", VAPID_PUBLIC, VAPID_PRIVATE);
+
+async function guardarPush(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  const sub = data.sub || {};
+  if (!sub.endpoint || !sub.keys?.p256dh || !sub.keys?.auth) return {ok:false, error:"Suscripción inválida"};
+  await db.from("push_subs").upsert({endpoint:sub.endpoint, user_id:auth.userId, p256dh:sub.keys.p256dh, auth:sub.keys.auth}, {onConflict:"endpoint"});
+  return {ok:true};
+}
+async function borrarPush(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  if (data.endpoint) await db.from("push_subs").delete().eq("endpoint", data.endpoint).eq("user_id", auth.userId);
+  return {ok:true};
+}
+// Manda a todos los dispositivos de esos usuarios. Si un dispositivo ya no existe, se borra.
+async function enviarPush(db: any, userIds: string[], aviso: {titulo:string, texto:string, url?:string, tag?:string}) {
+  if (!VAPID_PUBLIC || !userIds.length) return 0;
+  const {data: subs} = await db.from("push_subs").select("*").in("user_id", [...new Set(userIds)]);
+  let ok = 0;
+  await Promise.all((subs||[]).map(async (s:any) => {
+    try {
+      await webpush.sendNotification({endpoint:s.endpoint, keys:{p256dh:s.p256dh, auth:s.auth}},
+        JSON.stringify({title:aviso.titulo, body:aviso.texto, url:aviso.url||"/", tag:aviso.tag||""}), {TTL: 6*3600});
+      ok++;
+    } catch (e: any) {
+      if (e?.statusCode === 404 || e?.statusCode === 410) await db.from("push_subs").delete().eq("endpoint", s.endpoint);
+      else console.error("push", e?.statusCode, e?.body);
+    }
+  }));
+  return ok;
+}
+// true la primera vez que se pide esa clave (así cada aviso sale una sola vez)
+async function primeraVez(db: any, clave: string) {
+  const {error} = await db.from("push_enviados").insert({clave});
+  return !error;
+}
+async function probarPush(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  const n = await enviarPush(db, [auth.userId!], {titulo:"🔔 Avisos activados", texto:"Te vamos a avisar cuando pegues una regla, aciertes la Polla o se esté por cerrar una fecha.", tag:"prueba"});
+  return {ok:true, enviados:n};
+}
+// Después de cargar un resultado
+async function avisosResultado(db: any, partidoId: string) {
+  const {data: p} = await db.from("partidos").select("id,fecha_id,local,visita,tipo,resultado,estado").eq("id", partidoId).single();
+  if (!p || p.estado !== "Finalizado") return;
+  const partido = `${p.local} vs ${p.visita}`;
+  // ⭐ Acertaste la Polla (vale 5)
+  if (p.tipo === "Polla") {
+    const {data: ac} = await db.from("pronosticos").select("user_id").eq("partido_id", p.id).eq("acertado", true);
+    for (const a of (ac||[])) if (await primeraVez(db, `polla:${p.id}:${a.user_id}`))
+      await enviarPush(db, [a.user_id], {titulo:"⭐ ¡Acertaste la Polla!", texto:`${partido}: +5 puntos`, tag:`polla-${p.id}`});
+  }
+  // 🎯 Reglas que sumaron (en toda la fecha, por si alguna depende de varios partidos)
+  const {data: rs} = await db.from("reglas").select("id,user_id,nombre,codigo,local,visita,puntos_obtenidos").eq("fecha_id", p.fecha_id).gt("puntos_obtenidos", 0);
+  for (const r of (rs||[])) if (await primeraVez(db, `regla:${r.id}`))
+    await enviarPush(db, [r.user_id], {titulo:`🎯 ¡Pegaste ${r.nombre||r.codigo}!`, texto:`${r.local&&r.visita?r.local+" vs "+r.visita+": ":""}+${r.puntos_obtenidos} punto${r.puntos_obtenidos!==1?"s":""}`, tag:`regla-${r.id}`});
+}
+// Cada 15 minutos (pg_cron): fechas que cierran en menos de 2 horas → aviso a quien le faltan pronósticos
+async function cronAvisos(db: any) {
+  const {data: fechas} = await db.from("fechas").select("*").eq("estado","Abierta");
+  let avisos = 0;
+  for (const f of (fechas||[])) {
+    const {data: parts} = await db.from("partidos").select("id,fecha_hora").eq("fecha_id", f.id);
+    const mins = minutosHasta(cierreFecha(f, parts||[]));
+    if (!(mins > 0 && mins <= 120) || !(parts||[]).length) continue;
+    const [{data: ins}, {data: pr}] = await Promise.all([
+      db.from("inscripciones").select("user_id,pozo_id").eq("fecha_id", f.id).in("estado_pago",["Pendiente","Aprobado"]),
+      db.from("pronosticos").select("user_id,pozo_id").eq("fecha_id", f.id),
+    ]);
+    for (const i of (ins||[])) {
+      const puestos = (pr||[]).filter((x:any) => x.user_id === i.user_id && x.pozo_id === i.pozo_id).length;
+      const faltan = (parts||[]).length - puestos;
+      if (faltan <= 0) continue;
+      if (!(await primeraVez(db, `cierre:${f.id}:${i.user_id}`))) continue;
+      const h = Math.floor(mins/60), m = Math.round(mins%60);
+      await enviarPush(db, [i.user_id], {titulo:`⏰ ${f.nombre} está por cerrar`, texto:`Faltan ${h?h+" h ":""}${m} min y te falta${faltan!==1?"n":""} ${faltan} pronóstico${faltan!==1?"s":""}.`, tag:`cierre-${f.id}`});
+      avisos++;
+    }
+  }
+  return {ok:true, avisos};
 }
