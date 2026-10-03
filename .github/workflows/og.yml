@@ -1,0 +1,32 @@
+name: Vista previa de empresas
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: og
+jobs:
+  og:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pillow
+      - uses: browser-actions/setup-chrome@v1
+        id: chrome
+      - name: Generar imágenes y páginas de las empresas que cambiaron
+        run: python og/generar.py
+        env:
+          CHROME_BIN: ${{ steps.chrome.outputs.chrome-path }}
+          API_SECRET: ${{ secrets.API_SECRET }}
+          ANON_KEY: ${{ secrets.ANON_KEY }}
+          OG_SECRET: ${{ secrets.OG_SECRET }}
+      - name: Publicar si hubo cambios
+        run: |
+          git config user.name "Polla Prodes (automático)"
+          git config user.email "pollaprodes@users.noreply.github.com"
+          git add -A og */index.html
+          git diff --cached --quiet || (git commit -m "Vista previa de empresas actualizada" && git push)
