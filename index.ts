@@ -2417,7 +2417,7 @@ async function adminAgregarPartido(db: any, data: any) {
   if (!f) return {ok:false, error:"Fecha no encontrada"};
   if ((f.cant_partidos||0) >= 30) return {ok:false, error:"Máximo 30 partidos por fecha"};
   if (d.tipo === "Polla") await db.from("partidos").update({tipo:"Normal"}).eq("fecha_id", f.id).eq("tipo","Polla"); // una sola Polla
-  const [ll, lv] = await Promise.all([data.localLogo ? data.localLogo : escudoDe(d.local), data.visitaLogo ? data.visitaLogo : escudoDe(d.visita)]);
+  const [ll, lv] = await Promise.all([data.sinEscudoLocal ? "" : data.localLogo ? data.localLogo : escudoDe(d.local), data.sinEscudoVisita ? "" : data.visitaLogo ? data.visitaLogo : escudoDe(d.visita)]);
   const id = generarId("PAR");
   const {error} = await db.from("partidos").insert({id, fecha_id:f.id, numero:(f.cant_partidos||0)+1, ...d, liga:data.liga||f.liga||"",
     local_logo:String(ll||""), visita_logo:String(lv||""), estado:"Pendiente", tarjetas_rojas:0});
@@ -2434,8 +2434,12 @@ async function adminEditarPartido(db: any, data: any) {
   if (d.error) return {ok:false, error:d.error};
   if (d.tipo === "Polla") await db.from("partidos").update({tipo:"Normal"}).eq("fecha_id", p.fecha_id).eq("tipo","Polla").neq("id", p.id);
   const upd: any = {...d};
-  if (d.local !== p.local) upd.local_logo = data.localLogo || await escudoDe(d.local);
-  if (d.visita !== p.visita) upd.visita_logo = data.visitaLogo || await escudoDe(d.visita);
+  if (data.sinEscudoLocal) upd.local_logo = "";
+  else if (data.localLogo) upd.local_logo = data.localLogo;
+  else if (d.local !== p.local) upd.local_logo = await escudoDe(d.local);
+  if (data.sinEscudoVisita) upd.visita_logo = "";
+  else if (data.visitaLogo) upd.visita_logo = data.visitaLogo;
+  else if (d.visita !== p.visita) upd.visita_logo = await escudoDe(d.visita);
   await db.from("partidos").update(upd).eq("id", p.id);
   await renumerarPartidos(db, p.fecha_id);
   return {ok:true};

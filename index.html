@@ -2002,6 +2002,17 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
 .av-ic{font-size:26px}
 .av-banner div{flex:1;min-width:0}.av-banner b{display:block;font-size:15.5px}.av-banner small{font-size:13px;color:var(--ink-2)}
 .av-x{width:30px;height:30px;font-size:20px;color:var(--ink-3);border-radius:9px}
+/* Equipo sin escudo: inicial en un círculo */
+.esc-ini{display:inline-grid;place-items:center;width:28px;height:28px;flex:none;border-radius:50%;background:var(--surface-3);border:1px solid var(--line-2);color:var(--ink-2);font-family:var(--ff);font-weight:800;font-size:15px;line-height:1}
+.pd-eq .esc-ini{width:44px;height:44px;font-size:22px}
+.pd-b .pd-eq .esc-ini{width:34px;height:34px;font-size:18px}
+.pd-c-team .esc-ini{width:64px;height:64px;font-size:30px}
+.dl-team .esc-ini,.pp-eq .esc-ini{width:26px;height:26px;font-size:14px}
+.pm-it-eq .esc-ini{width:22px;height:22px;font-size:12px}
+.rs-team .esc-ini{width:40px;height:40px;font-size:20px}
+.pm-esc{position:relative}
+.pm-esc .esc-ini{width:30px;height:30px}
+.pm-esc-x{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background:var(--no);color:#fff;font-size:14px;font-weight:800;line-height:1;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 
 </style>
 </head>
@@ -2563,30 +2574,30 @@ function partidoDet(p,v,etiqueta){
   const hora=d?d.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"";
   const dia=d?d.toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"numeric",timeZone:"America/Argentina/Buenos_Aires"}).replace(".",""):"";
   const centro=susp?`<span class="pd-est">Susp.</span>`:post?`<span class="pd-est">Post.</span>`:jugado?`<span class="pd-gol">${p.golesLocal}</span><span class="pd-gsep">-</span><span class="pd-gol">${p.golesVisita}</span>`:`<span class="pd-hora">${hora}</span>`;
-  const esc=function(url){return url?`<img src="${url}" alt="" loading="lazy">`:`<span class="pd-noesc"></span>`;};
+  const esc=function(url,n){return url?`<img src="${url}" alt="" loading="lazy">`:inicialEq(n);};
   const lbl=etiqueta?`<span class="pd-lbl">Opción ${v}</span>`:"";
   if(v==="B")return`<div class="pd pd-b${jugado?" jugado":""}">${lbl}
       <span class="pd-n">#${p.numero}</span><span class="pd-tags">${tags}</span>
-      <span class="pd-eq loc"><b>${p.local}</b>${esc(p.localLogo)}</span>
+      <span class="pd-eq loc"><b>${p.local}</b>${esc(p.localLogo,p.local)}</span>
       <span class="pd-mid">${centro}</span>
-      <span class="pd-eq vis">${esc(p.visitaLogo)}<b>${p.visita}</b></span>
+      <span class="pd-eq vis">${esc(p.visitaLogo,p.visita)}<b>${p.visita}</b></span>
       <span class="pd-meta">${dia}${jugado?" · "+hora:""}</span>
     </div>`;
   if(v==="C")return`<div class="pd pd-c${jugado?" jugado":""}">${lbl}
       <div class="pd-c-top"><span class="pd-n">#${p.numero}</span>${tags}</div>
       <div class="pd-c-body">
-        <div class="pd-c-team">${esc(p.localLogo)}<b>${p.local}</b></div>
+        <div class="pd-c-team">${esc(p.localLogo,p.local)}<b>${p.local}</b></div>
         <div class="pd-mid">${centro}</div>
-        <div class="pd-c-team">${esc(p.visitaLogo)}<b>${p.visita}</b></div>
+        <div class="pd-c-team">${esc(p.visitaLogo,p.visita)}<b>${p.visita}</b></div>
       </div>
       <div class="pd-c-foot">${p.liga||""}${p.liga?" · ":""}${dia} · ${hora}</div>
     </div>`;
   return`<div class="pd pd-a${jugado?" jugado":""}">${lbl}
       <div class="pd-a-side"><span class="pd-n">#${p.numero}</span><span class="pd-tags">${tags}</span></div>
       <div class="pd-a-match">
-        <span class="pd-eq loc"><b>${p.local}</b>${esc(p.localLogo)}</span>
+        <span class="pd-eq loc"><b>${p.local}</b>${esc(p.localLogo,p.local)}</span>
         <span class="pd-mid">${centro}</span>
-        <span class="pd-eq vis">${esc(p.visitaLogo)}<b>${p.visita}</b></span>
+        <span class="pd-eq vis">${esc(p.visitaLogo,p.visita)}<b>${p.visita}</b></span>
       </div>
       <div class="pd-a-side der"><span class="pd-meta">${dia}</span><span class="pd-meta">${jugado?"Final":hora}</span><span class="pd-mio" id="pdm-${p.id}"></span></div>
     </div>`;
@@ -3652,7 +3663,7 @@ function renderGrilla(){
     return`<div class="dl${jugado?" jugado":""}">
       <div class="dl-tags"><span class="t-tag ${ti.cls}">${ti.k}</span>${st[p.id].tole?'<span class="t-tag t-tole">🔥</span>':""}</div>
       <span class="dl-n">#${p.numero}</span>
-      <div class="dl-eq"><span class="dl-team">${p.local_logo?`<img src="${p.local_logo}" alt="">`:""}<b>${sigla(p.local)}</b></span><span class="dl-res">${jugado?p.goles_local+"-"+p.goles_visita:"vs"}</span><span class="dl-team"><b>${sigla(p.visita)}</b>${p.visita_logo?`<img src="${p.visita_logo}" alt="">`:""}</span></div>
+      <div class="dl-eq"><span class="dl-team">${p.local_logo?`<img src="${p.local_logo}" alt="">`:inicialEq(p.local)}<b>${sigla(p.local)}</b></span><span class="dl-res">${jugado?p.goles_local+"-"+p.goles_visita:"vs"}</span><span class="dl-team"><b>${sigla(p.visita)}</b>${p.visita_logo?`<img src="${p.visita_logo}" alt="">`:inicialEq(p.visita)}</span></div>
       <div class="dl-picks"><span class="pcell ${a}${jugado?(a===p.resultado?" ok":" no"):""}">${a}</span><span class="dl-x">vs</span><span class="pcell ${b}${jugado?(b===p.resultado?" ok":" no"):""}">${b}</span></div>
       <span class="dl-pts">${jugado?"":"+"+valor(p)+" pts"}</span>
     </div>`;};
@@ -3696,9 +3707,9 @@ function renderGrilla(){
     return`<div class="pp${abierto?" abierto":""}">
       <button class="pp-top" onclick="window._grilla.pAb=window._grilla.pAb==='${p.id}'?null:'${p.id}';renderGrilla()">
         <div class="pp-eq"><span class="t-tag ${ti.cls}">${ti.k}</span>${x.tole?'<span class="t-tag t-tole">🔥</span>':""}
-          <span class="dl-team">${p.local_logo?`<img src="${p.local_logo}" alt="">`:""}<b>${sigla(p.local)}</b></span>
+          <span class="dl-team">${p.local_logo?`<img src="${p.local_logo}" alt="">`:inicialEq(p.local)}<b>${sigla(p.local)}</b></span>
           <span class="dl-res">${jugado?p.goles_local+"-"+p.goles_visita:p.fecha_hora?new Date(p.fecha_hora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"vs"}</span>
-          <span class="dl-team"><b>${sigla(p.visita)}</b>${p.visita_logo?`<img src="${p.visita_logo}" alt="">`:""}</span></div>
+          <span class="dl-team"><b>${sigla(p.visita)}</b>${p.visita_logo?`<img src="${p.visita_logo}" alt="">`:inicialEq(p.visita)}</span></div>
         <div class="pp-yo">${mio?`<span class="pp-yo-k">Vos</span><span class="pcell ${mio}${jugado?(mio===p.resultado?" ok":" no"):""}">${mio}</span><span class="pp-igual"><b>${igual}</b> de ${resto} igual que vos</span>`:`<span class="pp-igual">No jugaste este partido</span>`}</div>
         <div class="pp-bar">${seg("L")}${seg("E")}${seg("V")}</div>
         <span class="pp-chev">${abierto?"▴":"▾"}</span>
@@ -4017,9 +4028,9 @@ async function loadRes(ctx){
     <div class="rs-list">${ps.map(function(p){const e=est(p),done=e==="final";return`<div class="rs-card ${e}${p.tipo==="Polla"?" polla":p.tipo==="Doble"?" doble":""}" id="rs-${p.id}">
       <div class="rs-head"><span class="t-tag ${ti(p).cls}">${ti(p).k}</span>${p.esToleTole?'<span class="t-tag t-tole">🔥</span>':""}<span class="rs-n">#${p.numero}</span><span class="rs-hora">${hora(p)}</span>${chip[e]}</div>
       <div class="rs-body">
-        <div class="rs-team">${p.localLogo?`<img src="${p.localLogo}" alt="">`:""}<b>${sigla(p.local)}</b><small>${p.local}</small></div>
+        <div class="rs-team">${p.localLogo?`<img src="${p.localLogo}" alt="">`:inicialEq(p.local)}<b>${sigla(p.local)}</b><small>${p.local}</small></div>
         <div class="rs-score">${step("gL-"+p.id,p.golesLocal??0)}<span class="rs-sep">-</span>${step("gV-"+p.id,p.golesVisita??0)}</div>
-        <div class="rs-team">${p.visitaLogo?`<img src="${p.visitaLogo}" alt="">`:""}<b>${sigla(p.visita)}</b><small>${p.visita}</small></div>
+        <div class="rs-team">${p.visitaLogo?`<img src="${p.visitaLogo}" alt="">`:inicialEq(p.visita)}<b>${sigla(p.visita)}</b><small>${p.visita}</small></div>
       </div>
       <div class="rs-foot">
         <span class="rs-rojas-l">🟥 Rojas</span>${step("tr-"+p.id,p.tarjetasRojas||0,"rojas")}
@@ -4877,18 +4888,22 @@ async function pmCargar(){
   const TT={Normal:"×1",Doble:"×2",Polla:"P"},TC={Normal:"t-s",Doble:"t-d",Polla:"t-p"};
   el.innerHTML=ps.length?ps.map(function(x){const fh=x.fechaHora?new Date(x.fechaHora).toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"";
     return`<div class="pm-it"><span class="pm-n">#${x.numero}</span><span class="t-tag ${TC[x.tipo]||"t-s"}">${TT[x.tipo]||"×1"}</span>
-      <div class="pm-it-eq">${x.localLogo?`<img src="${escH(x.localLogo)}" alt="">`:`<span class="pm-noesc"></span>`}<b>${escH(x.local)}</b><i>vs</i><b>${escH(x.visita)}</b>${x.visitaLogo?`<img src="${escH(x.visitaLogo)}" alt="">`:`<span class="pm-noesc"></span>`}</div>
+      <div class="pm-it-eq">${x.localLogo?`<img src="${escH(x.localLogo)}" alt="">`:inicialEq(x.local)}<b>${escH(x.local)}</b><i>vs</i><b>${escH(x.visita)}</b>${x.visitaLogo?`<img src="${escH(x.visitaLogo)}" alt="">`:inicialEq(x.visita)}</div>
       <small>${fh}</small>${x.estado==="Finalizado"?`<span class="pm-fin">${x.golesLocal}-${x.golesVisita}</span>`:`<div class="pm-acc"><button onclick="pmEditar('${x.id}')">Editar</button><button onclick="pmBorrar('${x.id}')">Borrar</button></div>`}</div>`;}).join("")
     :`<p class="me-p">Todavía no hay partidos en esta fecha. Cargá el primero abajo.</p>`;
 }
+function pmPintarEsc(lado,logo,nombre){const box=document.getElementById("pm-e"+lado);if(!box)return;
+  box.innerHTML=logo?`<img src="${escH(logo)}" alt="" title="${escH(nombre||"")}"><button type="button" class="pm-esc-x" onclick="pmSinEscudo('${lado}')" title="Sacar escudo" aria-label="Sacar escudo">×</button>`:(nombre?inicialEq(nombre):"");}
+window.pmSinEscudo=function(lado){window._pm.logo[lado]="";window._pm.sinEsc=window._pm.sinEsc||{};window._pm.sinEsc[lado]=true;pmPintarEsc(lado,"",document.getElementById("pm-"+lado)?.value);};
 window.pmEscudo=function(lado){
   clearTimeout(window["_pmT"+lado]);
   window["_pmT"+lado]=setTimeout(async function(){
     const nom=document.getElementById("pm-"+lado)?.value||"",box=document.getElementById("pm-e"+lado);if(!box)return;
     let e=escudoLocal(nom);
     if(!e&&nom.trim().length>=4){const r=await api("buscarEquipos",{q:nom.trim()});const t=r.ok&&(r.equipos||[])[0];if(t)e={nombre:t.nombre,logo:t.logo};}
+    if(window._pm.sinEsc&&window._pm.sinEsc[lado]){pmPintarEsc(lado,"",nom);return;}
     window._pm.logo[lado]=e?e.logo:"";
-    box.innerHTML=e?`<img src="${escH(e.logo)}" alt="" title="${escH(e.nombre)}">`:"";
+    pmPintarEsc(lado,e?e.logo:"",e?e.nombre:nom);
   },350);
 };
 window.pmGuardar=async function(){
@@ -4897,7 +4912,8 @@ window.pmGuardar=async function(){
   if(!l||!v){toast("Poné los dos equipos");return;}
   const fh=new Date(fhs);if(isNaN(fh)){toast("Fecha u hora inválida");return;}
   window._pmDia=d;window._pmHora=h;
-  const datos={fechaId:window._pm.fechaId,local:l,visita:v,fechaHora:fh.toISOString(),tipo:t,localLogo:window._pm.logo.l,visitaLogo:window._pm.logo.v};
+  const se=window._pm.sinEsc||{};
+  const datos={fechaId:window._pm.fechaId,local:l,visita:v,fechaHora:fh.toISOString(),tipo:t,localLogo:window._pm.logo.l,visitaLogo:window._pm.logo.v,sinEscudoLocal:!!se.l,sinEscudoVisita:!!se.v};
   const r=window._pm.edit?await api("adminEditarPartido",Object.assign({partidoId:window._pm.edit},datos)):await api("adminAgregarPartido",datos);
   if(!r.ok){toast("❌ "+r.error);return;}
   toast(window._pm.edit?"✅ Partido actualizado":"✅ Partido agregado");pmLimpiar();pmCargar();if(App.screen==="admin-fechas")loadAdminFechas();
@@ -4909,11 +4925,11 @@ window.pmEditar=function(id){
   document.getElementById("pm-l").value=x.local;document.getElementById("pm-v").value=x.visita;
   ponerFH("pm",loc.slice(0,16));document.getElementById("pm-t").value=x.tipo||"Normal";
   window._pm.logo={l:x.localLogo||"",v:x.visitaLogo||""};
-  document.getElementById("pm-el").innerHTML=x.localLogo?`<img src="${escH(x.localLogo)}" alt="">`:"";document.getElementById("pm-ev").innerHTML=x.visitaLogo?`<img src="${escH(x.visitaLogo)}" alt="">`:"";
+  window._pm.sinEsc={};pmPintarEsc("l",x.localLogo,x.local);pmPintarEsc("v",x.visitaLogo,x.visita);
   document.getElementById("pm-tit").textContent="Editar partido #"+x.numero;document.getElementById("pm-ok").textContent="Guardar cambios";document.getElementById("pm-cancel").hidden=false;
 };
 window.pmLimpiar=function(){
-  window._pm.edit=null;window._pm.logo={l:"",v:""};
+  window._pm.edit=null;window._pm.logo={l:"",v:""};window._pm.sinEsc={};
   ["pm-l","pm-v"].forEach(function(i){const e=document.getElementById(i);if(e)e.value="";});
   ["pm-el","pm-ev"].forEach(function(i){const e=document.getElementById(i);if(e)e.innerHTML="";});
   const t=document.getElementById("pm-t");if(t)t.value="Normal";
@@ -5065,6 +5081,9 @@ async function pintarAvisos(){
   if(fb&&est==="apagado"&&!document.getElementById("av-banner")){let no=false;try{no=localStorage.getItem("pp_av_no")==="1";}catch(e){}
     if(!no){const d=document.createElement("div");d.id="av-banner";d.className="card av-banner";d.innerHTML=`<span class="av-ic">🔔</span><div><b>Activá los avisos</b><small>Enterate al toque cuando pegás una regla o se cierra una fecha.</small></div><button class="btn btn-p" onclick="activarAvisos()">Activar</button><button class="av-x" onclick="this.parentElement.remove();try{localStorage.setItem('pp_av_no','1')}catch(e){}" aria-label="Cerrar">×</button>`;fb.prepend(d);}}
 }
+// Equipo sin escudo: su inicial en un círculo
+function inicialEq(n){const w=String(n||"?").trim().split(/\s+/),skip=/^(club|c\.?a\.?|atl[eé]tico|atl\.?|deportivo|dep\.?|sporting|fc|cd|sc|real|el|la|los|de)$/i;
+  const k=w.find(function(x){return!skip.test(x);})||w[0]||"?";return`<span class="esc-ini">${escH(k[0].toUpperCase())}</span>`;}
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
