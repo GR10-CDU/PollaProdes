@@ -418,6 +418,7 @@ async function getFechas(db: any, data: any) {
       puedeJugar: f.estado === "Abierta" && mins > 0,
       minutosRestantes: mins,
       tieneCodigo: !!f.codigo_grupo,
+      plazoGuardado: esAdmin ? f.plazo_limite : undefined,
       empresaId: f.empresa_id || null, oculta: esAdmin ? !!f.oculta : undefined, cambiosGratis: !!(f.cambios_gratis || f.empresa_id),
       empresaNombre: esAdmin && f.empresa_id ? ((emps||[]).find((e:any) => e.id === f.empresa_id)?.nombre || "") : undefined,
       codigoGrupo: esAdmin ? (f.codigo_grupo || "") : undefined,

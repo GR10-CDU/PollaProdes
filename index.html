@@ -3916,7 +3916,7 @@ window.showCrearFecha=async function(){
   document.body.appendChild(m);
 };
 window.crearFecha=async function(){
-  const r=await api("adminCrearFecha",{cambiosGratis:document.getElementById("nfg")?.value==="1",empresaId:document.getElementById("nfe")?.value||"",nombre:document.getElementById("nfn")?.value,liga:document.getElementById("nfl")?.value,plazoLimite:leerFH("nfp"),descripcion:document.getElementById("nfd")?.value,codigoGrupo:document.getElementById("nfc")?.value||"",pagoAlias:document.getElementById("nfa")?.value||"",pagoTitular:document.getElementById("nft")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
+  const r=await api("adminCrearFecha",{cambiosGratis:document.getElementById("nfg")?.value==="1",empresaId:document.getElementById("nfe")?.value||"",nombre:document.getElementById("nfn")?.value,liga:document.getElementById("nfl")?.value,plazoLimite:fhISO("nfp"),descripcion:document.getElementById("nfd")?.value,codigoGrupo:document.getElementById("nfc")?.value||"",pagoAlias:document.getElementById("nfa")?.value||"",pagoTitular:document.getElementById("nft")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
   document.querySelector(".modal-bg")?.remove();
   if(r.ok){toast("✅ Fecha creada");loadAdminFechas();}else toast("❌ "+r.error);
 };
@@ -3925,13 +3925,13 @@ window.showEditarFecha=function(fechaId){
   const reglasActuales=f.reglasHabilitadas||[];
   window._reglasSelAdmin=new Set(reglasActuales);
   const reglasHTML=TODAS_LAS_REGLAS.map(function(r){const checked=reglasActuales.includes(r.codigo)?"checked":"";return`<label style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr-l);cursor:pointer"><input type="checkbox" value="${r.codigo}" ${checked} style="margin-top:2px;accent-color:var(--g2)" onchange="if(this.checked)window._reglasSelAdmin.add(this.value);else window._reglasSelAdmin.delete(this.value)"/><div><div style="font-size:17px;font-weight:600">${r.nombre} <span style="color:var(--g2);font-size:14px">+${r.pts}pts</span></div></div></label>`;}).join("");
-  let plazoFmt="";if(f.plazoLimite){try{const d=new Date(f.plazoLimite);const offset=d.getTimezoneOffset();const local=new Date(d.getTime()-offset*60000);plazoFmt=local.toISOString().slice(0,16);}catch(e){}}
+  const plazoFmt=isoArg(f.plazoGuardado||f.plazoLimite);
   const m=mkModal("✏️ Editar — "+(f.nombre||"Fecha"),`<div class="fg"><div class="ig"><label class="lbl">Nombre</label><input class="inp" id="ef-nom" value="${f.nombre||""}"/></div><div class="ig"><label class="lbl">Liga</label><input class="inp" id="ef-lig" value="${f.liga||""}"/></div><div class="ig"><label class="lbl">Plazo límite</label>${fhInput("ef-pla",plazoFmt)}</div><div class="ig"><label class="lbl">🔒 Código de grupo cerrado (opcional)</label><input class="inp" id="ef-cod" value="${f.codigoGrupo||""}" placeholder="Ej: AMIGOS26" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" style="font-family:var(--ff);font-size:22px;font-weight:800;letter-spacing:.12em"/><div style="font-size:13px;color:var(--txt3);margin-top:6px">Quien tenga este código entra a la fecha sin pagar. Dejalo vacío para una fecha abierta con pago.</div></div><div class="g2c"><div class="ig"><label class="lbl">🏦 Alias o CVU (opcional)</label><input class="inp" id="ef-pa" value="${f.pagoAlias||""}" placeholder="Usa el general si está vacío"/></div><div class="ig"><label class="lbl">Titular</label><input class="inp" id="ef-pt" value="${f.pagoTitular||""}"/></div></div><div class="ig"><label class="lbl">🔄 Cambios después del cierre</label><select class="inp" id="ef-cg"><option value="0"${f.cambiosGratis?"":" selected"}>Pagos (20%, 25% y 30% del pozo)</option><option value="1"${f.cambiosGratis?" selected":""}>Gratis (3 cambios sin costo)</option></select><div style="font-size:13px;color:var(--txt3);margin-top:6px">Antes del cierre siempre son gratis e ilimitados. Después, 3 cambios, cada uno hasta 1 hora antes de su partido.</div></div><div class="ig"><label class="lbl">Reglas habilitadas</label><div style="background:var(--off);border:1.5px solid var(--bdr-l2);border-radius:var(--rs);padding:4px 12px 8px">${reglasHTML}</div></div><button class="btn btn-p btn-lg" id="btn-guardar-fecha" onclick="guardarEditarFecha('${fechaId}')">Guardar cambios</button></div>`);
   document.body.appendChild(m);
 };
 window.guardarEditarFecha=async function(fechaId){
   const btn=document.getElementById("btn-guardar-fecha");if(btn){btn.textContent="Guardando...";btn.disabled=true;}
-  const r=await api("adminEditarFecha",{fechaId,cambiosGratis:document.getElementById("ef-cg")?.value==="1",nombre:document.getElementById("ef-nom")?.value,liga:document.getElementById("ef-lig")?.value,plazoLimite:leerFH("ef-pla"),codigoGrupo:document.getElementById("ef-cod")?.value||"",pagoAlias:document.getElementById("ef-pa")?.value||"",pagoTitular:document.getElementById("ef-pt")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
+  const r=await api("adminEditarFecha",{fechaId,cambiosGratis:document.getElementById("ef-cg")?.value==="1",nombre:document.getElementById("ef-nom")?.value,liga:document.getElementById("ef-lig")?.value,plazoLimite:fhISO("ef-pla"),codigoGrupo:document.getElementById("ef-cod")?.value||"",pagoAlias:document.getElementById("ef-pa")?.value||"",pagoTitular:document.getElementById("ef-pt")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
   document.querySelector(".modal-bg")?.remove();
   if(r.ok){toast("✅ Fecha actualizada");loadAdminFechas();}else toast("❌ "+r.error);
 };
@@ -4863,7 +4863,7 @@ function escudoLocal(nombre){const n=_normEq(nombre);if(n.length<3)return null;
 window.partidosManual=async function(fechaId){
   window._pm={fechaId,edit:null,logo:{l:"",v:""}};
   const f=window._adminFechas[fechaId]||{};
-  const diaPlazo=f.plazoLimite?new Date(new Date(f.plazoLimite).getTime()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10):new Date().toISOString().slice(0,10);
+  const diaPlazo=(isoArg(f.plazoLimite)||isoArg(new Date().toISOString())).slice(0,10);
   const m=mkModal("Partidos · "+escH(f.nombre||""),`<div class="pm">
     <div id="pm-lista" class="pm-lista"><div class="loading"><div class="spinner"></div></div></div>
     <div class="pm-form">
@@ -4910,7 +4910,7 @@ window.pmGuardar=async function(){
   const g=function(i){return document.getElementById(i)?.value||"";};
   const l=g("pm-l").trim(),v=g("pm-v").trim(),t=g("pm-t"),fhs=leerFH("pm"),d=fhs.slice(0,10),h=fhs.slice(11,16);
   if(!l||!v){toast("Poné los dos equipos");return;}
-  const fh=new Date(fhs);if(isNaN(fh)){toast("Fecha u hora inválida");return;}
+  const fh=new Date(fhs+":00-03:00");if(isNaN(fh)){toast("Fecha u hora inválida");return;}
   window._pmDia=d;window._pmHora=h;
   const se=window._pm.sinEsc||{};
   const datos={fechaId:window._pm.fechaId,local:l,visita:v,fechaHora:fh.toISOString(),tipo:t,localLogo:window._pm.logo.l,visitaLogo:window._pm.logo.v,sinEscudoLocal:!!se.l,sinEscudoVisita:!!se.v};
@@ -4921,7 +4921,7 @@ window.pmGuardar=async function(){
 };
 window.pmEditar=function(id){
   const x=(window._pm.partidos||[]).find(function(p){return p.id===id;});if(!x)return;window._pm.edit=id;
-  const loc=new Date(new Date(x.fechaHora).getTime()-new Date().getTimezoneOffset()*6e4).toISOString();
+  const loc=isoArg(x.fechaHora);
   document.getElementById("pm-l").value=x.local;document.getElementById("pm-v").value=x.visita;
   ponerFH("pm",loc.slice(0,16));document.getElementById("pm-t").value=x.tipo||"Normal";
   window._pm.logo={l:x.localLogo||"",v:x.visitaLogo||""};
@@ -4941,13 +4941,16 @@ window.pmBorrar=async function(id){if(!confirm("¿Borrar este partido? Se borran
 // ── Fecha y hora en castellano y 24 hs (no depende del idioma del navegador) ──
 const MESES_C=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 function fhInput(id,val){
-  const v=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(val||"")?val:new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,11)+"21:00";
+  const v=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(val||"")?val:isoArg(new Date().toISOString()).slice(0,11)+"21:00";
   const Y=+v.slice(0,4),M=+v.slice(5,7),D=+v.slice(8,10),h=+v.slice(11,13),mi=+v.slice(14,16),yNow=new Date().getFullYear();
   const op=function(a,b,sel,fmt){let o="";for(let i=a;i<=b;i++)o+=`<option value="${i}"${i===sel?" selected":""}>${fmt?fmt(i):i}</option>`;return o;};
   const p2=function(n){return String(n).padStart(2,"0");};
   let mins="";for(let i=0;i<60;i+=5)mins+=`<option value="${i}"${i===mi-mi%5?" selected":""}>${p2(i)}</option>`;
   return`<div class="fh" id="${id}-fh"><span class="fh-g"><select class="inp" id="${id}-D" aria-label="Día">${op(1,31,D)}</select><select class="inp" id="${id}-M" aria-label="Mes">${op(1,12,M,function(i){return MESES_C[i-1];})}</select><select class="inp" id="${id}-Y" aria-label="Año">${op(yNow,yNow+1,Y<yNow?yNow:Y)}</select></span><span class="fh-g"><span class="fh-sep">a las</span><select class="inp" id="${id}-h" aria-label="Hora">${op(0,23,h,p2)}</select><span class="fh-dos">:</span><select class="inp" id="${id}-m" aria-label="Minutos">${mins}</select><span class="fh-hs">hs</span></span></div>`;
 }
+// Hora de Argentina siempre (el servidor guarda en hora universal: hay que aclararle el -03:00)
+function fhISO(id){const v=leerFH(id);return v?v+":00-03:00":"";}
+function isoArg(iso){if(!iso)return"";const d=new Date(iso);if(isNaN(d))return"";const p={};new Intl.DateTimeFormat("en-CA",{timeZone:"America/Argentina/Buenos_Aires",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(d).forEach(function(x){p[x.type]=x.value;});return`${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;}
 function leerFH(id){const g=function(k){return document.getElementById(id+"-"+k)?.value||"";};const p2=function(n){return String(n).padStart(2,"0");};
   if(!g("Y"))return"";return`${g("Y")}-${p2(g("M"))}-${p2(g("D"))}T${p2(g("h"))}:${p2(g("m"))}`;}
 function ponerFH(id,val){const set=function(k,v){const e=document.getElementById(id+"-"+k);if(e)e.value=String(+v);};
