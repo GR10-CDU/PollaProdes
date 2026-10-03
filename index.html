@@ -2052,6 +2052,22 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
 body.login-active #inst-banner{display:none}
 .emp-pasar{background:var(--surface-2);border-color:var(--line);color:var(--ink-2)}
 .ll-ayuda{display:block;font-size:12px;color:rgba(255,255,255,.5);margin-top:4px}
+/* Selector de espacio (Polla Prodes / empresas) */
+#esp-sw:empty{display:none}
+#esp-sw{padding:4px 12px 10px}
+.esp-cap{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin:0 4px 6px}
+.esp-lista{display:grid;gap:4px;padding:4px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
+.esp-op{display:flex;align-items:center;gap:10px;width:100%;padding:7px 9px;border-radius:10px;font-size:14px;font-weight:700;color:var(--ink-2);text-align:left}
+.esp-op span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.esp-op:hover{background:var(--surface-3);color:var(--ink)}
+.esp-op.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-1),0 0 0 1px var(--accent-line)}
+.esp-logo{width:26px;height:26px;flex:none;border-radius:8px;overflow:hidden;background:#fff;display:grid;place-items:center;box-shadow:0 0 0 1px var(--line)}
+.esp-logo img{width:100%;height:100%;object-fit:contain}
+.esp-logo .emp-ini{font-size:11px}
+#tb-esp:empty{display:none}
+.tb-ucap{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding:6px 12px 2px}
+.tb-usep{height:1px;background:var(--line);margin:6px 8px}
+#tb-esp .tb-ui{display:flex;align-items:center;gap:10px}
 
 </style>
 </head>
@@ -2069,6 +2085,7 @@ body.login-active #inst-banner{display:none}
       <div class="sb-logo"><img src="icons/icon-192.png" alt="Polla Prodes" width="53" height="53"></div>
       <div class="sb-brand"><div class="name">Polla<br>Prodes</div><div class="sub">pollaprodes.ar</div></div>
     </div>
+    <div id="esp-sw"></div>
     <nav id="sb-nav" aria-label="Menú principal"></nav>
     <div id="sb-foot"></div>
   </aside>
@@ -2084,7 +2101,7 @@ body.login-active #inst-banner{display:none}
       <div class="tb-actions">
         <div class="tb-user">
           <button class="tb-chip" id="mh-chip" onclick="event.stopPropagation();document.querySelector('.tb-user').classList.toggle('open')" aria-label="Tu cuenta"></button>
-          <div class="tb-umenu">
+          <div class="tb-umenu"><div id="tb-esp"></div>
             <div class="tb-ui" onclick="go('perfil')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>Mi perfil</div>
             <div class="tb-ui salir" onclick="if(confirm('¿Cerrar sesión?'))logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</div>
           </div>
@@ -2304,7 +2321,7 @@ async function api(action,p={}){
     const r=await fetch(SUPABASE_URL,{
       method:"POST",
       headers:{"Content-Type":"application/json","Authorization":"Bearer "+SUPABASE_ANON},
-      body:JSON.stringify({action,apiSecret:API_SECRET,sessionToken:App.token,...p}),
+      body:JSON.stringify({action,apiSecret:API_SECRET,sessionToken:App.token,espacio:App.espacio||"",...p}),
     });
     if(!r.ok){const t=await r.text();return{ok:false,error:"HTTP "+r.status+": "+t};}
     return await r.json();
@@ -4308,6 +4325,7 @@ window.doLogin=async()=>{
   const r=await api("login",{telefono:t,pin:p,codigoEmpresa:window._empLogin?window._empLogin.codigo:undefined,codigoIngresado:document.getElementById("lce")?.value||""});
   if(b){b.textContent="Entrar →";b.disabled=false;}
   if(!r.ok){if(er)er.innerHTML=`<div class="ll-err">⚠ ${r.error}</div>`;return;}
+  r.user.rolBase=r.user.rol;window._espacioIngreso=r.espacio;
   saveSession(r.user,r.sessionToken);
   try{initApp();}catch(e){console.error("initApp error:",e);hideLoader();}
 };
@@ -4325,6 +4343,7 @@ window.doReg=async()=>{
   if(empR){const falta=(empR.campos||[]).find(function(c){return c.obligatorio&&!dx[c.id];});if(falta){err("Completá: "+falta.label);return;}}
   const r=await api("registro",{nombre:n,telefono:t,pin:p,pin2:p2,alias:empR?"":a,email:e,codigoEmpresa:ce,datosExtra:dx});
   if(!r.ok){if(er)er.innerHTML=`<div class="ll-err">⚠ ${r.error}</div>`;return;}
+  r.user.rolBase=r.user.rol;window._espacioIngreso=r.espacio;
   saveSession(r.user,r.sessionToken);toast(`✅ Bienvenido, ${r.user.usuario}`);initApp();
 };
 window.logout=()=>{document.querySelector(".tb-user")?.classList.remove("open");clearSession();showLogin();};
@@ -4370,8 +4389,9 @@ function startAutoRefresh(){
 function stopAutoRefresh(){if(_refreshTimer){clearInterval(_refreshTimer);_refreshTimer=null;}}
 
 function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
+  resolverEspacio();
   aplicarMarca(App.user?.empresa||null);
-  try{if(App.user?.empresa)localStorage.setItem("pp_emp_cod",App.user.empresa.codigo);else if(App.user?.rol!=="Admin")localStorage.removeItem("pp_emp_cod");}catch(e){}
+  pintarEspacios();
   document.body.classList.remove("login-active");
   document.getElementById("sl").style.display="none";
   const ld=document.getElementById("landing");if(ld)ld.hidden=true;
@@ -4555,17 +4575,16 @@ function aplicarMarca(emp){
 // Pantalla de ingreso con la marca de la empresa (link ?e=CODIGO o última empresa usada)
 async function loginEmpresa(){
   const qs=new URLSearchParams(location.search);let cod=qs.get("e");
-  if(!cod){try{cod=localStorage.getItem("pp_emp_cod");}catch(e){}}
+  if(!cod){window._empLogin=null;aplicarMarca(null);return;}
   if(!cod){window._empLogin=null;return;}
   const r=await api("getEmpresaPublica",{codigo:cod});
-  if(!r.ok){try{localStorage.removeItem("pp_emp_cod");}catch(e){}window._empLogin=null;
+  if(!r.ok){window._empLogin=null;
     if(qs.get("e")){const g=await api("getGrupoPorCodigo",{codigo:qs.get("e")});
       if(g.ok){window._codigoPend=qs.get("e");const sb=document.querySelector(".ll-sub");if(sb)sb.innerHTML=`Te invitaron a <b>${escH(g.grupo.fechaNombre||g.grupo.nombre)}</b>. Entrá o registrate y quedás adentro.`;}
       else toast("⚠ Ese link no corresponde a ninguna empresa ni torneo");}
     return;}
   const emp=r.empresa;window._empLogin=emp;
   if(qs.get("e")){try{history.replaceState(null,"",linkEmpresa(emp).replace(location.origin,""));}catch(e){}}
-  try{localStorage.setItem("pp_emp_cod",emp.codigo);}catch(e){}
   aplicarMarca(emp);
   const lg=document.querySelector(".ll-logo");if(lg){lg.classList.add("emp-logo");lg.innerHTML=logoEmpHtml(emp);}
   const tt=document.querySelector(".ll-title");if(tt){tt.innerHTML=escH(emp.nombre);tt.classList.add("emp");ajustarTitulo(tt);}
@@ -4576,7 +4595,7 @@ async function loginEmpresa(){
   const ce=document.getElementById("rce-g");if(ce)ce.innerHTML=`<div class="ll-emp">${logoEmpHtml(emp)}<span>Te sumás a <b>${escH(emp.nombre)}</b> · jugás gratis</span></div>
     <div class="ig"><label class="ll-lbl">Código de empresa</label><input class="ll-inp" id="rce" placeholder="Te lo da ${escH(emp.nombre)}" maxlength="16" autocapitalize="characters" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')"/></div>${camposEmpresaHtml(emp,{},"ll-inp")}`;
 }
-window.salirDeEmpresa=function(){try{localStorage.removeItem("pp_emp_cod");}catch(e){}window._empLogin=null;aplicarMarca(null);history.replaceState(null,"",location.pathname+"?login");showLogin();};
+window.salirDeEmpresa=function(){window._empLogin=null;aplicarMarca(null);history.replaceState(null,"",location.pathname+"?login");showLogin();};
 
 // Novedades y premios de la empresa (arriba de las fechas)
 async function mostrarNovedadesEn(el){
@@ -4717,7 +4736,7 @@ window.nvEditar=function(id){const n=(window._nvs||[]).find(function(x){return x
   document.getElementById("nv-t").value=n.titulo;document.getElementById("nv-x").value=n.texto||"";document.getElementById("nv-btn").textContent="Guardar cambios";document.getElementById("nv-cancel").hidden=false;document.getElementById("nv-t").focus();};
 window.nvCancelar=function(){window._nvEdit=null;const t=document.getElementById("nv-t"),x=document.getElementById("nv-x");if(t)t.value="";if(x)x.value="";const b=document.getElementById("nv-btn");if(b)b.textContent="Publicar";const c=document.getElementById("nv-cancel");if(c)c.hidden=true;};
 window.nvBorrar=async function(id){if(!confirm("¿Borrar esta publicación?"))return;const r=await api("borrarNovedad",{id});if(!r.ok){toast("❌ "+r.error);return;}toast("Borrado");nvCargar();};
-window.setRolEmp=async function(uid,admin){const r=await api("adminSetRol",{userId:uid,rol:admin?"AdminEmpresa":"Jugador"});toast(r.ok?(admin?"✅ Ahora es admin de la empresa":"Ya no es admin"):"❌ "+r.error);return r;};
+window.setRolEmp=async function(uid,admin){const r=await api("adminSetRol",{userId:uid,empresaId:window._edEmp&&window._edEmp.id,rol:admin?"AdminEmpresa":"Jugador"});toast(r.ok?(admin?"✅ Ahora es admin de la empresa":"Ya no es admin"):"❌ "+r.error);return r;};
 // Colores
 window.mkModo=function(m){
   const k=window._mk;k.modo=m;
@@ -4783,7 +4802,7 @@ window.mkGuardar=async function(){
   else r=await api("guardarMarcaEmpresa",datos);
   if(!r.ok){toast("❌ "+r.error);return;}
   toast("✅ Marca guardada");
-  if(App.user?.empresa&&App.user.empresa.id===r.empresa.id){App.user.empresa=r.empresa;saveSession(App.user,App.token);aplicarMarca(r.empresa);}
+  if(App.user?.empresa&&App.user.empresa.id===r.empresa.id){Object.assign(App.user.empresa,r.empresa);saveSession(App.user,App.token);aplicarMarca(App.user.empresa);pintarEspacios();}
   if(window._edAdmin)loadAdminEmpresas();else{window._edEmp=r.empresa;}
 };
 
@@ -4834,7 +4853,7 @@ window.buscarEmpresaReg=async function(cod){
 window.guardarDatosEmp=async function(root){
   const r=await api("guardarMisDatosEmpresa",{datos:leerCamposEmpresa(root)});
   if(!r.ok){toast("❌ "+r.error);return false;}
-  App.user.datosExtra=r.datosExtra;saveSession(App.user,App.token);toast("✅ Datos guardados");return true;
+  App.user.datosExtra=r.datosExtra;if(App.user.empresa)App.user.empresa.datosExtra=r.datosExtra;saveSession(App.user,App.token);toast("✅ Datos guardados");return true;
 };
 function pedirDatosEmpresa(){
   const u=App.user,e=u&&u.empresa;if(!e||!(e.campos||[]).length)return;
@@ -4868,7 +4887,7 @@ window.pqGuardar=async function(){
   const r=window._edAdmin?await api("adminGuardarEmpresa",Object.assign({id:emp.id},datos)):await api("guardarMarcaEmpresa",datos);
   if(!r.ok){toast("❌ "+r.error);return;}
   toast("✅ Preguntas guardadas");window._edCampos=(r.empresa.campos||[]).slice();window._edEmp=Object.assign(emp,{campos:r.empresa.campos});pqRender();
-  if(App.user?.empresa&&App.user.empresa.id===r.empresa.id){App.user.empresa=r.empresa;saveSession(App.user,App.token);}
+  if(App.user?.empresa&&App.user.empresa.id===r.empresa.id){Object.assign(App.user.empresa,r.empresa);saveSession(App.user,App.token);}
 };
 // Empleados de la empresa (admin de la empresa: solo lectura, con sus respuestas)
 async function cargarEmpleadosEmp(){
@@ -5038,12 +5057,13 @@ window.entrarConCodigo=async function(cod,silencioso){
   go("jugar",{fechaId:r.fechaId,pozoId:r.pozoId});return true;
 };
 async function unirsePorLink(){
-  const qs=new URLSearchParams(location.search);const cod=window._codigoPend||qs.get("c")||(!App.user?.empresa?qs.get("e"):"");
-  if(!cod||App.user?.empresa)return;
-  // ¿Es el link de una empresa? (la cuenta actual es pública)
+  const qs=new URLSearchParams(location.search);const cod=window._codigoPend||qs.get("c")||qs.get("e");
+  if(!cod)return;
+  // ¿Es el link de una empresa?
   if(!window._codigoPend){const re=await api("getEmpresaPublica",{codigo:cod});if(re.ok){
+    const miembro=(App.user?.empresas||[]).find(function(e){return e.id===re.empresa.id;});
+    if(miembro){try{history.replaceState(null,"",location.pathname.replace(/[^/]*$/,""));}catch(e){}if(App.espacio!==miembro.id)cambiarEspacio(miembro.id);return;}
     if(App.user?.rol==="Admin"){toast(`Ese es el link de ${re.empresa.nombre}. Sos el administrador: para verlo como un empleado, abrilo en una ventana de incógnito`,6500);try{history.replaceState(null,"",location.pathname.replace(/[^/]*$/,""));}catch(e){}return;}
-    try{localStorage.setItem("pp_emp_cod",re.empresa.codigo);}catch(e){}
     clearSession();showLogin();toast("Ingresá o registrate con tu cuenta de "+re.empresa.nombre,4000);return;}}
   if(App.user?.rol==="Admin")return;
   window._codigoPend=null;
@@ -5225,6 +5245,37 @@ window.pasarAEmpresa=async function(){
   if(!r.ok){toast("❌ "+r.error);return;}
   document.querySelector(".modal-bg")?.remove();saveSession(r.user,App.token);toast("✅ ¡Listo! Ya sos parte de "+emp.nombre);initApp();
 };
+
+// ── Espacios: una cuenta en Polla Prodes (público) y en una o más empresas ──
+function espaciosDe(u){const es=[];if(!u)return es;if(u.publico!==false||u.rolBase==="Admin"||u.rol==="Admin")es.push({id:"",nombre:"Polla Prodes",emp:null});(u.empresas||[]).forEach(function(e){es.push({id:e.id,nombre:e.nombre,emp:e});});return es;}
+function aplicarEspacio(id){
+  const u=App.user;if(!u)return;if(!u.rolBase)u.rolBase=u.rol==="Admin"?"Admin":"Jugador";
+  const emp=u.rolBase==="Admin"?null:((u.empresas||[]).find(function(e){return e.id===id;})||null);
+  App.espacio=emp?emp.id:"";u.empresa=emp;u.datosExtra=emp?(emp.datosExtra||{}):{};
+  u.rol=u.rolBase==="Admin"?"Admin":(emp&&emp.rolEmpresa==="AdminEmpresa"?"AdminEmpresa":"Jugador");
+  try{localStorage.setItem("pp_espacio",App.espacio);}catch(e){}
+}
+function resolverEspacio(){
+  const u=App.user,es=espaciosDe(u);let pref=window._espacioIngreso;window._espacioIngreso=undefined;
+  if(pref===undefined||pref===null){try{pref=localStorage.getItem("pp_espacio");}catch(e){}}
+  const ok=es.some(function(e){return e.id===(pref||"");});
+  aplicarEspacio(ok?(pref||""):((es[0]&&es[0].id)||""));
+}
+function pintarEspacios(){
+  const es=espaciosDe(App.user),sb=document.getElementById("esp-sw"),tb=document.getElementById("tb-esp");
+  if(es.length<2||App.user?.rolBase==="Admin"){if(sb)sb.innerHTML="";if(tb)tb.innerHTML="";return;}
+  const ico=function(e){return e.emp?`<span class="esp-logo">${logoEmpHtml(e.emp)}</span>`:`<span class="esp-logo pp"><img src="icons/icon-192.png" alt=""></span>`;};
+  if(sb)sb.innerHTML=`<div class="esp-cap">Estás jugando en</div><div class="esp-lista">${es.map(function(e){return`<button class="esp-op${e.id===App.espacio?" on":""}" onclick="cambiarEspacio('${e.id}')">${ico(e)}<span>${escH(e.nombre)}</span></button>`;}).join("")}</div>`;
+  if(tb)tb.innerHTML=`<div class="tb-ucap">Cambiar a</div>${es.filter(function(e){return e.id!==App.espacio;}).map(function(e){return`<div class="tb-ui" onclick="cambiarEspacio('${e.id}')">${ico(e)}${escH(e.nombre)}</div>`;}).join("")}<div class="tb-usep"></div>`;
+}
+window.cambiarEspacio=function(id){
+  document.querySelector(".tb-user")?.classList.remove("open");
+  aplicarEspacio(id);saveSession(App.user,App.token);aplicarMarca(App.user.empresa||null);pintarEspacios();
+  api("getMisInscripciones").then(function(r){if(r.ok)window._misFechasBadge=(r.inscripciones||[]).length;renderNav();});
+  try{loadSidebarRight();}catch(e){}
+  go("fechas");toast("Estás en "+(App.user.empresa?App.user.empresa.nombre:"Polla Prodes"));
+  setTimeout(pedirDatosEmpresa,600);
+};
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
@@ -5262,13 +5313,13 @@ async function boot(){
   if(loadSession()){
     try{
       const r=await api("loginConToken",{sessionToken:App.token});
-      if(r.ok){saveSession(r.user,r.sessionToken);hideLoader();try{initApp();}catch(e){console.error('initApp:',e);}return;}
+      if(r.ok){r.user.rolBase=r.user.rol;saveSession(r.user,r.sessionToken);hideLoader();try{initApp();}catch(e){console.error('initApp:',e);}return;}
     }catch(e){console.warn("boot error:",e);}
     clearSession();
   }
   // Portada para quien entra sin sesión (la app instalada va directo al ingreso)
-  const qs=new URLSearchParams(location.search);let codEmp=null;try{codEmp=localStorage.getItem("pp_emp_cod");}catch(e){}
-  if(!esApp()&&!qs.has("login")&&!qs.has("e")&&!codEmp)showLanding();else showLogin();
+  const qs=new URLSearchParams(location.search);try{localStorage.removeItem("pp_emp_cod");}catch(e){}
+  if(!esApp()&&!qs.has("login")&&!qs.has("e"))showLanding();else showLogin();
 }
 boot();
 </script>

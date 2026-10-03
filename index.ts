@@ -149,8 +149,13 @@ async function requireAuth(db: any, data: any): Promise<{ok:boolean, userId?:str
     await db.from("sesiones").delete().eq("token", data.sessionToken);
     return {ok:false, error:"Sesión expirada"};
   }
-  const { data: user } = await db.from("usuarios").select("rol,empresa_id").eq("id", sesion.user_id).single();
-  return {ok:true, userId: sesion.user_id, rol: user?.rol || "Jugador", empresaId: user?.empresa_id || null};
+  const { data: user } = await db.from("usuarios").select("rol,publico").eq("id", sesion.user_id).single();
+  if (user?.rol === "Admin") return {ok:true, userId: sesion.user_id, rol:"Admin", empresaId: data.espacio || null};
+  // Espacio: "" = Polla Prodes (público) · id de empresa = esa empresa (si es miembro)
+  const {data: ms} = await db.from("empresa_miembros").select("empresa_id,rol").eq("user_id", sesion.user_id);
+  let m = data.espacio ? (ms||[]).find((x:any) => x.empresa_id === data.espacio) : null;
+  if (!m && user?.publico === false) m = (ms||[])[0] || null; // cuenta solo de empresa
+  return {ok:true, userId: sesion.user_id, rol: m?.rol === "AdminEmpresa" ? "AdminEmpresa" : "Jugador", empresaId: m?.empresa_id || null};
 }
 
 // ── ROUTER ──────────────────────────────────────────────────
@@ -325,15 +330,17 @@ async function registro(db: any, data: any) {
 
   const {error} = await db.from("usuarios").insert({
     id, telefono: tel, pin_hash: pinHash, usuario, nombre,
-    alias_mp: empresa ? "" : (data.alias || ""), email: email || "", empresa_id: empresa?.id || null,
-    datos_extra: datosExtra, rol: invitacion ? "AdminEmpresa" : "Jugador",
+    alias_mp: empresa ? "" : (data.alias || ""), email: email || "",
+    publico: !empresa, rol: "Jugador",
   });
   if (error) return {ok:false, error: error.message};
 
   const token = await crearSesion(db, id);
   if (data.email) await enviarMail(data.email, "¡Bienvenido a Polla Prodes!", mailBienvenida(nombre, usuario, tel, data.alias || ""));
+  if (empresa) await sumarMiembro(db, id, empresa.id, invitacion ? "AdminEmpresa" : "Jugador", datosExtra);
   if (invitacion) await db.from("empresa_invitaciones").delete().eq("id", invitacion.id);
-  return {ok:true, user:{id, usuario, nombre, rol: invitacion ? "AdminEmpresa" : "Jugador", empresa: empresaOut(empresa), datosExtra}, sessionToken: token};
+  const {data: nuevo} = await db.from("usuarios").select("*").eq("id", id).single();
+  return {ok:true, user: await userOut(db, nuevo), sessionToken: token, espacio: empresa?.id || ""};
 }
 
 // ============================================================
@@ -353,12 +360,13 @@ async function login(db: any, data: any) {
   }
 
   // Ingreso desde la pantalla de una empresa: cuentas de esa empresa, o cuentas públicas que se suman con el código
-  let sumarAEmpresa: any = null;
+  let sumarAEmpresa: any = null, espacio = "";
   if (data.codigoEmpresa && user.rol !== "Admin") {
     const emp = await empresaPorCodigo(db, data.codigoEmpresa);
     if (!emp) return {ok:false, error:"El código de empresa no existe"};
-    if (user.empresa_id && user.empresa_id !== emp.id) return {ok:false, error:`Esta cuenta es de otra empresa, no de ${emp.nombre}.`};
-    if (!user.empresa_id) {
+    espacio = emp.id;
+    const {data: yaMiembro} = await db.from("empresa_miembros").select("user_id").eq("user_id", user.id).eq("empresa_id", emp.id).maybeSingle();
+    if (!yaMiembro) {
       const ingresado = normalizarCodigo(data.codigoIngresado);
       if (!ingresado) return {ok:false, error:`Para sumarte a ${emp.nombre}, escribí el código de empresa.`, pideCodigo:true};
       if (ingresado !== emp.codigo) return {ok:false, error:"El código de empresa no es correcto.", pideCodigo:true};
@@ -379,11 +387,11 @@ async function login(db: any, data: any) {
   }
 
   const upd: any = {ultimo_login: new Date().toISOString(), intentos_fallidos: 0, bloqueado_hasta: null};
-  if (sumarAEmpresa) { upd.empresa_id = sumarAEmpresa.id; upd.alias_mp = ""; user.empresa_id = sumarAEmpresa.id; }
+  if (sumarAEmpresa) await sumarMiembro(db, user.id, sumarAEmpresa.id);
   if (v.viejo) upd.pin_hash = await hashPinSeguro(String(data.pin)); // actualizar al formato seguro
   await db.from("usuarios").update(upd).eq("id", user.id);
   const token = await crearSesion(db, user.id);
-  return {ok:true, user: await userOut(db, user), sessionToken: token};
+  return {ok:true, user: await userOut(db, user), sessionToken: token, espacio};
 }
 
 // ============================================================
@@ -583,9 +591,10 @@ async function getMisInscripciones(db: any, data: any) {
   const auth = await requireAuth(db, data);
   if (!auth.ok) return auth;
 
-  const {data: insc} = await db.from("inscripciones")
-    .select("*, pozos(monto)")
+  const {data: insc0} = await db.from("inscripciones")
+    .select("*, pozos(monto), fechas(empresa_id)")
     .eq("user_id", auth.userId).or("estado_pago.eq.Aprobado,and(estado_pago.eq.Pendiente,comprobante_path.not.is.null)");
+  const insc = (insc0||[]).filter((i:any) => auth.rol === "Admin" || (i.fechas?.empresa_id || null) === (auth.empresaId || null));
 
   return {ok:true, inscripciones:(insc||[]).map((i:any) => ({
     inscripcionId:i.id, fechaId:i.fecha_id, pozoId:i.pozo_id, monto:i.pozos?.monto||0,
@@ -2084,10 +2093,16 @@ async function empresaPorCodigo(db: any, codigo: any) {
   return data || null;
 }
 async function userOut(db: any, user: any) {
-  let empresa = null;
-  if (user.empresa_id) { const {data} = await db.from("empresas").select("*").eq("id", user.empresa_id).maybeSingle(); empresa = empresaOut(data); }
+  const {data: ms} = await db.from("empresa_miembros").select("rol,datos_extra, empresas(*)").eq("user_id", user.id).order("created_at");
+  const empresas = (ms||[]).filter((m:any) => m.empresas && m.empresas.estado === "Activa").map((m:any) => ({...empresaOut(m.empresas), rolEmpresa:m.rol, datosExtra:m.datos_extra||{}}));
   return {id:user.id, usuario:user.usuario, nombre:user.nombre, alias:user.alias_mp, email:user.email, telefono:user.telefono,
-    avatar:user.avatar, fotoPendiente:user.foto_pendiente||null, rol:user.rol, cupones:user.cupones, empresa, datosExtra:user.datos_extra||{}};
+    avatar:user.avatar, fotoPendiente:user.foto_pendiente||null, rol:user.rol, cupones:user.cupones, publico:user.publico !== false, empresas};
+}
+async function sumarMiembro(db: any, userId: string, empresaId: string, rol?: string, datos?: any) {
+  const fila: any = {user_id:userId, empresa_id:empresaId};
+  if (rol) fila.rol = rol;
+  if (datos) fila.datos_extra = datos;
+  await db.from("empresa_miembros").upsert(fila, {onConflict:"user_id,empresa_id"});
 }
 
 // Pública: para mostrar la marca en la pantalla de ingreso cuando entran con el link de la empresa
@@ -2197,11 +2212,11 @@ async function adminGetEmpresas(db: any, data: any) {
   if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
   const [{data: emps}, {data: users}] = await Promise.all([
     db.from("empresas").select("*").order("created_at"),
-    db.from("usuarios").select("id,usuario,nombre,telefono,email,rol,empresa_id,datos_extra").not("empresa_id","is",null),
+    db.from("empresa_miembros").select("empresa_id,rol,datos_extra, usuarios(id,usuario,nombre,telefono,email)"),
   ]);
   const {data: invs} = await db.from("empresa_invitaciones").select("*").order("created_at");
   return {ok:true, empresas:(emps||[]).map((e:any) => ({...empresaOut(e), estado:e.estado,
-    usuarios:(users||[]).filter((u:any) => u.empresa_id === e.id).map((u:any) => ({id:u.id, usuario:u.usuario, nombre:u.nombre, telefono:u.telefono, email:u.email||"", rol:u.rol, datos:u.datos_extra||{}})),
+    usuarios:(users||[]).filter((m:any) => m.empresa_id === e.id && m.usuarios).map((m:any) => ({id:m.usuarios.id, usuario:m.usuarios.usuario, nombre:m.usuarios.nombre, telefono:m.usuarios.telefono, email:m.usuarios.email||"", rol:m.rol, datos:m.datos_extra||{}})),
     invitaciones:(invs||[]).filter((i:any) => i.empresa_id === e.id).map((i:any) => ({id:i.id, email:i.email}))}))};
 }
 async function adminGuardarEmpresa(db: any, data: any) {
@@ -2233,10 +2248,10 @@ async function adminSetRol(db: any, data: any) {
   const auth = await requireAuth(db, data);
   if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
   if (!["Jugador","AdminEmpresa"].includes(data.rol)) return {ok:false, error:"Rol inválido"};
-  const {data: u} = await db.from("usuarios").select("empresa_id,rol").eq("id", data.userId).single();
-  if (!u?.empresa_id) return {ok:false, error:"Ese usuario no es de ninguna empresa"};
-  if (u.rol === "Admin") return {ok:false, error:"No se puede cambiar al administrador general"};
-  await db.from("usuarios").update({rol:data.rol}).eq("id", data.userId);
+  if (!data.empresaId) return {ok:false, error:"Falta la empresa"};
+  const {data: m} = await db.from("empresa_miembros").select("user_id").eq("user_id", data.userId).eq("empresa_id", data.empresaId).maybeSingle();
+  if (!m) return {ok:false, error:"Ese usuario no es de esa empresa"};
+  await db.from("empresa_miembros").update({rol:data.rol}).eq("user_id", data.userId).eq("empresa_id", data.empresaId);
   return {ok:true};
 }
 
@@ -2345,7 +2360,7 @@ async function guardarMisDatosEmpresa(db: any, data: any) {
   const {data: e} = await db.from("empresas").select("*").eq("id", auth.empresaId).single();
   const v = validarDatosEmpresa(e, data.datos || {});
   if (v.error) return {ok:false, error:v.error};
-  await db.from("usuarios").update({datos_extra: v.datos}).eq("id", auth.userId);
+  await db.from("empresa_miembros").update({datos_extra: v.datos}).eq("user_id", auth.userId).eq("empresa_id", auth.empresaId);
   return {ok:true, datosExtra: v.datos};
 }
 // Admin de la empresa: ver a su gente (con sus respuestas)
@@ -2353,8 +2368,8 @@ async function empresaGetEmpleados(db: any, data: any) {
   const auth = await requireAuth(db, data);
   const empresaId = auth.rol === "Admin" ? data.empresaId : auth.empresaId;
   if (!empresaId || !empresaEditable(auth, empresaId)) return {ok:false, error:"Sin permisos"};
-  const {data: us} = await db.from("usuarios").select("id,usuario,nombre,email,rol,datos_extra,created_at").eq("empresa_id", empresaId).order("created_at");
-  return {ok:true, empleados:(us||[]).map((u:any) => ({id:u.id, usuario:u.usuario, nombre:u.nombre, email:u.email||"", rol:u.rol, datos:u.datos_extra||{}}))};
+  const {data: ms} = await db.from("empresa_miembros").select("rol,datos_extra,created_at, usuarios(id,usuario,nombre,email)").eq("empresa_id", empresaId).order("created_at");
+  return {ok:true, empleados:(ms||[]).filter((m:any) => m.usuarios).map((m:any) => ({id:m.usuarios.id, usuario:m.usuarios.usuario, nombre:m.usuarios.nombre, email:m.usuarios.email||"", rol:m.rol, datos:m.datos_extra||{}}))};
 }
 
 // ── Admins de empresa por correo ──────────────────────────────
@@ -2365,12 +2380,11 @@ async function adminInvitarAdmin(db: any, data: any) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return {ok:false, error:"Ese correo no parece válido"};
   const {data: emp} = await db.from("empresas").select("*").eq("id", data.empresaId).single();
   if (!emp) return {ok:false, error:"Empresa no encontrada"};
-  const {data: us} = await db.from("usuarios").select("id,nombre,usuario,rol,empresa_id").ilike("email", email);
+  const {data: us} = await db.from("usuarios").select("id,nombre,usuario,rol").ilike("email", email);
   const u = (us||[])[0];
   if (u) {
     if (u.rol === "Admin") return {ok:false, error:"Ese correo es del administrador general"};
-    if (u.empresa_id && u.empresa_id !== emp.id) return {ok:false, error:`${u.nombre||u.usuario} ya pertenece a otra empresa`};
-    await db.from("usuarios").update({empresa_id: emp.id, rol:"AdminEmpresa", alias_mp:""}).eq("id", u.id);
+    await sumarMiembro(db, u.id, emp.id, "AdminEmpresa");
     return {ok:true, estado:"asignado", nombre: u.nombre || u.usuario};
   }
   const {error} = await db.from("empresa_invitaciones").upsert({id:generarId("INV"), empresa_id:emp.id, email}, {onConflict:"empresa_id,email", ignoreDuplicates:true});
@@ -2659,7 +2673,7 @@ async function pasarCuentaAEmpresa(db: any, data: any) {
   if (!empresa) return {ok:false, error:"El código de empresa no existe"};
   const v = validarDatosEmpresa(empresa, data.datosExtra || {});
   if (v.error) return {ok:false, error:v.error};
-  await db.from("usuarios").update({empresa_id:empresa.id, datos_extra:v.datos, alias_mp:""}).eq("id", auth.userId);
+  await sumarMiembro(db, auth.userId!, empresa.id, undefined, v.datos);
   const {data: user} = await db.from("usuarios").select("*").eq("id", auth.userId).single();
   return {ok:true, user: await userOut(db, user)};
 }
