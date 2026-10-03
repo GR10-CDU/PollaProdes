@@ -2051,6 +2051,7 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
 .tb-brand .tb-name{max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 body.login-active #inst-banner{display:none}
 .emp-pasar{background:var(--surface-2);border-color:var(--line);color:var(--ink-2)}
+.ll-ayuda{display:block;font-size:12px;color:rgba(255,255,255,.5);margin-top:4px}
 
 </style>
 </head>
@@ -4276,6 +4277,7 @@ function showLogin(){
         <div class="fg">
           <div class="ig"><label class="ll-lbl">Teléfono</label><input class="ll-inp" id="lt" type="tel" placeholder="+5493442xxxxxx" onkeydown="if(event.key==='Enter')doLogin()"/></div>
           <div class="ig"><label class="ll-lbl">PIN</label><div class="pin-wrap"><input class="ll-inp" id="lp" type="password" inputmode="numeric" autocomplete="current-password" placeholder="4-8 dígitos" maxlength="8" onkeydown="if(event.key==='Enter')doLogin()"/><button type="button" class="pin-eye" onclick="togglePin(this)" aria-label="Mostrar PIN">👁</button></div></div>
+          <div class="ig" id="lce-g" hidden><label class="ll-lbl">Código de empresa</label><input class="ll-inp" id="lce" maxlength="16" autocapitalize="characters" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" onkeydown="if(event.key==='Enter')doLogin()"/><small class="ll-ayuda">Solo la primera vez, para sumar tu cuenta</small></div>
           <div id="le"></div>
           <button class="btn btn-p btn-lg" id="blb" onclick="doLogin()" style="margin-top:6px">Entrar →</button>
         </div>
@@ -4303,7 +4305,7 @@ window.doLogin=async()=>{
   const t=document.getElementById("lt")?.value,p=document.getElementById("lp")?.value,b=document.getElementById("blb"),er=document.getElementById("le");
   if(!t||!p){if(er)er.innerHTML=`<div class="ll-err">Completá todos los campos</div>`;return;}
   if(b){b.textContent="Ingresando...";b.disabled=true;}
-  const r=await api("login",{telefono:t,pin:p,codigoEmpresa:window._empLogin?window._empLogin.codigo:undefined});
+  const r=await api("login",{telefono:t,pin:p,codigoEmpresa:window._empLogin?window._empLogin.codigo:undefined,codigoIngresado:document.getElementById("lce")?.value||""});
   if(b){b.textContent="Entrar →";b.disabled=false;}
   if(!r.ok){if(er)er.innerHTML=`<div class="ll-err">⚠ ${r.error}</div>`;return;}
   saveSession(r.user,r.sessionToken);
@@ -4570,6 +4572,7 @@ async function loginEmpresa(){
   const sb=document.querySelector(".ll-sub");if(sb)sb.textContent=emp.slogan||("La Polla de "+emp.nombre);
   const ft=document.querySelector(".ll-foot");if(ft)ft.innerHTML=`${escH(emp.nombre).toUpperCase()} · CON POLLA PRODES · <a href="#" onclick="salirDeEmpresa();return false">No soy de ${escH(emp.nombre)}</a>`;
   const ra=document.getElementById("ra-g");if(ra)ra.hidden=true;
+  const lc=document.getElementById("lce-g");if(lc){lc.hidden=false;const i=document.getElementById("lce");if(i)i.placeholder="Te lo da "+emp.nombre;}
   const ce=document.getElementById("rce-g");if(ce)ce.innerHTML=`<div class="ll-emp">${logoEmpHtml(emp)}<span>Te sumás a <b>${escH(emp.nombre)}</b> · jugás gratis</span></div>
     <div class="ig"><label class="ll-lbl">Código de empresa</label><input class="ll-inp" id="rce" placeholder="Te lo da ${escH(emp.nombre)}" maxlength="16" autocapitalize="characters" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')"/></div>${camposEmpresaHtml(emp,{},"ll-inp")}`;
 }

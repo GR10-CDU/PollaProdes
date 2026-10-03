@@ -352,11 +352,18 @@ async function login(db: any, data: any) {
     return {ok:false, error:`Demasiados intentos. Probá de nuevo en ${min} minuto${min!==1?"s":""}`};
   }
 
-  // Ingreso desde la pantalla de una empresa: solo cuentas de esa empresa
+  // Ingreso desde la pantalla de una empresa: cuentas de esa empresa, o cuentas públicas que se suman con el código
+  let sumarAEmpresa: any = null;
   if (data.codigoEmpresa && user.rol !== "Admin") {
     const emp = await empresaPorCodigo(db, data.codigoEmpresa);
     if (!emp) return {ok:false, error:"El código de empresa no existe"};
-    if (user.empresa_id !== emp.id) return {ok:false, error:`Esta cuenta no es de ${emp.nombre}. Si sos de ${emp.nombre}, registrate con el código de la empresa.`};
+    if (user.empresa_id && user.empresa_id !== emp.id) return {ok:false, error:`Esta cuenta es de otra empresa, no de ${emp.nombre}.`};
+    if (!user.empresa_id) {
+      const ingresado = normalizarCodigo(data.codigoIngresado);
+      if (!ingresado) return {ok:false, error:`Para sumarte a ${emp.nombre}, escribí el código de empresa.`, pideCodigo:true};
+      if (ingresado !== emp.codigo) return {ok:false, error:"El código de empresa no es correcto.", pideCodigo:true};
+      sumarAEmpresa = emp;
+    }
   }
   const v = await verificarPin(String(data.pin), user.pin_hash);
   if (!v.ok) {
@@ -372,6 +379,7 @@ async function login(db: any, data: any) {
   }
 
   const upd: any = {ultimo_login: new Date().toISOString(), intentos_fallidos: 0, bloqueado_hasta: null};
+  if (sumarAEmpresa) { upd.empresa_id = sumarAEmpresa.id; upd.alias_mp = ""; user.empresa_id = sumarAEmpresa.id; }
   if (v.viejo) upd.pin_hash = await hashPinSeguro(String(data.pin)); // actualizar al formato seguro
   await db.from("usuarios").update(upd).eq("id", user.id);
   const token = await crearSesion(db, user.id);
