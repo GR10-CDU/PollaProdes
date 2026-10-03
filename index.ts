@@ -189,6 +189,7 @@ Deno.serve(async (req) => {
       // ── EMPRESAS ──────────────────────────────────────────
       case "getEmpresaPublica": return resp(await getEmpresaPublica(db, data));
       case "jugarEmpresa": return resp(await jugarEmpresa(db, data));
+      case "pasarCuentaAEmpresa": return resp(await pasarCuentaAEmpresa(db, data));
       case "getNovedades": return resp(await getNovedades(db, data));
       case "guardarNovedad": return resp(await guardarNovedad(db, data));
       case "borrarNovedad": return resp(await borrarNovedad(db, data));
@@ -2632,4 +2633,19 @@ Si un equipo figura contra "LIBRE" (fecha libre), NO es un partido: no lo incluy
     } catch (e: any) { ultimoError = String(e?.message||e); }
   }
   return {ok:false, error:"La IA no respondió: "+ultimoError};
+}
+
+// Un jugador con cuenta pública entra con el link de una empresa y elige pasar su cuenta a esa empresa
+async function pasarCuentaAEmpresa(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  if (auth.rol === "Admin") return {ok:false, error:"El administrador general no puede pasarse a una empresa"};
+  if (auth.empresaId) return {ok:false, error:"Tu cuenta ya es de una empresa"};
+  const empresa = await empresaPorCodigo(db, data.codigo);
+  if (!empresa) return {ok:false, error:"El código de empresa no existe"};
+  const v = validarDatosEmpresa(empresa, data.datosExtra || {});
+  if (v.error) return {ok:false, error:v.error};
+  await db.from("usuarios").update({empresa_id:empresa.id, datos_extra:v.datos, alias_mp:""}).eq("id", auth.userId);
+  const {data: user} = await db.from("usuarios").select("*").eq("id", auth.userId).single();
+  return {ok:true, user: await userOut(db, user)};
 }

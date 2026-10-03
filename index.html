@@ -2050,6 +2050,7 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
 .sb-brand .name.emp{font-size:clamp(17px,2vw,24px);line-height:1.02;overflow-wrap:anywhere}
 .tb-brand .tb-name{max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 body.login-active #inst-banner{display:none}
+.emp-pasar{background:var(--surface-2);border-color:var(--line);color:var(--ink-2)}
 
 </style>
 </head>
@@ -5032,7 +5033,10 @@ window.entrarConCodigo=async function(cod,silencioso){
 };
 async function unirsePorLink(){
   const qs=new URLSearchParams(location.search);const cod=window._codigoPend||qs.get("c")||(!App.user?.empresa?qs.get("e"):"");
-  if(!cod||App.user?.empresa||App.user?.rol==="Admin")return;
+  if(!cod||App.user?.empresa)return;
+  // ¿Es el link de una empresa? (la cuenta actual es pública)
+  if(!window._codigoPend){const re=await api("getEmpresaPublica",{codigo:cod});if(re.ok){ofrecerPasarAEmpresa(re.empresa);return;}}
+  if(App.user?.rol==="Admin")return;
   window._codigoPend=null;
   const ok=await entrarConCodigo(cod,true);
   if(ok)try{history.replaceState(null,"",location.pathname);}catch(e){}
@@ -5191,6 +5195,27 @@ function ajustarTitulo(el,max,min){max=max||74;min=min||26;
   const fit=function(){let f=max;el.style.fontSize=f+"px";while(f>min&&el.scrollWidth>el.clientWidth+1){f-=2;el.style.fontSize=f+"px";}};
   fit();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);}
 window.addEventListener("resize",function(){const t=document.querySelector(".ll-title.emp");if(t)ajustarTitulo(t);});
+
+// Link de empresa con una sesión pública abierta: pasar la cuenta o usar otra
+function ofrecerPasarAEmpresa(emp){
+  try{history.replaceState(null,"",location.pathname.replace(/[^/]*$/,""));}catch(e){}
+  if(App.user?.rol==="Admin"){toast(`Ese es el link de ${emp.nombre}. Sos el administrador: para verlo como un empleado, abrilo en una ventana de incógnito`,6500);return;}
+  window._empPasar=emp;
+  const m=mkModal(escH(emp.nombre),`<div class="fg" id="pae"><div class="ll-emp emp-pasar">${logoEmpHtml(emp)}<span>Abriste el link de <b>${escH(emp.nombre)}</b>, pero tu cuenta (${escH(App.user.usuario)}) es de Polla Prodes.</span></div>
+    <p style="font-size:14.5px;color:var(--txt3)">Si la pasás a ${escH(emp.nombre)}, vas a jugar gratis sus fechas con su marca, y vas a dejar de ver las fechas públicas de Polla Prodes.</p>
+    ${camposEmpresaHtml(emp,App.user.datosExtra||{},"inp")}
+    <button class="btn btn-p btn-lg" onclick="pasarAEmpresa()">Pasar mi cuenta a ${escH(emp.nombre)}</button>
+    <button class="btn btn-s" onclick="document.querySelector('.modal-bg')?.remove();try{localStorage.setItem('pp_emp_cod','${escH(emp.codigo)}')}catch(e){};logout()">Usar otra cuenta (registrarme)</button>
+    <button class="btn btn-s" onclick="document.querySelector('.modal-bg')?.remove()">Seguir en Polla Prodes</button></div>`);
+  document.body.appendChild(m);
+}
+window.pasarAEmpresa=async function(){
+  const emp=window._empPasar;const dx=leerCamposEmpresa(document.getElementById("pae"));
+  const falta=(emp.campos||[]).find(function(c){return c.obligatorio&&!dx[c.id];});if(falta){toast("Completá: "+falta.label);return;}
+  const r=await api("pasarCuentaAEmpresa",{codigo:emp.codigo,datosExtra:dx});
+  if(!r.ok){toast("❌ "+r.error);return;}
+  document.querySelector(".modal-bg")?.remove();saveSession(r.user,App.token);toast("✅ ¡Listo! Ya sos parte de "+emp.nombre);initApp();
+};
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
