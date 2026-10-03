@@ -352,6 +352,12 @@ async function login(db: any, data: any) {
     return {ok:false, error:`Demasiados intentos. Probá de nuevo en ${min} minuto${min!==1?"s":""}`};
   }
 
+  // Ingreso desde la pantalla de una empresa: solo cuentas de esa empresa
+  if (data.codigoEmpresa && user.rol !== "Admin") {
+    const emp = await empresaPorCodigo(db, data.codigoEmpresa);
+    if (!emp) return {ok:false, error:"El código de empresa no existe"};
+    if (user.empresa_id !== emp.id) return {ok:false, error:`Esta cuenta no es de ${emp.nombre}. Si sos de ${emp.nombre}, registrate con el código de la empresa.`};
+  }
   const v = await verificarPin(String(data.pin), user.pin_hash);
   if (!v.ok) {
     const n = (user.intentos_fallidos || 0) + 1;

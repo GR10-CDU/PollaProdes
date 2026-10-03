@@ -4303,7 +4303,7 @@ window.doLogin=async()=>{
   const t=document.getElementById("lt")?.value,p=document.getElementById("lp")?.value,b=document.getElementById("blb"),er=document.getElementById("le");
   if(!t||!p){if(er)er.innerHTML=`<div class="ll-err">Completá todos los campos</div>`;return;}
   if(b){b.textContent="Ingresando...";b.disabled=true;}
-  const r=await api("login",{telefono:t,pin:p});
+  const r=await api("login",{telefono:t,pin:p,codigoEmpresa:window._empLogin?window._empLogin.codigo:undefined});
   if(b){b.textContent="Entrar →";b.disabled=false;}
   if(!r.ok){if(er)er.innerHTML=`<div class="ll-err">⚠ ${r.error}</div>`;return;}
   saveSession(r.user,r.sessionToken);
@@ -4316,7 +4316,9 @@ window.doReg=async()=>{
   if(!/^\d{4,8}$/.test(p)){err("El PIN tiene que tener entre 4 y 8 números");return;}
   if(p!==p2){err("Los dos PIN no coinciden");return;}
   const empR=window._empLogin||window._empReg||null;
-  const ce=(empR&&empR.codigo)||document.getElementById("rce")?.value||"";
+  const ce=(document.getElementById("rce")?.value||"").trim().toUpperCase();
+  if(window._empLogin&&!ce){err("Escribí el código de empresa");return;}
+  if(window._empLogin&&ce!==String(window._empLogin.codigo).toUpperCase()){err("El código de empresa no es correcto");return;}
   const dx=leerCamposEmpresa(document.getElementById("rf"));
   if(empR){const falta=(empR.campos||[]).find(function(c){return c.obligatorio&&!dx[c.id];});if(falta){err("Completá: "+falta.label);return;}}
   const r=await api("registro",{nombre:n,telefono:t,pin:p,pin2:p2,alias:empR?"":a,email:e,codigoEmpresa:ce,datosExtra:dx});
@@ -4568,7 +4570,8 @@ async function loginEmpresa(){
   const sb=document.querySelector(".ll-sub");if(sb)sb.textContent=emp.slogan||("La Polla de "+emp.nombre);
   const ft=document.querySelector(".ll-foot");if(ft)ft.innerHTML=`${escH(emp.nombre).toUpperCase()} · CON POLLA PRODES · <a href="#" onclick="salirDeEmpresa();return false">No soy de ${escH(emp.nombre)}</a>`;
   const ra=document.getElementById("ra-g");if(ra)ra.hidden=true;
-  const ce=document.getElementById("rce-g");if(ce)ce.innerHTML=`<div class="ll-emp">${logoEmpHtml(emp)}<span>Te sumás a <b>${escH(emp.nombre)}</b> · jugás gratis</span></div>${camposEmpresaHtml(emp,{},"ll-inp")}`;
+  const ce=document.getElementById("rce-g");if(ce)ce.innerHTML=`<div class="ll-emp">${logoEmpHtml(emp)}<span>Te sumás a <b>${escH(emp.nombre)}</b> · jugás gratis</span></div>
+    <div class="ig"><label class="ll-lbl">Código de empresa</label><input class="ll-inp" id="rce" placeholder="Te lo da ${escH(emp.nombre)}" maxlength="16" autocapitalize="characters" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')"/></div>${camposEmpresaHtml(emp,{},"ll-inp")}`;
 }
 window.salirDeEmpresa=function(){try{localStorage.removeItem("pp_emp_cod");}catch(e){}window._empLogin=null;aplicarMarca(null);history.replaceState(null,"",location.pathname+"?login");showLogin();};
 
@@ -5035,7 +5038,10 @@ async function unirsePorLink(){
   const qs=new URLSearchParams(location.search);const cod=window._codigoPend||qs.get("c")||(!App.user?.empresa?qs.get("e"):"");
   if(!cod||App.user?.empresa)return;
   // ¿Es el link de una empresa? (la cuenta actual es pública)
-  if(!window._codigoPend){const re=await api("getEmpresaPublica",{codigo:cod});if(re.ok){ofrecerPasarAEmpresa(re.empresa);return;}}
+  if(!window._codigoPend){const re=await api("getEmpresaPublica",{codigo:cod});if(re.ok){
+    if(App.user?.rol==="Admin"){toast(`Ese es el link de ${re.empresa.nombre}. Sos el administrador: para verlo como un empleado, abrilo en una ventana de incógnito`,6500);try{history.replaceState(null,"",location.pathname.replace(/[^/]*$/,""));}catch(e){}return;}
+    try{localStorage.setItem("pp_emp_cod",re.empresa.codigo);}catch(e){}
+    clearSession();showLogin();toast("Ingresá o registrate con tu cuenta de "+re.empresa.nombre,4000);return;}}
   if(App.user?.rol==="Admin")return;
   window._codigoPend=null;
   const ok=await entrarConCodigo(cod,true);
