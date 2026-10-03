@@ -2082,6 +2082,17 @@ body.login-active #inst-banner{display:none}
 #tb-esp .tb-ui{display:flex;align-items:center;gap:10px}
 /* Ingreso de empresa sin marca guardada todavía: no mostrar la de Polla Prodes mientras carga */
 #sl .lb.ll-cargando .ll-logo,#sl .lb.ll-cargando .ll-title,#sl .lb.ll-cargando .ll-sub{visibility:hidden}
+/* Celular / app instalada: barra de arriba 100% nítida y fija; menú de abajo más pegado al borde */
+@media(max-width:880px){
+  #topbar{position:sticky;top:0;z-index:30;background:var(--bg)!important}
+  #topbar,#topbar *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  #topbar .tb-chip,#topbar .icon-btn{background:var(--surface-2)!important}
+  #topbar img{image-rendering:auto;transform:translateZ(0)}
+  #bn{padding-bottom:max(2px,calc(env(safe-area-inset-bottom) - 24px))!important}
+  #bn .bn-wrap{height:52px}
+  .bn-item{height:48px}
+  .page{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+}
 
 </style>
 </head>
