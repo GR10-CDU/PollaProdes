@@ -249,6 +249,7 @@ Deno.serve(async (req) => {
       case "importarPartidos": return resp(await importarPartidos(db, data));
       case "adminAgregarPartido": return resp(await adminAgregarPartido(db, data));
       case "adminLeerCaptura": return resp(await adminLeerCaptura(db, data));
+      case "getEscudosEquipos": return resp(await getEscudosEquipos(db, data));
       case "adminGetInscriptos": return resp(await adminGetInscriptos(db, data));
       case "adminEditarPartido": return resp(await adminEditarPartido(db, data));
       case "adminBorrarPartido": return resp(await adminBorrarPartido(db, data));
@@ -2387,7 +2388,21 @@ async function buscarEquipos(db: any, data: any) {
     return {ok:true, equipos:(r.response||[]).slice(0,8).map((t:any) => ({nombre:t.team?.name, logo:t.team?.logo, pais:t.team?.country}))};
   } catch { return {ok:true, equipos:[], sinApi:true}; }
 }
+function normEquipo(t: string) {
+  return String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
+}
+async function getEscudosEquipos(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const {data: es} = await db.from("escudos_equipos").select("nombre_norm,nombre,logo_url").order("nombre");
+  return {ok:true, escudos:(es||[]).map((e:any) => ({clave:e.nombre_norm, nombre:e.nombre, logo:e.logo_url}))};
+}
 async function escudoDe(nombre: string): Promise<string> {
+  // Primero, los escudos propios (torneos amateur / de empresa)
+  try {
+    const {data: e} = await createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY).from("escudos_equipos").select("logo_url").eq("nombre_norm", normEquipo(nombre)).maybeSingle();
+    if (e?.logo_url) return e.logo_url;
+  } catch { /* sigue con la API */ }
   try {
     const r = await callAPIFootball("teams", {search:nombre});
     if (errorAPIFootball(r)) return "";
@@ -2589,7 +2604,8 @@ async function adminLeerCaptura(db: any, data: any) {
 Extraé TODOS los partidos, en el orden en que aparecen, juntando todas las imágenes sin repetir partidos.
 Para cada partido devolvé: local (equipo de arriba o de la izquierda), visita (el otro), hora en formato 24 hs "HH:MM" si aparece,
 fecha en formato "AAAA-MM-DD" solo si la imagen muestra el día (si no, null) y extra con datos útiles como la cancha o la zona (o "").
-Copiá los nombres de los equipos tal cual se ven, incluyendo letras o aclaraciones como "(S)". No inventes partidos.`;
+Copiá los nombres de los equipos tal cual se ven, incluyendo letras o aclaraciones como "(S)". No inventes partidos.
+Si un equipo figura contra "LIBRE" (fecha libre), NO es un partido: no lo incluyas.`;
   const cuerpo = {
     contents:[{role:"user", parts:[{text:prompt}, ...partes]}],
     generationConfig:{temperature:0, responseMimeType:"application/json", responseSchema:{
@@ -2611,7 +2627,7 @@ Copiá los nombres de los equipos tal cual se ven, incluyendo letras o aclaracio
         local:String(p.local||"").trim().slice(0,40), visita:String(p.visita||"").trim().slice(0,40),
         hora:/^\d{1,2}:\d{2}$/.test(String(p.hora||"").trim()) ? String(p.hora).trim().padStart(5,"0") : "",
         fecha:/^\d{4}-\d{2}-\d{2}$/.test(String(p.fecha||"")) ? p.fecha : "", extra:String(p.extra||"").trim().slice(0,40),
-      })).filter((p:any) => p.local && p.visita).slice(0,40);
+      })).filter((p:any) => p.local && p.visita && !/^libre$/i.test(p.local) && !/^libre$/i.test(p.visita)).slice(0,40);
       return {ok:true, partidos, modelo};
     } catch (e: any) { ultimoError = String(e?.message||e); }
   }

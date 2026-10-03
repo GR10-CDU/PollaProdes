@@ -2033,6 +2033,19 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
 .cap-extra{grid-column:2/-1;font-size:12px;color:var(--ink-3);margin-top:-2px}
 @media(max-width:560px){.cap-it{grid-template-columns:22px 1fr 1fr}.cap-vs{display:none}.cap-hora,.cap-tipo{grid-column:span 1}.cap-it .cap-hora{grid-column:2}.cap-it .cap-tipo{grid-column:3}}
 .modal-box:has(.pm){max-width:720px;width:100%}
+/* Partidos de categoría Senior (equipos con "(S)") */
+:root{--senior:#7C5CFF;--senior-soft:rgba(124,92,255,.10);--senior-line:rgba(124,92,255,.45)}
+.t-tag.t-senior{background:var(--senior);color:#fff;font-size:10.5px;letter-spacing:.04em;padding:0 6px;width:auto}
+.partido-card.senior,.pd.senior,.dl.senior,.pp.senior,.pm-it.senior,.cap-it.senior,.rs-card.senior{border-color:var(--senior-line)!important;background-image:linear-gradient(135deg,var(--senior-soft),transparent 60%)}
+.partido-card.senior{box-shadow:inset 4px 0 0 var(--senior)}
+.pd.senior,.dl.senior,.pm-it.senior,.cap-it.senior,.rs-card.senior{box-shadow:inset 3px 0 0 var(--senior)}
+.partido-card{position:relative}
+.senior-flag{position:absolute;top:10px;right:12px;z-index:2;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:8px;background:var(--senior);color:#fff}
+:root{--senior-soft:rgba(124,92,255,.16)}
+.cap-eq{display:flex;align-items:center;gap:6px;min-width:0}
+.cap-eq .inp{flex:1}
+.cap-esc{width:28px;height:28px;flex:none;display:grid;place-items:center}
+.cap-esc img{width:28px;height:28px;object-fit:contain}
 
 </style>
 </head>
@@ -2587,7 +2600,7 @@ async function loadFechaDet(ctx){
 // Partido en el detalle de fecha: 3 variantes de diseño (A marcador TV · B fila compacta · C ficha)
 function partidoDet(p,v,etiqueta){
   const ti=TIPO_INFO[p.tipo]||TIPO_INFO.Normal;
-  const tags=`<span class="t-tag ${ti.cls}">${ti.k}</span>${p.esToleTole?'<span class="t-tag t-tole">🔥</span>':""}`;
+  const tags=`<span class="t-tag ${ti.cls}">${ti.k}</span>${p.esToleTole?'<span class="t-tag t-tole">🔥</span>':""}${esSenior(p)?TAG_SENIOR:""}`;
   const jugado=p.golesLocal!==null&&p.golesLocal!==undefined&&p.golesLocal!=="";
   const susp=p.estado==="Suspendido",post=p.estado==="Postergado";
   const d=p.fechaHora?new Date(p.fechaHora):null;
@@ -2596,14 +2609,14 @@ function partidoDet(p,v,etiqueta){
   const centro=susp?`<span class="pd-est">Susp.</span>`:post?`<span class="pd-est">Post.</span>`:jugado?`<span class="pd-gol">${p.golesLocal}</span><span class="pd-gsep">-</span><span class="pd-gol">${p.golesVisita}</span>`:`<span class="pd-hora">${hora}</span>`;
   const esc=function(url,n){return url?`<img src="${url}" alt="" loading="lazy">`:inicialEq(n);};
   const lbl=etiqueta?`<span class="pd-lbl">Opción ${v}</span>`:"";
-  if(v==="B")return`<div class="pd pd-b${jugado?" jugado":""}">${lbl}
+  if(v==="B")return`<div class="pd pd-b${jugado?" jugado":""}${esSenior(p)?" senior":""}">${lbl}
       <span class="pd-n">#${p.numero}</span><span class="pd-tags">${tags}</span>
       <span class="pd-eq loc"><b>${p.local}</b>${esc(p.localLogo,p.local)}</span>
       <span class="pd-mid">${centro}</span>
       <span class="pd-eq vis">${esc(p.visitaLogo,p.visita)}<b>${p.visita}</b></span>
       <span class="pd-meta">${dia}${jugado?" · "+hora:""}</span>
     </div>`;
-  if(v==="C")return`<div class="pd pd-c${jugado?" jugado":""}">${lbl}
+  if(v==="C")return`<div class="pd pd-c${jugado?" jugado":""}${esSenior(p)?" senior":""}">${lbl}
       <div class="pd-c-top"><span class="pd-n">#${p.numero}</span>${tags}</div>
       <div class="pd-c-body">
         <div class="pd-c-team">${esc(p.localLogo,p.local)}<b>${p.local}</b></div>
@@ -2612,7 +2625,7 @@ function partidoDet(p,v,etiqueta){
       </div>
       <div class="pd-c-foot">${p.liga||""}${p.liga?" · ":""}${dia} · ${hora}</div>
     </div>`;
-  return`<div class="pd pd-a${jugado?" jugado":""}">${lbl}
+  return`<div class="pd pd-a${jugado?" jugado":""}${esSenior(p)?" senior":""}">${lbl}
       <div class="pd-a-side"><span class="pd-n">#${p.numero}</span><span class="pd-tags">${tags}</span></div>
       <div class="pd-a-match">
         <span class="pd-eq loc"><b>${p.local}</b>${esc(p.localLogo,p.local)}</span>
@@ -3053,7 +3066,7 @@ function renderPartidos(parts,ctx,puede){
     const _vr=!sinGoles?(["A","B","C"][window._finIdx++]||"A"):null;
     const _calc=!sinGoles&&_prd.calculado;
     const _tot=_calc?(_prd.ptsTotal!=null?_prd.ptsTotal:0):0;
-    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}${_calc?(_tot>0?" suma":" nosuma"):""}" id="pc-${p.id}">
+    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}${_calc?(_tot>0?" suma":" nosuma"):""}${esSenior(p)?" senior":""}" id="pc-${p.id}">${esSenior(p)?`<span class="senior-flag">Senior</span>`:""}
       <div class="pc-meta">
         <div class="pc-bdgs">
           <span style="font-size:14px;font-weight:700;color:var(--txt3)">#${p.numero}</span>
@@ -3680,7 +3693,7 @@ function renderGrilla(){
 
   // ── Cara a cara
   const linea=function(p,r){const ti=TIPO_INFO[p.tipo]||TIPO_INFO.Normal,a=base.pronos[p.id].v,b=r.pronos[p.id].v,jugado=p.estado==="Finalizado";
-    return`<div class="dl${jugado?" jugado":""}">
+    return`<div class="dl${jugado?" jugado":""}${esSenior(p)?" senior":""}">
       <div class="dl-tags"><span class="t-tag ${ti.cls}">${ti.k}</span>${st[p.id].tole?'<span class="t-tag t-tole">🔥</span>':""}</div>
       <span class="dl-n">#${p.numero}</span>
       <div class="dl-eq"><span class="dl-team">${p.local_logo?`<img src="${p.local_logo}" alt="">`:inicialEq(p.local)}<b>${sigla(p.local)}</b></span><span class="dl-res">${jugado?p.goles_local+"-"+p.goles_visita:"vs"}</span><span class="dl-team"><b>${sigla(p.visita)}</b>${p.visita_logo?`<img src="${p.visita_logo}" alt="">`:inicialEq(p.visita)}</span></div>
@@ -3724,9 +3737,9 @@ function renderGrilla(){
     const col=function(k){const gente=x.quien[k];return`<div class="pp-col${mio===k?" mio":""}${jugado&&p.resultado===k?" ok":""}">
         <div class="pp-col-h"><span class="pcell ${k}">${k}</span><b>${x.c[k]}</b><small>${Math.round(x.pct[k]||0)}%</small>${jugado&&p.resultado===k?'<em>✓ salió</em>':""}</div>
         <div class="pp-gente">${gente.map(function(j){return`<span class="pp-p${j.userId===me?" yo":""}">${av(j)}${nm(j)}</span>`;}).join("")||'<span class="pp-nadie">Nadie</span>'}</div></div>`;};
-    return`<div class="pp${abierto?" abierto":""}">
+    return`<div class="pp${abierto?" abierto":""}${esSenior(p)?" senior":""}">
       <button class="pp-top" onclick="window._grilla.pAb=window._grilla.pAb==='${p.id}'?null:'${p.id}';renderGrilla()">
-        <div class="pp-eq"><span class="t-tag ${ti.cls}">${ti.k}</span>${x.tole?'<span class="t-tag t-tole">🔥</span>':""}
+        <div class="pp-eq"><span class="t-tag ${ti.cls}">${ti.k}</span>${x.tole?'<span class="t-tag t-tole">🔥</span>':""}${esSenior(p)?TAG_SENIOR:""}
           <span class="dl-team">${p.local_logo?`<img src="${p.local_logo}" alt="">`:inicialEq(p.local)}<b>${sigla(p.local)}</b></span>
           <span class="dl-res">${jugado?p.goles_local+"-"+p.goles_visita:p.fecha_hora?new Date(p.fecha_hora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"vs"}</span>
           <span class="dl-team"><b>${sigla(p.visita)}</b>${p.visita_logo?`<img src="${p.visita_logo}" alt="">`:inicialEq(p.visita)}</span></div>
@@ -4045,7 +4058,7 @@ async function loadRes(ctx){
       <div class="g-stat"><b>${nCargar}</b><span>para cargar</span></div>
       <div class="g-stat"><b>${nFinal}/${ps.length}</b><span>cargados</span></div>
     </div>
-    <div class="rs-list">${ps.map(function(p){const e=est(p),done=e==="final";return`<div class="rs-card ${e}${p.tipo==="Polla"?" polla":p.tipo==="Doble"?" doble":""}" id="rs-${p.id}">
+    <div class="rs-list">${ps.map(function(p){const e=est(p),done=e==="final";return`<div class="rs-card ${e}${esSenior(p)?" senior":""}${p.tipo==="Polla"?" polla":p.tipo==="Doble"?" doble":""}" id="rs-${p.id}">
       <div class="rs-head"><span class="t-tag ${ti(p).cls}">${ti(p).k}</span>${p.esToleTole?'<span class="t-tag t-tole">🔥</span>':""}<span class="rs-n">#${p.numero}</span><span class="rs-hora">${hora(p)}</span>${chip[e]}</div>
       <div class="rs-body">
         <div class="rs-team">${p.localLogo?`<img src="${p.localLogo}" alt="">`:inicialEq(p.local)}<b>${sigla(p.local)}</b><small>${p.local}</small></div>
@@ -4876,11 +4889,16 @@ window.copiarInvitacion=function(email){
 
 // ── Partidos cargados a mano (equipo, día, hora y tipo; el escudo si se encuentra) ──
 function _normEq(t){return String(t||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9 ]/g,"").trim();}
-function escudoLocal(nombre){const n=_normEq(nombre);if(n.length<3)return null;
+function _normEsc(t){return String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();}
+function escudoLocal(nombre){
+  // Escudos propios del torneo (exactos: "Salud B (S)" ≠ "Salud B")
+  const x=(window._escExtra||{})[_normEsc(nombre)];if(x)return{nombre:x.nombre,logo:x.logo};
+  const n=_normEq(nombre);if(n.length<3)return null;
   const sin=function(t){return(" "+t+" ").replace(/ (club|atletico|ca|cd|fc|sc|deportivo|de|la|el) /g," ").trim();},ns=sin(n);
   const e=ESCUDOS.find(function(x){return _normEq(x[0])===n;})||ESCUDOS.find(function(x){const k=sin(_normEq(x[0]));return k.length>=4&&(ns===k||ns.startsWith(k)||k.startsWith(ns)||(" "+ns+" ").includes(" "+k+" "));});
   return e?{nombre:e[0],logo:"https://media.api-sports.io/football/teams/"+e[1]+".png"}:null;}
 window.partidosManual=async function(fechaId){
+  if(!window._escExtra){api("getEscudosEquipos").then(function(r){if(r.ok){window._escExtra={};(r.escudos||[]).forEach(function(e){window._escExtra[e.clave]=e;});}});}
   window._pm={fechaId,edit:null,logo:{l:"",v:""}};
   const f=window._adminFechas[fechaId]||{};
   const diaPlazo=(isoArg(f.plazoLimite)||isoArg(new Date().toISOString())).slice(0,10);
@@ -4909,7 +4927,7 @@ async function pmCargar(){
   const r=await api("getFecha",{fechaId:window._pm.fechaId});const ps=r.ok?(r.partidos||[]):[];window._pm.partidos=ps;
   const TT={Normal:"×1",Doble:"×2",Polla:"P"},TC={Normal:"t-s",Doble:"t-d",Polla:"t-p"};
   el.innerHTML=ps.length?ps.map(function(x){const fh=x.fechaHora?new Date(x.fechaHora).toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"";
-    return`<div class="pm-it"><span class="pm-n">#${x.numero}</span><span class="t-tag ${TC[x.tipo]||"t-s"}">${TT[x.tipo]||"×1"}</span>
+    return`<div class="pm-it${esSenior(x)?" senior":""}"><span class="pm-n">#${x.numero}</span><span class="t-tag ${TC[x.tipo]||"t-s"}">${TT[x.tipo]||"×1"}</span>
       <div class="pm-it-eq">${x.localLogo?`<img src="${escH(x.localLogo)}" alt="">`:inicialEq(x.local)}<b>${escH(x.local)}</b><i>vs</i><b>${escH(x.visita)}</b>${x.visitaLogo?`<img src="${escH(x.visitaLogo)}" alt="">`:inicialEq(x.visita)}</div>
       <small>${fh}</small>${x.estado==="Finalizado"?`<span class="pm-fin">${x.golesLocal}-${x.golesVisita}</span>`:`<div class="pm-acc"><button onclick="pmEditar('${x.id}')">Editar</button><button onclick="pmBorrar('${x.id}')">Borrar</button></div>`}</div>`;}).join("")
     :`<p class="me-p">Todavía no hay partidos en esta fecha. Cargá el primero abajo.</p>`;
@@ -5106,6 +5124,9 @@ async function pintarAvisos(){
   if(fb&&est==="apagado"&&!document.getElementById("av-banner")){let no=false;try{no=localStorage.getItem("pp_av_no")==="1";}catch(e){}
     if(!no){const d=document.createElement("div");d.id="av-banner";d.className="card av-banner";d.innerHTML=`<span class="av-ic">🔔</span><div><b>Activá los avisos</b><small>Enterate al toque cuando pegás una regla o se cierra una fecha.</small></div><button class="btn btn-p" onclick="activarAvisos()">Activar</button><button class="av-x" onclick="this.parentElement.remove();try{localStorage.setItem('pp_av_no','1')}catch(e){}" aria-label="Cerrar">×</button>`;fb.prepend(d);}}
 }
+// Partido de categoría Senior: algún equipo dice "(S)"
+function esSenior(p){const t=function(n){return/(\(\s*s\s*\)|\ss)\s*$/i.test(String(n||"").trim());};return!!p&&(t(p.local)||t(p.visita));}
+const TAG_SENIOR='<span class="t-tag t-senior" title="Categoría Senior">Senior</span>';
 // Equipo sin escudo: su inicial en un círculo
 function inicialEq(n){const w=String(n||"?").trim().split(/\s+/),skip=/^(club|c\.?a\.?|atl[eé]tico|atl\.?|deportivo|dep\.?|sporting|fc|cd|sc|real|el|la|los|de)$/i;
   const k=w.find(function(x){return!skip.test(x);})||w[0]||"?";return`<span class="esc-ini">${escH(k[0].toUpperCase())}</span>`;}
@@ -5125,6 +5146,7 @@ window.capLeer=async function(files){
   window._cap=r.partidos.map(function(p){return Object.assign({ok:true,tipo:"Normal"},p);});
   capPintar();
 };
+function capEsc(n){const e=escudoLocal(n);return`<span class="cap-esc">${e?`<img src="${escH(e.logo)}" alt="">`:inicialEq(n)}</span>`;}
 function capPintar(){
   const box=document.getElementById("pm-capres"),cs=window._cap||[];if(!box)return;
   const f0=cs.find(function(c){return c.fecha;});const dia=(f0&&f0.fecha)||(isoArg(window._adminFechas[window._pm.fechaId]?.plazoLimite)||isoArg(new Date().toISOString())).slice(0,10);
@@ -5132,11 +5154,11 @@ function capPintar(){
   box.innerHTML=`<div class="cap">
     <div class="cap-h"><b>La IA encontró ${cs.length} partido${cs.length!==1?"s":""}</b><small>Revisá y corregí lo que haga falta. Destildá los que no quieras.</small></div>
     <div class="cap-dia"><span>Día de los partidos:</span>${fhInput("cap",dia+"T21:00")}</div>
-    <div class="cap-lista">${cs.map(function(c,i){return`<div class="cap-it${c.ok?"":" off"}">
+    <div class="cap-lista">${cs.map(function(c,i){return`<div class="cap-it${c.ok?"":" off"}${esSenior(c)?" senior":""}">
       <input type="checkbox" ${c.ok?"checked":""} onchange="window._cap[${i}].ok=this.checked;capPintar()" aria-label="Incluir"/>
-      <input class="inp" value="${escH(c.local)}" oninput="window._cap[${i}].local=this.value" aria-label="Local"/>
+      <div class="cap-eq">${capEsc(c.local)}<input class="inp" value="${escH(c.local)}" onchange="window._cap[${i}].local=this.value;capPintar()" aria-label="Local"/></div>
       <span class="cap-vs">vs</span>
-      <input class="inp" value="${escH(c.visita)}" oninput="window._cap[${i}].visita=this.value" aria-label="Visitante"/>
+      <div class="cap-eq">${capEsc(c.visita)}<input class="inp" value="${escH(c.visita)}" onchange="window._cap[${i}].visita=this.value;capPintar()" aria-label="Visitante"/></div>
       <input class="inp cap-hora" value="${escH(c.hora||"")}" placeholder="HH:MM" maxlength="5" oninput="window._cap[${i}].hora=this.value" aria-label="Hora"/>
       <select class="inp cap-tipo" onchange="window._cap[${i}].tipo=this.value"><option value="Normal"${c.tipo==="Normal"?" selected":""}>×1</option><option value="Doble"${c.tipo==="Doble"?" selected":""}>×2</option><option value="Polla"${c.tipo==="Polla"?" selected":""}>Polla</option></select>
       ${c.extra?`<small class="cap-extra">${escH(c.extra)}</small>`:""}</div>`;}).join("")}</div>
