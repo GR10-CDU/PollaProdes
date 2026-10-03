@@ -24,7 +24,7 @@ if(location.protocol==="http:"&&/(^|\.)pollaprodes\.ar$/.test(location.hostname)
 (function(){var d={mode:"auto",theme:"cancha",layout:"side"},p=d;
 try{p=Object.assign({},d,JSON.parse(localStorage.getItem("pp_prefs")||"{}"));}catch(e){}
 var h=document.documentElement,m=p.mode==="auto"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):p.mode;
-var mk=null;try{mk=JSON.parse(localStorage.getItem("pp_marca")||"null");}catch(e){}
+var mk=null;try{if(/[?&]e=/.test(location.search))mk=JSON.parse(localStorage.getItem("pp_marca")||"null");}catch(e){}
 h.setAttribute("data-theme",mk?mk.tema:p.theme);h.setAttribute("data-mode",m);h.setAttribute("data-layout",p.layout);window.__prefs=p;
 if(mk&&mk.css){var st=document.createElement("style");st.id="marca-css";st.textContent=mk.css;document.head.appendChild(st);}})();
 </script>
@@ -4389,6 +4389,7 @@ function startAutoRefresh(){
 function stopAutoRefresh(){if(_refreshTimer){clearInterval(_refreshTimer);_refreshTimer=null;}}
 
 function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
+  {const q0=new URLSearchParams(location.search);window._linkCod=q0.get("c")||q0.get("e")||"";}
   resolverEspacio();
   aplicarMarca(App.user?.empresa||null);
   pintarEspacios();
@@ -5057,14 +5058,15 @@ window.entrarConCodigo=async function(cod,silencioso){
   go("jugar",{fechaId:r.fechaId,pozoId:r.pozoId});return true;
 };
 async function unirsePorLink(){
-  const qs=new URLSearchParams(location.search);const cod=window._codigoPend||qs.get("c")||qs.get("e");
+  const cod=window._codigoPend||window._linkCod;window._linkCod="";
   if(!cod)return;
   // ¿Es el link de una empresa?
   if(!window._codigoPend){const re=await api("getEmpresaPublica",{codigo:cod});if(re.ok){
     const miembro=(App.user?.empresas||[]).find(function(e){return e.id===re.empresa.id;});
-    if(miembro){try{history.replaceState(null,"",location.pathname.replace(/[^/]*$/,""));}catch(e){}if(App.espacio!==miembro.id)cambiarEspacio(miembro.id);return;}
+    if(miembro){if(App.espacio!==miembro.id)cambiarEspacio(miembro.id);return;}
     if(App.user?.rol==="Admin"){toast(`Ese es el link de ${re.empresa.nombre}. Sos el administrador: para verlo como un empleado, abrilo en una ventana de incógnito`,6500);try{history.replaceState(null,"",location.pathname.replace(/[^/]*$/,""));}catch(e){}return;}
-    clearSession();showLogin();toast("Ingresá o registrate con tu cuenta de "+re.empresa.nombre,4000);return;}}
+    try{history.replaceState(null,"",location.pathname.replace(/[^/]*$/,"")+"?e="+encodeURIComponent(cod));}catch(e){}
+    clearSession();showLogin();toast("Ingresá con tu cuenta y el código de "+re.empresa.nombre+", o registrate",4500);return;}}
   if(App.user?.rol==="Admin")return;
   window._codigoPend=null;
   const ok=await entrarConCodigo(cod,true);
@@ -5253,11 +5255,18 @@ function aplicarEspacio(id){
   const emp=u.rolBase==="Admin"?null:((u.empresas||[]).find(function(e){return e.id===id;})||null);
   App.espacio=emp?emp.id:"";u.empresa=emp;u.datosExtra=emp?(emp.datosExtra||{}):{};
   u.rol=u.rolBase==="Admin"?"Admin":(emp&&emp.rolEmpresa==="AdminEmpresa"?"AdminEmpresa":"Jugador");
-  try{localStorage.setItem("pp_espacio",App.espacio);}catch(e){}
+  try{localStorage.removeItem("pp_espacio");}catch(e){}
+  // La barra de direcciones refleja dónde estás (para recargar o guardar el link)
+  try{const base=location.pathname.replace(/[^/]*$/,"");history.replaceState(null,"",emp?linkEmpresa(emp).replace(location.origin,""):base);}catch(e){}
 }
 function resolverEspacio(){
   const u=App.user,es=espaciosDe(u);let pref=window._espacioIngreso;window._espacioIngreso=undefined;
-  if(pref===undefined||pref===null){try{pref=localStorage.getItem("pp_espacio");}catch(e){}}
+  if(pref===undefined||pref===null){
+    // pollaprodes.ar → Polla Prodes · pollaprodes.ar/codigo (?e=codigo) → esa empresa, si es miembro
+    const cod=String(new URLSearchParams(location.search).get("e")||"").toUpperCase();
+    const emp=cod?(u.empresas||[]).find(function(e){return String(e.codigo).toUpperCase()===cod;}):null;
+    pref=emp?emp.id:"";
+  }
   const ok=es.some(function(e){return e.id===(pref||"");});
   aplicarEspacio(ok?(pref||""):((es[0]&&es[0].id)||""));
 }
