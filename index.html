@@ -24,7 +24,7 @@ if(location.protocol==="http:"&&/(^|\.)pollaprodes\.ar$/.test(location.hostname)
 (function(){var d={mode:"auto",theme:"cancha",layout:"side"},p=d;
 try{p=Object.assign({},d,JSON.parse(localStorage.getItem("pp_prefs")||"{}"));}catch(e){}
 var h=document.documentElement,m=p.mode==="auto"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):p.mode;
-var mk=null;try{if(/[?&]e=/.test(location.search))mk=JSON.parse(localStorage.getItem("pp_marca")||"null");}catch(e){}
+var mk=null;try{if(/[?&]e=/.test(location.search)||/^\/(PollaProdes\/)?[A-Za-z0-9_-]{3,16}\/?$/.test(location.pathname))mk=JSON.parse(localStorage.getItem("pp_marca")||"null");}catch(e){}
 h.setAttribute("data-theme",mk?mk.tema:p.theme);h.setAttribute("data-mode",m);h.setAttribute("data-layout",p.layout);window.__prefs=p;
 if(mk&&mk.css){var st=document.createElement("style");st.id="marca-css";st.textContent=mk.css;document.head.appendChild(st);}})();
 </script>
@@ -2068,6 +2068,8 @@ body.login-active #inst-banner{display:none}
 .tb-ucap{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding:6px 12px 2px}
 .tb-usep{height:1px;background:var(--line);margin:6px 8px}
 #tb-esp .tb-ui{display:flex;align-items:center;gap:10px}
+/* Ingreso de empresa sin marca guardada todavía: no mostrar la de Polla Prodes mientras carga */
+#sl .lb.ll-cargando .ll-logo,#sl .lb.ll-cargando .ll-title,#sl .lb.ll-cargando .ll-sub{visibility:hidden}
 
 </style>
 </head>
@@ -4389,7 +4391,7 @@ function startAutoRefresh(){
 function stopAutoRefresh(){if(_refreshTimer){clearInterval(_refreshTimer);_refreshTimer=null;}}
 
 function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
-  {const q0=new URLSearchParams(location.search);window._linkCod=q0.get("c")||q0.get("e")||"";}
+  {const q0=new URLSearchParams(location.search);window._linkCod=q0.get("c")||codigoDeDireccion()||"";}
   resolverEspacio();
   aplicarMarca(App.user?.empresa||null);
   pintarEspacios();
@@ -4574,19 +4576,15 @@ function aplicarMarca(emp){
   document.title=emp?"Polla "+emp.nombre:"Polla Prodes";
 }
 // Pantalla de ingreso con la marca de la empresa (link ?e=CODIGO o última empresa usada)
-async function loginEmpresa(){
-  const qs=new URLSearchParams(location.search);let cod=qs.get("e");
-  if(!cod){window._empLogin=null;aplicarMarca(null);return;}
-  if(!cod){window._empLogin=null;return;}
-  const r=await api("getEmpresaPublica",{codigo:cod});
-  if(!r.ok){window._empLogin=null;
-    if(qs.get("e")){const g=await api("getGrupoPorCodigo",{codigo:qs.get("e")});
-      if(g.ok){window._codigoPend=qs.get("e");const sb=document.querySelector(".ll-sub");if(sb)sb.innerHTML=`Te invitaron a <b>${escH(g.grupo.fechaNombre||g.grupo.nombre)}</b>. Entrá o registrate y quedás adentro.`;}
-      else toast("⚠ Ese link no corresponde a ninguna empresa ni torneo");}
-    return;}
-  const emp=r.empresa;window._empLogin=emp;
-  if(qs.get("e")){try{history.replaceState(null,"",linkEmpresa(emp).replace(location.origin,""));}catch(e){}}
-  aplicarMarca(emp);
+// Código de empresa de la dirección: ?e=cdp o /cdp
+function codigoDeDireccion(){
+  const q=new URLSearchParams(location.search).get("e");if(q)return q;
+  const seg=location.pathname.replace(/^\/PollaProdes\//,"/").split("/").filter(Boolean)[0]||"";
+  return/^[A-Za-z0-9_-]{3,16}$/.test(seg)&&!/\./.test(seg)?seg:"";
+}
+function pintarLoginEmpresa(emp){
+  window._empLogin=emp;aplicarMarca(emp);
+  const lb=document.querySelector("#sl .lb");if(lb)lb.classList.remove("ll-cargando");
   const lg=document.querySelector(".ll-logo");if(lg){lg.classList.add("emp-logo");lg.innerHTML=logoEmpHtml(emp);}
   const tt=document.querySelector(".ll-title");if(tt){tt.innerHTML=escH(emp.nombre);tt.classList.add("emp");ajustarTitulo(tt);}
   const sb=document.querySelector(".ll-sub");if(sb)sb.textContent=emp.slogan||("La Polla de "+emp.nombre);
@@ -4595,6 +4593,26 @@ async function loginEmpresa(){
   const lc=document.getElementById("lce-g");if(lc){lc.hidden=false;const i=document.getElementById("lce");if(i)i.placeholder="Te lo da "+emp.nombre;}
   const ce=document.getElementById("rce-g");if(ce)ce.innerHTML=`<div class="ll-emp">${logoEmpHtml(emp)}<span>Te sumás a <b>${escH(emp.nombre)}</b> · jugás gratis</span></div>
     <div class="ig"><label class="ll-lbl">Código de empresa</label><input class="ll-inp" id="rce" placeholder="Te lo da ${escH(emp.nombre)}" maxlength="16" autocapitalize="characters" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')"/></div>${camposEmpresaHtml(emp,{},"ll-inp")}`;
+}
+async function loginEmpresa(){
+  const cod=codigoDeDireccion();
+  const lb=document.querySelector("#sl .lb");
+  if(!cod){window._empLogin=null;aplicarMarca(null);return;}
+  // Marca guardada de esa empresa → se pinta al instante (sin ver un segundo el ingreso de Polla Prodes)
+  let cache=null;try{cache=JSON.parse(localStorage.getItem("pp_emp_"+cod.toUpperCase())||"null");}catch(e){}
+  if(cache)pintarLoginEmpresa(cache);else if(lb)lb.classList.add("ll-cargando");
+  const r=await api("getEmpresaPublica",{codigo:cod});
+  if(lb)lb.classList.remove("ll-cargando");
+  if(!r.ok){window._empLogin=null;try{localStorage.removeItem("pp_emp_"+cod.toUpperCase());}catch(e){}
+    if(cache){aplicarMarca(null);showLogin();return;}
+    const g=await api("getGrupoPorCodigo",{codigo:cod});
+    if(g.ok){window._codigoPend=cod;const sb=document.querySelector(".ll-sub");if(sb)sb.innerHTML=`Te invitaron a <b>${escH(g.grupo.fechaNombre||g.grupo.nombre)}</b>. Entrá o registrate y quedás adentro.`;}
+    else toast("⚠ Ese link no corresponde a ninguna empresa ni torneo");
+    return;}
+  const emp=r.empresa;
+  try{localStorage.setItem("pp_emp_"+cod.toUpperCase(),JSON.stringify(emp));}catch(e){}
+  try{history.replaceState(null,"",linkEmpresa(emp).replace(location.origin,""));}catch(e){}
+  pintarLoginEmpresa(emp);
 }
 window.salirDeEmpresa=function(){window._empLogin=null;aplicarMarca(null);history.replaceState(null,"",location.pathname+"?login");showLogin();};
 
@@ -5263,7 +5281,7 @@ function resolverEspacio(){
   const u=App.user,es=espaciosDe(u);let pref=window._espacioIngreso;window._espacioIngreso=undefined;
   if(pref===undefined||pref===null){
     // pollaprodes.ar → Polla Prodes · pollaprodes.ar/codigo (?e=codigo) → esa empresa, si es miembro
-    const cod=String(new URLSearchParams(location.search).get("e")||"").toUpperCase();
+    const cod=String(codigoDeDireccion()||"").toUpperCase();
     const emp=cod?(u.empresas||[]).find(function(e){return String(e.codigo).toUpperCase()===cod;}):null;
     pref=emp?emp.id:"";
   }
@@ -5328,7 +5346,7 @@ async function boot(){
   }
   // Portada para quien entra sin sesión (la app instalada va directo al ingreso)
   const qs=new URLSearchParams(location.search);try{localStorage.removeItem("pp_emp_cod");}catch(e){}
-  if(!esApp()&&!qs.has("login")&&!qs.has("e"))showLanding();else showLogin();
+  if(!esApp()&&!qs.has("login")&&!codigoDeDireccion())showLanding();else showLogin();
 }
 boot();
 </script>
