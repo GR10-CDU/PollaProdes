@@ -2046,6 +2046,10 @@ label.me-sw{width:auto;aspect-ratio:auto;max-width:none;border-radius:0;backgrou
 .cap-eq .inp{flex:1}
 .cap-esc{width:28px;height:28px;flex:none;display:grid;place-items:center}
 .cap-esc img{width:28px;height:28px;object-fit:contain}
+.ll-title.emp{display:block;width:100%;max-width:100%;white-space:normal;overflow-wrap:normal;line-height:.92;overflow:hidden}
+.sb-brand .name.emp{font-size:clamp(17px,2vw,24px);line-height:1.02;overflow-wrap:anywhere}
+.tb-brand .tb-name{max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.login-active #inst-banner{display:none}
 
 </style>
 </head>
@@ -4559,7 +4563,7 @@ async function loginEmpresa(){
   try{localStorage.setItem("pp_emp_cod",emp.codigo);}catch(e){}
   aplicarMarca(emp);
   const lg=document.querySelector(".ll-logo");if(lg){lg.classList.add("emp-logo");lg.innerHTML=logoEmpHtml(emp);}
-  const tt=document.querySelector(".ll-title");if(tt)tt.innerHTML=escH(emp.nombre);
+  const tt=document.querySelector(".ll-title");if(tt){tt.innerHTML=escH(emp.nombre);tt.classList.add("emp");ajustarTitulo(tt);}
   const sb=document.querySelector(".ll-sub");if(sb)sb.textContent=emp.slogan||("La Polla de "+emp.nombre);
   const ft=document.querySelector(".ll-foot");if(ft)ft.innerHTML=`${escH(emp.nombre).toUpperCase()} · CON POLLA PRODES · <a href="#" onclick="salirDeEmpresa();return false">No soy de ${escH(emp.nombre)}</a>`;
   const ra=document.getElementById("ra-g");if(ra)ra.hidden=true;
@@ -5182,6 +5186,11 @@ window.capAgregar=async function(){
   }
   toast(`✅ ${ok} partido${ok!==1?"s":""} agregado${ok!==1?"s":""}`);window._cap=null;document.getElementById("pm-capres").innerHTML="";pmCargar();if(App.screen==="admin-fechas")loadAdminFechas();
 };
+// Achica la letra hasta que la palabra más larga entre en el ancho disponible
+function ajustarTitulo(el,max,min){max=max||74;min=min||26;
+  const fit=function(){let f=max;el.style.fontSize=f+"px";while(f>min&&el.scrollWidth>el.clientWidth+1){f-=2;el.style.fontSize=f+"px";}};
+  fit();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);}
+window.addEventListener("resize",function(){const t=document.querySelector(".ll-title.emp");if(t)ajustarTitulo(t);});
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
