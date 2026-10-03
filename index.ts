@@ -248,6 +248,7 @@ Deno.serve(async (req) => {
       case "eliminarNoticia": return resp(await eliminarNoticia(db, data));
       case "importarPartidos": return resp(await importarPartidos(db, data));
       case "adminAgregarPartido": return resp(await adminAgregarPartido(db, data));
+      case "adminLeerCaptura": return resp(await adminLeerCaptura(db, data));
       case "adminGetInscriptos": return resp(await adminGetInscriptos(db, data));
       case "adminEditarPartido": return resp(await adminEditarPartido(db, data));
       case "adminBorrarPartido": return resp(await adminBorrarPartido(db, data));
@@ -2566,4 +2567,53 @@ async function cronAvisos(db: any) {
     }
   }
   return {ok:true, avisos};
+}
+
+// ============================================================
+//  PARTIDOS DESDE CAPTURAS (IA de Google Gemini, nivel gratis)
+//  Recibe 1 a 4 imágenes y devuelve la lista de partidos para revisar antes de guardar.
+// ============================================================
+async function adminLeerCaptura(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const KEY = Deno.env.get("GEMINI_API_KEY");
+  if (!KEY) return {ok:false, error:"Falta configurar la clave de Gemini"};
+  const imgs = (Array.isArray(data.imagenes) ? data.imagenes : []).slice(0,4);
+  const partes: any[] = [];
+  for (const im of imgs) {
+    const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(String(im||""));
+    if (m) partes.push({inline_data:{mime_type:m[1], data:m[2]}});
+  }
+  if (!partes.length) return {ok:false, error:"Subí al menos una captura"};
+  const prompt = `Estas imágenes son capturas de un fixture de fútbol (pueden ser de un torneo amateur o de empresa).
+Extraé TODOS los partidos, en el orden en que aparecen, juntando todas las imágenes sin repetir partidos.
+Para cada partido devolvé: local (equipo de arriba o de la izquierda), visita (el otro), hora en formato 24 hs "HH:MM" si aparece,
+fecha en formato "AAAA-MM-DD" solo si la imagen muestra el día (si no, null) y extra con datos útiles como la cancha o la zona (o "").
+Copiá los nombres de los equipos tal cual se ven, incluyendo letras o aclaraciones como "(S)". No inventes partidos.`;
+  const cuerpo = {
+    contents:[{role:"user", parts:[{text:prompt}, ...partes]}],
+    generationConfig:{temperature:0, responseMimeType:"application/json", responseSchema:{
+      type:"OBJECT", properties:{partidos:{type:"ARRAY", items:{type:"OBJECT", properties:{
+        local:{type:"STRING"}, visita:{type:"STRING"}, hora:{type:"STRING", nullable:true}, fecha:{type:"STRING", nullable:true}, extra:{type:"STRING", nullable:true},
+      }, required:["local","visita"]}}}, required:["partidos"]}},
+  };
+  const modelos = [Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash", "gemini-flash-latest", "gemini-2.0-flash"];
+  let ultimoError = "";
+  for (const modelo of modelos) {
+    try {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, {
+        method:"POST", headers:{"Content-Type":"application/json", "x-goog-api-key":KEY}, body:JSON.stringify(cuerpo)});
+      const j = await r.json();
+      if (!r.ok) { ultimoError = j?.error?.message || `Error ${r.status}`; if (r.status === 404) continue; if (r.status === 429) return {ok:false, error:"Se alcanzó el límite gratis de la IA por hoy o por minuto. Probá en un rato."}; return {ok:false, error:"La IA no pudo leer la captura: "+ultimoError}; }
+      const txt = j?.candidates?.[0]?.content?.parts?.map((x:any) => x.text||"").join("") || "";
+      const out = JSON.parse(txt);
+      const partidos = (out.partidos||[]).map((p:any) => ({
+        local:String(p.local||"").trim().slice(0,40), visita:String(p.visita||"").trim().slice(0,40),
+        hora:/^\d{1,2}:\d{2}$/.test(String(p.hora||"").trim()) ? String(p.hora).trim().padStart(5,"0") : "",
+        fecha:/^\d{4}-\d{2}-\d{2}$/.test(String(p.fecha||"")) ? p.fecha : "", extra:String(p.extra||"").trim().slice(0,40),
+      })).filter((p:any) => p.local && p.visita).slice(0,40);
+      return {ok:true, partidos, modelo};
+    } catch (e: any) { ultimoError = String(e?.message||e); }
+  }
+  return {ok:false, error:"La IA no respondió: "+ultimoError};
 }
