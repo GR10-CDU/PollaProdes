@@ -193,6 +193,7 @@ Deno.serve(async (req) => {
       case "getFechas": return resp(await getFechas(db, data));
       // ── EMPRESAS ──────────────────────────────────────────
       case "getEmpresaPublica": return resp(await getEmpresaPublica(db, data));
+      case "ogEmpresas": return resp(await ogEmpresas(db, data));
       case "jugarEmpresa": return resp(await jugarEmpresa(db, data));
       case "pasarCuentaAEmpresa": return resp(await pasarCuentaAEmpresa(db, data));
       case "getNovedades": return resp(await getNovedades(db, data));
@@ -1224,6 +1225,13 @@ async function calcularPuntajesPartido(db: any, partidoId: string) {
 
   // La Rachita y El Diego dependen de varios partidos
   await calcularReglasMultiples(db, part.fecha_id);
+  // Si se vuelve a cargar, que los avisos puedan salir de nuevo
+  if (estado === "Pendiente") {
+    const {data: rs} = await db.from("reglas").select("id").eq("partido_id", partidoId);
+    const claves = (rs||[]).map((r:any) => `regla:${r.id}`);
+    if (claves.length) await db.from("push_enviados").delete().in("clave", claves);
+    await db.from("push_enviados").delete().like("clave", `polla:${partidoId}:%`);
+  }
 }
 
 function calcPtsRegla(reg:any, resultado:string, gL:number, gV:number, rojas:number): number {
@@ -2676,4 +2684,12 @@ async function pasarCuentaAEmpresa(db: any, data: any) {
   await sumarMiembro(db, auth.userId!, empresa.id, undefined, v.datos);
   const {data: user} = await db.from("usuarios").select("*").eq("id", auth.userId).single();
   return {ok:true, user: await userOut(db, user)};
+}
+
+// Para la vista previa en WhatsApp/redes (lo usa el proceso automático de GitHub, con su propia clave)
+async function ogEmpresas(db: any, data: any) {
+  const K = Deno.env.get("OG_SECRET");
+  if (!K || data.ogSecret !== K) return {ok:false, error:"Sin permisos"};
+  const {data: es} = await db.from("empresas").select("nombre,codigo,slogan,logo_url,color").eq("estado","Activa").order("created_at");
+  return {ok:true, empresas:(es||[]).map((e:any) => ({nombre:e.nombre, codigo:e.codigo, slogan:e.slogan||"", logo:e.logo_url||"", color:e.color||"#2F5BEA"}))};
 }

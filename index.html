@@ -2093,6 +2093,7 @@ body.login-active #inst-banner{display:none}
   .bn-item{height:48px}
   .page{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
 }
+.res-eb.res-borrar{color:var(--no);border-color:color-mix(in srgb,var(--no) 35%,transparent)}
 
 </style>
 </head>
@@ -4121,16 +4122,17 @@ async function loadRes(ctx){
         <button class="res-eb" onclick="estadoPartido('${p.id}','Suspendido','${sf}')">⛔ Suspendido</button>
         <button class="res-eb" onclick="estadoPartido('${p.id}','Postergado','${sf}')">📅 Postergado</button>
         ${["susp","post"].includes(e)?`<button class="res-eb" onclick="estadoPartido('${p.id}','Pendiente','${sf}')">↺ Volver a normal</button>`:""}
+        ${done?`<button class="res-eb res-borrar" onclick="estadoPartido('${p.id}','Borrar','${sf}')">🗑 Borrar resultado</button>`:""}
       </div>
     </div>`;}).join("")}</div>
     <p class="rs-nota">Goles de los 90 minutos (sin alargue ni penales). Rojas según Flashscore.</p>`;
 }
 window.stp=function(id,d){const i=document.getElementById(id);if(!i)return;i.value=Math.max(0,Math.min(20,(parseInt(i.value)||0)+d));};
 window.estadoPartido=async(pid,estado,fid)=>{
-  const msg={Suspendido:"¿Marcar como SUSPENDIDO? Se borran sus puntos y no suma para nadie.",Postergado:"¿Marcar como POSTERGADO? Queda en espera hasta que decidas.",Pendiente:"¿Volver el partido a la normalidad?"}[estado];
+  const msg={Suspendido:"¿Marcar como SUSPENDIDO? Se borran sus puntos y no suma para nadie.",Postergado:"¿Marcar como POSTERGADO? Queda en espera hasta que decidas.",Pendiente:"¿Volver el partido a la normalidad?",Borrar:"¿Borrar el resultado? El partido vuelve a 'no jugado' y se quitan los puntos que dio (también en las copias de esta fecha en otras empresas)."}[estado];
   if(!confirm(msg))return;
-  const r=await api("adminEstadoPartido",{partidoId:pid,estado});
-  toast(r.ok?"✅ Partido "+estado.toLowerCase():"❌ "+r.error);if(r.ok)loadRes({fechaId:fid});
+  const r=await api("adminEstadoPartido",{partidoId:pid,estado:estado==="Borrar"?"Pendiente":estado});
+  toast(r.ok?(estado==="Borrar"?"✅ Resultado borrado: el partido quedó sin jugar":"✅ Partido "+estado.toLowerCase()):"❌ "+r.error);if(r.ok)loadRes({fechaId:fid});
 };
 window.guardarRes=async(pid,fid)=>{const gL=document.getElementById("gL-"+pid)?.value,gV=document.getElementById("gV-"+pid)?.value,tr=document.getElementById("tr-"+pid)?.value;if(gL===""||gV===""){toast("Ingresá ambos goles");return;}const card=document.getElementById("rs-"+pid);if(card)card.classList.add("saving");const r=await api("adminIngresarResultado",{partidoId:pid,fechaId:fid,golesLocal:+gL,golesVisita:+gV,tarjetasRojas:+tr||0});toast(r.ok?`✅ ${gL}-${gV} guardado: puntos calculados`:"❌ "+r.error);if(r.ok)loadRes({fechaId:fid});else if(card)card.classList.remove("saving");};
 
