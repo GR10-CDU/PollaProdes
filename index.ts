@@ -2981,10 +2981,9 @@ async function adminLinksAuto(db: any, data: any) {
       if (fechaTit && `${fechaTit[1]}/${fechaTit[2]}/${fechaTit[3]}` !== esperada) estado = "otra fecha";
       if (mid && estado === "ok") url += `?mid=${mid}`;
     } catch { estado = "sin verificar"; }
-    if (estado === "otra fecha") { res.push({numero:p.numero, estado, detalle:`${a.nombre} vs ${b.nombre}`}); continue; }
     const ids = await partidosGemelos(db, p.id);
     for (const id of ids) await db.from("partidos").update({link_stats:url}).eq("id", id);
     res.push({numero:p.numero, estado, detalle:`${a.nombre} vs ${b.nombre}`});
   }
-  return {ok:true, resultados:res, cargados:res.filter((r:any)=>r.estado==="ok"||r.estado==="sin verificar").length};
+  return {ok:true, resultados:res, cargados:res.filter((r:any)=>["ok","sin verificar","otra fecha"].includes(r.estado)).length};
 }

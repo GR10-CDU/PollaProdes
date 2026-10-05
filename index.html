@@ -5910,7 +5910,7 @@ window.actualizarGrilla=async function(btn){
 function linkStats(p){
   if(p&&p.linkStats)return p.linkStats;
   const d=p&&p.fechaHora?isoArg(p.fechaHora).slice(0,10):"";
-  return"https://www.google.com/search?q="+encodeURIComponent(`flashscore ${p.local} vs ${p.visita} ${d}`)+"&btnI=1";
+  return"https://www.google.com/search?q="+encodeURIComponent(`flashscore ${p.local} vs ${p.visita} ${d}`);
 }
 function botonStats(p,cls){return`<a class="st-btn ${cls||""}" href="${escH(linkStats(p))}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ver estadísticas en Flashscore">📊 Estadísticas</a>`;}
 window.guardarLinkStats=async function(pid,inp){const r=await api("adminLinkPartido",{partidoId:pid,link:inp.value});toast(r.ok?(inp.value?"✅ Link guardado":"Link borrado"):"❌ "+r.error);};
@@ -5920,7 +5920,7 @@ window.linksAuto=async function(fid,btn){
   const r=await api("adminLinksAuto",{fechaId:fid});
   if(btn){btn.disabled=false;btn.textContent="📊 Cargar links de estadísticas";}
   if(!r.ok){toast("❌ "+r.error);return;}
-  const no=r.resultados.filter(function(x){return x.estado==="no encontrado"||x.estado==="otra fecha";});
+  const no=r.resultados.filter(function(x){return x.estado==="no encontrado";});
   toast(`✅ ${r.cargados} link${r.cargados!==1?"s":""} cargado${r.cargados!==1?"s":""}`+(no.length?` · ${no.length} sin encontrar (#${no.map(function(x){return x.numero;}).join(", #")})`:""),6000);
 };
 // ── LANDING (portada para quien no tiene sesión) ────────────
