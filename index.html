@@ -2344,6 +2344,14 @@ body.login-active #inst-banner{display:none}
 .pf-legal{text-align:center;font-size:13px;color:var(--ink-3);margin-top:14px}
 body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:none!important}
 .pc-jugado b{font-family:inherit;font-size:14px;font-weight:700;letter-spacing:.02em;text-transform:capitalize;opacity:.95}
+/* Tabla: tocar un nombre lleva a su grilla */
+.t-ir{cursor:pointer;position:relative}
+.t-ir .t-nm{transition:color .15s}
+.t-ir:hover .t-nm{color:var(--accent-text);text-decoration:underline;text-underline-offset:3px}
+.t-ir::after{content:"Ir a su grilla →";position:absolute;left:52px;top:-6px;z-index:5;padding:4px 10px;border-radius:9px;font-size:12px;font-weight:800;white-space:nowrap;background:var(--ink);color:var(--bg);box-shadow:var(--shadow-2,0 6px 16px rgba(0,0,0,.25));opacity:0;transform:translateY(4px);pointer-events:none;transition:opacity .15s,transform .15s}
+.t-ir:hover::after{opacity:1;transform:none}
+@media(hover:none){.t-ir::after{display:none}}
+.t-ir-p{cursor:pointer}.t-ir-p:hover{transform:translateY(-2px)}
 
 </style>
 </head>
@@ -3827,6 +3835,8 @@ async function loadTabla(ctx){
   if(App.user?.rol==="Admin"){const b=document.createElement("div");b.className="back";b.textContent="← Otras fechas";b.onclick=function(){go("tabla");};el.prepend(b);}
 }
 window.setTabla=function(k,v){window._tabla[k]=v;renderTabla();};
+// Tabla → Grilla: comparación directa con ese jugador
+window.irAGrilla=function(uid){window._grillaVs=uid;go("grilla",{fechaId:App.ctx.fechaId,pozoId:App.ctx.pozoId});};
 function renderTabla(){
   const el=document.getElementById("tc");if(!el||!window._tabla)return;
   const T=window._tabla,r=T.r,t=r.tabla||[],me=App.user?.id,mov=window._tablaMov||{};
@@ -3843,7 +3853,7 @@ function renderTabla(){
     return`<tr class="${cls||""}${esYo?" t-yo":""}${pos<=3?" t-top":""}">
       <td class="t-pos">${pos<=3?`<span class="t-med">${puestoIco(pos,30)}</span>`:pos}</td>
       <td class="t-movc">${flecha(u)}</td>
-      <td class="t-jug"><div class="t-jw">${avatarHtml(u)}<div><div class="t-nm">${esYo?"Vos":u.siglas}</div><div class="t-full">${u.nombre&&u.nombre!==u.siglas?u.nombre:""}</div></div></div></td>
+      <td class="t-jug${esYo?"":" t-ir"}" ${esYo?"":`onclick="irAGrilla('${u.userId}')" title="Ir a su grilla"`}><div class="t-jw">${avatarHtml(u)}<div><div class="t-nm">${esYo?"Vos":u.siglas}</div><div class="t-full">${u.nombre&&u.nombre!==u.siglas?u.nombre:""}</div></div></div></td>
       <td class="t-big">${u.ptsTotal||0}</td>
       <td>${u.ptsPartidos||0}</td><td>${u.ptsReglas||0}</td>
       <td>${u.acertados||0}</td><td>${u.empatesAcertados||0}</td><td>${u.visitantesAcertados||0}</td>
@@ -3857,7 +3867,7 @@ function renderTabla(){
       ${yo?`<div class="g-stat yo"><b>${yo.posicion}º</b><span>tu puesto · ${yo.ptsTotal} pts</span></div>`:""}
     </div>
     ${primeros.length>1?`<div class="t-empate">🤝 <b>${primeros.length} jugadores empatados en el primer puesto</b> en todos los criterios: si termina así, se dividen el premio.</div>`:""}
-    ${po.length>=3?`<div class="podio-wrap">${[po[1],po[0],po[2]].map(function(u,i){const first=i===1;return`<div class="podio-item${first?" first":""}"><div class="med">${puestoIco(u.posicion,first?54:42)}</div><div class="pnm">${u.userId===me?"Vos":(u.nombre||u.siglas)}</div><div class="podio-box"><div class="podio-pts">${u.ptsTotal}</div><div style="font-size:12px;opacity:.7">pts · ${u.acertados} aciertos</div></div></div>`;}).join("")}</div>`:""}
+    ${po.length>=3?`<div class="podio-wrap">${[po[1],po[0],po[2]].map(function(u,i){const first=i===1;return`<div class="podio-item${first?" first":""}${u.userId!==me?" t-ir-p":""}" ${u.userId!==me?`onclick="irAGrilla('${u.userId}')" title="Ir a su grilla"`:""}><div class="med">${puestoIco(u.posicion,first?54:42)}</div><div class="pnm">${u.userId===me?"Vos":(u.nombre||u.siglas)}</div><div class="podio-box"><div class="podio-pts">${u.ptsTotal}</div><div style="font-size:12px;opacity:.7">pts · ${u.acertados} aciertos</div></div></div>`;}).join("")}</div>`:""}
     <div class="g-bar">
       <input class="inp g-q" placeholder="Buscar jugador…" value="${T.q||""}" oninput="window._tabla.q=this.value;clearTimeout(window._tqT);window._tqT=setTimeout(function(){renderTabla();var i=document.querySelector('#tc .g-q');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},250)"/>
     </div>
@@ -3927,6 +3937,7 @@ async function loadGrilla(ctx){
   const r=await api("getGrilla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
   if(!r.ok){el.innerHTML=emptyBox("🔒",r.abreEl?`La grilla se abre el ${_fmtH(new Date(r.abreEl))}, cuando cierra la fecha. Antes nadie puede ver los pronósticos de los demás.`:r.error);return;}
   window._grilla={data:r,cmp:(window._grilla&&window._grilla.cmp)||"top3",soloDif:!!(window._grilla&&window._grilla.soloDif)};
+  if(window._grillaVs){window._grilla.cmp="sel";window._grilla.sel=[window._grillaVs];window._grilla.vista="cara";window._grillaVs=null;}
   renderGrilla();
 }
 
