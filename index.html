@@ -2582,6 +2582,8 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .partido-card.jugado .pcj-bdgs{margin-left:0}
 .partido-card.jugado .st-ico{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.35);color:#fff}
 @media(max-width:560px){.pcj-est{padding-left:6px;margin-left:0}}
+.pc-tipo .k-d,.pc-tipo .k-m{font-style:normal}.pc-tipo .k-m{display:none}
+@media(max-width:560px){.pc-tipo .k-d{display:none}.pc-tipo .k-m{display:inline}}
 
 </style>
 </head>
@@ -3647,7 +3649,7 @@ function renderPartidos(parts,ctx,puede){
     const _calc=!sinGoles&&_prd.calculado;
     const _tot=_calc?(_prd.ptsTotal!=null?_prd.ptsTotal:0):0;
     const _bdgs=`<span style="font-size:14px;font-weight:700;color:var(--txt3)">#${p.numero}</span>
-          ${(function(){const t=TIPO_INFO[p.tipo]||TIPO_INFO.Normal;return`<span class="t-tag ${t.cls} pc-tipo">${t.k}</span><span class="pc-tipo-n">${t.n}</span>`;})()}${p.esToleTole?'<span class="t-tag t-tole pc-tipo">🔥 TOLE</span>':""}
+          ${(function(){const t=TIPO_INFO[p.tipo]||TIPO_INFO.Normal;return`<span class="t-tag ${t.cls} pc-tipo">${p.tipo==="Polla"?'<i class="k-d">P</i><i class="k-m">PP</i>':t.k}</span><span class="pc-tipo-n">${t.n}</span>`;})()}${p.esToleTole?'<span class="t-tag t-tole pc-tipo">🔥 TOLE</span>':""}
           ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:16px;padding:4px 11px">● VIVO</span>`:""}
           ${reglaEnPartido.map(function(r){return`<span class="bdg bgold" style="font-size:14px;padding:3px 8px">${r.codigo}</span>`;}).join("")}`;
     return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}${_calc?(_tot>0?" suma":" nosuma"):""}${esSenior(p)?" senior":""}${p.estado==="Finalizado"?" jugado":""}" id="pc-${p.id}">${p.estado==="Finalizado"?`<div class="pc-jugado"><div class="pcj-bdgs">${_bdgs}</div><div class="pct-r">${botonStats(p,"st-mini st-ico").replace("📊 Estadísticas","📊")}<b>${p.fechaHora?new Date(p.fechaHora).toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","").replace(",","")+" hs":""}</b><span class="pcj-est">✓<i class="pcj-txt"> JUGADO</i></span></div></div>`:""}${esSenior(p)?`<span class="senior-flag">Senior</span>`:""}
