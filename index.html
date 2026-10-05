@@ -2227,6 +2227,19 @@ body.login-active #inst-banner{display:none}
   .toast{bottom:calc(84px + env(safe-area-inset-bottom))}
   #inst-banner{bottom:calc(84px + env(safe-area-inset-bottom))}
 }
+/* v8: arriba también una cápsula flotante; menú más abajo; el contenido llega hasta el borde inferior (sin franja lisa) */
+@media(max-width:880px){
+  #app{height:100vh!important;height:100lvh!important;min-height:100dvh}
+  html body #topbar{top:calc(env(safe-area-inset-top) + 4px)!important;left:12px!important;right:12px!important;
+    height:54px!important;padding:0 8px 0 10px!important;border-radius:28px!important;border:.5px solid var(--wa-edge)!important;
+    box-shadow:0 10px 30px -12px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.18)!important}
+  #scroll{padding-top:calc(env(safe-area-inset-top) + 66px)!important}
+  .tb-brand .tb-logo{width:36px!important;height:36px!important;border-radius:10px!important}
+  .tb-brand .tb-name{font-size:19px!important}
+  #topbar .icon-btn{width:38px;height:38px;border-radius:19px}
+  #topbar .tb-chip{height:38px;border-radius:19px}
+  html body #bn{bottom:max(4px,calc(env(safe-area-inset-bottom) - 24px))!important}
+}
 
 </style>
 </head>
