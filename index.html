@@ -2378,6 +2378,12 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .cp-dia{color:var(--ink)}
 .pc-cuando{font-size:16px!important}
 .cp-hoy,.cp-man,.cp-dia{font-weight:900}
+/* Cambios que le quedan a cada uno (Tabla y Grilla) */
+.cb-n{display:inline-grid;place-items:center;min-width:26px;height:24px;padding:0 6px;border-radius:12px;font-family:var(--ff);font-size:15px;font-weight:800;background:color-mix(in srgb,var(--blue,#448AFF) 14%,transparent);color:var(--blue,#448AFF)}
+.cb-n.cero{background:var(--surface-3);color:var(--ink-3)}
+.t-camb{text-align:center}
+.dx-camb{display:flex;justify-content:space-between;gap:8px;margin-top:10px;font-size:13px;color:var(--ink-2)}
+.dx-camb b{font-family:var(--ff);font-size:16px;color:var(--ink)}
 
 </style>
 </head>
@@ -3883,6 +3889,7 @@ function renderTabla(){
       <td>${u.ptsPartidos||0}</td><td>${u.ptsReglas||0}</td>
       <td>${u.acertados||0}</td><td>${u.empatesAcertados||0}</td><td>${u.visitantesAcertados||0}</td>
       <td class="t-dif">${pos===1?"—":"-"+(lider-(u.ptsTotal||0))}</td>
+      <td class="t-camb" title="Cambios que le quedan">${u.cambiosRestantes!==undefined?`<span class="cb-n${u.cambiosRestantes?"":" cero"}">${u.cambiosRestantes}</span>`:"–"}</td>
     </tr>`;};
   const po=t.slice(0,3);
   const tt=document.getElementById("topbar-title");if(tt)tt.innerHTML=`Tabla <span class="tt-n">${t.length} jugadores</span>`;
@@ -3900,10 +3907,10 @@ function renderTabla(){
       <div class="grilla-wrap g-scroll">
         <table class="t-tbl">
           <thead>
-            <tr><th>#</th><th></th><th class="t-jh">Jugador</th><th>Pts</th><th title="Puntos por acertar L, E o V (×1, ×2, Polla, TOLE)">Por L/E/V</th><th title="Puntos por reglas especiales">Por reglas</th><th title="Desempate 1">Aciertos</th><th title="Desempate 2">Empates</th><th title="Desempate 3">Visitantes</th><th title="Puntos que le faltan para el puntero">Al 1º</th></tr>
+            <tr><th>#</th><th></th><th class="t-jh">Jugador</th><th>Pts</th><th title="Puntos por acertar L, E o V (×1, ×2, Polla, TOLE)">Por L/E/V</th><th title="Puntos por reglas especiales">Por reglas</th><th title="Desempate 1">Aciertos</th><th title="Desempate 2">Empates</th><th title="Desempate 3">Visitantes</th><th title="Puntos que le faltan para el puntero">Al 1º</th><th title="Cambios que le quedan">Cambios</th></tr>
             ${yo?fila(yo,"t-fija"):""}
           </thead>
-          <tbody>${filas.map(function(u){return fila(u);}).join("")||`<tr><td colspan="10" class="g-nada">Nadie coincide con el filtro</td></tr>`}</tbody>
+          <tbody>${filas.map(function(u){return fila(u);}).join("")||`<tr><td colspan="11" class="g-nada">Nadie coincide con el filtro</td></tr>`}</tbody>
         </table>
       </div>
       <div class="g-ley"><span>Desempate: más puntos → más aciertos → más empates acertados → más visitantes acertados → si siguen iguales, dividen el premio</span><span><span class="t-mov up">▲</span><span class="t-mov down">▼</span> puestos que subió o bajó con el último resultado</span></div>
@@ -4037,6 +4044,7 @@ function renderGrilla(){
       <td class="gx-n">${j.acertados||0}</td>
       <td class="gx-n">${j.ptsReglas||0}</td>
       <td class="gx-n">${difHtml(j)}</td>
+      <td class="gx-n"><span class="cb-n${j.cambiosRestantes?"":" cero"}">${j.cambiosRestantes!==undefined?j.cambiosRestantes:"–"}</span></td>
       <td class="gx-ck">${esYo?"":`<span class="gx-box${on?" on":""}">${on?"✓":""}</span>`}</td>
     </tr>`;};
 
@@ -4067,6 +4075,7 @@ function renderGrilla(){
       <div class="dh dh-a"><div class="dha-j yo">${av(base)}<b>${nm(base)}</b><small>${medal(base)} ${ptxt(base)}</small></div>
         <div class="dha-mid"><div class="dha-score"><span>${base.ptsTotal||0}</span><i>–</i><span>${r.ptsTotal||0}</span></div><div class="dh-dif ${cls}">${difTxt}</div></div>
         <div class="dha-j">${av(r)}<b>${nm(r)}</b><small>${medal(r)} ${ptxt(r)}</small></div></div>
+      <div class="dx-camb"><span>🔄 ${nm(base)}: <b>${base.cambiosRestantes}</b> cambio${base.cambiosRestantes!==1?"s":""}</span><span>🔄 ${nm(r)}: <b>${r.cambiosRestantes}</b> cambio${r.cambiosRestantes!==1?"s":""}</span></div>
       <div class="dx">
         ${barra("Partidos acertados",base.acertados||0,r.acertados||0)}
         ${barra("Puntos por partidos",base.ptsPartidos||0,r.ptsPartidos||0)}
@@ -4102,11 +4111,12 @@ function renderGrilla(){
   };
 
   // Reglas: en qué partido puso cada uno cada regla
+  const rl=function(j){return Array.isArray(j.reglas)?j.reglas:[];};
   const reglasDuelo=function(a,b){
-    const cods=[...new Set([].concat(a.reglas||[],b.reglas||[]).map(function(x){return x.codigo;}))];
+    const cods=[...new Set([].concat(rl(a),rl(b)).map(function(x){return x.codigo;}))];
     if(!cods.length)return"";
     const pp=function(id){return parts.find(function(x){return x.id===id;});};
-    const chips=function(j,c){const rs=(j.reglas||[]).filter(function(x){return x.codigo===c;});
+    const chips=function(j,c){const rs=rl(j).filter(function(x){return x.codigo===c;});
       if(!rs.length)return`<span class="rg-no">—</span>`;
       return rs.map(function(x){const m=pp(x.partidoId),jug=m&&m.estado==="Finalizado";return`<span class="rg-p${jug?(x.pts>0?" ok":" no"):""}" title="${m?escH(m.local+" vs "+m.visita):""}">#${x.numero} ${m?sigla(m.local)+"-"+sigla(m.visita):""}${x.detalle?` <em class="rg-mk">${escH(x.detalle)}</em>`:""}${jug&&x.pts>0?` <b>+${x.pts}</b>`:""}</span>`;}).join("");};
     return`<div class="rg-duelo"><div class="rg-h"><span>Reglas</span><span>${nm(a)}</span><span>${nm(b)}</span></div>${cods.map(function(c){return`<div class="rg-row"><span class="t-tag rg-cod">${c}</span><div class="rg-cell">${chips(a,c)}</div><div class="rg-cell">${chips(b,c)}</div></div>`;}).join("")}</div>`;
@@ -4122,7 +4132,7 @@ function renderGrilla(){
         <div class="seg gx-seg">${btn("puntero","Puntero")}${btn("top3","Top 3")}${btn("top5","Top 5")}${yo?btn("cerca","Cerca mío"):""}</div>
         ${jug.length>8?`<input class="inp gx-q" placeholder="Buscar jugador…" value="${g.q}" oninput="window._grilla.q=this.value;clearTimeout(window._gqT);window._gqT=setTimeout(function(){renderGrilla();var i=document.querySelector('.gx-q');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},250)"/>`:""}
         <div class="gx-scroll"><table class="gx-tbl">
-          <thead><tr><th>#</th><th class="gx-jug">Jugador</th><th class="gx-n">Pts</th><th class="gx-n" title="Partidos acertados">Acert.</th><th class="gx-n" title="Puntos por reglas">Reglas</th><th class="gx-n" title="Diferencia con vos">Dif.</th><th></th></tr></thead>
+          <thead><tr><th>#</th><th class="gx-jug">Jugador</th><th class="gx-n">Pts</th><th class="gx-n" title="Partidos acertados">Acert.</th><th class="gx-n" title="Puntos por reglas">Reglas</th><th class="gx-n" title="Diferencia con vos">Dif.</th><th class="gx-n" title="Cambios que le quedan">Camb.</th><th></th></tr></thead>
           <tbody>${lista.map(filaMini).join("")}</tbody>
         </table></div>
       </div>

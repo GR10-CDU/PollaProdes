@@ -955,7 +955,12 @@ async function armarTabla(db: any, fechaId: string, pozoId: string) {
 }
 
 async function getTabla(db: any, data: any) {
-  return {ok:true, ...(await armarTabla(db, data.fechaId, data.pozoId))};
+  const r: any = await armarTabla(db, data.fechaId, data.pozoId);
+  const {data: pr} = await db.from("pronosticos").select("user_id,cambios_realizados").eq("fecha_id",data.fechaId).eq("pozo_id",data.pozoId);
+  const usados: Record<string,number> = {};
+  for (const p of (pr||[])) usados[p.user_id] = (usados[p.user_id]||0) + (p.cambios_realizados||0);
+  for (const u of (r.tabla||[])) u.cambiosRestantes = Math.max(0, MAX_CAMBIOS - (usados[u.userId]||0));
+  return {ok:true, ...r};
 }
 
 // Al cerrar y calcular: registra el/los ganadores de cada pozo; si empatan, se dividen el premio
