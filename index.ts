@@ -235,6 +235,7 @@ Deno.serve(async (req) => {
       case "probarPush": return resp(await probarPush(db, data));
       case "logCliente": { const au = data.sessionToken ? await requireAuth(db, data) : {ok:false}; await db.from("log_cliente").insert({user_id:(au as any).userId||null, que:String(data.que||"").slice(0,60), detalle:String(data.detalle||"").slice(0,1000), agente:String(data.agente||"").slice(0,300)}); return resp({ok:true}); }
       case "setAvisosReglas": return resp(await setAvisosReglas(db, data));
+      case "setAvisos": { const au = await requireAuth(db, data); if (!au.ok) return resp(au); const upd: any = {}; for (const k of ["avisos_reglas","avisos_goles","avisos_final"]) if (data[k] !== undefined) upd[k] = !!data[k]; await db.from("usuarios").update(upd).eq("id", au.userId); return resp({ok:true}); }
       case "aceptarLegales": { const au = await requireAuth(db, data); if (!au.ok) return resp(au); await db.from("usuarios").update({legales_version:LEGALES_VERSION, legales_at:new Date().toISOString()}).eq("id", au.userId); return resp({ok:true}); }
       case "adminEnviarPush": return resp(await adminEnviarPush(db, data));
       case "adminPushMasivo": return resp(await adminPushMasivo(db, data));
@@ -1122,6 +1123,8 @@ async function aplicarResultado(db: any, partidoId: string, gL: number, gV: numb
     await calcularPuntajesPartido(db, id);
   }
   try { for (const id of ids) await avisosResultado(db, id); } catch (e) { console.error("push", e); }
+  try { const {data: pf} = await db.from("partidos").select("local,visita").eq("id", partidoId).single();
+    await avisoPartido(db, partidoId, "avisos_final", `final:${partidoId}:${gL}-${gV}`, `🏁 Final: ${pf?.local} ${gL}-${gV} ${pf?.visita}`, "Ya se sumaron los puntos. Mirá cómo quedó la tabla."); } catch (e) { console.error("push final", e); }
 
   return {ok:true, resultado, enOtrasFechas: ids.length - 1};
 }
@@ -2197,7 +2200,7 @@ async function userOut(db: any, user: any) {
   const {data: ms} = await db.from("empresa_miembros").select("rol,datos_extra, empresas(*)").eq("user_id", user.id).order("created_at");
   const empresas = (ms||[]).filter((m:any) => m.empresas && m.empresas.estado === "Activa").map((m:any) => ({...empresaOut(m.empresas), rolEmpresa:m.rol, datosExtra:m.datos_extra||{}}));
   return {id:user.id, usuario:user.usuario, nombre:user.nombre, alias:user.alias_mp, email:user.email, telefono:user.telefono,
-    avatar:user.avatar, fotoPendiente:user.foto_pendiente||null, rol:user.rol, cupones:user.cupones, publico:user.publico !== false, empresas, avisosReglas:user.avisos_reglas !== false,
+    avatar:user.avatar, fotoPendiente:user.foto_pendiente||null, rol:user.rol, cupones:user.cupones, publico:user.publico !== false, empresas, avisosReglas:user.avisos_reglas !== false, avisosGoles:user.avisos_goles !== false, avisosFinal:user.avisos_final !== false,
     legalesPendientes: user.legales_version !== LEGALES_VERSION};
 }
 async function sumarMiembro(db: any, userId: string, empresaId: string, rol?: string, datos?: any) {
@@ -3093,6 +3096,15 @@ async function cronVivo(db: any) {
           }
         }
         const etapa = c.AC === "12" ? "1T" : c.AC === "13" ? "2T" : c.AC === "38" ? "ET" : "";
+        const ngl = c.AG!==undefined?parseInt(c.AG)||0:null, ngv = c.AH!==undefined?parseInt(c.AH)||0:null;
+        if (est === "vivo" && ngl !== null && ngv !== null && (ngl+ngv) > 0) {
+          const {data: viejo} = await db.from("partidos").select("vivo_gl,vivo_gv,local,visita").eq("id", p.id).single();
+          if (viejo && (ngl+ngv) > ((viejo.vivo_gl||0)+(viejo.vivo_gv||0))) {
+            const quien = ngl > (viejo.vivo_gl||0) ? viejo.local : viejo.visita;
+            const min = c.AO ? Math.floor((Date.now()-Number(c.AO)*1000)/60000)+1+(etapa==="2T"?45:0) : null;
+            await avisoPartido(db, p.id, "avisos_goles", `gol:${p.id}:${ngl}-${ngv}`, `⚽ ¡Gol de ${quien}!`, `${viejo.local} ${ngl}-${ngv} ${viejo.visita}${min?` · ${min}'`:""}`);
+          }
+        }
         await db.from("partidos").update({vivo_gl: c.AG!==undefined?parseInt(c.AG)||0:null, vivo_gv: c.AH!==undefined?parseInt(c.AH)||0:null, vivo_estado:est, vivo_at:new Date().toISOString(),
           vivo_etapa:etapa, vivo_desde: c.AO ? new Date(Number(c.AO)*1000).toISOString() : null}).eq("id", p.id);
         actualizados++;
@@ -3108,4 +3120,19 @@ async function avisarAdmin(db: any, titulo: string, texto: string) {
   const ids = (admins||[]).map((a:any) => a.id);
   await enviarPush(db, ids, {titulo, texto, tag:"admin-"+Date.now()});
   for (const a of (admins||[])) if (a.email) await enviarMail(a.email, titulo, mailBase({titulo:esc(titulo), cuerpo:`<p style="margin:0">${esc(texto)}</p>`, boton:{texto:"Ir a Cargar resultados →", url:SITIO}}));
+}
+
+// Aviso a los anotados en las fechas que tienen ese partido (respetando su preferencia)
+async function avisoPartido(db: any, partidoId: string, pref: string, clave: string, titulo: string, texto: string) {
+  if (!(await primeraVez(db, clave))) return;
+  const ids = await partidosGemelos(db, partidoId);
+  const {data: ps} = await db.from("partidos").select("fecha_id").in("id", ids);
+  const fechas = [...new Set((ps||[]).map((x:any) => x.fecha_id))];
+  if (!fechas.length) return;
+  const {data: ins} = await db.from("inscripciones").select("user_id").in("fecha_id", fechas).in("estado_pago",["Pendiente","Aprobado"]);
+  let users = [...new Set((ins||[]).map((i:any) => i.user_id))] as string[];
+  if (!users.length) return;
+  const {data: us} = await db.from("usuarios").select(`id,${pref}`).in("id", users);
+  users = (us||[]).filter((u:any) => u[pref] !== false).map((u:any) => u.id);
+  await enviarPush(db, users, {titulo, texto, tag:clave});
 }

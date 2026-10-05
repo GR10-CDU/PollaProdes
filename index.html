@@ -2462,6 +2462,10 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .fs-pb{display:flex;align-items:center;gap:8px;height:44px;padding:0 12px;border-radius:12px;font-size:14px;font-weight:800;background:var(--surface);border:1px solid var(--line);text-align:left}
 .fs-pb:hover{border-color:var(--accent-line);background:var(--accent-soft)}
 .fs-pb span{font-size:18px}
+/* Placa en vivo dentro de la fila del detalle de fecha: sin pisar nada */
+.pd-mid:has(.lv){background:none!important;border:0!important;box-shadow:none!important;padding:0!important;min-width:0!important}
+.pd .lv.c{margin:0;flex-direction:column;gap:2px;padding:5px 10px}
+.pd .lv.c .lv-sc{font-size:22px}
 
 </style>
 </head>
@@ -2669,6 +2673,8 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
         <div class="st-label">🔔 Avisos</div>
         <label class="st-tog"><span><b>Avisos en este dispositivo</b><small id="tg-dev-s">Recibir notificaciones acá</small></span><input type="checkbox" id="tg-dev" onchange="(this.checked?activarAvisos():desactivarAvisos()).then(refrescarTogAvisos)"/><i></i></label>
         <label class="st-tog" style="margin-top:8px"><span><b>Avisos de reglas</b><small>Te avisamos cuando pegás una regla</small></span><input type="checkbox" id="tg-reglas" onchange="toggleAvisosReglas(this.checked)"/><i></i></label>
+        <label class="st-tog" style="margin-top:8px"><span><b>Goles en vivo</b><small>Cada gol de los partidos de tus fechas</small></span><input type="checkbox" id="tg-goles" onchange="toggleAviso('avisos_goles','avisosGoles',this.checked)"/><i></i></label>
+        <label class="st-tog" style="margin-top:8px"><span><b>Resultado final</b><small>Cuando termina cada partido y se suman los puntos</small></span><input type="checkbox" id="tg-final" onchange="toggleAviso('avisos_final','avisosFinal',this.checked)"/><i></i></label>
       </div>
       <div class="st-group">
         <div class="st-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.84-.44-1.13-.29-.29-.44-.65-.44-1.13a1.64 1.64 0 0 1 1.67-1.67h2c3.05 0 5.56-2.5 5.56-5.55C21.96 6.01 17.46 2 12 2z"/></svg>Tema</div>
@@ -3033,7 +3039,7 @@ function partidoDet(p,v,etiqueta){
   const hora=d?d.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"";
   const dia=d?d.toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"numeric",timeZone:"America/Argentina/Buenos_Aires"}).replace(".",""):"";
   const centro=susp?`<span class="pd-est">Susp.</span>`:post?`<span class="pd-est">Post.</span>`:jugado?`<span class="pd-gol">${p.golesLocal}</span><span class="pd-gsep">-</span><span class="pd-gol">${p.golesVisita}</span>`:`<span class="pd-hora">${hora}</span>`;
-  const centroV=!jugado&&p.vivo?vivoHtml(p):centro;
+  const centroV=!jugado&&p.vivo?vivoHtml(p,false,true):centro;
   const esc=function(url,n){return url?`<img src="${url}" alt="" loading="lazy">`:inicialEq(n);};
   const lbl=etiqueta?`<span class="pd-lbl">Opción ${v}</span>`:"";
   if(v==="B")return`<div class="pd pd-b${jugado?" jugado":""}${esSenior(p)?" senior":""}">${lbl}
@@ -4965,6 +4971,7 @@ window.openSettings=function(){
   applyPrefs(window.__prefs,false);
   const sa=document.getElementById("st-avisos");if(sa){sa.hidden=!App.user;const tg=document.getElementById("tg-reglas");if(tg)tg.checked=App.user?.avisosReglas!==false;}
   refrescarTogAvisos();
+  {const g=document.getElementById("tg-goles");if(g)g.checked=App.user?.avisosGoles!==false;const f=document.getElementById("tg-final");if(f)f.checked=App.user?.avisosFinal!==false;}
   const s=document.getElementById("settings");s.classList.add("open");
   setTimeout(()=>s.querySelector('[aria-pressed="true"]')?.focus({preventScroll:true}),60);
 };
@@ -6188,6 +6195,12 @@ async function irAFechaEnJuego(){
     if(ins)go("jugar",{fechaId:ins.fechaId,pozoId:ins.pozoId});
   }catch(e){}
 }
+
+window.toggleAviso=async function(col,prop,on){
+  const r=await api("setAvisos",{[col]:on});if(!r.ok){toast("❌ "+r.error);return;}
+  App.user[prop]=on;saveSession(App.user,App.token);toast(on?"🔔 Activado":"🔕 Desactivado");
+  if(on&&typeof pushEstado==="function"&&await pushEstado()==="apagado")activarAvisos();
+};
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
