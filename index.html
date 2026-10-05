@@ -2106,6 +2106,47 @@ body.login-active #inst-banner{display:none}
 .adm-sel-b small{grid-column:1;font-size:12.5px;color:var(--ink-3)}
 .adm-sel-b i{grid-row:1/3;grid-column:2;font-style:normal;font-size:20px;color:var(--accent-text)}
 
+/* ═══ CELULAR · HEADER Y FOOTER v2 · vidrio profesional, a todo el ancho ═══ */
+@media(max-width:880px){
+  :root{--m-top:58px;--m-glass:color-mix(in srgb,var(--bg) 70%,transparent);--m-glass-2:color-mix(in srgb,var(--surface) 72%,transparent);--m-line:color-mix(in srgb,var(--ink) 9%,transparent)}
+  html[data-mode="dark"]{--m-glass:color-mix(in srgb,var(--bg) 62%,transparent);--m-glass-2:color-mix(in srgb,var(--surface) 66%,transparent)}
+  html{background:var(--bg)}
+  /* Header: flota sobre el contenido (que pasa por debajo, difuminado) */
+  html body #topbar{position:absolute!important;top:0;left:0;right:0;z-index:40;
+    height:calc(var(--m-top) + env(safe-area-inset-top))!important;padding:env(safe-area-inset-top) 12px 0 14px!important;gap:10px;
+    background:var(--m-glass)!important;-webkit-backdrop-filter:saturate(1.8) blur(22px)!important;backdrop-filter:saturate(1.8) blur(22px)!important;
+    border-bottom:1px solid var(--m-line);box-shadow:0 12px 30px -22px rgba(0,0,0,.55)}
+  #scroll{padding-top:calc(var(--m-top) + env(safe-area-inset-top))}
+  .tb-brand{gap:10px}
+  .tb-brand .tb-logo{width:38px!important;height:38px!important;border-radius:11px!important;box-shadow:0 0 0 1px var(--m-line),0 4px 10px rgba(0,0,0,.18)}
+  .tb-brand .tb-name{font-size:20px!important;letter-spacing:.05em}
+  #topbar .icon-btn{width:40px;height:40px;border-radius:13px;background:var(--m-glass-2)!important;border:1px solid var(--m-line);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+  #topbar .tb-chip{height:40px;background:var(--m-glass-2)!important;border:1px solid var(--m-line);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+  #topbar .icon-btn svg{width:19px;height:19px}
+  /* Footer: a todo el ancho, apoyado en el borde; la curva va abajo (sigue las esquinas del celular) */
+  html body #bn{left:0!important;right:0!important;bottom:0!important;height:auto!important;
+    padding:6px 8px max(6px,calc(env(safe-area-inset-bottom) - 12px))!important;
+    border-radius:0 0 44px 44px!important;border:0!important;border-top:1px solid var(--m-line)!important;
+    background:var(--m-glass)!important;-webkit-backdrop-filter:saturate(1.8) blur(24px)!important;backdrop-filter:saturate(1.8) blur(24px)!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 -14px 34px -24px rgba(0,0,0,.6)!important}
+  html body #bn::after{display:none!important}
+  html body #bn .bn-wrap{height:56px!important;gap:4px}
+  .bn-item{height:54px!important;max-width:none;border-radius:16px;gap:2px;transition:background .25s var(--ease),color .2s}
+  .bn-item .ni{width:auto!important;height:26px;background:none!important;box-shadow:none!important}
+  .bn-item .ni svg{width:22px;height:22px}
+  .bn-item .nl{font-size:10.5px;font-weight:700}
+  .bn-item.active{color:var(--accent-text);background:color-mix(in srgb,var(--accent) 14%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 22%,transparent)}
+  .bn-item.active .ni{color:var(--accent-text)}
+  .bn-badge{top:4px}
+  .page{padding-bottom:calc(84px + env(safe-area-inset-bottom))!important}
+  .toast{bottom:calc(80px + env(safe-area-inset-bottom))}
+  #inst-banner{bottom:calc(76px + env(safe-area-inset-bottom))}
+}
+@media(max-width:880px){
+  html body #bn{padding-left:10px!important;padding-right:10px!important}
+  .bn-item.active{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 22%,transparent),color-mix(in srgb,var(--accent) 10%,transparent))}
+}
+
 </style>
 </head>
 <body>
