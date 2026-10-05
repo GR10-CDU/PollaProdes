@@ -2876,7 +2876,7 @@ async function cargarExtraFecha(f){
     } else {
       // En curso — mostrar cambios restantes y link
       if(cf!==null&&cf>0){
-        estadoHtml+=` <span class="bdg" style="font-size:14px;padding:3px 10px;background:var(--bluel);color:var(--blue);font-weight:700;cursor:pointer" onclick="event.stopPropagation();go('jugar',{fechaId:'${f.id}',pozoId:'${yaJugo.id}'})">🔄 ${cf} cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</span>`;
+        estadoHtml+=` <span class="bdg" style="font-size:14px;padding:3px 10px;background:var(--bluel);color:var(--blue);font-weight:700;cursor:pointer" onclick="event.stopPropagation();go('jugar',{fechaId:'${f.id}',pozoId:'${yaJugo.id}'})">🔄 Te ${cf!==1?"quedan":"queda"} ${cf} cambio${cf!==1?"s":""}</span>`;
       } else if(cf===0){
         estadoHtml+=` <span class="bdg bred" style="font-size:14px;padding:3px 8px">🔒 Sin cambios</span>`;
       } else {
@@ -3014,8 +3014,7 @@ async function loadMisPronoDet(fechaId,f){
       
       <!-- Cambios disponibles -->
       ${cf>0?`<div style="padding:12px 16px;background:var(--bluel);border:1px solid rgba(68,138,255,.2);border-radius:var(--rs);display:flex;align-items:center;gap:12px;margin-bottom:10px">
-        <span style="font-family:var(--ff);font-size:42px;font-weight:900;color:var(--blue)">${cf}</span>
-        <div><div style="font-size:17px;font-weight:700;color:var(--blue)">cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</div><div style="font-size:14px;color:var(--txt3)">${rm.cambiosGratis||App.user?.empresa?"Gratis · cada uno hasta 1 hora antes de su partido":"Costo: 20%/25%/30% del pozo por cambio · hasta 1 hora antes de cada partido"}</div></div>
+        <div><div style="font-size:19px;font-weight:700;color:var(--blue)">Te ${cf!==1?"quedan":"queda"} <span style="font-family:var(--ff);font-size:30px;font-weight:900">${cf}</span> cambio${cf!==1?"s":""}</div><div style="font-size:14px;color:var(--txt3)">${rm.cambiosGratis||App.user?.empresa?"Gratis · cada uno hasta 1 hora antes de su partido":"Costo: 20%/25%/30% del pozo por cambio · hasta 1 hora antes de cada partido"}</div></div>
       </div>`:`<div style="padding:10px 14px;background:rgba(255,82,82,.08);border:1px solid rgba(255,82,82,.2);border-radius:var(--rs);margin-bottom:10px;text-align:center"><span style="color:var(--red);font-weight:600">🔒 Sin cambios disponibles</span></div>`}
       
       <div style="display:flex;gap:8px;margin-bottom:12px">
@@ -3325,7 +3324,7 @@ function renderResumenCambios(){
     :`Próximo cambio: <strong>$${(proximoCosto||0).toLocaleString("es-AR")}</strong>${proximoPct?` (${proximoPct}% del pozo)`:""} · se cierran 1 hora antes de cada partido`;
   el.innerHTML=`<div class="cambios-box${cambiosRestantes<=0?" agotados":""}">
     <div class="cb-dots" aria-hidden="true">${dots}</div>
-    <div class="cb-txt"><div class="cb-t">${cambiosRestantes<=0?"Sin cambios disponibles":`Te quedan <b>${cambiosRestantes}</b> de 3 cambios`}</div><div class="cb-s">${sub}</div></div>
+    <div class="cb-txt"><div class="cb-t">${cambiosRestantes<=0?"No te quedan cambios":`Te ${cambiosRestantes!==1?"quedan":"queda"} <b>${cambiosRestantes}</b> cambio${cambiosRestantes!==1?"s":""}`}</div><div class="cb-s">${sub}</div></div>
     ${ptsBadge}
   </div>`;
 }
@@ -3397,7 +3396,7 @@ function renderPartidos(parts,ctx,puede){
       else if(!sel){cls="off";txt="Cerrado: no lo pronosticaste";}
       else if(libre){cls="ok";txt="Cambios gratis hasta "+_fmtH(_libreHasta(window._parts));}
       else if(!cambiosCerrados&&cf>0){cls="warn";txt="Cambios hasta "+hasta(60)+costo+` · quedan ${cf}`;}
-      else if(!cambiosCerrados){cls="off";txt="Sin cambios disponibles";}
+      else if(!cambiosCerrados){cls="off";txt="No te quedan cambios";}
       else{cls="off";txt="Cambios cerrados";}
       plazoHtml=`<div class="pc-plazo"><span class="pp-k pc-cuando">${cuandoPartido(p.fechaHora,true)}</span><span class="pp-v ${cls}">${txt}</span></div>`;
     }
@@ -3722,7 +3721,7 @@ window.showModalCambio=async function(pid,pronoAnterior,pronoNuevo,fid,poid){
         </button>
       </div>
       <div style="font-size:13px;color:var(--txt3);margin-top:12px">
-        Cambios disponibles: <strong>${cambiosRestantes}</strong> de 3
+        Te ${cambiosRestantes!==1?"quedan":"queda"} <strong>${cambiosRestantes}</strong> cambio${cambiosRestantes!==1?"s":""}
       </div>
     </div>
   `);
@@ -3818,7 +3817,7 @@ async function loadMisFechas(){
             ${pos?`<div style="font-size:13px;color:var(--txt2);margin-top:2px">${pos<=3?puestoIco(pos,22):"#"+pos}</div>`:""}
           </div>
         </div>
-        ${cerrada&&cf!==undefined?cf>0?`<div style="padding:8px 12px;background:var(--bluel);border:1px solid rgba(68,138,255,.15);border-radius:var(--rs);margin-bottom:10px;display:flex;align-items:center;gap:8px"><span style="font-family:var(--ff);font-size:24px;font-weight:900;color:var(--blue)">${cf}</span><span style="font-size:14px;color:var(--blue);font-weight:600">cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</span></div>`:`<div style="padding:6px 10px;background:rgba(255,82,82,.06);border-radius:var(--rs);margin-bottom:10px;text-align:center"><span style="font-size:13px;color:var(--red)">🔒 Sin cambios</span></div>`:""}
+        ${cerrada&&cf!==undefined?cf>0?`<div style="padding:8px 12px;background:var(--bluel);border:1px solid rgba(68,138,255,.15);border-radius:var(--rs);margin-bottom:10px;display:flex;align-items:center;gap:8px"><span style="font-size:14px;color:var(--blue);font-weight:600">Te ${cf!==1?"quedan":"queda"} <b style="font-family:var(--ff);font-size:20px">${cf}</b> cambio${cf!==1?"s":""}</span></div>`:`<div style="padding:6px 10px;background:rgba(255,82,82,.06);border-radius:var(--rs);margin-bottom:10px;text-align:center"><span style="font-size:13px;color:var(--red)">🔒 Sin cambios</span></div>`:""}
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-p" style="flex:1;padding:10px" onclick="go('jugar',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})">
             ${cerrada&&cf>0?"✏️ Modificar":"👁 Ver"} pronósticos
