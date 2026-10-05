@@ -1143,8 +1143,11 @@ async function buscarPorRonda(db: any, data: any) {
 async function adminGetUsuarios(db: any, data: any) {
   const auth = await requireAuth(db, data);
   if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
-  const {data: users} = await db.from("usuarios").select("id,telefono,usuario,nombre,alias_mp,email,estado,rol,empresa_id,created_at").order("created_at");
-  return {ok:true, usuarios:users||[]};
+  const [{data: users}, {data: subs}] = await Promise.all([
+    db.from("usuarios").select("id,telefono,usuario,nombre,alias_mp,email,estado,rol,avatar,avisos_reglas,created_at").order("created_at"),
+    db.from("push_subs").select("user_id,endpoint,dispositivo,created_at"),
+  ]);
+  return {ok:true, usuarios:(users||[]).map((u:any) => ({...u, avisos:(subs||[]).filter((p:any) => p.user_id === u.id).map((p:any) => ({dispositivo: p.dispositivo || nombreDispositivo("", p.endpoint), desde:p.created_at}))}))};
 }
 
 // ============================================================
@@ -2549,7 +2552,7 @@ async function guardarPush(db: any, data: any) {
   if (!auth.ok) return auth;
   const sub = data.sub || {};
   if (!sub.endpoint || !sub.keys?.p256dh || !sub.keys?.auth) return {ok:false, error:"Suscripción inválida"};
-  await db.from("push_subs").upsert({endpoint:sub.endpoint, user_id:auth.userId, p256dh:sub.keys.p256dh, auth:sub.keys.auth}, {onConflict:"endpoint"});
+  await db.from("push_subs").upsert({endpoint:sub.endpoint, user_id:auth.userId, p256dh:sub.keys.p256dh, auth:sub.keys.auth, dispositivo:nombreDispositivo(String(data.agente||""), sub.endpoint)}, {onConflict:"endpoint"});
   return {ok:true};
 }
 async function borrarPush(db: any, data: any) {
@@ -2756,4 +2759,20 @@ async function setAvisosReglas(db: any, data: any) {
   if (!auth.ok) return auth;
   await db.from("usuarios").update({avisos_reglas: !!data.activo}).eq("id", auth.userId);
   return {ok:true, activo: !!data.activo};
+}
+
+// Nombre legible del dispositivo que activó los avisos
+function nombreDispositivo(ua: string, endpoint: string) {
+  const a = ua.toLowerCase();
+  if (/iphone/.test(a)) return "iPhone";
+  if (/ipad/.test(a)) return "iPad";
+  if (/android/.test(a)) return "Android";
+  const nav = /edg\//.test(a) ? "Edge" : /firefox/.test(a) ? "Firefox" : /chrome/.test(a) ? "Chrome" : /safari/.test(a) ? "Safari" : "";
+  if (/macintosh|mac os/.test(a)) return "Mac" + (nav ? " · " + nav : "");
+  if (/windows/.test(a)) return "Windows" + (nav ? " · " + nav : "");
+  if (/linux/.test(a)) return "Linux" + (nav ? " · " + nav : "");
+  if (/web\.push\.apple\.com/.test(endpoint)) return "iPhone / Mac (Apple)";
+  if (/fcm\.googleapis/.test(endpoint)) return "Chrome (Android o compu)";
+  if (/mozilla/.test(endpoint)) return "Firefox";
+  return "Otro";
 }

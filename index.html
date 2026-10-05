@@ -2310,6 +2310,21 @@ body.login-active #inst-banner{display:none}
 .rg-p.no{opacity:.55}
 .rg-no{color:var(--ink-3)}
 .rg-mk{font-style:normal;font-family:var(--ff);font-weight:800;font-size:13.5px;padding:0 5px;border-radius:5px;background:var(--gold-soft);color:var(--gold)}
+/* Admin · Jugadores con avisos */
+.us-res{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.us-res span{padding:6px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);font-size:14px}
+.us-res b{font-family:var(--ff);font-size:19px}
+.us-it{display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:8px}
+.us-av{width:42px;height:42px;flex:none;border-radius:12px;display:grid;place-items:center;font-weight:800;background:var(--surface-2);overflow:hidden}
+.us-av img{width:100%;height:100%;object-fit:cover}
+.us-tx{flex:1;min-width:0}
+.us-nm{font-size:16.5px;font-weight:800}.us-nm span{font-weight:500;color:var(--ink-2);font-size:14px}
+.us-tel{font-size:13px;color:var(--ink-3)}
+.us-av-l{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.us-disp{font-size:12px;font-weight:700;padding:3px 8px;border-radius:9px;background:color-mix(in srgb,var(--ok) 14%,transparent);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent)}
+.us-disp.off{background:var(--surface-2);border-color:var(--line);color:var(--ink-3)}
+.us-acc{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.us-acc .btn{padding:4px 10px;font-size:13px}
 
 </style>
 </head>
@@ -4453,13 +4468,14 @@ function renderReglamento(){
 async function loadUsers(){
   const r=await api("adminGetUsuarios"),el=document.getElementById("aul");if(!el)return;
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
-  el.innerHTML=(r.usuarios||[]).map(u=>`<div class="card" style="margin-bottom:7px;padding:12px 14px;display:flex;align-items:center;gap:10px">
-    <div style="width:38px;height:38px;border-radius:10px;background:rgba(0,200,83,.06);border:1px solid rgba(0,200,83,.15);display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">${u.avatar||"👤"}</div>
-    <div style="flex:1;min-width:0"><div style="font-size:18px;font-weight:600">${u.usuario} <span style="font-size:14px;color:var(--txt2)">${u.nombre}</span></div><div style="font-size:14px;color:var(--txt3)">${u.telefono}</div></div>
-    <div style="display:flex;gap:7px;align-items:center">
-      <span class="bdg ${u.estado==="Activo"?"bg":"bred"}">${u.estado}</span>
-      <button class="btn btn-s" style="padding:4px 10px;font-size:14px" onclick="cambiarEstado('${u.id}','${u.estado==="Activo"?"Suspendido":"Activo"}')">${u.estado==="Activo"?"Suspender":"Activar"}</button>
-    </div></div>`).join("")||emptyBox("👥","Sin jugadores");
+  const us=r.usuarios||[],con=us.filter(u=>(u.avisos||[]).length).length;
+  const icoDisp=function(d){return/iphone|ipad/i.test(d)?"📱":/android/i.test(d)?"🤖":/mac|windows|linux|chrome|firefox|edge/i.test(d)?"💻":"🔔";};
+  el.innerHTML=`<div class="us-res"><span>👥 <b>${us.length}</b> jugadores</span><span>🔔 <b>${con}</b> con avisos activados</span></div>`+us.map(u=>{const av=u.avisos||[];return`<div class="card us-it">
+    ${avatarHtml(u,"us-av")}
+    <div class="us-tx"><div class="us-nm">${escH(u.usuario)} <span>${escH(u.nombre||"")}</span></div><div class="us-tel">${escH(u.telefono||"")}${u.rol==="Admin"?" · Admin":""}</div>
+      <div class="us-av-l">${av.length?av.map(a=>`<span class="us-disp" title="Desde ${new Date(a.desde).toLocaleDateString("es-AR")}">${icoDisp(a.dispositivo)} ${escH(a.dispositivo)}</span>`).join(""):`<span class="us-disp off">🔕 Sin avisos</span>`}${av.length&&u.avisos_reglas===false?`<span class="us-disp off">Reglas apagadas</span>`:""}</div></div>
+    <div class="us-acc"><span class="bdg ${u.estado==="Activo"?"bg":"bred"}">${u.estado}</span>
+      <button class="btn btn-s" onclick="cambiarEstado('${u.id}','${u.estado==="Activo"?"Suspendido":"Activo"}')">${u.estado==="Activo"?"Suspender":"Activar"}</button></div></div>`;}).join("")||emptyBox("👥","Sin jugadores");
 }
 window.cambiarEstado=async(id,est)=>{if(!confirm(`¿${est==="Suspendido"?"Suspender":"Activar"}?`))return;const r=await api("adminCambiarEstado",{targetUserId:id,estado:est});toast(r.ok?"✅":"❌ "+r.error);if(r.ok)loadUsers();};
 
@@ -5436,7 +5452,7 @@ window.activarAvisos=async function(){
     let sub=await reg.pushManager.getSubscription();
     if(!sub)sub=await _conTiempo(reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_b64(VAPID_PUBLIC)}),15000,"suscribir");
     paso="guardar";
-    const r=await api("guardarPush",{sub:sub.toJSON()});
+    const r=await api("guardarPush",{sub:sub.toJSON(),agente:navigator.userAgent});
     if(!r.ok)throw new Error(r.error);
     api("probarPush");toast("✅ ¡Listo! Te mandamos un aviso de prueba");pintarAvisos();return true;
   }catch(e){console.error(e);api("logCliente",{que:"push-"+paso,detalle:String(e&&(e.stack||e.message)||e),agente:navigator.userAgent+" standalone="+esApp()});toast("❌ No se pudieron activar los avisos ("+paso+": "+(e&&e.message||e)+")",7000);pintarAvisos();return false;}
@@ -5648,7 +5664,7 @@ async function sincronizarPush(){
     if(!pushSoportado()||Notification.permission!=="granted")return;
     const reg=await navigator.serviceWorker.getRegistration();const sub=reg&&await reg.pushManager.getSubscription();
     if(!sub){api("logCliente",{que:"push-sin-sub",detalle:"permiso concedido pero sin suscripción",agente:navigator.userAgent+" standalone="+esApp()});return;}
-    const r=await api("guardarPush",{sub:sub.toJSON()});
+    const r=await api("guardarPush",{sub:sub.toJSON(),agente:navigator.userAgent});
     if(!r.ok)api("logCliente",{que:"push-sync",detalle:r.error||"",agente:navigator.userAgent});
   }catch(e){api("logCliente",{que:"push-sync-ex",detalle:String(e&&e.message||e),agente:navigator.userAgent});}
 }
