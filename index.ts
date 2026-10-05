@@ -2595,7 +2595,7 @@ async function avisosResultado(db: any, partidoId: string) {
   if (p.tipo === "Polla") {
     const {data: ac} = await db.from("pronosticos").select("user_id").eq("partido_id", p.id).eq("acertado", true);
     for (const a of (ac||[])) if (await primeraVez(db, `polla:${p.id}:${a.user_id}`))
-      await enviarPush(db, [a.user_id], {titulo:"⭐ ¡Acertaste la Polla!", texto:`${partido}: +5 puntos`, tag:`polla-${p.id}`});
+      await enviarPush(db, [a.user_id], {titulo:`⭐ Acertaste la Polla: +5 pts ⭐`, texto:"", tag:`polla-${p.id}`});
   }
   // ⚽ Reglas: las de un partido avisan al sumar; LMR, LR y EL DIEGO recién cuando terminan sus 3 partidos
   await avisosReglas(db, p.fecha_id);
@@ -2731,7 +2731,7 @@ async function avisosReglas(db: any, fechaId: string) {
   // De un partido: una vez por regla, apenas suma
   for (const r of (rs||[]).filter((r:any) => !REGLAS_LARGAS.includes(r.codigo) && (r.puntos_obtenidos||0) > 0 && !off.has(r.user_id)))
     if (await primeraVez(db, `regla:${r.id}`))
-      await enviarPush(db, [r.user_id], {titulo:TITULO_REGLA, texto:textoRegla(r.codigo, r.puntos_obtenidos), tag:`regla-${r.id}`});
+      await enviarPush(db, [r.user_id], {titulo:`⚽ ${textoRegla(r.codigo, r.puntos_obtenidos)} ⚽`, texto:"", tag:`regla-${r.id}`});
   // Largas: cuando la regla terminó, con el total
   const grupos: Record<string, any[]> = {};
   for (const r of (rs||[]).filter((r:any) => REGLAS_LARGAS.includes(r.codigo))) (grupos[`${r.user_id}|${r.pozo_id}|${r.codigo}`] ||= []).push(r);
@@ -2747,7 +2747,7 @@ async function avisosReglas(db: any, fechaId: string) {
     } else fin = regs.every((r:any) => terminado(r.partido_id));
     const total = regs.reduce((t:number, r:any) => t + (r.puntos_obtenidos||0), 0);
     if (fin && total > 0 && !off.has(userId) && await primeraVez(db, `rl:${fechaId}:${k}`))
-      await enviarPush(db, [userId], {titulo:TITULO_REGLA, texto:textoRegla(codigo, total), tag:`rl-${codigo}-${pozoId}`});
+      await enviarPush(db, [userId], {titulo:`⚽ ${textoRegla(codigo, total)} ⚽`, texto:"", tag:`rl-${codigo}-${pozoId}`});
   }
 }
 
