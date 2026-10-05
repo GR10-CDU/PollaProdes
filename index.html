@@ -2516,6 +2516,7 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .tbs-plazo.ab{color:var(--accent-text)}
 .tbs-bot{display:flex;gap:8px;margin-top:14px}
 .tbs-bot .btn{flex:1;padding:11px}
+.tbs-plazo.cb{color:var(--blue,#448AFF)}
 
 </style>
 </head>
@@ -3974,7 +3975,7 @@ function tbsCard(x,mis){
   }
   const meta=[x.empresa?"":(x.monto?"Entrada "+$(x.monto):"Gratis"),x.liga,rango,x.reglas?x.reglas+" regla"+(x.reglas!==1?"s":"")+" especial"+(x.reglas!==1?"es":""):""].filter(Boolean).join(" · ");
   const abierta=x.cierre&&new Date(x.cierre)>new Date();
-  const plazo=x.cierre?`<div class="tbs-plazo${abierta?" ab":""}">${abierta?"⏰ Jugá hasta "+cuandoPartido(x.cierre)+" hs":"🔒 Cerró "+cuandoPartido(x.cierre)+" hs"}${!abierta&&!x.terminada&&!x.empresa?` <span class="tbs-sep">·</span> ${x.cambiosRestantes?"Te quedan "+x.cambiosRestantes+" cambio"+(x.cambiosRestantes!==1?"s":""):"Sin cambios"}`:""}</div>`:"";
+  const plazo=abierta?`<div class="tbs-plazo ab">⏰ Jugá hasta ${cuandoPartido(x.cierre)} hs</div>`:x.cierre&&!x.terminada&&!x.empresa?`<div class="tbs-plazo cb">${x.cambiosRestantes?"Te quedan "+x.cambiosRestantes+" cambio"+(x.cambiosRestantes!==1?"s":""):"Sin cambios"}</div>`:"";
   const botones=mis?`<div class="tbs-bot"><button class="btn btn-p" onclick="event.stopPropagation();go('jugar',{fechaId:'${x.fechaId}',pozoId:'${x.pozoId}'})">${abierta?"✏️ Modificar":"👁 Ver"} pronósticos</button><button class="btn btn-s" onclick="event.stopPropagation();go('tabla',{fechaId:'${x.fechaId}',pozoId:'${x.pozoId}'})">🏆 Ver tabla</button></div>`:"";
   return`<div class="tbs-card card" onclick="go('${mis?"jugar":"tabla"}',{fechaId:'${x.fechaId}',pozoId:'${x.pozoId}'})">
     <div class="tbs-h"><div class="tbs-tit"><b>${escH(x.nombre)}</b><small>${escH(meta)}</small></div><span class="tbs-est ${est[1]}">${est[0]}</span></div>
