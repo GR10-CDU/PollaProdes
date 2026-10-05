@@ -2884,15 +2884,14 @@ async function loadFechaDet(ctx){
       ${f.reglasDetalle?.length?`<div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px"><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px">${ICO_SILBATO} Reglas especiales</div><div style="display:flex;gap:6px;flex-wrap:wrap">${f.reglasDetalle.map(function(r){return`<div class="fd-regla" id="fdr-${r.codigo}" style="padding:5px 10px;background:rgba(255,179,0,.15);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs)"><span style="font-size:16px;font-weight:700;color:var(--gold)">${r.nombre}</span><span style="font-size:14px;color:rgba(255,255,255,.5);margin-left:5px">+${r.pts}pts</span></div>`;}).join("")}</div></div>`:""}
     </div>
 
-    <div id="pjtop"></div>
+    <div id="pjtop"></div>${puedeJugar?"":`<div id="plist-cerrada"></div>`}
     <p class="sec">Partidos</p>
     <div class="pd-list">${ps.map(function(p){return partidoDet(p,"A");}).join("")}</div>
 
     ${puedeJugar?`
       <p class="sec">Elegí tu pozo</p>
       <div id="plist"><div class="loading"><div class="spinner"></div></div></div>
-      <div id="pjbtn" style="margin-top:14px;display:none"></div>`:`
-      <div id="plist-cerrada"></div>`}
+      <div id="pjbtn" style="margin-top:14px;display:none"></div>`:""}
     <div id="mis-pronos-det"></div>`;
   if(puedeJugar){
     loadPozos(ctx.fechaId);
@@ -2943,6 +2942,7 @@ function partidoDet(p,v,etiqueta){
 
 async function loadMisPronoDet(fechaId,f){
   const rp=await api("getPozos",{fechaId,userId:App.user?.id});
+  if(rp.ok)premioEnCabecera(rp.pozos||[]);
   const el=document.getElementById("plist-cerrada");
   const yaInsc=rp.ok?rp.pozos?.find(function(p){return p.yaInscripto;}):null;
   if(!yaInsc){
@@ -2971,7 +2971,7 @@ async function loadMisPronoDet(fechaId,f){
   
   if(el)el.innerHTML=`
     <div class="card" style="padding:16px;margin-bottom:12px">
-      ${App.user?.empresa?"":`      <!-- Pozo actual -->
+      ${App.user?.empresa||document.querySelector("#fd-premio .fd-premio")?"":`      <!-- Pozo actual -->
       <div style="padding:12px 16px;background:linear-gradient(135deg,rgba(255,179,0,.15),rgba(255,179,0,.08));border:1px solid rgba(255,179,0,.25);border-radius:var(--r);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
         <div><div style="font-size:13px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:1px">${yaInsc.monto?"💰 Pozo actual":"🏆 Premio"}${yaInsc.premioFijo?" fijo":""}</div></div>
         <div style="font-family:var(--ff);font-size:32px;font-weight:900;color:var(--gold)">$${pozoActual.toLocaleString("es-AR")}</div>
