@@ -2530,6 +2530,9 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
   #jc .pc-meta{align-items:flex-start;gap:10px;margin-bottom:12px}
   #jc .pc-plazo{flex-shrink:0}
   #jc .lev-btn{height:58px}
+  /* Reglas especiales: también de a dos, del mismo ancho que los partidos */
+  .reglas-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+  .reglas-grid>.card{margin-bottom:0!important}
 }
 
 </style>
@@ -3726,6 +3729,7 @@ function renderReglasSection(puede){
   const bloq=!puede;let html="";
   if(window._reglasDisp.length){
     html+=`<div style="margin-top:22px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-family:var(--ff);font-size:29px;font-weight:900;letter-spacing:.5px;display:inline-flex;align-items:center;gap:8px">${ICO_SILBATO} REGLAS ESPECIALES</span>${bloq?`<span class="bdg bred">🔒 Bloqueadas</span>`:`<span class="bdg bg">Abiertas</span>`}</div><p style="font-size:16px;color:var(--txt3);margin-bottom:6px">Elegí a qué partido aplicar cada regla.</p>${(function(){const h=_libreHasta(window._parts);return _enLibre()?`<div class="reglas-aviso libre">✓ Podés mover tus reglas libremente${h?` hasta <b>${_fmtH(h)}</b>`:""} (1 hora antes del primer partido). Después quedan <b>fijas para siempre</b>.</div>`:`<div class="reglas-aviso">🔒 Las reglas que guardaste quedaron <b>fijas</b> y no se pueden cambiar. Solo podés completar las que te falten.</div>`;})()}`;
+    html+=`<div class="reglas-grid">`;
     window._reglasDisp.forEach(function(reg){
       const yaCompleta=reg.partidos.length>=reg.cantReq;
       const esMultiple=reg.cantReq>1;
@@ -3739,7 +3743,7 @@ function renderReglasSection(puede){
       }
       html+=`</div>`;
     });
-    html+=`</div>`;
+    html+=`</div></div>`;
   }
   if(!bloq){
     const estado=_calcularEstado();
