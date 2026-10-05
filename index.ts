@@ -186,6 +186,7 @@ Deno.serve(async (req) => {
       case "guardarPush": return resp(await guardarPush(db, data));
       case "borrarPush": return resp(await borrarPush(db, data));
       case "probarPush": return resp(await probarPush(db, data));
+      case "adminEnviarPush": return resp(await adminEnviarPush(db, data));
       case "cronAvisos": return resp(await cronAvisos(db));
       case "logout": return resp(await logout(db, data));
 
@@ -2692,4 +2693,14 @@ async function ogEmpresas(db: any, data: any) {
   if (!K || data.ogSecret !== K) return {ok:false, error:"Sin permisos"};
   const {data: es} = await db.from("empresas").select("nombre,codigo,slogan,logo_url,color").eq("estado","Activa").order("created_at");
   return {ok:true, empresas:(es||[]).map((e:any) => ({nombre:e.nombre, codigo:e.codigo, slogan:e.slogan||"", logo:e.logo_url||"", color:e.color||"#2F5BEA"}))};
+}
+
+// Admin: mandar un aviso a un usuario (por su usuario, ej. EN872)
+async function adminEnviarPush(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const {data: u} = await db.from("usuarios").select("id,usuario").eq("usuario", String(data.usuario||"").toUpperCase()).maybeSingle();
+  if (!u) return {ok:false, error:"Usuario no encontrado"};
+  const n = await enviarPush(db, [u.id], {titulo:String(data.titulo||"Polla Prodes").slice(0,80), texto:String(data.texto||"").slice(0,200), tag:"admin-"+Date.now()});
+  return {ok:true, enviados:n};
 }
