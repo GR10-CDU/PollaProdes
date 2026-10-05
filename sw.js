@@ -19,6 +19,7 @@ self.addEventListener("notificationclick", e => {
   e.waitUntil(clients.matchAll({type: "window", includeUncontrolled: true}).then(ws => {
     const ir = new URL(url).searchParams.get("ir");
     for (const w of ws) if (w.url.startsWith(self.registration.scope)) { if (ir) w.postMessage({ir}); return w.focus(); }
-    return clients.openWindow(url);
+    // App cerrada: se abre en el inicio y el jugador elige a dónde ir
+    return clients.openWindow(ir ? self.registration.scope : url);
   }));
 });
