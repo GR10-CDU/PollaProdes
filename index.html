@@ -2442,6 +2442,7 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .fs-p small{font-size:12.5px;color:var(--ink-2);white-space:nowrap}
 .fs-acc{position:sticky;bottom:0;background:var(--accent-soft);padding:8px 0}
 @media(max-width:560px){.fs-p{grid-template-columns:22px 1fr 1fr}.fs-p i{display:none}.fs-p small{grid-column:2/-1}}
+.st-edit{width:28px;height:28px;margin-top:4px;border-radius:14px;font-size:14px;color:var(--ink-3);border:1px solid var(--line);background:var(--surface-2)}
 
 </style>
 </head>
@@ -4507,7 +4508,7 @@ async function loadRes(ctx){
         <span class="rs-rojas-l">🟥 Rojas</span>${step("tr-"+p.id,p.tarjetasRojas||0,"rojas")}
         <button class="btn ${done?"btn-s":"btn-p"} rs-save" onclick="guardarRes('${p.id}','${sf}')">${done?"Corregir":"Guardar"}</button>
       </div>
-      <div class="rs-link"><input class="inp" placeholder="Link de Flashscore (opcional)" value="${escH(p.linkStats||"")}" onchange="guardarLinkStats('${p.id}',this)"/>${botonStats(p,"st-mini")}</div>
+      <div class="rs-link">${botonStats(p,"st-mini")}<button class="st-edit" title="Cambiar el link" onclick="editarLinkStats('${p.id}','${escH(p.linkStats||"").replace(/'/g,"")}')">✎</button></div>
       <div class="rs-more">
         <button class="res-eb" onclick="estadoPartido('${p.id}','Suspendido','${sf}')">⛔ Suspendido</button>
         <button class="res-eb" onclick="estadoPartido('${p.id}','Postergado','${sf}')">📅 Postergado</button>
@@ -5968,6 +5969,7 @@ function linkStats(p){
   return"https://www.google.com/search?q="+encodeURIComponent(`flashscore ${p.local} vs ${p.visita} ${d}`);
 }
 function botonStats(p,cls){return`<a class="st-btn ${cls||""}" href="${escH(linkStats(p))}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ver estadísticas en Flashscore">📊 Estadísticas</a>`;}
+window.editarLinkStats=async function(pid,actual){const v=prompt("Link de Flashscore del partido (dejalo vacío para que se busque solo):",actual||"");if(v===null)return;const r=await api("adminLinkPartido",{partidoId:pid,link:v.trim()});toast(r.ok?"✅ Link guardado":"❌ "+r.error);if(r.ok&&App.screen==="admin-res")loadRes(App.ctx);};
 window.guardarLinkStats=async function(pid,inp){const r=await api("adminLinkPartido",{partidoId:pid,link:inp.value});toast(r.ok?(inp.value?"✅ Link guardado":"Link borrado"):"❌ "+r.error);};
 
 window.linksAuto=async function(fid,btn){
