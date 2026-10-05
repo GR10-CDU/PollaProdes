@@ -2490,7 +2490,8 @@ body.login-active #inst-banner{display:none}
       </div>
       <div class="st-group" id="st-avisos" hidden>
         <div class="st-label">🔔 Avisos</div>
-        <label class="st-tog"><span><b>Avisos de reglas</b><small>Te avisamos cuando pegás una regla</small></span><input type="checkbox" id="tg-reglas" onchange="toggleAvisosReglas(this.checked)"/><i></i></label>
+        <label class="st-tog"><span><b>Avisos en este dispositivo</b><small id="tg-dev-s">Recibir notificaciones acá</small></span><input type="checkbox" id="tg-dev" onchange="(this.checked?activarAvisos():desactivarAvisos()).then(refrescarTogAvisos)"/><i></i></label>
+        <label class="st-tog" style="margin-top:8px"><span><b>Avisos de reglas</b><small>Te avisamos cuando pegás una regla</small></span><input type="checkbox" id="tg-reglas" onchange="toggleAvisosReglas(this.checked)"/><i></i></label>
       </div>
       <div class="st-group">
         <div class="st-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.84-.44-1.13-.29-.29-.44-.65-.44-1.13a1.64 1.64 0 0 1 1.67-1.67h2c3.05 0 5.56-2.5 5.56-5.55C21.96 6.01 17.46 2 12 2z"/></svg>Tema</div>
@@ -4745,6 +4746,7 @@ window.setPref=function(k,v){
 window.openSettings=function(){
   applyPrefs(window.__prefs,false);
   const sa=document.getElementById("st-avisos");if(sa){sa.hidden=!App.user;const tg=document.getElementById("tg-reglas");if(tg)tg.checked=App.user?.avisosReglas!==false;}
+  refrescarTogAvisos();
   const s=document.getElementById("settings");s.classList.add("open");
   setTimeout(()=>s.querySelector('[aria-pressed="true"]')?.focus({preventScroll:true}),60);
 };
@@ -5379,29 +5381,39 @@ async function pushEstado(){
   if(Notification.permission==="denied")return"bloqueado";
   try{const reg=await navigator.serviceWorker.getRegistration();const sub=reg&&await reg.pushManager.getSubscription();return sub?"activo":"apagado";}catch(e){return"apagado";}
 }
+function _conTiempo(pr,ms,paso){return Promise.race([pr,new Promise(function(_,rej){setTimeout(function(){rej(new Error("tardó demasiado en: "+paso));},ms);})]);}
 window.activarAvisos=async function(){
-  if(!pushSoportado()){toast(esIOS()?"En iPhone: primero instalá la app (Compartir → Agregar a inicio) y abrila desde ahí":"Este navegador no permite avisos",5000);return;}
-  const perm=await Notification.requestPermission();
-  if(perm!=="granted"){toast("Para recibir avisos tenés que permitir las notificaciones",4500);pintarAvisos();return;}
+  if(!pushSoportado()){toast(esIOS()?"En iPhone: primero instalá la app (Compartir → Agregar a inicio) y abrila desde ahí":"Este navegador no permite avisos",5000);pintarAvisos();return false;}
+  let paso="permiso";
   try{
-    const reg=await navigator.serviceWorker.register("sw.js");await navigator.serviceWorker.ready;
-    const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_b64(VAPID_PUBLIC)});
+    const perm=await Notification.requestPermission();
+    if(perm!=="granted"){toast("Para recibir avisos tenés que permitir las notificaciones",4500);pintarAvisos();return false;}
+    paso="registro";
+    let reg=await _conTiempo(navigator.serviceWorker.getRegistration(),5000,"buscar registro");
+    if(!reg)reg=await _conTiempo(navigator.serviceWorker.register("sw.js"),8000,"registrar");
+    paso="activación";
+    if(!reg.active)await _conTiempo(navigator.serviceWorker.ready,8000,"activar");
+    paso="suscripción";
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await _conTiempo(reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_b64(VAPID_PUBLIC)}),15000,"suscribir");
+    paso="guardar";
     const r=await api("guardarPush",{sub:sub.toJSON()});
-    if(!r.ok){toast("❌ "+r.error);return;}
-    api("probarPush");toast("✅ ¡Listo! Te mandamos un aviso de prueba");
-  }catch(e){console.error(e);toast("❌ No se pudieron activar los avisos");}
-  pintarAvisos();
+    if(!r.ok)throw new Error(r.error);
+    api("probarPush");toast("✅ ¡Listo! Te mandamos un aviso de prueba");pintarAvisos();return true;
+  }catch(e){console.error(e);toast("❌ No se pudieron activar los avisos ("+paso+": "+(e&&e.message||e)+")",7000);pintarAvisos();return false;}
 };
+async function refrescarTogAvisos(){const t=document.getElementById("tg-dev");if(!t||typeof pushEstado!=="function")return;const e=await pushEstado();t.checked=e==="activo";const sm=document.getElementById("tg-dev-s");if(sm)sm.textContent=e==="activo"?"Activados":e==="bloqueado"?"Bloqueados en el sistema":e==="ios-instalar"?"Instalá la app para recibirlos":e==="no"?"No disponible en este navegador":"Desactivados";}
 window.desactivarAvisos=async function(){
   try{const reg=await navigator.serviceWorker.getRegistration();const sub=reg&&await reg.pushManager.getSubscription();if(sub){await api("borrarPush",{endpoint:sub.endpoint});await sub.unsubscribe();}}catch(e){}
-  toast("Avisos desactivados en este dispositivo");pintarAvisos();
+  toast("Avisos desactivados en este dispositivo");pintarAvisos();refrescarTogAvisos();return true;
 };
 // Tarjeta en el Perfil + cartelito en Fechas (si todavía no los activó)
 async function pintarAvisos(){
   const est=await pushEstado();
   const pf=document.getElementById("pf-avisos");
-  if(pf){const T={activo:["🔔 Avisos activados","Te avisamos cuando pegás una regla, acertás la Polla o se está por cerrar una fecha.",`<button class="btn btn-s" onclick="desactivarAvisos()">Desactivar</button>`],
-      apagado:["🔕 Avisos apagados","Activalos y te avisamos cuando pegás una regla, acertás la Polla o se está por cerrar una fecha.",`<button class="btn btn-p" onclick="activarAvisos()">Activar avisos</button>`],
+  if(pf){const tog=function(on){return`<label class="st-tog"><span><b>Avisos en este dispositivo</b><small>${on?"Activados":"Desactivados"}</small></span><input type="checkbox" ${on?"checked":""} onchange="this.checked?activarAvisos():desactivarAvisos()"/><i></i></label>`;};
+    const T={activo:["🔔 Avisos","Te avisamos cuando pegás una regla, acertás la Polla o se está por cerrar una fecha.",tog(true)],
+      apagado:["🔔 Avisos","Activalos y te avisamos cuando pegás una regla, acertás la Polla o se está por cerrar una fecha.",tog(false)],
       bloqueado:["🔕 Notificaciones bloqueadas","Las bloqueaste en este navegador. Habilitalas desde el candadito de la barra de direcciones → Notificaciones → Permitir.",""],
       "ios-instalar":["📲 Instalá la app para recibir avisos","En iPhone los avisos llegan solo con la app instalada: Compartir → Agregar a inicio, y abrila desde el ícono.",""],
       no:["Avisos no disponibles","Este navegador no permite notificaciones.",""]}[est];
