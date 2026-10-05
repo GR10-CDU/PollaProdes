@@ -4500,6 +4500,7 @@ async function loadRes(ctx){
   // Por defecto: la fecha en juego (ya cerró y sigue activa); si no hay, la más próxima
   const enJuego=fs.filter(function(f){return f.minutosRestantes<=0;});
   const sf=ctx?.fechaId||(enJuego[0]||fs[0])?.id;
+  if(sf&&App.screen==="admin-res")App.ctx=Object.assign({},App.ctx,{fechaId:sf});
   if(!sf){el.innerHTML=emptyBox("📅","No hay fechas activas. Creá una en Fechas.");return;}
   const rp=await api("getFecha",{fechaId:sf});if(!rp.ok){el.innerHTML=errBox(rp.error);return;}
   const ahora=Date.now();
@@ -6151,10 +6152,31 @@ function minutoVivo(v){
 function vivoHtml(p,grande,chico){
   const v=p&&p.vivo;if(!v||v.gl===null||v.gl===undefined)return"";
   const min=minutoVivo(v),fin=v.estado==="final";
-  return`<div class="lv${grande?" g":""}${chico?" c":""}${fin?" fin":""}"><div class="lv-top"><span class="lv-dot"></span>${fin?"TERMINÓ":v.estado==="entretiempo"?"ENTRETIEMPO":"EN VIVO"}${min&&!fin&&v.estado!=="entretiempo"?`<b class="lv-min">${min}</b>`:""}</div><div class="lv-sc">${v.gl}<i>:</i>${v.gv}</div>${chico?"":`<div class="lv-sub">${fin?"Falta confirmar · aún no suma":"Parcial · no suma puntos"}</div>`}</div>`;
+  return`<div class="lv${grande?" g":""}${chico?" c":""}${fin?" fin":""}" data-pid="${p.id}" data-g="${grande?1:0}" data-c="${chico?1:0}"><div class="lv-top"><span class="lv-dot"></span>${fin?"TERMINÓ":v.estado==="entretiempo"?"ENTRETIEMPO":"EN VIVO"}${min&&!fin&&v.estado!=="entretiempo"?`<b class="lv-min">${min}</b>`:""}</div><div class="lv-sc">${v.gl}<i>:</i>${v.gv}</div>${chico?"":`<div class="lv-sub">${fin?"Falta confirmar · aún no suma":"Parcial · no suma puntos"}</div>`}</div>`;
 }
-// Refresca los minutos en vivo cada 30 s sin recargar
-setInterval(function(){document.querySelectorAll(".lv-min").forEach(function(){});},30000);
+// En vivo: cada 30 s (y al volver a la pestaña) trae los parciales y actualiza solo los marcadores
+async function refrescarVivo(forzar){
+  const ctx=App.ctx||{};if(!App.user||!ctx.fechaId||!["jugar","fecha-det","admin-res"].includes(App.screen))return;
+  if(document.hidden&&!forzar)return;
+  const r=await api("getFecha",{fechaId:ctx.fechaId});if(!r.ok)return;
+  let recargar=false;
+  (r.partidos||[]).forEach(function(p){
+    const el=document.querySelector(`.lv[data-pid="${p.id}"]`);
+    const viejo=App.screen==="jugar"?(window._parts||[]).find(function(x){return x.id===p.id;}):null;
+    if(viejo&&viejo.estado!==p.estado)recargar=true;
+    if(!el&&p.vivo&&p.estado!=="Finalizado")recargar=true;
+    if(el){if(!p.vivo||p.estado==="Finalizado"){recargar=true;return;}
+      const n=document.createElement("div");n.innerHTML=vivoHtml(p,el.dataset.g==="1",el.dataset.c==="1");
+      if(n.firstElementChild&&n.firstElementChild.outerHTML!==el.outerHTML){el.replaceWith(n.firstElementChild);}}
+  });
+  if(App.screen==="jugar")window._parts=r.partidos||window._parts;
+  if(recargar){const sc=document.getElementById("scroll"),y=sc?sc.scrollTop:0;
+    const fn=App.screen==="jugar"?loadJugar:App.screen==="fecha-det"?loadFechaDet:loadRes;
+    Promise.resolve(fn(App.ctx)).then(function(){if(sc)sc.scrollTop=y;});}
+}
+setInterval(function(){refrescarVivo(false);},30000);
+document.addEventListener("visibilitychange",function(){if(!document.hidden)refrescarVivo(true);});
+window.addEventListener("focus",function(){refrescarVivo(true);});
 
 // Si hay una fecha en juego (ya cerró y todavía no terminó) en la que juego, entrar directo a mis pronósticos
 async function irAFechaEnJuego(){
