@@ -249,6 +249,13 @@ Deno.serve(async (req) => {
       // ── EMPRESAS ──────────────────────────────────────────
       case "getEmpresaPublica": return resp(await getEmpresaPublica(db, data));
       case "ogEmpresas": return resp(await ogEmpresas(db, data));
+      case "completarFlashscore": { const K = Deno.env.get("OG_SECRET"); if (!K || data.clave !== K) return resp({ok:false, error:"No autorizado"}, 401);
+        const {data: ps} = await db.from("partidos").select("id,link_stats,fecha_hora").like("link_stats","%flashscore%");
+        const n = await completarMids(db, ps||[]);
+        let det = 0;
+        for (const p of (ps||[])) { const mm = /mid=([A-Za-z0-9]{8})/.exec(p.link_stats||""); if (!mm || new Date(p.fecha_hora).getTime() > Date.now()) continue;
+          const inc = await fsFeed(`df_sui_1_${mm[1]}`); if (inc) { await db.from("partidos").update({goles_det: golesDeInc(inc)}).eq("id", p.id); det++; } }
+        return resp({ok:true, mids:n, detalles:det}); }
       case "pushPruebaUsuario": { const K = Deno.env.get("OG_SECRET"); if (!K || data.clave !== K) return resp({ok:false, error:"No autorizado"}, 401);
         const {data: us} = await db.from("usuarios").select("id").eq("usuario", String(data.usuario||"")).maybeSingle(); if (!us) return resp({ok:false, error:"No existe"});
         return resp({ok:true, enviados: await enviarPush(db, [us.id], {titulo:String(data.titulo||"Prueba"), texto:String(data.texto||""), url:data.url||"/", tag:"prueba-"+Date.now()})}); }
@@ -3043,7 +3050,9 @@ async function adminLinksAuto(db: any, data: any) {
       const fechaTit = /(\d{2})\/(\d{2})\/(\d{4})/.exec(/<title>([^<]*)/.exec(html)?.[1] || "");
       const esperada = new Date(p.fecha_hora).toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric",timeZone:"America/Argentina/Buenos_Aires"});
       if (fechaTit && `${fechaTit[1]}/${fechaTit[2]}/${fechaTit[3]}` !== esperada) estado = "otra fecha";
-      if (mid && estado === "ok") url += `?mid=${mid}`;
+      const mid2 = await midDesdeEquipo(url, p.fecha_hora).catch(() => null);
+      if (mid2) { url += `?mid=${mid2}`; estado = "ok"; }
+      else if (mid && estado === "ok") url += `?mid=${mid}`;
     } catch { estado = "sin verificar"; }
     const ids = await partidosGemelos(db, p.id);
     for (const id of ids) await db.from("partidos").update({link_stats:url}).eq("id", id);
@@ -3137,7 +3146,7 @@ function seccionesInc(inc: string) {
   }
   return out;
 }
-// Goleadores desde las incidencias: [{e:"L"|"V", m:"38'", j:"Santos M.", t:""|"pen"|"ec"}] (sin la tanda de penales)
+// Goles y rojas desde las incidencias: [{e:"L"|"V", m:"38'", j:"Santos M.", t:""|"pen"|"ec"|"roja"}] (sin la tanda de penales)
 function golesDeInc(inc: string) {
   const out: any[] = [];
   for (const s of seccionesInc(inc)) {
@@ -3145,6 +3154,7 @@ function golesDeInc(inc: string) {
     for (const it of s.txt.split("III÷").slice(1)) {
       const c = parseFeed(it);
       const k = c.IK || "";
+      if (/red card/i.test(k)) { out.push({e: c.IA === "2" ? "V" : "L", m: c.IB || "", j: c.IF || "", t: "roja"}); continue; }
       if (!/^(goal|own goal|penalty)$/i.test(k)) continue;
       out.push({e: c.IA === "2" ? "V" : "L", m: c.IB || "", j: c.IF || "", t: /own/i.test(k) ? "ec" : /penalty/i.test(k) ? "pen" : ""});
     }
@@ -3159,12 +3169,39 @@ function rojasHasta90(inc: string) {
   return seccionesInc(inc).filter(s => /^(1st|2nd) Half$/.test(s.nombre))
     .reduce((n, s) => n + (s.txt.match(/IK÷[^¬]*Red Card/g)||[]).length, 0);
 }
+// Código del partido (mid) desde la página del equipo local: busca local+visitante y la fecha (±36 h)
+async function midDesdeEquipo(link: string, fechaHora: string) {
+  const m = /\/partido\/futbol\/([a-z0-9-]+)-([A-Za-z0-9]{8})\/[a-z0-9-]+-([A-Za-z0-9]{8})\//.exec(link||"");
+  if (!m) return null;
+  const html = await (await fetch(`https://www.flashscore.com.ar/equipo/${m[1]}/${m[2]}/`, {headers:{"User-Agent":UA_WEB,"Accept-Language":"es-AR"}})).text();
+  const t0 = new Date(fechaHora).getTime()/1000;
+  for (const b of html.split("AA÷").slice(1)) {
+    const c = parseFeed("AA÷" + b.slice(0, b.indexOf("¬~") > 0 ? b.indexOf("¬~") : 3000));
+    if (c.PX === m[2] && c.PY === m[3] && Math.abs(Number(c.AD) - t0) < 36*3600) return c.AA;
+  }
+  return null;
+}
+async function completarMids(db: any, ps: any[]) {
+  let n = 0;
+  for (const p of ps) {
+    if (!/flashscore/.test(p.link_stats||"") || /mid=/.test(p.link_stats)) continue;
+    try {
+      const mid = await midDesdeEquipo(p.link_stats, p.fecha_hora);
+      if (!mid) continue;
+      const url = p.link_stats.split("?")[0] + `?mid=${mid}`;
+      for (const id of await partidosGemelos(db, p.id)) await db.from("partidos").update({link_stats:url}).eq("id", id);
+      p.link_stats = url; n++;
+    } catch (e) { console.error("mid", p.id, e); }
+  }
+  return n;
+}
 async function cronVivo(db: any) {
   const ahora = Date.now();
   const {data: ps} = await db.from("partidos").select("id,link_stats,fecha_hora,estado,vivo_estado,goles_det")
-    .neq("estado","Finalizado").neq("estado","Suspendido").like("link_stats","%flashscore%mid=%")
+    .neq("estado","Finalizado").neq("estado","Suspendido").like("link_stats","%flashscore%")
     .gte("fecha_hora", new Date(ahora - 4*3600e3).toISOString()).lte("fecha_hora", new Date(ahora + 5*60e3).toISOString());
   if (!(ps||[]).length) return {ok:true, partidos:0};
+  await completarMids(db, (ps||[]).filter((p:any) => !/mid=/.test(p.link_stats||"")));
   // Agrupar por página del equipo local (una descarga trae su partido)
   const porPagina: Record<string, any[]> = {};
   for (const p of (ps||[])) {
@@ -3206,10 +3243,11 @@ async function cronVivo(db: any) {
           await avisoPartido(db, p.id, "avisos_goles", `gol:${p.id}:${ngl}-${ngv}`, `⚽ ¡Gol! ${sigla(viejo.local)} ${ngl}-${ngv} ${sigla(viejo.visita)}`, `Gol de ${quien}${min?` · ${min}'`:""}`);
         }
       }
-      // Goleadores: se piden solo cuando cambia la cantidad de goles
-      if (ngl !== null && ngv !== null && (ngl+ngv) !== (Array.isArray(p.goles_det) ? p.goles_det.length : 0)) {
+      // Goles y rojas con nombre y minuto (se guarda solo si cambió algo)
+      {
         const inc = await fsFeed(`df_sui_1_${p.mid}`);
-        if (inc) await db.from("partidos").update({goles_det: golesDeInc(inc)}).eq("id", p.id);
+        const det = inc ? golesDeInc(inc) : null;
+        if (det && JSON.stringify(det) !== JSON.stringify(p.goles_det||[])) await db.from("partidos").update({goles_det: det}).eq("id", p.id);
       }
       await db.from("partidos").update({vivo_gl: ngl, vivo_gv: ngv, vivo_estado:est, vivo_at:new Date().toISOString(),
         vivo_etapa:etapa, vivo_desde: c.DD ? new Date(Number(c.DD)*1000).toISOString() : null}).eq("id", p.id);
