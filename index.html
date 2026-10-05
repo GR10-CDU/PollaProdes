@@ -2387,6 +2387,13 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .dx-camb{align-items:center}
 .dx-act{height:32px;padding:0 14px;border-radius:16px;font-size:13px;font-weight:800;color:var(--accent-text);background:var(--accent-soft);border:1px solid var(--accent-line)}
 .dx-act:disabled{opacity:.6}
+/* Botón de estadísticas (Flashscore) */
+.st-btn{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px;border-radius:14px;font-size:12.5px;font-weight:800;text-decoration:none;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);white-space:nowrap}
+.st-btn:hover{color:var(--accent-text);border-color:var(--accent-line)}
+.st-mini{margin-top:4px}
+.pc-plazo .st-btn{margin:0 0 0 auto}
+.rs-link{display:flex;gap:8px;align-items:center;margin:8px 0}
+.rs-link .inp{flex:1;height:38px;font-size:13px}
 
 </style>
 </head>
@@ -2980,7 +2987,7 @@ function partidoDet(p,v,etiqueta){
         <span class="pd-mid">${centro}</span>
         <span class="pd-eq vis">${esc(p.visitaLogo,p.visita)}<b>${p.visita}</b></span>
       </div>
-      <div class="pd-a-side der"><span class="pd-meta pd-cuando">${jugado?"Final":cuandoPartido(p.fechaHora)}</span><span class="pd-mio" id="pdm-${p.id}"></span></div>
+      <div class="pd-a-side der"><span class="pd-meta pd-cuando">${jugado?"Final":cuandoPartido(p.fechaHora)}</span><span class="pd-mio" id="pdm-${p.id}"></span>${botonStats(p,"st-mini")}</div>
     </div>`;
 }
 
@@ -3407,7 +3414,7 @@ function renderPartidos(parts,ctx,puede){
       else if(!cambiosCerrados&&cf>0){cls="warn";txt=`Te ${cf!==1?"quedan":"queda"} ${cf} cambio${cf!==1?"s":""}${window._cambiosGratis||App.user?.empresa?" gratis":costo} · hasta `+hasta(60);}
       else if(!cambiosCerrados){cls="off";txt="No te quedan cambios";}
       else{cls="off";txt="Cambios cerrados";}
-      plazoHtml=`<div class="pc-plazo"><span class="pp-k pc-cuando">${cuandoPartido(p.fechaHora,true)}</span><span class="pp-v ${cls}">${txt}</span></div>`;
+      plazoHtml=`<div class="pc-plazo"><span class="pp-k pc-cuando">${cuandoPartido(p.fechaHora,true)}</span><span class="pp-v ${cls}">${txt}</span>${botonStats(p,"st-mini")}</div>`;
     }
     const bloq=!puedePonerProno;
     // Reglas aplicadas a este partido
@@ -4446,6 +4453,7 @@ async function loadRes(ctx){
         <span class="rs-rojas-l">🟥 Rojas</span>${step("tr-"+p.id,p.tarjetasRojas||0,"rojas")}
         <button class="btn ${done?"btn-s":"btn-p"} rs-save" onclick="guardarRes('${p.id}','${sf}')">${done?"Corregir":"Guardar"}</button>
       </div>
+      <div class="rs-link"><input class="inp" placeholder="Link de Flashscore (opcional)" value="${escH(p.linkStats||"")}" onchange="guardarLinkStats('${p.id}',this)"/>${botonStats(p,"st-mini")}</div>
       <div class="rs-more">
         <button class="res-eb" onclick="estadoPartido('${p.id}','Suspendido','${sf}')">⛔ Suspendido</button>
         <button class="res-eb" onclick="estadoPartido('${p.id}','Postergado','${sf}')">📅 Postergado</button>
@@ -5327,6 +5335,7 @@ window.partidosManual=async function(fechaId){
       </div>
       <datalist id="pm-equipos">${ESCUDOS.map(function(e){return`<option value="${escH(e[0])}">`;}).join("")}</datalist>
       ${fhInput("pm",(window._pmDia||diaPlazo)+"T"+(window._pmHora||"21:00"))}
+      <input class="inp" id="pm-ls" placeholder="Link de Flashscore (opcional)"/>
       <div class="pm-fila"><select class="inp" id="pm-t"><option value="Normal">Simple ×1</option><option value="Doble">Doble ×2</option><option value="Polla">Polla</option></select></div>
       <div class="me-acc"><button class="btn btn-s" id="pm-cancel" hidden onclick="pmLimpiar()">Cancelar</button><button class="btn btn-p" id="pm-ok" onclick="pmGuardar()">+ Agregar partido</button></div>
       <p class="pm-nota">El escudo aparece solo si conocemos al equipo. Si no, el partido queda sin escudo y funciona igual.</p>
@@ -5365,7 +5374,7 @@ window.pmGuardar=async function(){
   const fh=new Date(fhs+":00-03:00");if(isNaN(fh)){toast("Fecha u hora inválida");return;}
   window._pmDia=d;window._pmHora=h;
   const se=window._pm.sinEsc||{};
-  const datos={fechaId:window._pm.fechaId,local:l,visita:v,fechaHora:fh.toISOString(),tipo:t,localLogo:window._pm.logo.l,visitaLogo:window._pm.logo.v,sinEscudoLocal:!!se.l,sinEscudoVisita:!!se.v};
+  const datos={fechaId:window._pm.fechaId,local:l,visita:v,fechaHora:fh.toISOString(),tipo:t,localLogo:window._pm.logo.l,visitaLogo:window._pm.logo.v,sinEscudoLocal:!!se.l,sinEscudoVisita:!!se.v,linkStats:g("pm-ls").trim()};
   const r=window._pm.edit?await api("adminEditarPartido",Object.assign({partidoId:window._pm.edit},datos)):await api("adminAgregarPartido",datos);
   if(!r.ok){toast("❌ "+r.error);return;}
   toast(window._pm.edit?"✅ Partido actualizado":"✅ Partido agregado");pmLimpiar();pmCargar();if(App.screen==="admin-fechas")loadAdminFechas();
@@ -5377,12 +5386,12 @@ window.pmEditar=function(id){
   document.getElementById("pm-l").value=x.local;document.getElementById("pm-v").value=x.visita;
   ponerFH("pm",loc.slice(0,16));document.getElementById("pm-t").value=x.tipo||"Normal";
   window._pm.logo={l:x.localLogo||"",v:x.visitaLogo||""};
-  window._pm.sinEsc={};pmPintarEsc("l",x.localLogo,x.local);pmPintarEsc("v",x.visitaLogo,x.visita);
+  window._pm.sinEsc={};document.getElementById("pm-ls").value=x.linkStats||"";pmPintarEsc("l",x.localLogo,x.local);pmPintarEsc("v",x.visitaLogo,x.visita);
   document.getElementById("pm-tit").textContent="Editar partido #"+x.numero;document.getElementById("pm-ok").textContent="Guardar cambios";document.getElementById("pm-cancel").hidden=false;
 };
 window.pmLimpiar=function(){
   window._pm.edit=null;window._pm.logo={l:"",v:""};window._pm.sinEsc={};
-  ["pm-l","pm-v"].forEach(function(i){const e=document.getElementById(i);if(e)e.value="";});
+  ["pm-l","pm-v","pm-ls"].forEach(function(i){const e=document.getElementById(i);if(e)e.value="";});
   ["pm-el","pm-ev"].forEach(function(i){const e=document.getElementById(i);if(e)e.innerHTML="";});
   const t=document.getElementById("pm-t");if(t)t.value="Normal";
   const tt=document.getElementById("pm-tit");if(tt)tt.textContent="Agregar partido";const ok=document.getElementById("pm-ok");if(ok)ok.textContent="+ Agregar partido";const c=document.getElementById("pm-cancel");if(c)c.hidden=true;
@@ -5895,6 +5904,15 @@ window.actualizarGrilla=async function(btn){
   if(r.ok&&g){g.data=r;renderGrilla();toast("✅ Comparación actualizada");}
   else{toast("❌ "+(r.error||"No se pudo actualizar"));if(btn){btn.disabled=false;btn.textContent="↻ Actualizar";}}
 };
+
+// Estadísticas del partido: el link cargado, o la búsqueda en Flashscore
+function linkStats(p){
+  if(p&&p.linkStats)return p.linkStats;
+  const d=p&&p.fechaHora?isoArg(p.fechaHora).slice(0,10):"";
+  return"https://www.google.com/search?q="+encodeURIComponent(`flashscore ${p.local} vs ${p.visita} ${d}`)+"&btnI=1";
+}
+function botonStats(p,cls){return`<a class="st-btn ${cls||""}" href="${escH(linkStats(p))}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ver estadísticas en Flashscore">📊 Estadísticas</a>`;}
+window.guardarLinkStats=async function(pid,inp){const r=await api("adminLinkPartido",{partidoId:pid,link:inp.value});toast(r.ok?(inp.value?"✅ Link guardado":"Link borrado"):"❌ "+r.error);};
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){

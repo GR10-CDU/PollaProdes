@@ -309,6 +309,7 @@ Deno.serve(async (req) => {
       case "eliminarNoticia": return resp(await eliminarNoticia(db, data));
       case "importarPartidos": return resp(await importarPartidos(db, data));
       case "adminAgregarPartido": return resp(await adminAgregarPartido(db, data));
+      case "adminLinkPartido": { const au = await requireAuth(db, data); if (!au.ok || au.rol !== "Admin") return resp({ok:false, error:"Sin permisos"}); const l = String(data.link||"").trim(); if (l && !/^https?:\/\//i.test(l)) return resp({ok:false, error:"El link tiene que empezar con https://"}); const ids = await partidosGemelos(db, data.partidoId); for (const id of ids) await db.from("partidos").update({link_stats:l.slice(0,500)}).eq("id", id); return resp({ok:true}); }
       case "adminLeerCaptura": return resp(await adminLeerCaptura(db, data));
       case "getEscudosEquipos": return resp(await getEscudosEquipos(db, data));
       case "adminGetInscriptos": return resp(await adminGetInscriptos(db, data));
@@ -540,7 +541,7 @@ async function getFecha(db: any, data: any) {
       fechaHora:p.fecha_hora, liga:p.liga, tipo:p.tipo, estado:p.estado,
       golesLocal:p.goles_local, golesVisita:p.goles_visita,
       resultado:p.resultado, tarjetasRojas:p.tarjetas_rojas||0, esToleTole:!!p.es_tole,
-      localLogo:p.local_logo||"", visitaLogo:p.visita_logo||"",
+      localLogo:p.local_logo||"", visitaLogo:p.visita_logo||"", linkStats:p.link_stats||"",
     })),
   };
 }
@@ -2560,7 +2561,8 @@ function datosPartidoManual(data: any) {
   const fh = new Date(data.fechaHora);
   if (isNaN(fh.getTime())) return {error:"Fecha y hora inválidas"};
   const tipo = ["Normal","Doble","Polla"].includes(data.tipo) ? data.tipo : "Normal";
-  return {local, visita, fecha_hora: fh.toISOString(), tipo};
+  const link = String(data.linkStats||"").trim();
+  return {local, visita, fecha_hora: fh.toISOString(), tipo, ...(data.linkStats!==undefined ? {link_stats: /^https?:\/\//i.test(link) ? link.slice(0,500) : ""} : {})};
 }
 async function adminAgregarPartido(db: any, data: any) {
   const auth = await requireAuth(db, data);
