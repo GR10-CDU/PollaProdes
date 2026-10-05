@@ -2256,6 +2256,20 @@ body.login-active #inst-banner{display:none}
   .bn-item .ni svg{width:21px!important;height:21px!important}
   html body #topbar,html body #bn{box-sizing:border-box}
 }
+/* Dashboard del admin: tarjetas compactas, números y textos grandes */
+.dk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.dk{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:12px;align-items:center;padding:14px 16px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1);text-align:left}
+.dk .dk-ic{grid-row:span 2}
+.dk b{font-family:var(--ff);font-size:32px;font-weight:800;line-height:1;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dk small{font-size:13.5px;font-weight:700;color:var(--ink-2);line-height:1.2}
+.dk-ic{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:var(--accent-soft);color:var(--accent-text);flex:none}
+.dk-ic svg{width:22px;height:22px}
+.dk-acc{display:grid;gap:8px}
+.dk-a{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:16px;background:var(--surface);border:1px solid var(--line);text-align:left}
+.dk-tx{flex:1;min-width:0}.dk-tx b{display:block;font-size:17px;font-weight:800}.dk-tx small{display:block;font-size:14px;color:var(--ink-2)}
+.dk-a i{font-style:normal;font-size:24px;color:var(--ink-3)}
+.dk-badge{min-width:26px;height:26px;padding:0 8px;border-radius:13px;display:grid;place-items:center;background:var(--no);color:#fff;font-size:13px;font-weight:800}
+@media(max-width:880px){.dk-grid{grid-template-columns:1fr 1fr;gap:10px}.dk{padding:12px;column-gap:10px}.dk b{font-size:28px}.dk small{font-size:12.5px}.dk-ic{width:38px;height:38px}}
 
 </style>
 </head>
@@ -4082,14 +4096,17 @@ window.resolverFoto=async function(uid,ok){const r=await api("adminResolverFoto"
 
 /* ══ ADMIN DASH ══════════════════════════════════════════════ */
 async function loadDash(){
-  const r=await api("getFechas"),el=document.getElementById("adc");if(!el)return;
-  const ab=r.fechas?.filter(f=>f.estado==="Abierta").length||0;
-  el.innerHTML=`<div class="g4c" style="margin-bottom:20px">
-    ${[{v:r.fechas?.length||0,l:"Fechas",i:"📅",c:"var(--g2)"},{v:ab,l:"Abiertas",i:"🟢",c:"var(--g2)"},{v:"—",l:"Jugadores",i:"👥",c:"var(--blue)"},{v:"—",l:"Recaudado",i:"💰",c:"var(--gold)"}]
-      .map(s=>`<div class="metric"><div class="mi">${s.i}</div><div class="mv" style="color:${s.c}">${s.v}</div><div class="ml">${s.l}</div></div>`).join("")}
-  </div>
+  const el=document.getElementById("adc");if(!el)return;
+  const [rf,rs,rp]=await Promise.all([api("getFechas"),api("getEstadisticas"),api("adminGetPagos")]);
+  const fs=rf.ok?(rf.fechas||[]):[],ab=fs.filter(f=>f.estado==="Abierta");
+  const pz=await Promise.all(ab.map(f=>api("getPozos",{fechaId:f.id}).then(r=>r.ok?(r.pozos||[]):[])));
+  const recaudado=pz.flat().reduce((t,p)=>t+(p.totalRecaudado||0),0),anotados=pz.flat().reduce((t,p)=>t+(p.inscriptos||0),0);
+  const pend=rp.ok?(rp.pagos||[]).length:0;
+  const kpi=[[ab.length,"Fechas abiertas",ICO.fechas,"admin-fechas"],[anotados,"Anotados en juego",ICO.jugadores,"admin-fechas"],[rs.ok?rs.totalUsuarios:"—","Jugadores",ICO.perfil,"admin-users"],["$"+recaudado.toLocaleString("es-AR"),"Recaudado en juego",ICO.pagos,"admin-pagos"]];
+  const acc=[[ICO.resultados,"Cargar resultados","Goles y rojas de la fecha","admin-res",""],[ICO.fechas,"Fechas","Crear, cargar partidos y pozos","admin-fechas",""],[ICO.pagos,"Pagos","Comprobantes para revisar","admin-pagos",pend?pend:""],[ICO.empresas,"Empresas","Marca, códigos y administradores","admin-empresas",""],[ICO.jugadores,"Jugadores","Cuentas registradas","admin-users",""]];
+  el.innerHTML=`<div class="dk-grid">${kpi.map(k=>`<button class="dk" onclick="go('${k[3]}')"><span class="dk-ic">${k[2]}</span><b>${k[0]}</b><small>${k[1]}</small></button>`).join("")}</div>
   <p class="sec">Acciones rápidas</p>
-  ${[["📅 Gestión de Fechas","Crear y administrar fechas","admin-fechas"],["🔗 Importar partidos","Traer desde API-Football","admin-importar"],["⚽ Ingresar resultados","Cargar resultados","admin-res"],["💰 Pagos pendientes","Habilitar inscripciones","admin-pagos"]].map(([t,d,k])=>`<button class="admin-btn" onclick="go('${k}')"><div><div class="abt">${t}</div><div class="abd">${d}</div></div><span style="font-size:26px;color:var(--g2)">›</span></button>`).join("")}`;
+  <div class="dk-acc">${acc.map(a=>`<button class="dk-a" onclick="go('${a[3]}')"><span class="dk-ic">${a[0]}</span><span class="dk-tx"><b>${a[1]}</b><small>${a[2]}</small></span>${a[4]?`<span class="dk-badge">${a[4]}</span>`:""}<i>›</i></button>`).join("")}</div>`;
 }
 
 /* ══ ADMIN FECHAS ════════════════════════════════════════════ */
