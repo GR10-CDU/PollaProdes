@@ -2394,6 +2394,9 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .pc-plazo .st-btn{margin:0 0 0 auto}
 .rs-link{display:flex;gap:8px;align-items:center;margin:8px 0}
 .rs-link .inp{flex:1;height:38px;font-size:13px}
+.fx-extra{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px;margin-top:18px}
+.fx-card{padding:16px}
+.fx-tit{font-family:var(--ff);font-size:20px;font-weight:800;text-transform:uppercase;margin-bottom:8px}
 
 </style>
 </head>
@@ -2864,6 +2867,7 @@ async function loadFechas(){
   cajaCodigoEn(el);
   mostrarNovedadesEn(el);
   if(App.user?.rol!=="Admin")pintarAvisos();
+  extrasFechas(el);
 }
 
 async function cargarExtraFecha(f){
@@ -5923,6 +5927,20 @@ window.linksAuto=async function(fid,btn){
   const no=r.resultados.filter(function(x){return x.estado==="no encontrado";});
   toast(`✅ ${r.cargados} link${r.cargados!==1?"s":""} cargado${r.cargados!==1?"s":""}`+(no.length?` · ${no.length} sin encontrar (#${no.map(function(x){return x.numero;}).join(", #")})`:""),6000);
 };
+
+// Noticias y Salón de la fama: si la columna derecha no se ve (menú superior o celular), van al final de Fechas
+async function extrasFechas(el){
+  const sr=document.getElementById("sidebar-right");
+  if(!el||(sr&&getComputedStyle(sr).display!=="none"))return;
+  document.getElementById("fx-extra")?.remove();
+  const box=document.createElement("div");box.id="fx-extra";box.className="fx-extra";el.appendChild(box);
+  const emp=!!App.user?.empresa;
+  const [rn,rs]=await Promise.all([emp?Promise.resolve({ok:false}):api("getNoticias"),emp?Promise.resolve({ok:false}):api("getEstadisticas")]);
+  const nots=rn.ok?(rn.noticias||[]):[],gans=rs.ok?(rs.ganadores||[]):[];
+  if(!nots.length&&!gans.length){box.remove();return;}
+  box.innerHTML=`${nots.length?`<div class="card fx-card"><div class="fx-tit">📣 Noticias</div>${nots.slice(0,4).map(function(n){return`<div class="noticia-item">${n.fecha?`<div class="noticia-fecha">${n.fecha}</div>`:""}${n.texto}</div>`;}).join("")}</div>`:""}
+    ${gans.length?`<div class="card fx-card"><div class="fx-tit">🏆 Salón de la fama</div>${(function(){const m={};gans.forEach(function(g){const k=g.usuario||"";m[k]=(m[k]||0)+1;});return Object.keys(m).sort(function(a,b){return m[b]-m[a];}).slice(0,5).map(function(u,i){return`<div class="sr-hof-item"><span class="sr-hof-medal">${puestoIco(i+1,24)}</span><div class="sr-hof-name">${escH(u)}</div><span class="sr-hof-wins">${m[u]} fecha${m[u]!==1?"s":""}</span></div>`;}).join("");})()}</div>`:""}`;
+}
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
