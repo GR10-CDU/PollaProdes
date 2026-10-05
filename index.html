@@ -721,10 +721,10 @@ textarea.inp{height:auto;padding:12px 15px;line-height:1.5}
 .cb-txt{flex:1;min-width:0}
 .cb-t{font-size:16px;font-weight:700}
 .cb-t b{font-family:var(--ff);font-size:22px;color:var(--gold)}
-.cb-s{font-size:13px;color:var(--ink-3);margin-top:2px}
+.cb-s{font-size:14.5px;line-height:1.35;color:var(--ink-3);margin-top:3px}
 .cb-s strong{color:var(--ink-2)}
 .cambios-box>span,.cambios-box>button{flex-shrink:0}
-@media(max-width:560px){.cambios-box{flex-wrap:wrap;gap:10px 12px;padding:12px 14px}.cb-txt{flex:1 1 calc(100% - 56px)}.cambios-box>span{margin-left:50px!important}.cb-t{font-size:15px}.cb-s{font-size:12.5px}}
+@media(max-width:560px){.cambios-box{flex-wrap:wrap;gap:12px;padding:14px}.cb-txt{flex:1 1 calc(100% - 70px)}.cb-t{font-size:16px}.cb-s{font-size:14px;line-height:1.35}.cb-pos{flex:1 1 100%;margin:0}}
 /* Ventana de pago de prueba */
 .pp-aviso{font-size:14px;line-height:1.5;padding:12px 14px;border-radius:14px;background:var(--info-soft);color:var(--ink-2);border:1px solid var(--info-line);margin-bottom:14px}
 .pp-tk{border-radius:16px;border:1px dashed var(--line-2);background:var(--surface-2);padding:6px 16px;margin-bottom:16px}
@@ -2469,6 +2469,15 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .fecha-cierre{display:inline-flex;align-items:center;gap:4px;margin-left:10px;vertical-align:middle;padding:3px 10px;border-radius:12px;font-family:var(--fb,inherit);font-size:15px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--ink-2);background:var(--accent-soft);border:1px solid var(--accent-line);white-space:nowrap}
 @media(max-width:560px){.fecha-cierre{display:flex;width:fit-content;margin:6px 0 0}}
 
+/* Posición / puntos / distancia al puntero en el cuadro de cambios */
+.cb-pos{display:flex;align-items:stretch;gap:8px;flex-shrink:0}
+.cbp-it{flex:1;min-width:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 10px;border-radius:12px;background:var(--surface-3);border:1px solid var(--line)}
+.cbp-it b{font-family:var(--ff);font-size:24px;font-weight:900;line-height:1;color:var(--ink)}
+.cbp-it span{font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);margin-top:4px;white-space:nowrap}
+.cbp-it.oro{background:var(--gold-soft);border-color:var(--gold-line)}
+.cbp-it.oro b{color:var(--gold)}
+.cbp-btn{flex:0 0 40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:16px;cursor:pointer}
+
 </style>
 </head>
 <body>
@@ -3355,7 +3364,8 @@ window.showModalCambiosPagados=function(cambios){
 
 window.actualizarPuntajes=async function(){
   const btn=document.getElementById("btn-actualizar-pts");
-  if(btn){btn.textContent="⏳ Actualizando...";btn.disabled=true;}
+  if(btn){btn.textContent="⏳";btn.disabled=true;}
+  window._tablaPosT=0;
   const rm=await api("getMiFecha",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId});
   if(rm.ok){
     window._cambiosFecha=rm.cambiosRestantesFecha!==undefined?rm.cambiosRestantesFecha:3;
@@ -3378,8 +3388,29 @@ window.actualizarPuntajes=async function(){
       renderResumenCambios();
     }
   }
-  if(btn){btn.textContent="🔄 Actualizar";btn.disabled=false;}
+  const b2=document.getElementById("btn-actualizar-pts");if(b2){b2.textContent="🔄";b2.disabled=false;}
 };
+
+// Posición, puntos y distancia al puntero (cuando la fecha ya arrancó)
+function _cbPosHtml(totalPts){
+  const t=window._tablaPos,me=App.user?.id;
+  const yo=t&&t.tabla?t.tabla.find(function(u){return u.userId===me;}):null;
+  const pts=yo?yo.ptsTotal:totalPts;
+  const lider=t&&t.tabla&&t.tabla.length?t.tabla[0].ptsTotal:null;
+  const dif=yo&&lider!==null?lider-yo.ptsTotal:null;
+  const it=function(v,l,c){return`<div class="cbp-it${c?" "+c:""}"><b>${v}</b><span>${l}</span></div>`;};
+  return it(yo?yo.posicion+"º":"–","Posición")+it(pts,"Puntos","oro")+it(dif===null?"–":dif===0?"Puntero":"-"+dif,dif===0?"¡Vas 1º!":"Al puntero")
+    +`<button onclick="actualizarPuntajes()" class="cbp-btn" id="btn-actualizar-pts" aria-label="Actualizar">🔄</button>`;
+}
+async function _cargarPosicion(totalPts){
+  const k=window._ctx?.fechaId+"|"+window._ctx?.pozoId,ahora=Date.now();
+  if(window._tablaPosK===k&&ahora-(window._tablaPosT||0)<30000)return;
+  window._tablaPosK=k;window._tablaPosT=ahora;
+  const r=await api("getTabla",{fechaId:window._ctx.fechaId,pozoId:window._ctx.pozoId});
+  if(!r.ok)return;
+  window._tablaPos=r;
+  const el=document.getElementById("cb-pos");if(el)el.innerHTML=_cbPosHtml(totalPts);
+}
 
 function renderResumenCambios(){
   const el=document.getElementById("prog-cambios");if(!el)return;
@@ -3401,7 +3432,8 @@ function renderResumenCambios(){
     const ptsReglas=(p.reglas||[]).filter(function(r){return r.codigo!=="LR"&&r.codigo!=="DIEGO";}).reduce(function(s,r){return s+(r.puntos||0);},0);
     return t+ptsBase+lrPts+ptsReglas;
   },0);
-  const ptsBadge=totalPts>0?`<span style="font-family:var(--ff);font-size:26px;font-weight:900;color:var(--g2);margin-left:12px">🏆 ${totalPts} pts</span> <button onclick="actualizarPuntajes()" style="font-size:14px;padding:3px 10px;background:var(--off);border:1px solid var(--bdr-l2);border-radius:var(--rs);cursor:pointer;font-weight:600;color:var(--txt2);margin-left:6px" id="btn-actualizar-pts">🔄 Actualizar</button>`:"";
+  const ptsBadge=_enLibre()?"":`<div class="cb-pos" id="cb-pos">${_cbPosHtml(totalPts)}</div>`;
+  if(!_enLibre())_cargarPosicion(totalPts);
   
   el.style.display="block";
   if(_enLibre()){
