@@ -2466,6 +2466,8 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .pd-mid:has(.lv){background:none!important;border:0!important;box-shadow:none!important;padding:0!important;min-width:0!important}
 .pd .lv.c{margin:0;flex-direction:column;gap:2px;padding:5px 10px}
 .pd .lv.c .lv-sc{font-size:22px}
+.fecha-cierre{display:inline-flex;align-items:center;gap:4px;margin-left:10px;vertical-align:middle;padding:3px 10px;border-radius:12px;font-family:var(--fb,inherit);font-size:13px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--ink-2);background:var(--accent-soft);border:1px solid var(--accent-line);white-space:nowrap}
+@media(max-width:560px){.fecha-cierre{display:flex;width:fit-content;margin:6px 0 0}}
 
 </style>
 </head>
@@ -2921,7 +2923,7 @@ async function loadFechas(){
       <div class="fecha-body">
         <div class="fecha-lig-box">${ic}</div>
         <div class="fecha-info">
-          <div class="fecha-nom">${f.nombre}</div>
+          <div class="fecha-nom">${f.nombre}${f.plazoLimite&&mins>0?`<span class="fecha-cierre">⏰ Jugá hasta ${cuandoPartido(f.plazoLimite)} hs</span>`:""}</div>
           <div class="fecha-meta">
             <span>⚽ ${f.cantPartidos||0} partidos</span>
             <span style="color:var(--bdr-l2)">·</span>
