@@ -186,6 +186,7 @@ Deno.serve(async (req) => {
       case "guardarPush": return resp(await guardarPush(db, data));
       case "borrarPush": return resp(await borrarPush(db, data));
       case "probarPush": return resp(await probarPush(db, data));
+      case "setAvisosReglas": return resp(await setAvisosReglas(db, data));
       case "adminEnviarPush": return resp(await adminEnviarPush(db, data));
       case "cronAvisos": return resp(await cronAvisos(db));
       case "logout": return resp(await logout(db, data));
@@ -1795,6 +1796,7 @@ async function estadoPartidoUno(db: any, partidoId: string, estado: string) {
     const claves = (rs||[]).map((r:any) => `regla:${r.id}`);
     if (claves.length) await db.from("push_enviados").delete().in("clave", claves);
     await db.from("push_enviados").delete().like("clave", `polla:${partidoId}:%`);
+    await db.from("push_enviados").delete().like("clave", `rl:${part.fecha_id}:%`);
   }
 }
 
@@ -2105,7 +2107,7 @@ async function userOut(db: any, user: any) {
   const {data: ms} = await db.from("empresa_miembros").select("rol,datos_extra, empresas(*)").eq("user_id", user.id).order("created_at");
   const empresas = (ms||[]).filter((m:any) => m.empresas && m.empresas.estado === "Activa").map((m:any) => ({...empresaOut(m.empresas), rolEmpresa:m.rol, datosExtra:m.datos_extra||{}}));
   return {id:user.id, usuario:user.usuario, nombre:user.nombre, alias:user.alias_mp, email:user.email, telefono:user.telefono,
-    avatar:user.avatar, fotoPendiente:user.foto_pendiente||null, rol:user.rol, cupones:user.cupones, publico:user.publico !== false, empresas};
+    avatar:user.avatar, fotoPendiente:user.foto_pendiente||null, rol:user.rol, cupones:user.cupones, publico:user.publico !== false, empresas, avisosReglas:user.avisos_reglas !== false};
 }
 async function sumarMiembro(db: any, userId: string, empresaId: string, rol?: string, datos?: any) {
   const fila: any = {user_id:userId, empresa_id:empresaId};
@@ -2592,10 +2594,8 @@ async function avisosResultado(db: any, partidoId: string) {
     for (const a of (ac||[])) if (await primeraVez(db, `polla:${p.id}:${a.user_id}`))
       await enviarPush(db, [a.user_id], {titulo:"⭐ ¡Acertaste la Polla!", texto:`${partido}: +5 puntos`, tag:`polla-${p.id}`});
   }
-  // 🎯 Reglas que sumaron (en toda la fecha, por si alguna depende de varios partidos)
-  const {data: rs} = await db.from("reglas").select("id,user_id,nombre,codigo,local,visita,puntos_obtenidos").eq("fecha_id", p.fecha_id).gt("puntos_obtenidos", 0);
-  for (const r of (rs||[])) if (await primeraVez(db, `regla:${r.id}`))
-    await enviarPush(db, [r.user_id], {titulo:`🎯 ¡Pegaste ${r.nombre||r.codigo}!`, texto:`${r.local&&r.visita?r.local+" vs "+r.visita+": ":""}+${r.puntos_obtenidos} punto${r.puntos_obtenidos!==1?"s":""}`, tag:`regla-${r.id}`});
+  // ⚽ Reglas: las de un partido avisan al sumar; LMR, LR y EL DIEGO recién cuando terminan sus 3 partidos
+  await avisosReglas(db, p.fecha_id);
 }
 // Cada 15 minutos (pg_cron): fechas que cierran en menos de 2 horas → aviso a quien le faltan pronósticos
 async function cronAvisos(db: any) {
@@ -2703,4 +2703,54 @@ async function adminEnviarPush(db: any, data: any) {
   if (!u) return {ok:false, error:"Usuario no encontrado"};
   const n = await enviarPush(db, [u.id], {titulo:String(data.titulo||"Polla Prodes").slice(0,80), texto:String(data.texto||"").slice(0,200), tag:"admin-"+Date.now()});
   return {ok:true, enviados:n};
+}
+
+const TITULO_REGLA = "⚽ Pegaste una Regla ⚽";
+function textoRegla(codigo: string, pts: number) {
+  switch (codigo) {
+    case "ZPL": return "Metiste la ZAPALI, Crack!";
+    case "MK": return "Metiste MK, SUBLIME!";
+    case "LR": return `Sumaste ${pts} puntos en LR`;
+    case "DIEGO": return `Sumaste ${pts} pts en EL DIEGO`;
+    default: return `Sumaste ${pts} pts en ${codigo}`;
+  }
+}
+const REGLAS_LARGAS = ["LMR","LR","DIEGO"];
+async function avisosReglas(db: any, fechaId: string) {
+  const {data: apagados} = await db.from("usuarios").select("id").eq("avisos_reglas", false);
+  const off = new Set((apagados||[]).map((u:any) => u.id));
+  const [{data: rs}, {data: parts}, {data: pronos}] = await Promise.all([
+    db.from("reglas").select("id,user_id,pozo_id,codigo,partido_id,numero_partido,puntos_obtenidos").eq("fecha_id", fechaId),
+    db.from("partidos").select("id,numero,estado").eq("fecha_id", fechaId),
+    db.from("pronosticos").select("user_id,pozo_id,partido_id,numero_partido,acertado").eq("fecha_id", fechaId),
+  ]);
+  const terminado = (pid: string) => { const x = (parts||[]).find((p:any) => p.id === pid); return !!x && (x.estado === "Finalizado" || x.estado === "Suspendido"); };
+  // De un partido: una vez por regla, apenas suma
+  for (const r of (rs||[]).filter((r:any) => !REGLAS_LARGAS.includes(r.codigo) && (r.puntos_obtenidos||0) > 0 && !off.has(r.user_id)))
+    if (await primeraVez(db, `regla:${r.id}`))
+      await enviarPush(db, [r.user_id], {titulo:TITULO_REGLA, texto:textoRegla(r.codigo, r.puntos_obtenidos), tag:`regla-${r.id}`});
+  // Largas: cuando la regla terminó, con el total
+  const grupos: Record<string, any[]> = {};
+  for (const r of (rs||[]).filter((r:any) => REGLAS_LARGAS.includes(r.codigo))) (grupos[`${r.user_id}|${r.pozo_id}|${r.codigo}`] ||= []).push(r);
+  for (const [k, regs] of Object.entries(grupos)) {
+    const [userId, pozoId, codigo] = k.split("|");
+    let fin = false;
+    if (codigo === "LR") {
+      const ini = regs[0];
+      const susp = new Set((parts||[]).filter((p:any) => p.estado === "Suspendido").map((p:any) => p.id));
+      const racha = (pronos||[]).filter((p:any) => p.user_id === userId && p.pozo_id === pozoId && p.numero_partido >= ini.numero_partido && !susp.has(p.partido_id))
+        .sort((a:any,b:any) => a.numero_partido - b.numero_partido).slice(0,3);
+      fin = racha.some((p:any) => p.acertado === false && terminado(p.partido_id)) || (racha.length === 3 && racha.every((p:any) => terminado(p.partido_id)));
+    } else fin = regs.every((r:any) => terminado(r.partido_id));
+    const total = regs.reduce((t:number, r:any) => t + (r.puntos_obtenidos||0), 0);
+    if (fin && total > 0 && !off.has(userId) && await primeraVez(db, `rl:${fechaId}:${k}`))
+      await enviarPush(db, [userId], {titulo:TITULO_REGLA, texto:textoRegla(codigo, total), tag:`rl-${codigo}-${pozoId}`});
+  }
+}
+
+async function setAvisosReglas(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  await db.from("usuarios").update({avisos_reglas: !!data.activo}).eq("id", auth.userId);
+  return {ok:true, activo: !!data.activo};
 }

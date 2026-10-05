@@ -2277,6 +2277,15 @@ body.login-active #inst-banner{display:none}
 .rs-card.final .rs-head .rs-n{font-size:20px}
 .rs-card.final .rs-chip.final,.rs-card.final .rs-chip{background:rgba(255,255,255,.22);color:#fff;font-size:14px;height:28px;padding:0 12px;border-radius:14px}
 .rs-card.final .rs-head .t-tag{background:rgba(255,255,255,.22);color:#fff;box-shadow:none}
+/* Interruptor en Ajustes */
+.st-tog{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:16px;background:var(--surface-2);border:1px solid var(--line);cursor:pointer}
+.st-tog b{display:block;font-size:15px}.st-tog small{font-size:12.5px;color:var(--ink-3)}
+.st-tog input{display:none}
+.st-tog i{flex:none;width:50px;height:30px;border-radius:15px;background:var(--line-2);position:relative;transition:background .2s}
+.st-tog i::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .25s var(--ease-out)}
+.st-tog input:checked+i{background:var(--ok)}
+.st-tog input:checked+i::after{transform:translateX(20px)}
+#st-avisos[hidden]{display:none}
 
 </style>
 </head>
@@ -2478,6 +2487,10 @@ body.login-active #inst-banner{display:none}
           <button data-v="auto" onclick="setPref('mode','auto')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Auto</button>
         </div>
         <div class="st-hint">"Auto" sigue la configuración de tu teléfono o computadora.</div>
+      </div>
+      <div class="st-group" id="st-avisos" hidden>
+        <div class="st-label">🔔 Avisos</div>
+        <label class="st-tog"><span><b>Avisos de reglas</b><small>Te avisamos cuando pegás una regla</small></span><input type="checkbox" id="tg-reglas" onchange="toggleAvisosReglas(this.checked)"/><i></i></label>
       </div>
       <div class="st-group">
         <div class="st-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.84-.44-1.13-.29-.29-.44-.65-.44-1.13a1.64 1.64 0 0 1 1.67-1.67h2c3.05 0 5.56-2.5 5.56-5.55C21.96 6.01 17.46 2 12 2z"/></svg>Tema</div>
@@ -3731,6 +3744,7 @@ async function loadTabla(ctx){
     const ri=await api("getMisInscripciones");
     const inscripciones=ri.ok?(ri.inscripciones||[]):[];
     if(!inscripciones.length){el.innerHTML=emptyBox("🏆","No estás inscripto en ninguna fecha");return;}
+    if(inscripciones.length===1){go("tabla",{fechaId:inscripciones[0].fechaId,pozoId:inscripciones[0].pozoId});return;}
     const fechas=rf.ok?(rf.fechas||[]):[];
     el.innerHTML=`<div class="card" style="padding:20px"><p class="sec" style="margin-top:0;color:var(--txt)">${App.user?.empresa?"Seleccioná la fecha":"Seleccioná fecha y pozo"}</p>${inscripciones.map(function(i){const f=fechas.find(function(x){return x.id===i.fechaId;});return`<div class="admin-btn" onclick="go('tabla',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})"><div><div class="abt">${f?f.nombre:i.fechaId}</div><div class="abd">${App.user?.empresa?"":"Pozo $"+(i.monto||0).toLocaleString("es-AR")+" · "}${f?f.liga||"":""}</div></div><span style="color:var(--g2);font-size:23px">→</span></div>`;}).join("")}</div>`;
     return;
@@ -4730,6 +4744,7 @@ window.setPref=function(k,v){
 };
 window.openSettings=function(){
   applyPrefs(window.__prefs,false);
+  const sa=document.getElementById("st-avisos");if(sa){sa.hidden=!App.user;const tg=document.getElementById("tg-reglas");if(tg)tg.checked=App.user?.avisosReglas!==false;}
   const s=document.getElementById("settings");s.classList.add("open");
   setTimeout(()=>s.querySelector('[aria-pressed="true"]')?.focus({preventScroll:true}),60);
 };
@@ -5556,6 +5571,14 @@ function bnCercano(x){const items=[...document.querySelectorAll("#bn-wrap .bn-it
 })();
 
 try{localStorage.removeItem("pp_medir");}catch(e){}
+
+// Ajustes: prender / apagar avisos de reglas
+window.toggleAvisosReglas=async function(on){
+  const r=await api("setAvisosReglas",{activo:on});
+  if(!r.ok){toast("❌ "+r.error);const t=document.getElementById("tg-reglas");if(t)t.checked=!on;return;}
+  App.user.avisosReglas=on;saveSession(App.user,App.token);toast(on?"🔔 Avisos de reglas activados":"🔕 Avisos de reglas desactivados");
+  if(on&&typeof pushEstado==="function"&&await pushEstado()==="apagado")activarAvisos();
+};
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
