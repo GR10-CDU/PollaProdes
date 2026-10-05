@@ -237,6 +237,7 @@ Deno.serve(async (req) => {
       case "setAvisosReglas": return resp(await setAvisosReglas(db, data));
       case "aceptarLegales": { const au = await requireAuth(db, data); if (!au.ok) return resp(au); await db.from("usuarios").update({legales_version:LEGALES_VERSION, legales_at:new Date().toISOString()}).eq("id", au.userId); return resp({ok:true}); }
       case "adminEnviarPush": return resp(await adminEnviarPush(db, data));
+      case "adminPushMasivo": return resp(await adminPushMasivo(db, data));
       case "adminMailsPrueba": return resp(await adminMailsPrueba(db, data));
       case "cronAvisos": return resp(await cronAvisos(db));
       case "logout": return resp(await logout(db, data));
@@ -2986,4 +2987,19 @@ async function adminLinksAuto(db: any, data: any) {
     res.push({numero:p.numero, estado, detalle:`${a.nombre} vs ${b.nombre}`});
   }
   return {ok:true, resultados:res, cargados:res.filter((r:any)=>["ok","sin verificar","otra fecha"].includes(r.estado)).length};
+}
+
+// Admin: aviso personalizado a todos los que tienen avisos activados (o a los de una empresa / fecha)
+async function adminPushMasivo(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const titulo = String(data.titulo||"").trim().slice(0,80), texto = String(data.texto||"").trim().slice(0,200);
+  if (!titulo) return {ok:false, error:"Escribí el título"};
+  const {data: subs} = await db.from("push_subs").select("user_id");
+  let ids = [...new Set((subs||[]).map((x:any) => x.user_id))] as string[];
+  if (data.empresaId) { const {data: ms} = await db.from("empresa_miembros").select("user_id").eq("empresa_id", data.empresaId); const ok = new Set((ms||[]).map((m:any)=>m.user_id)); ids = ids.filter(i => ok.has(i)); }
+  if (data.fechaId) { const {data: ins} = await db.from("inscripciones").select("user_id").eq("fecha_id", data.fechaId).in("estado_pago",["Pendiente","Aprobado"]); const ok = new Set((ins||[]).map((m:any)=>m.user_id)); ids = ids.filter(i => ok.has(i)); }
+  if (data.soloContar) return {ok:true, usuarios:ids.length};
+  const n = await enviarPush(db, ids, {titulo, texto, tag:"admin-"+Date.now()});
+  return {ok:true, usuarios:ids.length, dispositivos:n};
 }
