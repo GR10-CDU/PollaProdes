@@ -2188,6 +2188,15 @@ body.login-active #inst-banner{display:none}
   html.ios-gap body #bn{padding-bottom:max(4px,calc(env(safe-area-inset-bottom) - 26px))!important}
   html{background:var(--surface)}
 }
+/* v5: el menú vuelve a su lugar (sin bajarlo por medición); header con el mismo borde que el menú */
+@media(max-width:880px){
+  html body #bn{transform:none!important}
+  html.ios-gap body #bn{padding-bottom:var(--m-safe-bot)!important}
+  html body #topbar{background:var(--surface)!important;border-bottom:1px solid var(--m-line)!important;
+    box-shadow:inset 0 -1px 0 rgba(255,255,255,.07),0 14px 34px -24px rgba(0,0,0,.6)!important}
+  html body #bn{background:var(--surface)!important}
+  #dbg-ios{position:fixed;left:8px;right:8px;top:50%;z-index:99999;padding:10px 12px;border-radius:12px;background:#111;color:#0f0;font:600 13px/1.4 monospace;white-space:pre-wrap;pointer-events:none}
+}
 
 </style>
 </head>
@@ -5474,7 +5483,13 @@ function ajustarBordeIOS(){
     if(gap>4&&gap<80){h.style.setProperty("--ios-gap",gap+"px");h.classList.add("ios-gap");}else{h.style.removeProperty("--ios-gap");h.classList.remove("ios-gap");}
   }catch(e){}
 }
-ajustarBordeIOS();window.addEventListener("resize",ajustarBordeIOS);window.addEventListener("orientationchange",function(){setTimeout(ajustarBordeIOS,300);});
+ajustarBordeIOS();window.addEventListener("resize",ajustarBordeIOS);
+// Diagnóstico temporal (solo con ?medir): muestra las medidas de la pantalla
+if(/[?&]medir/.test(location.search)||(function(){try{return localStorage.getItem("pp_medir")==="1";}catch(e){return false;}})()){
+  try{localStorage.setItem("pp_medir","1");}catch(e){}
+  setTimeout(function(){const d=document.createElement("div");d.id="dbg-ios";const p=document.createElement("div");p.style.cssText="position:fixed;bottom:0;left:0;width:1px;height:env(safe-area-inset-bottom)";const t=document.createElement("div");t.style.cssText="position:fixed;top:0;left:0;width:1px;height:env(safe-area-inset-top)";document.body.append(p,t);
+    d.textContent=`pantalla ${screen.width}x${screen.height}\nventana ${innerWidth}x${innerHeight}\nvisual ${Math.round(visualViewport?visualViewport.height:0)}\nsafe arriba ${t.offsetHeight} · abajo ${p.offsetHeight}\napp ${navigator.standalone}`;document.body.appendChild(d);},1500);
+}window.addEventListener("orientationchange",function(){setTimeout(ajustarBordeIOS,300);});
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
