@@ -2370,6 +2370,13 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .em-danger{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding:12px 14px;border-radius:14px;border:1px solid color-mix(in srgb,var(--no) 35%,transparent);background:color-mix(in srgb,var(--no) 6%,transparent)}
 .em-danger b{display:block;color:var(--no)}.em-danger small{font-size:12.5px;color:var(--ink-2)}
 @media(max-width:560px){.em-kpis{grid-template-columns:repeat(2,1fr)}.em-kpis .em-kpi-p{grid-column:span 2}.pq-fila{flex-wrap:wrap}}
+/* Cuándo se juega cada partido */
+.pd-cuando,.pc-cuando,.rs-hora{font-size:15px!important;font-weight:700;color:var(--ink-2);white-space:nowrap}
+.pd-cuando b,.pc-cuando b,.rs-hora b{font-weight:900;letter-spacing:.03em}
+.cp-hoy{color:var(--no)}
+.cp-man{color:var(--accent-text)}
+.cp-dia{color:var(--ink)}
+.pc-cuando{font-size:16px!important}
 
 </style>
 </head>
@@ -2945,7 +2952,7 @@ function partidoDet(p,v,etiqueta){
       <span class="pd-eq loc"><b>${p.local}</b>${esc(p.localLogo,p.local)}</span>
       <span class="pd-mid">${centro}</span>
       <span class="pd-eq vis">${esc(p.visitaLogo,p.visita)}<b>${p.visita}</b></span>
-      <span class="pd-meta">${dia}${jugado?" · "+hora:""}</span>
+      <span class="pd-meta pd-cuando">${cuandoPartido(p.fechaHora)}</span>
     </div>`;
   if(v==="C")return`<div class="pd pd-c${jugado?" jugado":""}${esSenior(p)?" senior":""}">${lbl}
       <div class="pd-c-top"><span class="pd-n">#${p.numero}</span>${tags}</div>
@@ -2963,7 +2970,7 @@ function partidoDet(p,v,etiqueta){
         <span class="pd-mid">${centro}</span>
         <span class="pd-eq vis">${esc(p.visitaLogo,p.visita)}<b>${p.visita}</b></span>
       </div>
-      <div class="pd-a-side der"><span class="pd-meta">${dia}</span><span class="pd-meta">${jugado?"Final":hora}</span><span class="pd-mio" id="pdm-${p.id}"></span></div>
+      <div class="pd-a-side der"><span class="pd-meta pd-cuando">${jugado?"Final":cuandoPartido(p.fechaHora)}</span><span class="pd-mio" id="pdm-${p.id}"></span></div>
     </div>`;
 }
 
@@ -3391,7 +3398,7 @@ function renderPartidos(parts,ctx,puede){
       else if(!cambiosCerrados&&cf>0){cls="warn";txt="Cambios hasta "+hasta(60)+costo+` · quedan ${cf}`;}
       else if(!cambiosCerrados){cls="off";txt="Sin cambios disponibles";}
       else{cls="off";txt="Cambios cerrados";}
-      plazoHtml=`<div class="pc-plazo"><span class="pp-k">Empieza ${fmtH(inicioP)}</span><span class="pp-v ${cls}">${txt}</span></div>`;
+      plazoHtml=`<div class="pc-plazo"><span class="pp-k pc-cuando">${cuandoPartido(p.fechaHora,true)}</span><span class="pp-v ${cls}">${txt}</span></div>`;
     }
     const bloq=!puedePonerProno;
     // Reglas aplicadas a este partido
@@ -4406,7 +4413,7 @@ async function loadRes(ctx){
   const ps=(rp.partidos||[]).slice().sort(function(a,b){return orden[est(a)]-orden[est(b)]||(a.numero-b.numero);});
   const nCargar=ps.filter(function(p){return est(p)==="cargar";}).length,nFinal=ps.filter(function(p){return est(p)==="final";}).length;
   const ti=function(p){return TIPO_INFO[p.tipo]||TIPO_INFO.Normal;};
-  const hora=function(p){return p.fechaHora?_fmtH(new Date(p.fechaHora)):"";};
+  const hora=function(p){return p.fechaHora?cuandoPartido(p.fechaHora):"";};
   const step=function(id,val,cls){return`<div class="stp ${cls||""}"><button onclick="stp('${id}',-1)" aria-label="menos">–</button><input id="${id}" type="number" min="0" max="20" inputmode="numeric" value="${val}"/><button onclick="stp('${id}',1)" aria-label="más">+</button></div>`;};
   const chip={cargar:'<span class="rs-chip cargar">● Para cargar</span>',prox:'<span class="rs-chip">Próximo</span>',final:'<span class="rs-chip final">✓ Cargado</span>',susp:'<span class="rs-chip susp">⛔ Suspendido</span>',post:'<span class="rs-chip post">📅 Postergado</span>'};
   el.innerHTML=`
@@ -5854,6 +5861,18 @@ window.eliminarEmpresa=async function(){
   if(!r.ok){toast("❌ "+r.error);return;}
   toast(`🗑 Empresa eliminada (${r.fechasBorradas} fecha${r.fechasBorradas!==1?"s":""} borrada${r.fechasBorradas!==1?"s":""})`);window._empEdit=null;loadAdminEmpresas();
 };
+
+// Cuándo se juega: "HOY 21:15", "MAÑANA 16:45" o "Lun 6/10 21:15" (hora de Argentina)
+function cuandoPartido(iso,conHs){
+  if(!iso)return"";const d=new Date(iso);if(isNaN(d))return"";
+  const dia=function(x){return isoArg(x.toISOString()).slice(0,10);};
+  const hoy=dia(new Date()),man=dia(new Date(Date.now()+864e5)),el=dia(d);
+  const h=d.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"})+(conHs?" hs":"");
+  if(el===hoy)return`<b class="cp-hoy">HOY</b> ${h}`;
+  if(el===man)return`<b class="cp-man">MAÑANA</b> ${h}`;
+  const f=d.toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"numeric",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","").replace(",","");
+  return`<b class="cp-dia">${f.charAt(0).toUpperCase()+f.slice(1)}</b> ${h}`;
+}
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
