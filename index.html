@@ -2443,6 +2443,13 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .fs-acc{position:sticky;bottom:0;background:var(--accent-soft);padding:8px 0}
 @media(max-width:560px){.fs-p{grid-template-columns:22px 1fr 1fr}.fs-p i{display:none}.fs-p small{grid-column:2/-1}}
 .st-edit{width:28px;height:28px;margin-top:4px;border-radius:14px;font-size:14px;color:var(--ink-3);border:1px solid var(--line);background:var(--surface-2)}
+/* En vivo */
+.vivo{display:inline-flex;flex-direction:column;align-items:center;gap:2px;padding:4px 10px;border-radius:12px;background:color-mix(in srgb,var(--no) 10%,transparent);border:1px solid color-mix(in srgb,var(--no) 35%,transparent)}
+.vivo-k{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:900;letter-spacing:.08em;color:var(--no);white-space:nowrap}
+.vivo-k i{width:7px;height:7px;border-radius:50%;background:var(--no)}
+.vivo.on .vivo-k i{animation:livedot 1.4s infinite}
+.vivo b{font-family:var(--ff);font-size:24px;font-weight:800;color:var(--ink);line-height:1}
+.vivo.g{margin-bottom:8px}.vivo.g b{font-size:34px}
 
 </style>
 </head>
@@ -2750,7 +2757,7 @@ function getNav(){const r=App.user?.rol;return r==="Admin"?NAV_A:r==="AdminEmpre
 function go(k,ctx={}){
   if(k!=="jugar"){const b=document.getElementById("reglas-badge");if(b)b.style.display="none";}
   App.screen=k;App.ctx=ctx;
-  if(["jugar","tabla","grilla","los-otros"].includes(k)){startAutoRefresh();}
+  if(["jugar","tabla","grilla","los-otros","fecha-det"].includes(k)){startAutoRefresh();}
   else{stopAutoRefresh();}
   const TITULOS={"fecha-det":"Fecha","jugar":"Tus pronósticos","stats":"Estadísticas"};
   const item=getNav().find(n=>n.k===k)||{t:TITULOS[k]||"Polla Prodes"};
@@ -3014,12 +3021,13 @@ function partidoDet(p,v,etiqueta){
   const hora=d?d.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"";
   const dia=d?d.toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"numeric",timeZone:"America/Argentina/Buenos_Aires"}).replace(".",""):"";
   const centro=susp?`<span class="pd-est">Susp.</span>`:post?`<span class="pd-est">Post.</span>`:jugado?`<span class="pd-gol">${p.golesLocal}</span><span class="pd-gsep">-</span><span class="pd-gol">${p.golesVisita}</span>`:`<span class="pd-hora">${hora}</span>`;
+  const centroV=!jugado&&p.vivo?vivoHtml(p):centro;
   const esc=function(url,n){return url?`<img src="${url}" alt="" loading="lazy">`:inicialEq(n);};
   const lbl=etiqueta?`<span class="pd-lbl">Opción ${v}</span>`:"";
   if(v==="B")return`<div class="pd pd-b${jugado?" jugado":""}${esSenior(p)?" senior":""}">${lbl}
       <span class="pd-n">#${p.numero}</span><span class="pd-tags">${tags}</span>
       <span class="pd-eq loc"><b>${p.local}</b>${esc(p.localLogo,p.local)}</span>
-      <span class="pd-mid">${centro}</span>
+      <span class="pd-mid">${centroV}</span>
       <span class="pd-eq vis">${esc(p.visitaLogo,p.visita)}<b>${p.visita}</b></span>
       <span class="pd-meta pd-cuando">${cuandoPartido(p.fechaHora)}</span>
     </div>`;
@@ -3027,7 +3035,7 @@ function partidoDet(p,v,etiqueta){
       <div class="pd-c-top"><span class="pd-n">#${p.numero}</span>${tags}</div>
       <div class="pd-c-body">
         <div class="pd-c-team">${esc(p.localLogo,p.local)}<b>${p.local}</b></div>
-        <div class="pd-mid">${centro}</div>
+        <div class="pd-mid">${centroV}</div>
         <div class="pd-c-team">${esc(p.visitaLogo,p.visita)}<b>${p.visita}</b></div>
       </div>
       <div class="pd-c-foot">${p.liga||""}${p.liga?" · ":""}${dia} · ${hora}</div>
@@ -3036,7 +3044,7 @@ function partidoDet(p,v,etiqueta){
       <div class="pd-a-side"><span class="pd-n">#${p.numero}</span><span class="pd-tags">${tags}</span></div>
       <div class="pd-a-match">
         <span class="pd-eq loc"><b>${p.local}</b>${esc(p.localLogo,p.local)}</span>
-        <span class="pd-mid">${centro}</span>
+        <span class="pd-mid">${centroV}</span>
         <span class="pd-eq vis">${esc(p.visitaLogo,p.visita)}<b>${p.visita}</b></span>
       </div>
       <div class="pd-a-side der"><span class="pd-meta pd-cuando">${jugado?"Final":cuandoPartido(p.fechaHora)}</span><span class="pd-mio" id="pdm-${p.id}"></span>${botonStats(p,"st-mini")}</div>
@@ -3496,7 +3504,7 @@ function renderPartidos(parts,ctx,puede){
             const prd=window._pr[p.id]||{};
             // Sin resultado aún
             if(sinGoles){
-              return sel?`<div class="prono-box ${sel}">${sel}</div><div class="prono-lbl">tu pronóstico</div>`:`<div class="vs-txt">VS</div>`;
+              return vivoHtml(p,true)+(sel?`<div class="prono-box ${sel}">${sel}</div><div class="prono-lbl">tu pronóstico</div>`:(p.vivo?"":`<div class="vs-txt">VS</div>`));
             }
             // Con resultado — marcador, rojas, tu pronóstico y lo que sumó cada cosa
             const rojas=p.tarjetasRojas||0;
@@ -4799,6 +4807,8 @@ function startAutoRefresh(){
           renderResumenCambios();
         });
       });
+    } else if(s==="fecha-det"){
+      const sc=document.getElementById("scroll"),y=sc?sc.scrollTop:0;loadFechaDet(App.ctx).then(function(){if(sc)sc.scrollTop=y;});
     } else if(s==="tabla"){
       loadTabla(App.ctx);
     } else if(s==="grilla"||s==="los-otros"){
@@ -6117,6 +6127,13 @@ window.fsImportar=async function(){
   toast(`✅ ${ok} partido${ok!==1?"s":""} agregado${ok!==1?"s":""}. Marcá cuál es Doble y cuál la Polla con "Editar"`,5000);
   document.getElementById("pm-fs").innerHTML="";pmCargar();if(App.screen==="admin-fechas")loadAdminFechas();
 };
+
+// Resultado parcial en vivo (no suma puntos hasta que el admin carga el final)
+function vivoHtml(p,grande){
+  const v=p&&p.vivo;if(!v||v.gl===null||v.gl===undefined)return"";
+  const et=v.estado==="entretiempo"?"ENTRETIEMPO":v.estado==="final"?"FINAL · sin confirmar":"EN VIVO";
+  return`<div class="vivo${grande?" g":""}${v.estado==="vivo"?" on":""}"><span class="vivo-k"><i></i>${et}</span><b>${v.gl} - ${v.gv}</b></div>`;
+}
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){

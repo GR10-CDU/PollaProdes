@@ -240,6 +240,7 @@ Deno.serve(async (req) => {
       case "adminPushMasivo": return resp(await adminPushMasivo(db, data));
       case "adminMailsPrueba": return resp(await adminMailsPrueba(db, data));
       case "cronAvisos": return resp(await cronAvisos(db));
+      case "cronVivo": return resp(await cronVivo(db));
       case "logout": return resp(await logout(db, data));
 
       // ── FECHAS Y PARTIDOS ─────────────────────────────────
@@ -546,6 +547,7 @@ async function getFecha(db: any, data: any) {
       golesLocal:p.goles_local, golesVisita:p.goles_visita,
       resultado:p.resultado, tarjetasRojas:p.tarjetas_rojas||0, esToleTole:!!p.es_tole,
       localLogo:p.local_logo||"", visitaLogo:p.visita_logo||"", linkStats:p.link_stats||"",
+      vivo: p.estado !== "Finalizado" && p.vivo_estado ? {gl:p.vivo_gl, gv:p.vivo_gv, estado:p.vivo_estado} : null,
     })),
   };
 }
@@ -3039,4 +3041,45 @@ async function fsPartidos(db: any, data: any) {
   }
   out.sort((a,b) => a.ts - b.ts);
   return {ok:true, partidos:out.slice(0,120)};
+}
+
+// ============================================================
+//  RESULTADOS EN VIVO (cada 1 minuto, desde Flashscore). Solo muestra: NO calcula puntos.
+// ============================================================
+function estadoVivo(ab: string, ac: string) {
+  if (ab === "3") return "final";
+  if (ab !== "2") return "";
+  if (ac === "38") return "entretiempo";
+  return "vivo";
+}
+async function cronVivo(db: any) {
+  const ahora = Date.now();
+  const {data: ps} = await db.from("partidos").select("id,link_stats,fecha_hora,estado,vivo_estado")
+    .neq("estado","Finalizado").neq("estado","Suspendido").like("link_stats","%flashscore%mid=%")
+    .gte("fecha_hora", new Date(ahora - 4*3600e3).toISOString()).lte("fecha_hora", new Date(ahora + 5*60e3).toISOString());
+  if (!(ps||[]).length) return {ok:true, partidos:0};
+  // Agrupar por página del equipo local (una descarga trae su partido)
+  const porPagina: Record<string, any[]> = {};
+  for (const p of (ps||[])) {
+    const m = /\/partido\/futbol\/([a-z0-9-]+)-([A-Za-z0-9]{8})\/[^?]*\?mid=([A-Za-z0-9]{8})/.exec(p.link_stats||"");
+    if (!m) continue;
+    (porPagina[`https://www.flashscore.com.ar/equipo/${m[1]}/${m[2]}/`] ||= []).push({...p, mid:m[3]});
+  }
+  let actualizados = 0;
+  for (const [url, lista] of Object.entries(porPagina)) {
+    try {
+      const html = await (await fetch(url, {headers:{"User-Agent":UA_WEB,"Accept-Language":"es-AR"}})).text();
+      for (const p of lista) {
+        const i = html.indexOf(`AA÷${p.mid}¬`); if (i < 0) continue;
+        const bloque = html.slice(i, html.indexOf("¬~", i) > 0 ? html.indexOf("¬~", i) : i + 3000);
+        const c: Record<string,string> = {};
+        for (const par of bloque.split("¬")) { const k = par.indexOf("÷"); if (k > 0) c[par.slice(0,k)] = par.slice(k+1); }
+        const est = estadoVivo(c.AB||"", c.AC||"");
+        if (!est) continue;
+        await db.from("partidos").update({vivo_gl: c.AG!==undefined?parseInt(c.AG)||0:null, vivo_gv: c.AH!==undefined?parseInt(c.AH)||0:null, vivo_estado:est, vivo_at:new Date().toISOString()}).eq("id", p.id);
+        actualizados++;
+      }
+    } catch (e) { console.error("vivo", url, e); }
+  }
+  return {ok:true, partidos:(ps||[]).length, actualizados};
 }
