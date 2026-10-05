@@ -547,7 +547,7 @@ async function getFecha(db: any, data: any) {
       golesLocal:p.goles_local, golesVisita:p.goles_visita,
       resultado:p.resultado, tarjetasRojas:p.tarjetas_rojas||0, esToleTole:!!p.es_tole,
       localLogo:p.local_logo||"", visitaLogo:p.visita_logo||"", linkStats:p.link_stats||"",
-      vivo: p.estado !== "Finalizado" && p.vivo_estado ? {gl:p.vivo_gl, gv:p.vivo_gv, estado:p.vivo_estado} : null,
+      vivo: p.estado !== "Finalizado" && p.vivo_estado ? {gl:p.vivo_gl, gv:p.vivo_gv, estado:p.vivo_estado, etapa:p.vivo_etapa||"", desde:p.vivo_desde} : null,
       resultadoAuto: !!p.resultado_auto,
     })),
   };
@@ -3031,12 +3031,13 @@ async function fsPartidos(db: any, data: any) {
   const path = String(data.path||"").replace(/[^a-z0-9\-\/]/gi,"");
   if (!path) return {ok:false, error:"Elegí una liga"};
   const html = await (await fetch(`https://www.flashscore.com.ar/futbol/${path}/partidos/`, {headers:{"User-Agent":UA_WEB,"Accept-Language":"es-AR"}})).text();
-  const out: any[] = []; let torneo = "";
+  const out: any[] = []; let torneo = ""; const vistos = new Set<string>();
   for (const bloque of html.split("¬~")) {
     const c: Record<string,string> = {};
     for (const par of bloque.split("¬")) { const i = par.indexOf("÷"); if (i > 0) c[par.slice(0,i).replace(/^~/,"")] = par.slice(i+1); }
     if (c.ZA) torneo = c.ZA;
-    if (!c.AA || !c.AD || c.AB !== "1") continue;
+    if (!c.AA || !c.AD || c.AB !== "1" || vistos.has(c.AA)) continue;
+    vistos.add(c.AA);
     const img = (x:string) => x ? `https://static.flashscore.com/res/image/data/${x}` : "";
     out.push({id:c.AA, ts:Number(c.AD)*1000, ronda:c.ER||"", torneo, local:c.AE||"", visita:c.AF||"",
       localLogo:img(c.OA), visitaLogo:img(c.OB),
@@ -3091,7 +3092,9 @@ async function cronVivo(db: any) {
             }
           }
         }
-        await db.from("partidos").update({vivo_gl: c.AG!==undefined?parseInt(c.AG)||0:null, vivo_gv: c.AH!==undefined?parseInt(c.AH)||0:null, vivo_estado:est, vivo_at:new Date().toISOString()}).eq("id", p.id);
+        const etapa = c.AC === "12" ? "1T" : c.AC === "13" ? "2T" : c.AC === "38" ? "ET" : "";
+        await db.from("partidos").update({vivo_gl: c.AG!==undefined?parseInt(c.AG)||0:null, vivo_gv: c.AH!==undefined?parseInt(c.AH)||0:null, vivo_estado:est, vivo_at:new Date().toISOString(),
+          vivo_etapa:etapa, vivo_desde: c.AO ? new Date(Number(c.AO)*1000).toISOString() : null}).eq("id", p.id);
         actualizados++;
       }
     } catch (e) { console.error("vivo", url, e); }
