@@ -2203,6 +2203,30 @@ body.login-active #inst-banner{display:none}
   html body #bn{background:var(--surface)!important;padding-bottom:max(6px,calc(env(safe-area-inset-bottom) - 20px))!important}
   #app{background:var(--bg)}
 }
+/* ═══ CELULAR v7 · estilo WhatsApp: barras de vidrio flotantes con desenfoque fuerte; el contenido pasa por debajo ═══ */
+@media(max-width:880px){
+  :root{--wa-glass:color-mix(in srgb,var(--surface) 58%,transparent);--wa-edge:color-mix(in srgb,var(--ink) 10%,transparent)}
+  html[data-mode="dark"]{--wa-glass:color-mix(in srgb,var(--surface) 52%,transparent)}
+  html,body{background:var(--bg)!important}
+  /* Arriba: vidrio a todo el ancho que cubre también la zona de la hora; el contenido queda debajo de la hora (nítido) */
+  html body #topbar{position:absolute!important;top:0;left:0;right:0;z-index:40;
+    height:calc(54px + env(safe-area-inset-top))!important;padding:env(safe-area-inset-top) 12px 0 14px!important;
+    background:var(--wa-glass)!important;-webkit-backdrop-filter:saturate(2) blur(28px)!important;backdrop-filter:saturate(2) blur(28px)!important;
+    border:0!important;border-bottom:.5px solid var(--wa-edge)!important;box-shadow:none!important}
+  #scroll{padding-top:calc(54px + env(safe-area-inset-top))!important}
+  #topbar .icon-btn,#topbar .tb-chip{background:color-mix(in srgb,var(--surface) 70%,transparent)!important;border:.5px solid var(--wa-edge)!important;box-shadow:none!important}
+  /* Abajo: cápsula flotante, separada de los bordes y bien abajo */
+  html body #bn{left:14px!important;right:14px!important;bottom:max(10px,calc(env(safe-area-inset-bottom) - 14px))!important;
+    padding:4px 6px!important;border-radius:32px!important;border:.5px solid var(--wa-edge)!important;
+    background:var(--wa-glass)!important;-webkit-backdrop-filter:saturate(2) blur(28px)!important;backdrop-filter:saturate(2) blur(28px)!important;
+    box-shadow:0 10px 30px -10px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.18)!important;transform:none!important}
+  html body #bn .bn-wrap{height:56px!important}
+  .bn-item{height:52px!important;border-radius:26px}
+  .bn-pill{height:52px;margin-top:-26px;border-radius:26px}
+  .page{padding-bottom:calc(96px + env(safe-area-inset-bottom))!important}
+  .toast{bottom:calc(84px + env(safe-area-inset-bottom))}
+  #inst-banner{bottom:calc(84px + env(safe-area-inset-bottom))}
+}
 
 </style>
 </head>
