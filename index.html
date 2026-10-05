@@ -3446,8 +3446,8 @@ function renderPartidos(parts,ctx,puede){
       else if(libre){cls="ok";txt="Cambios gratis hasta "+_fmtH(_libreHasta(window._parts));}
       else if(!cambiosCerrados&&cf>0){cls="warn";txt=`Te ${cf!==1?"quedan":"queda"} ${cf} cambio${cf!==1?"s":""}${window._cambiosGratis||App.user?.empresa?" gratis":costo} · hasta `+hasta(60);}
       else if(!cambiosCerrados){cls="off";txt="No te quedan cambios";}
-      else{cls="off";txt="Cambios cerrados";}
-      plazoHtml=`<div class="pc-plazo"><span class="pp-k pc-cuando">${cuandoPartido(p.fechaHora,true)}</span><span class="pp-v ${cls}">${txt}</span>${botonStats(p,"st-mini")}</div>`;
+      else{cls="";txt="";}
+      plazoHtml=`<div class="pc-plazo"><span class="pp-k pc-cuando">${cuandoPartido(p.fechaHora,true)}</span>${txt?`<span class="pp-v ${cls}">${txt}</span>`:""}${botonStats(p,"st-mini")}</div>`;
     }
     const bloq=!puedePonerProno;
     // Reglas aplicadas a este partido
