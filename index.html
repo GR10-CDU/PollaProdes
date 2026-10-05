@@ -2352,6 +2352,24 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .t-ir:hover::after{opacity:1;transform:none}
 @media(hover:none){.t-ir::after{display:none}}
 .t-ir-p{cursor:pointer}.t-ir-p:hover{transform:translateY(-2px)}
+/* Empresas: resumen comercial */
+.em-stats{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.em-stats span{font-size:12.5px;padding:3px 9px;border-radius:9px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2)}
+.em-stats b{color:var(--ink)}
+.em-stats .em-pago{background:var(--gold-soft);border-color:var(--gold-line)}
+.em-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px}
+.em-kpis div{padding:10px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);text-align:center}
+.em-kpis b{display:block;font-family:var(--ff);font-size:24px;font-weight:800;line-height:1}
+.em-kpis b small{font-size:15px;color:var(--ink-3)}
+.em-kpis span{font-size:11.5px;color:var(--ink-3);font-weight:700}
+.em-kpis .em-kpi-p{background:var(--gold-soft);border-color:var(--gold-line)}
+.em-pagos{display:grid;gap:6px;margin-bottom:10px}
+.em-pg{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.em-pg div{flex:1;min-width:0}.em-pg b{display:block;font-size:15px}.em-pg small{font-size:12.5px;color:var(--ink-3)}
+.em-pg-m{font-family:var(--ff);font-size:20px;font-weight:800}
+.em-danger{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding:12px 14px;border-radius:14px;border:1px solid color-mix(in srgb,var(--no) 35%,transparent);background:color-mix(in srgb,var(--no) 6%,transparent)}
+.em-danger b{display:block;color:var(--no)}.em-danger small{font-size:12.5px;color:var(--ink-2)}
+@media(max-width:560px){.em-kpis{grid-template-columns:repeat(2,1fr)}.em-kpis .em-kpi-p{grid-column:span 2}.pq-fila{flex-wrap:wrap}}
 
 </style>
 </head>
@@ -4987,7 +5005,8 @@ async function loadAdminEmpresas(){
   if(window._empEdit){const e=window._empresas.find(function(x){return x.id===window._empEdit;});if(e){renderEditorEmpresa(el,e,true);return;}window._empEdit=null;}
   el.innerHTML=`<div class="em-top"><p>Cada empresa tiene su código, su marca y sus propias fechas. Sus empleados juegan gratis.</p><button class="btn btn-p" onclick="nuevaEmpresa()">+ Nueva empresa</button></div>
     ${window._empresas.length?`<div class="em-lista">${window._empresas.map(function(e){const adm=e.usuarios.filter(function(u){return u.rol==="AdminEmpresa";}).length;return`<button class="card em-card" style="--pv:${e.tema==="marca"?e.color:(TEMAS_JUEGO.find(function(t){return t[0]===e.tema;})||[,,"#2F5BEA"])[2]}" onclick="window._empEdit='${e.id}';loadAdminEmpresas()">
-      <span class="em-logo">${logoEmpHtml(e)}</span><span class="em-info"><b>${escH(e.nombre)}</b><small>${escH(e.slogan||"Sin eslogan")}</small><span class="em-meta"><code>${escH(e.codigo)}</code> · ${e.usuarios.length} empleado${e.usuarios.length!==1?"s":""}${adm?` · ${adm} admin`:""}${e.estado!=="Activa"?" · ⏸ Pausada":""}</span></span><span class="em-chev">›</span></button>`;}).join("")}</div>`
+      <span class="em-logo">${logoEmpHtml(e)}</span><span class="em-info"><b>${escH(e.nombre)}</b><small>${escH(e.slogan||"Sin eslogan")}</small><span class="em-meta"><code>${escH(e.codigo)}</code> · ${e.usuarios.length} miembro${e.usuarios.length!==1?"s":""}${adm?` · ${adm} admin`:""}${e.estado!=="Activa"?" · ⏸ Pausada":""}</span>
+      <span class="em-stats"><span>📅 <b>${e.stats.fechas}</b>${e.stats.fechasContratadas?`/${e.stats.fechasContratadas}`:""} fechas</span><span>🟢 <b>${e.stats.abiertas}</b> abiertas</span><span>👥 <b>${e.stats.jugadores}</b> jugando</span><span class="em-pago">💰 <b>$${e.stats.pagado.toLocaleString("es-AR")}</b></span></span></span><span class="em-chev">›</span></button>`;}).join("")}</div>`
       :emptyBox("🏢","Todavía no hay empresas. Creá la primera.")}`;
 }
 window.nuevaEmpresa=function(){
@@ -5032,6 +5051,7 @@ function renderEditorEmpresa(el,emp,esAdminGeneral){
         <p class="me-p">O que pongan el código <b class="me-cod">${escH(emp.codigo)}</b> al registrarse.</p>
       </div>
       <div class="card me-sec"><div class="me-tit">Preguntas al registrarse</div><div id="pq-box">${preguntasHtml()}</div></div>
+      ${esAdminGeneral?`<div class="card me-sec"><div class="me-tit">Contrato y pagos</div>${pagosEmpHtml(emp)}</div>`:""}
       ${esAdminGeneral?`<div class="card me-sec"><div class="me-tit">Administradores</div>${adminsHtml(emp)}</div>`:`<div class="card me-sec"><div class="me-tit">Tu gente</div><div id="me-emp"><div class="loading"><div class="spinner"></div></div></div></div>`}
       ${esAdminGeneral?`<div class="card me-sec"><div class="me-tit">Empleados (${emp.usuarios.length})</div>${emp.usuarios.length?`<div class="me-users">${emp.usuarios.map(function(u){return`<div class="me-u"><div><b>${escH(u.nombre||u.usuario)}</b><small>${escH(u.usuario)} · ${escH(u.telefono||"")}${u.email?" · "+escH(u.email):""}</small><div class="dx-datos">${datosTxt(emp,u.datos)}</div></div><label class="me-sw"><input type="checkbox" ${u.rol==="AdminEmpresa"?"checked":""} onchange="setRolEmp('${u.id}',this.checked)"/><span>Admin</span></label></div>`;}).join("")}</div>`:`<p class="me-p">Todavía nadie se registró con el código.</p>`}
         <div class="me-acc"><button class="btn btn-s" onclick="window._fechaParaEmpresa='${emp.id}';go('admin-fechas');setTimeout(showCrearFecha,300)">+ Crear fecha para ${escH(emp.nombre)}</button></div></div>`:""}
@@ -5807,6 +5827,33 @@ function estadoFecha(f){
   if(f.estado==="Abierta"&&(f.minutosRestantes===undefined||f.minutosRestantes>0))return{t:"Abierta",c:"bg"};
   return{t:"Cerrada",c:"bred"};
 }
+
+// Admin general: resumen comercial de la empresa, pagos y eliminar
+function pagosEmpHtml(emp){
+  const st=emp.stats||{pagos:[]},fmt=function(n){return"$"+Number(n||0).toLocaleString("es-AR");};
+  const hoy=isoArg(new Date().toISOString()).slice(0,10);
+  return`<div class="em-kpis"><div><b>${st.fechas||0}${st.fechasContratadas?`<small>/${st.fechasContratadas}</small>`:""}</b><span>Fechas cargadas${st.fechasContratadas?" / contratadas":""}</span></div><div><b>${st.abiertas||0}</b><span>Abiertas</span></div><div><b>${st.terminadas||0}</b><span>Terminadas</span></div><div><b>${st.jugadores||0}</b><span>Jugando</span></div><div class="em-kpi-p"><b>${fmt(st.pagado)}</b><span>Total pagado</span></div></div>
+    ${(st.pagos||[]).length?`<div class="em-pagos">${st.pagos.map(function(p){return`<div class="em-pg"><div><b>${escH(p.concepto)}</b><small>${p.fechaPago?new Date(p.fechaPago+"T12:00:00").toLocaleDateString("es-AR"):"Sin fecha"}${p.fechas?` · ${p.fechas} fecha${p.fechas!==1?"s":""}`:""}${p.notas?` · ${escH(p.notas)}`:""}</small></div><span class="em-pg-m">${fmt(p.monto)}</span><button class="pq-x" onclick="borrarPagoEmp('${p.id}')" aria-label="Borrar">×</button></div>`;}).join("")}</div>`:`<p class="me-p">Todavía no registraste pagos de esta empresa.</p>`}
+    <div class="pq-nueva"><input class="inp" id="ep-c" placeholder="Concepto: ej. Mundial 2026" maxlength="80"/>
+      <div class="pq-fila"><input class="inp" id="ep-m" type="number" min="0" placeholder="Monto $"/><input class="inp" id="ep-f" type="number" min="0" placeholder="Fechas incluidas"/><input class="inp" id="ep-d" type="date" value="${hoy}"/></div>
+      <input class="inp" id="ep-n" placeholder="Notas (opcional)" maxlength="300"/>
+      <div class="me-acc"><button class="btn btn-p" onclick="guardarPagoEmp()">+ Registrar pago</button></div></div>
+    <div class="em-danger"><div><b>Eliminar empresa</b><small>Borra la empresa, su marca, sus fechas (con pronósticos y puntajes), novedades y pagos. Las cuentas de los jugadores no se borran.</small></div><button class="btn btn-d" onclick="eliminarEmpresa()">🗑 Eliminar</button></div>`;
+}
+window.guardarPagoEmp=async function(){
+  const g=function(i){return document.getElementById(i)?.value||"";};
+  const r=await api("adminPagoEmpresa",{empresaId:window._edEmp.id,concepto:g("ep-c"),monto:g("ep-m"),fechas:g("ep-f"),fechaPago:g("ep-d"),notas:g("ep-n")});
+  if(!r.ok){toast("❌ "+r.error);return;}toast("✅ Pago registrado");loadAdminEmpresas();
+};
+window.borrarPagoEmp=async function(id){if(!confirm("¿Borrar este pago?"))return;const r=await api("adminPagoEmpresa",{id,borrar:true});toast(r.ok?"Pago borrado":"❌ "+r.error);loadAdminEmpresas();};
+window.eliminarEmpresa=async function(){
+  const e=window._edEmp;
+  const t=prompt(`Vas a ELIMINAR "${e.nombre}" con todas sus fechas, pronósticos, novedades y pagos. No se puede deshacer.\n\nEscribí el código de la empresa (${e.codigo}) para confirmar:`);
+  if(!t)return;
+  const r=await api("adminEliminarEmpresa",{empresaId:e.id,confirmar:t});
+  if(!r.ok){toast("❌ "+r.error);return;}
+  toast(`🗑 Empresa eliminada (${r.fechasBorradas} fecha${r.fechasBorradas!==1?"s":""} borrada${r.fechasBorradas!==1?"s":""})`);window._empEdit=null;loadAdminEmpresas();
+};
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){

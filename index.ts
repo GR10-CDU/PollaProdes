@@ -255,6 +255,8 @@ Deno.serve(async (req) => {
       case "adminGetEmpresas": return resp(await adminGetEmpresas(db, data));
       case "adminGuardarEmpresa": return resp(await adminGuardarEmpresa(db, data));
       case "adminSetRol": return resp(await adminSetRol(db, data));
+      case "adminEliminarEmpresa": return resp(await adminEliminarEmpresa(db, data));
+      case "adminPagoEmpresa": return resp(await adminPagoEmpresa(db, data));
       case "adminInvitarAdmin": return resp(await adminInvitarAdmin(db, data));
       case "adminQuitarInvitacion": return resp(await adminQuitarInvitacion(db, data));
       case "empresaGetEmpleados": return resp(await empresaGetEmpleados(db, data));
@@ -2299,9 +2301,24 @@ async function adminGetEmpresas(db: any, data: any) {
     db.from("empresa_miembros").select("empresa_id,rol,datos_extra, usuarios(id,usuario,nombre,telefono,email)"),
   ]);
   const {data: invs} = await db.from("empresa_invitaciones").select("*").order("created_at");
+  const [{data: fes}, {data: pagos}, {data: insc}] = await Promise.all([
+    db.from("fechas").select("id,empresa_id,estado,nombre,plazo_limite").not("empresa_id","is",null),
+    db.from("empresa_pagos").select("*").order("fecha_pago",{ascending:false}),
+    db.from("inscripciones").select("user_id,fecha_id").in("estado_pago",["Pendiente","Aprobado"]),
+  ]);
+  const {data: gans} = await db.from("ganadores").select("fecha_id");
+  const term = new Set((gans||[]).map((g:any)=>g.fecha_id));
   return {ok:true, empresas:(emps||[]).map((e:any) => ({...empresaOut(e), estado:e.estado,
     usuarios:(users||[]).filter((m:any) => m.empresa_id === e.id && m.usuarios).map((m:any) => ({id:m.usuarios.id, usuario:m.usuarios.usuario, nombre:m.usuarios.nombre, telefono:m.usuarios.telefono, email:m.usuarios.email||"", rol:m.rol, datos:m.datos_extra||{}})),
-    invitaciones:(invs||[]).filter((i:any) => i.empresa_id === e.id).map((i:any) => ({id:i.id, email:i.email}))}))};
+    invitaciones:(invs||[]).filter((i:any) => i.empresa_id === e.id).map((i:any) => ({id:i.id, email:i.email})),
+    stats: (() => {
+      const fs = (fes||[]).filter((f:any) => f.empresa_id === e.id), ids = new Set(fs.map((f:any)=>f.id));
+      const ps = (pagos||[]).filter((p:any) => p.empresa_id === e.id);
+      const jugadores = new Set((insc||[]).filter((i:any) => ids.has(i.fecha_id)).map((i:any)=>i.user_id)).size;
+      return {fechas:fs.length, abiertas:fs.filter((f:any)=>f.estado==="Abierta"&&!term.has(f.id)).length, terminadas:fs.filter((f:any)=>term.has(f.id)).length,
+        jugadores, pagado: ps.reduce((t:number,p:any)=>t+Number(p.monto||0),0), fechasContratadas: ps.reduce((t:number,p:any)=>t+Number(p.fechas_incluidas||0),0),
+        pagos: ps.map((p:any)=>({id:p.id, concepto:p.concepto, monto:Number(p.monto||0), fechas:p.fechas_incluidas, fechaPago:p.fecha_pago, notas:p.notas||""}))};
+    })()}))};
 }
 async function adminGuardarEmpresa(db: any, data: any) {
   const auth = await requireAuth(db, data);
@@ -2367,6 +2384,9 @@ async function adminEliminarFecha(db: any, data: any) {
   if (!f) return {ok:false, error:"Fecha no encontrada"};
   const {count} = await db.from("inscripciones").select("id", {count:"exact", head:true}).eq("fecha_id", id);
   if (f.estado === "Abierta" && (count||0) > 0) return {ok:false, error:"Tiene jugadores anotados y sigue abierta: cerrala primero"};
+  return await borrarFechaCompleta(db, id);
+}
+async function borrarFechaCompleta(db: any, id: string) {
   // Borrar todo lo que cuelga de la fecha (en orden, por las referencias)
   for (const t of ["cambios_pagos","puntajes","reglas","pronosticos","ganadores","grupos","inscripciones"]) {
     const {error} = await db.from(t).delete().eq("fecha_id", id);
@@ -2874,4 +2894,37 @@ async function adminMailsPrueba(db: any, data: any) {
 async function soloPozosGratis(db: any, fechaId: string) {
   const {data: pz} = await db.from("pozos").select("monto").eq("fecha_id", fechaId).eq("estado","Activo");
   return !!(pz||[]).length && (pz||[]).every((z:any) => !Number(z.monto));
+}
+
+// Admin: registrar o borrar un pago/contrato de una empresa
+async function adminPagoEmpresa(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  if (data.borrar) { await db.from("empresa_pagos").delete().eq("id", data.id); return {ok:true}; }
+  const concepto = String(data.concepto||"").trim().slice(0,80);
+  if (!concepto) return {ok:false, error:"Poné un concepto (ej: Mundial 2026)"};
+  const fila = {empresa_id:data.empresaId, concepto, monto:Number(data.monto)||0, fechas_incluidas:parseInt(data.fechas)||0, fecha_pago:data.fechaPago||null, notas:String(data.notas||"").slice(0,300)};
+  const {error} = data.id ? await db.from("empresa_pagos").update(fila).eq("id", data.id) : await db.from("empresa_pagos").insert({id:generarId("EPG"), ...fila});
+  if (error) return {ok:false, error:error.message};
+  return {ok:true};
+}
+// Admin: eliminar una empresa con todas sus fechas (las cuentas de los jugadores siguen existiendo)
+async function adminEliminarEmpresa(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const {data: e} = await db.from("empresas").select("id,codigo").eq("id", data.empresaId).maybeSingle();
+  if (!e) return {ok:false, error:"Empresa no encontrada"};
+  if (normalizarCodigo(data.confirmar) !== e.codigo) return {ok:false, error:"El código no coincide"};
+  const {data: fs} = await db.from("fechas").select("id").eq("empresa_id", e.id);
+  for (const f of (fs||[])) { const r = await borrarFechaCompleta(db, f.id); if (!r.ok) return r; }
+  // Cuentas que eran solo de esa empresa: pasan a ser públicas para no quedar sin lugar
+  const {data: ms} = await db.from("empresa_miembros").select("user_id").eq("empresa_id", e.id);
+  for (const m of (ms||[])) {
+    const {count} = await db.from("empresa_miembros").select("user_id",{count:"exact",head:true}).eq("user_id", m.user_id).neq("empresa_id", e.id);
+    if (!count) await db.from("usuarios").update({publico:true}).eq("id", m.user_id);
+  }
+  await db.from("usuarios").update({empresa_id:null}).eq("empresa_id", e.id);
+  const {error} = await db.from("empresas").delete().eq("id", e.id); // miembros, novedades, invitaciones y pagos se borran solos
+  if (error) return {ok:false, error:error.message};
+  return {ok:true, fechasBorradas:(fs||[]).length};
 }
