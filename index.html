@@ -2455,6 +2455,7 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .vivo b{color:var(--no)!important;display:flex;gap:6px;align-items:center}
 .vivo b em{font-style:normal;opacity:.6}
 .vivo small{font-size:10px;font-weight:700;color:var(--ink-3);white-space:nowrap}
+.rs-auto{margin-left:6px;font-size:11.5px;font-weight:800;padding:2px 7px;border-radius:8px;background:rgba(255,255,255,.25);color:inherit}
 
 </style>
 </head>
@@ -4511,7 +4512,7 @@ async function loadRes(ctx){
       <div class="g-stat"><b>${nFinal}/${ps.length}</b><span>cargados</span></div>
     </div>
     <div class="rs-list">${ps.map(function(p){const e=est(p),done=e==="final";return`<div class="rs-card ${e}${esSenior(p)?" senior":""}${p.tipo==="Polla"?" polla":p.tipo==="Doble"?" doble":""}" id="rs-${p.id}">
-      <div class="rs-head"><span class="t-tag ${ti(p).cls}">${ti(p).k}</span>${p.esToleTole?'<span class="t-tag t-tole">🔥</span>':""}<span class="rs-n">#${p.numero}</span><span class="rs-hora">${hora(p)}</span>${chip[e]}</div>
+      <div class="rs-head"><span class="t-tag ${ti(p).cls}">${ti(p).k}</span>${p.esToleTole?'<span class="t-tag t-tole">🔥</span>':""}<span class="rs-n">#${p.numero}</span><span class="rs-hora">${hora(p)}</span>${chip[e]}${p.resultadoAuto?'<span class="rs-auto" title="Cargado automáticamente desde Flashscore">⚡ Auto</span>':""}</div>
       <div class="rs-body">
         <div class="rs-team">${p.localLogo?`<img src="${p.localLogo}" alt="">`:inicialEq(p.local)}<b>${sigla(p.local)}</b><small>${p.local}</small></div>
         <div class="rs-score">${step("gL-"+p.id,p.golesLocal??0)}<span class="rs-sep">-</span>${step("gV-"+p.id,p.golesVisita??0)}</div>

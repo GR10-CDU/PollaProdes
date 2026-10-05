@@ -548,6 +548,7 @@ async function getFecha(db: any, data: any) {
       resultado:p.resultado, tarjetasRojas:p.tarjetas_rojas||0, esToleTole:!!p.es_tole,
       localLogo:p.local_logo||"", visitaLogo:p.visita_logo||"", linkStats:p.link_stats||"",
       vivo: p.estado !== "Finalizado" && p.vivo_estado ? {gl:p.vivo_gl, gv:p.vivo_gv, estado:p.vivo_estado} : null,
+      resultadoAuto: !!p.resultado_auto,
     })),
   };
 }
@@ -1106,13 +1107,15 @@ async function adminIngresarResultado(db: any, data: any) {
 
   const gL = parseInt(data.golesLocal), gV = parseInt(data.golesVisita);
   if (isNaN(gL)||isNaN(gV)) return {ok:false, error:"Goles inválidos"};
+  return await aplicarResultado(db, data.partidoId, gL, gV, data.tarjetasRojas||0, false);
+}
+async function aplicarResultado(db: any, partidoId: string, gL: number, gV: number, rojas: number, auto: boolean) {
   const resultado = gL>gV?"L":gL===gV?"E":"V";
-
-  const ids = await partidosGemelos(db, data.partidoId);
+  const ids = await partidosGemelos(db, partidoId);
   for (const id of ids) {
     await db.from("partidos").update({
       estado:"Finalizado", goles_local:gL, goles_visita:gV,
-      resultado, tarjetas_rojas:data.tarjetasRojas||0,
+      resultado, tarjetas_rojas:rojas||0, resultado_auto:auto,
       ultimo_update:new Date().toISOString(),
     }).eq("id",id);
     // Calcular puntajes
@@ -3076,10 +3079,30 @@ async function cronVivo(db: any) {
         for (const par of bloque.split("¬")) { const k = par.indexOf("÷"); if (k > 0) c[par.slice(0,k)] = par.slice(k+1); }
         const est = estadoVivo(c.AB||"", c.AC||"");
         if (!est) continue;
+        // Terminado: se carga el resultado final (90 min) y las rojas, y se avisa al admin
+        if (est === "final") {
+          const gL = parseInt(c.AT ?? c.AG), gV = parseInt(c.AU ?? c.AH), rojas = (parseInt(c.AJ)||0) + (parseInt(c.AK)||0);
+          if (!isNaN(gL) && !isNaN(gV)) {
+            const {data: ya} = await db.from("partidos").select("estado,local,visita").eq("id", p.id).single();
+            if (ya && ya.estado !== "Finalizado") {
+              await aplicarResultado(db, p.id, gL, gV, rojas, true);
+              await avisarAdmin(db, `✅ Cargado: ${ya.local} ${gL}-${gV} ${ya.visita}`, `${rojas} roja${rojas!==1?"s":""} · automático desde Flashscore. Revisalo en Cargar resultados.`);
+              actualizados++; continue;
+            }
+          }
+        }
         await db.from("partidos").update({vivo_gl: c.AG!==undefined?parseInt(c.AG)||0:null, vivo_gv: c.AH!==undefined?parseInt(c.AH)||0:null, vivo_estado:est, vivo_at:new Date().toISOString()}).eq("id", p.id);
         actualizados++;
       }
     } catch (e) { console.error("vivo", url, e); }
   }
   return {ok:true, partidos:(ps||[]).length, actualizados};
+}
+
+// Aviso solo al administrador general (GR873)
+async function avisarAdmin(db: any, titulo: string, texto: string) {
+  const {data: admins} = await db.from("usuarios").select("id,email").eq("rol","Admin");
+  const ids = (admins||[]).map((a:any) => a.id);
+  await enviarPush(db, ids, {titulo, texto, tag:"admin-"+Date.now()});
+  for (const a of (admins||[])) if (a.email) await enviarMail(a.email, titulo, mailBase({titulo:esc(titulo), cuerpo:`<p style="margin:0">${esc(texto)}</p>`, boton:{texto:"Ir a Cargar resultados →", url:SITIO}}));
 }
