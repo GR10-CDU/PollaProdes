@@ -724,7 +724,7 @@ textarea.inp{height:auto;padding:12px 15px;line-height:1.5}
 .cb-s{font-size:14.5px;line-height:1.35;color:var(--ink-3);margin-top:3px}
 .cb-s strong{color:var(--ink-2)}
 .cambios-box>span,.cambios-box>button{flex-shrink:0}
-@media(max-width:560px){.cambios-box{flex-wrap:wrap;gap:12px;padding:14px}.cb-txt{flex:1 1 calc(100% - 70px)}.cb-t{font-size:16px}.cb-s{font-size:14px;line-height:1.35}.cb-pos{flex:1 1 100%;margin:0}}
+@media(max-width:560px){.cambios-box{flex-wrap:wrap;gap:8px 12px;padding:14px}.cambios-box:not(.libre) .cb-txt{display:contents}.cb-t{flex:1;font-size:16px}.cambios-box:not(.libre) .cb-s{flex:1 1 100%;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:min(14px,3.45vw)}.cb-pos{flex:1 1 100%;margin:4px 0 0}}
 /* Ventana de pago de prueba */
 .pp-aviso{font-size:14px;line-height:1.5;padding:12px 14px;border-radius:14px;background:var(--info-soft);color:var(--ink-2);border:1px solid var(--info-line);margin-bottom:14px}
 .pp-tk{border-radius:16px;border:1px dashed var(--line-2);background:var(--surface-2);padding:6px 16px;margin-bottom:16px}
@@ -3445,8 +3445,8 @@ function renderResumenCambios(){
   const dots=[0,1,2].map(function(i){return`<i class="${i<usados?"used":""}"></i>`;}).join("");
   const sub=cambiosRestantes<=0
     ?"Ya usaste los 3 cambios de esta fecha"
-    :App.user?.empresa||window._cambiosGratis||!proximoCosto?`Cambios <strong>gratis</strong> · cada uno hasta 1 hora antes de su partido`
-    :`Próximo cambio: <strong>$${(proximoCosto||0).toLocaleString("es-AR")}</strong>${proximoPct?` (${proximoPct}% del pozo)`:""} · se cierran 1 hora antes de cada partido`;
+    :App.user?.empresa||window._cambiosGratis||!proximoCosto?`Cambios <strong>gratis</strong> · hasta 1 h antes de cada partido`
+    :`Próximo cambio: <strong>$${(proximoCosto||0).toLocaleString("es-AR")}</strong>${proximoPct?` (${proximoPct}%)`:""} · hasta 1 h antes de cada partido`;
   el.innerHTML=`<div class="cambios-box${cambiosRestantes<=0?" agotados":""}">
     <div class="cb-dots" aria-hidden="true">${dots}</div>
     <div class="cb-txt"><div class="cb-t">${cambiosRestantes<=0?"No te quedan cambios":`Te ${cambiosRestantes!==1?"quedan":"queda"} <b>${cambiosRestantes}</b> cambio${cambiosRestantes!==1?"s":""}`}</div><div class="cb-s">${sub}</div></div>
