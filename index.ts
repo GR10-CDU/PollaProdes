@@ -188,6 +188,7 @@ Deno.serve(async (req) => {
       case "probarPush": return resp(await probarPush(db, data));
       case "logCliente": { const au = data.sessionToken ? await requireAuth(db, data) : {ok:false}; await db.from("log_cliente").insert({user_id:(au as any).userId||null, que:String(data.que||"").slice(0,60), detalle:String(data.detalle||"").slice(0,1000), agente:String(data.agente||"").slice(0,300)}); return resp({ok:true}); }
       case "setAvisosReglas": return resp(await setAvisosReglas(db, data));
+      case "aceptarLegales": { const au = await requireAuth(db, data); if (!au.ok) return resp(au); await db.from("usuarios").update({legales_version:LEGALES_VERSION, legales_at:new Date().toISOString()}).eq("id", au.userId); return resp({ok:true}); }
       case "adminEnviarPush": return resp(await adminEnviarPush(db, data));
       case "cronAvisos": return resp(await cronAvisos(db));
       case "logout": return resp(await logout(db, data));
@@ -302,6 +303,7 @@ async function registro(db: any, data: any) {
   if (!PIN_OK(pin)) return {ok:false, error:"El PIN tiene que tener entre 4 y 8 números"};
   if (data.pin2 !== undefined && data.pin2 !== pin) return {ok:false, error:"Los PIN no coinciden"};
   if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) return {ok:false, error:"El email no parece válido"};
+  if (!data.aceptaLegales) return {ok:false, error:"Para registrarte tenés que ser mayor de 18 y aceptar los Términos, la Política de privacidad y Juego responsable"};
   const pinHash = await hashPinSeguro(pin);
 
   // Verificar si existe
@@ -335,7 +337,7 @@ async function registro(db: any, data: any) {
   const {error} = await db.from("usuarios").insert({
     id, telefono: tel, pin_hash: pinHash, usuario, nombre,
     alias_mp: empresa ? "" : (data.alias || ""), email: email || "",
-    publico: !empresa, rol: "Jugador",
+    publico: !empresa, rol: "Jugador", legales_version: LEGALES_VERSION, legales_at: new Date().toISOString(),
   });
   if (error) return {ok:false, error: error.message};
 
@@ -2098,6 +2100,7 @@ async function adminGuardarDatosPago(db: any, data: any) {
 //  Rol "AdminEmpresa": escribe novedades/premios y cambia la marca de SU empresa.
 //  Los empleados juegan gratis (paga la empresa) y solo ven las fechas de su empresa.
 // ============================================================
+const LEGALES_VERSION = "2026-10-05";
 const TEMAS_EMPRESA = ["cancha","copa","pasion","marca"];
 function empresaOut(e: any) {
   if (!e) return null;
@@ -2113,7 +2116,8 @@ async function userOut(db: any, user: any) {
   const {data: ms} = await db.from("empresa_miembros").select("rol,datos_extra, empresas(*)").eq("user_id", user.id).order("created_at");
   const empresas = (ms||[]).filter((m:any) => m.empresas && m.empresas.estado === "Activa").map((m:any) => ({...empresaOut(m.empresas), rolEmpresa:m.rol, datosExtra:m.datos_extra||{}}));
   return {id:user.id, usuario:user.usuario, nombre:user.nombre, alias:user.alias_mp, email:user.email, telefono:user.telefono,
-    avatar:user.avatar, fotoPendiente:user.foto_pendiente||null, rol:user.rol, cupones:user.cupones, publico:user.publico !== false, empresas, avisosReglas:user.avisos_reglas !== false};
+    avatar:user.avatar, fotoPendiente:user.foto_pendiente||null, rol:user.rol, cupones:user.cupones, publico:user.publico !== false, empresas, avisosReglas:user.avisos_reglas !== false,
+    legalesPendientes: user.legales_version !== LEGALES_VERSION};
 }
 async function sumarMiembro(db: any, userId: string, empresaId: string, rol?: string, datos?: any) {
   const fila: any = {user_id:userId, empresa_id:empresaId};

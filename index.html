@@ -2325,6 +2325,24 @@ body.login-active #inst-banner{display:none}
 .us-disp.off{background:var(--surface-2);border-color:var(--line);color:var(--ink-3)}
 .us-acc{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .us-acc .btn{padding:4px 10px;font-size:13px}
+/* Legales */
+.lg-box{max-width:720px;width:100%}
+.lg-tabs{margin-bottom:12px}
+.lg-tabs button{font-size:13px}
+.lg-body{max-height:62vh;overflow-y:auto;padding-right:4px;font-size:14.5px;line-height:1.6;color:var(--ink-2)}
+.lg-body h3{font-family:var(--ff);font-size:26px;font-weight:800;text-transform:uppercase;color:var(--ink);margin-bottom:4px}
+.lg-body h4{font-size:15.5px;font-weight:800;color:var(--ink);margin:16px 0 4px}
+.lg-body p{margin:6px 0}.lg-body ul{margin:6px 0 6px 18px}.lg-body li{margin:4px 0}
+.lg-v{font-size:12.5px;color:var(--ink-3)}
+.lg-aaip{font-size:12.5px;padding:10px 12px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line)}
+.lg-alerta{padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--no) 12%,transparent);border:1px solid color-mix(in srgb,var(--no) 40%,transparent);color:var(--ink);text-align:center}
+.lg-check{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;line-height:1.45;cursor:pointer}
+.lg-check input{width:20px;height:20px;flex:none;margin-top:1px;accent-color:var(--accent)}
+.lg-check a,.ll-legal a,.pf-legal a,.ld-foot a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+.ll-check{color:rgba(255,255,255,.8);margin-top:4px}
+.ll-legal{margin-top:10px;font-size:11.5px;text-align:center;color:rgba(255,255,255,.45);line-height:1.6}
+.pf-legal{text-align:center;font-size:13px;color:var(--ink-3);margin-top:14px}
+body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:none!important}
 
 </style>
 </head>
@@ -2502,7 +2520,8 @@ body.login-active #inst-banner{display:none}
   <footer class="ld-foot">
     <div class="ld-brand"><img src="icons/icon-192.png" alt="" width="30" height="30"><span>POLLA <b>PRODES</b></span></div>
     <div class="ld-foot-links"><button onclick="landingIr('login')">Ingresar</button><button onclick="landingIr('registro')">Registrarse</button></div>
-    <small>Jugá con responsabilidad · Solo mayores de 18 años</small>
+    <small><a href="#" onclick="abrirLegales('terminos');return false">Términos</a> · <a href="#" onclick="abrirLegales('privacidad');return false">Privacidad</a> · <a href="#" onclick="abrirLegales('juego');return false">Juego responsable</a></small>
+    <small>Jugar compulsivamente es perjudicial para la salud · Prohibido para menores de 18 años</small>
   </footer>
 </div>
 
@@ -4130,7 +4149,8 @@ async function loadPerfil(){
     </div>
   </div>
   ${u.empresa&&(u.empresa.campos||[]).length?`<div class="card pf-sec" id="pf-emp"><div class="pf-tit">Tus datos para ${escH(u.empresa.nombre)}</div><div class="fg">${camposEmpresaHtml(u.empresa,u.datosExtra||{},"inp")}<button class="btn btn-p" onclick="guardarDatosEmp(document.getElementById('pf-emp'))">Guardar</button></div></div>`:""}
-  <button class="btn btn-d" style="width:100%" onclick="if(confirm('¿Cerrar sesión?'))logout()">⎋ Cerrar sesión</button>`;
+  <button class="btn btn-d" style="width:100%" onclick="if(confirm('¿Cerrar sesión?'))logout()">⎋ Cerrar sesión</button>
+  <p class="pf-legal"><a href="#" onclick="abrirLegales('terminos');return false">Términos</a> · <a href="#" onclick="abrirLegales('privacidad');return false">Privacidad</a> · <a href="#" onclick="abrirLegales('juego');return false">Juego responsable</a></p>`;
   pintarAvisos();
 }
 window.elegirAvatar=async function(val){
@@ -4593,12 +4613,14 @@ function showLogin(){
           <div class="ig" id="ra-g"><label class="ll-lbl">Alias MercadoPago</label><input class="ll-inp" id="ra" placeholder="tu.alias.mp"/></div>
           <div class="ig" id="rce-g"><button type="button" class="ll-emp-link" onclick="this.nextElementSibling.hidden=false;this.remove()">¿Tu empresa te dio un código?</button><div hidden><label class="ll-lbl">Código de empresa</label><input class="ll-inp" id="rce" placeholder="Ej: ACME" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" onchange="buscarEmpresaReg(this.value)"/><div id="rce-campos"></div></div></div>
           <div class="ig"><label class="ll-lbl">Email (opcional)</label><input class="ll-inp" id="rem" type="email" placeholder="tu@email.com"/></div>
+          <label class="lg-check ll-check"><input type="checkbox" id="r-legal"/> <span>Soy mayor de 18 años y acepto los <a href="#" onclick="abrirLegales('terminos');return false">Términos</a>, la <a href="#" onclick="abrirLegales('privacidad');return false">Política de privacidad</a> y <a href="#" onclick="abrirLegales('juego');return false">Juego responsable</a>.</span></label>
           <div id="re"></div>
           <button class="btn btn-p btn-lg" onclick="doReg()" style="margin-top:6px">Crear cuenta →</button>
         </div>
       </div>
     </div>
     <div class="ll-foot">POLLA PRODES · TEMPORADA 2026</div>
+    <div class="ll-legal"><a href="#" onclick="abrirLegales('terminos');return false">Términos</a> · <a href="#" onclick="abrirLegales('privacidad');return false">Privacidad</a> · <a href="#" onclick="abrirLegales('juego');return false">Juego responsable</a><br>Jugar compulsivamente es perjudicial para la salud · +18</div>
   </div>`;
   loginEmpresa();
 }
@@ -4620,13 +4642,14 @@ window.doReg=async()=>{
   if(!n||!t||!p){err("Completá los campos obligatorios");return;}
   if(!/^\d{4,8}$/.test(p)){err("El PIN tiene que tener entre 4 y 8 números");return;}
   if(p!==p2){err("Los dos PIN no coinciden");return;}
+  if(!document.getElementById("r-legal")?.checked){err("Tenés que ser mayor de 18 y aceptar los Términos para registrarte");return;}
   const empR=window._empLogin||window._empReg||null;
   const ce=(document.getElementById("rce")?.value||"").trim().toUpperCase();
   if(window._empLogin&&!ce){err("Escribí el código de empresa");return;}
   if(window._empLogin&&ce!==String(window._empLogin.codigo).toUpperCase()){err("El código de empresa no es correcto");return;}
   const dx=leerCamposEmpresa(document.getElementById("rf"));
   if(empR){const falta=(empR.campos||[]).find(function(c){return c.obligatorio&&!dx[c.id];});if(falta){err("Completá: "+falta.label);return;}}
-  const r=await api("registro",{nombre:n,telefono:t,pin:p,pin2:p2,alias:empR?"":a,email:e,codigoEmpresa:ce,datosExtra:dx});
+  const r=await api("registro",{nombre:n,telefono:t,pin:p,pin2:p2,alias:empR?"":a,email:e,codigoEmpresa:ce,datosExtra:dx,aceptaLegales:true});
   if(!r.ok){if(er)er.innerHTML=`<div class="ll-err">⚠ ${r.error}</div>`;return;}
   r.user.rolBase=r.user.rol;window._espacioIngreso=r.espacio;
   saveSession(r.user,r.sessionToken);toast(`✅ Bienvenido, ${r.user.usuario}`);initApp();
@@ -4697,6 +4720,7 @@ function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
   setTimeout(pedirDatosEmpresa,900);
   setTimeout(unirsePorLink,700);
   setTimeout(sincronizarPush,1500);
+  setTimeout(pedirLegales,800);
 }
 
 /* ══ HELPERS ═════════════════════════════════════════════════ */
@@ -5668,6 +5692,100 @@ async function sincronizarPush(){
     if(!r.ok)api("logCliente",{que:"push-sync",detalle:r.error||"",agente:navigator.userAgent});
   }catch(e){api("logCliente",{que:"push-sync-ex",detalle:String(e&&e.message||e),agente:navigator.userAgent});}
 }
+
+// ══ LEGALES: Términos, Privacidad y Juego responsable ══════════
+const LEGALES_FECHA="5 de octubre de 2026";
+const LEGALES={
+terminos:{t:"Términos y Condiciones",h:`
+<p class="lg-v">Vigentes desde el ${LEGALES_FECHA}</p>
+<h4>1. Qué es Polla Prodes</h4>
+<p>Polla Prodes (pollaprodes.ar) es una plataforma de pronósticos deportivos entre amigos, grupos y empresas. Los jugadores pronostican resultados de partidos de fútbol y suman puntos según el Reglamento publicado en la app. El organizador y responsable de la plataforma es Germán Alberto Rodríguez, con domicilio en la República Argentina.</p>
+<h4>2. Quién puede jugar</h4>
+<p>Solo pueden registrarse y jugar personas <b>mayores de 18 años</b>, con capacidad legal para contratar. Al registrarte declarás que tus datos son verdaderos y que la cuenta es personal. Cada persona puede tener una sola cuenta.</p>
+<h4>3. Tu cuenta</h4>
+<p>Ingresás con tu teléfono y un PIN. Sos responsable de mantener tu PIN en secreto y de todo lo que se haga desde tu cuenta. Si creés que alguien la usa sin permiso, avisanos enseguida.</p>
+<h4>4. Cómo se juega</h4>
+<p>Las reglas del juego (puntajes, reglas especiales, cambios, cierre de fechas, desempates y criterios ante partidos suspendidos o postergados) están en el <b>Reglamento</b> dentro de la app, que forma parte de estos Términos. Los resultados que valen son los de los 90 minutos reglamentarios, según la carga que hace el administrador. Las decisiones del administrador sobre resultados, partidos suspendidos o postergados y casos no previstos son finales.</p>
+<h4>5. Pozos, pagos y premios</h4>
+<p>Algunas fechas tienen pozos con inscripción paga y otras son gratuitas. En los pozos pagos, la inscripción se abona por transferencia y el jugador sube el comprobante; el administrador lo verifica. Si el pago no se verifica, la inscripción y sus pronósticos se anulan. El premio de cada pozo se informa en la app: puede ser un premio fijo o un porcentaje de lo recaudado, descontado el cargo de organización indicado en el Reglamento. Los premios se pagan por transferencia al ganador o se dividen en caso de empate total, según el Reglamento. Las inscripciones no se reembolsan una vez cerrada la fecha, salvo que la fecha se anule por decisión de la organización.</p>
+<h4>6. Torneos de empresas y grupos</h4>
+<p>Las empresas y grupos pueden organizar torneos propios dentro de la plataforma, con su marca y sus premios. Cada empresa es responsable de los premios que ofrece a su gente y de la información que publica. Polla Prodes brinda la herramienta y no es parte de la relación entre la empresa y sus empleados o clientes.</p>
+<h4>7. Uso correcto</h4>
+<p>No está permitido: crear cuentas falsas o múltiples, ponerse de acuerdo con otros jugadores para manipular resultados, intentar vulnerar la plataforma, subir comprobantes falsos, ni publicar contenido ofensivo (por ejemplo, en la foto de perfil). Ante cualquiera de estas conductas podemos suspender la cuenta y anular sus participaciones y premios.</p>
+<h4>8. Disponibilidad</h4>
+<p>Hacemos lo posible para que la app funcione siempre, pero puede haber interrupciones, errores en datos de terceros (horarios, resultados) o fallas técnicas. No somos responsables por pronósticos que no se pudieron cargar por problemas de conexión del usuario. Ante errores evidentes, el administrador puede corregir resultados y recalcular puntajes.</p>
+<h4>9. Cambios</h4>
+<p>Podemos actualizar estos Términos. Si el cambio es importante, te vamos a pedir que los aceptes de nuevo al entrar a la app.</p>
+<h4>10. Ley aplicable</h4>
+<p>Estos Términos se rigen por las leyes de la República Argentina. Cualquier conflicto se resolverá ante los tribunales ordinarios competentes del domicilio del usuario consumidor, conforme la Ley 24.240 de Defensa del Consumidor.</p>
+<h4>11. Contacto</h4>
+<p>Por consultas o reclamos: WhatsApp +54 9 11 6163-0873 o pollaprodes@gmail.com.</p>`},
+privacidad:{t:"Política de Privacidad",h:`
+<p class="lg-v">Vigente desde el ${LEGALES_FECHA}</p>
+<p>Cuidamos tus datos personales conforme la <b>Ley 25.326 de Protección de los Datos Personales</b> y sus normas complementarias. El responsable de la base de datos es Germán Alberto Rodríguez (Polla Prodes).</p>
+<h4>1. Qué datos recabamos</h4>
+<ul>
+<li><b>Datos de registro:</b> nombre y apellido, teléfono, PIN (guardado cifrado, nadie puede verlo), email (opcional) y alias de pago (opcional).</li>
+<li><b>Perfil:</b> avatar o foto que elijas subir.</li>
+<li><b>Juego:</b> tus pronósticos, reglas elegidas, cambios, puntajes, posiciones e inscripciones.</li>
+<li><b>Pagos:</b> las imágenes de los comprobantes de transferencia que subas y el estado de cada pago. No guardamos datos de tarjetas ni de cuentas bancarias.</li>
+<li><b>Empresas:</b> si te sumás al torneo de una empresa, a qué empresa pertenecés y las respuestas a las preguntas que esa empresa configure (por ejemplo, sector o equipo).</li>
+<li><b>Avisos:</b> si activás las notificaciones, un identificador técnico de tu dispositivo y su tipo (por ejemplo, iPhone o Chrome en una computadora).</li>
+<li><b>Datos técnicos:</b> registros de acceso y errores (fecha, hora, tipo de navegador) necesarios para la seguridad y el funcionamiento.</li>
+</ul>
+<h4>2. Para qué los usamos</h4>
+<p>Para crear y administrar tu cuenta, hacer funcionar el juego (puntajes, tablas y grillas), verificar pagos y entregar premios, enviarte avisos que hayas activado, prevenir fraudes y comunicarnos con vos sobre tu cuenta. No vendemos tus datos ni los usamos para publicidad de terceros.</p>
+<h4>3. Qué ven los demás</h4>
+<p>Los otros jugadores de una misma fecha ven tu usuario, tu nombre, tu avatar, tu posición y, una vez cerrada la fecha, tus pronósticos y reglas (en la Tabla y la Grilla). Tu teléfono y tu email no se muestran a otros jugadores. En los torneos de empresa, los administradores de esa empresa pueden ver a sus participantes y las respuestas a sus preguntas.</p>
+<h4>4. Con quién se comparten</h4>
+<p>Usamos proveedores que procesan datos por cuenta nuestra, solo para prestar el servicio: alojamiento de la base de datos y archivos (Supabase), publicación de la web (GitHub) y seguridad de la conexión (Cloudflare), servicios de notificaciones del sistema (Apple y Google) y envío de emails. Algunos de estos proveedores están fuera de Argentina; contratamos servicios que aplican medidas de seguridad adecuadas. También podríamos compartir datos si lo exige una autoridad competente.</p>
+<h4>5. Cuánto tiempo los guardamos</h4>
+<p>Mientras tu cuenta esté activa. Si pedís darla de baja, eliminamos o anonimizamos tus datos, salvo los que debamos conservar por obligaciones legales o para resolver reclamos (por ejemplo, registros de pagos y premios).</p>
+<h4>6. Tus derechos</h4>
+<p>Podés pedir en cualquier momento <b>acceso, rectificación, actualización o supresión</b> de tus datos, y la baja de tu cuenta, escribiendo a pollaprodes@gmail.com o por WhatsApp al +54 9 11 6163-0873. Respondemos dentro de los plazos de ley (10 días corridos para acceso y 5 días hábiles para rectificación o supresión). Podés desactivar los avisos cuando quieras desde tu Perfil.</p>
+<p class="lg-aaip">La AGENCIA DE ACCESO A LA INFORMACIÓN PÚBLICA, en su carácter de Órgano de Control de la Ley N° 25.326, tiene la atribución de atender las denuncias y reclamos que interpongan quienes resulten afectados en sus derechos por incumplimiento de las normas vigentes en materia de protección de datos personales.</p>
+<h4>7. Seguridad</h4>
+<p>Los datos viajan cifrados (https), los PIN se guardan cifrados y los comprobantes de pago se guardan en un espacio privado al que solo accede el administrador.</p>`},
+juego:{t:"Juego Responsable",h:`
+<p class="lg-alerta"><b>JUGAR COMPULSIVAMENTE ES PERJUDICIAL PARA LA SALUD.</b><br>Prohibido para menores de 18 años.</p>
+<p>Polla Prodes es un juego para divertirse con amigos y compañeros, poniendo a prueba lo que sabés de fútbol. Queremos que siga siendo eso.</p>
+<h4>Recomendaciones</h4>
+<ul>
+<li>Jugá solo con dinero que puedas permitirte gastar en entretenimiento.</li>
+<li>Poné un límite de cuánto querés gastar por fecha y respetalo.</li>
+<li>No juegues para recuperar lo perdido ni como forma de ganar dinero.</li>
+<li>No dejes que el juego interfiera con tu trabajo, tu familia o tus obligaciones.</li>
+<li>Recordá que también hay fechas y torneos gratuitos.</li>
+</ul>
+<h4>Señales de alerta</h4>
+<p>Si sentís que jugás más de lo que querías, gastás más de lo que podés, mentís sobre cuánto jugás o el juego te genera ansiedad, pedí ayuda. Es un problema de salud y tiene tratamiento.</p>
+<h4>Dónde pedir ayuda</h4>
+<p>Podés consultar al programa de prevención y asistencia del juego compulsivo de la lotería o del ministerio de salud de tu provincia, o a tu obra social o centro de salud. También podés escribirnos y suspendemos tu cuenta por el tiempo que nos pidas.</p>`}
+};
+window.abrirLegales=function(tab){
+  tab=LEGALES[tab]?tab:"terminos";
+  document.getElementById("lg-modal")?.remove();
+  const m=document.createElement("div");m.className="modal-bg";m.id="lg-modal";m.onclick=function(e){if(e.target===m)m.remove();};
+  m.innerHTML=`<div class="modal-box lg-box"><div class="modal-head"><div class="modal-title">Legales</div><div class="modal-close" onclick="this.closest('.modal-bg').remove()">×</div></div>
+    <div class="seg lg-tabs">${Object.keys(LEGALES).map(function(k){return`<button aria-pressed="${k===tab}" onclick="abrirLegales('${k}')">${k==="terminos"?"Términos":k==="privacidad"?"Privacidad":"Juego responsable"}</button>`;}).join("")}</div>
+    <div class="lg-body"><h3>${LEGALES[tab].t}</h3>${LEGALES[tab].h}</div></div>`;
+  document.body.appendChild(m);
+};
+// Si los Términos cambiaron (o es una cuenta anterior), pedir aceptarlos una vez
+function pedirLegales(){
+  if(!App.user||!App.user.legalesPendientes||document.getElementById("lg-acepta"))return;
+  const m=document.createElement("div");m.className="modal-bg";m.id="lg-acepta";
+  m.innerHTML=`<div class="modal-box"><div class="modal-head"><div class="modal-title">Actualizamos los términos</div></div>
+    <div class="fg"><p style="font-size:15px;color:var(--txt3)">Para seguir jugando, confirmá que sos mayor de 18 años y que aceptás los <a href="#" onclick="abrirLegales('terminos');return false">Términos y Condiciones</a>, la <a href="#" onclick="abrirLegales('privacidad');return false">Política de privacidad</a> y <a href="#" onclick="abrirLegales('juego');return false">Juego responsable</a>.</p>
+    <label class="lg-check"><input type="checkbox" id="lg-ok"/> <span>Soy mayor de 18 años y acepto</span></label>
+    <button class="btn btn-p btn-lg" onclick="aceptarLegalesApp()">Continuar</button></div></div>`;
+  document.body.appendChild(m);
+}
+window.aceptarLegalesApp=async function(){
+  if(!document.getElementById("lg-ok")?.checked){toast("Tildá la casilla para continuar");return;}
+  const r=await api("aceptarLegales");if(!r.ok){toast("❌ "+r.error);return;}
+  App.user.legalesPendientes=false;saveSession(App.user,App.token);document.getElementById("lg-acepta")?.remove();
+};
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
