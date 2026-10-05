@@ -518,14 +518,14 @@ textarea.inp{height:auto;padding:12px 15px;line-height:1.5}
 .fecha-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-2);border-color:var(--line-2)}
 .fecha-card:hover .fecha-right>span:last-child{gap:10px;color:var(--accent-text)}
 .fecha-strip{width:4px;flex-shrink:0;margin:14px 0 14px 14px;border-radius:4px}
-.fecha-strip.abierta{background:var(--accent);box-shadow:0 0 12px var(--accent-soft)}
+.fecha-strip.abierta{background:#22c55e;box-shadow:0 0 12px rgba(34,197,94,.45)}
 .fecha-strip.cerrada{background:var(--danger)}
 .fecha-strip.borrador{background:var(--line-2)}
 .fecha-body{flex:1;min-width:0;display:flex;align-items:center;gap:16px;padding:18px 16px}
 .fecha-lig-box{width:56px;height:56px;border-radius:17px;flex-shrink:0;display:grid;place-items:center;font-size:28px;background:var(--surface-3);border:1px solid var(--line)}
 .fecha-info{flex:1;min-width:0}
-.fecha-nom{font-family:var(--ff);font-size:27px;font-weight:800;letter-spacing:.01em;line-height:1.05;text-transform:uppercase}
-.fecha-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;font-size:13.5px;font-weight:600;color:var(--ink-3)}
+.fecha-nom{font-family:var(--ff);font-size:32px;font-weight:800;letter-spacing:.01em;line-height:1.05;text-transform:uppercase}
+.fecha-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:15.5px;font-weight:600;color:var(--ink-3)}
 .fecha-right{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:10px;flex-shrink:0;padding:16px 20px 16px 0}
 .fecha-right>span:last-child{display:inline-flex;align-items:center;gap:6px;transition:gap .25s var(--ease),color .2s;font-size:14px!important}
 
@@ -2466,7 +2466,7 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .pd-mid:has(.lv){background:none!important;border:0!important;box-shadow:none!important;padding:0!important;min-width:0!important}
 .pd .lv.c{margin:0;flex-direction:column;gap:2px;padding:5px 10px}
 .pd .lv.c .lv-sc{font-size:22px}
-.fecha-cierre{display:inline-flex;align-items:center;gap:4px;margin-left:10px;vertical-align:middle;padding:3px 10px;border-radius:12px;font-family:var(--fb,inherit);font-size:13px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--ink-2);background:var(--accent-soft);border:1px solid var(--accent-line);white-space:nowrap}
+.fecha-cierre{display:inline-flex;align-items:center;gap:4px;margin-left:10px;vertical-align:middle;padding:3px 10px;border-radius:12px;font-family:var(--fb,inherit);font-size:15px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--ink-2);background:var(--accent-soft);border:1px solid var(--accent-line);white-space:nowrap}
 @media(max-width:560px){.fecha-cierre{display:flex;width:fit-content;margin:6px 0 0}}
 
 </style>
@@ -2917,11 +2917,10 @@ async function loadFechas(){
     const urgente=mins>0&&mins<=30;
     const pt=!f.plazoLimite?"Sin partidos todavía":mins<=0?"🔒 Plazo vencido":mins<60?"⏱ "+mins+"min":mins<1440?"⏱ "+Math.floor(mins/60)+"hs":"📅 "+new Date(f.plazoLimite).toLocaleDateString("es-AR",{day:"numeric",month:"long",timeZone:"America/Argentina/Buenos_Aires"});
     const ic=ICONS[f.liga]||"⚽";
-    const strip=f.estado==="Abierta"?"abierta":f.estado==="Cerrada"?"cerrada":"borrador";
+    const strip=f.estado==="Abierta"&&f.plazoLimite&&mins>0?"abierta":"cerrada";
     return`<div class="fecha-card" onclick="go('fecha-det',{fechaId:'${f.id}'})">
       <div class="fecha-strip ${strip}"></div>
       <div class="fecha-body">
-        <div class="fecha-lig-box">${ic}</div>
         <div class="fecha-info">
           <div class="fecha-nom">${f.nombre}${f.plazoLimite&&mins>0?`<span class="fecha-cierre">⏰ Jugá hasta ${cuandoPartido(f.plazoLimite)} hs</span>`:""}</div>
           <div class="fecha-meta">
