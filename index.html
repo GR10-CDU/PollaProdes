@@ -2293,6 +2293,11 @@ body.login-active #inst-banner{display:none}
 .podio-item .med{font-size:0;display:grid;place-items:center;margin-bottom:4px}
 .podio-item.first .pu-ico{filter:drop-shadow(0 6px 12px rgba(226,168,20,.45))}
 .sr-hof-medal{font-size:0;display:inline-grid;place-items:center}
+/* Pronósticos: partidos ya jugados con franja verde arriba */
+.partido-card.jugado{overflow:hidden;border-color:color-mix(in srgb,var(--ok) 55%,transparent)!important}
+.pc-jugado{display:flex;align-items:center;justify-content:space-between;margin:-16px -16px 12px;padding:8px 16px;background:var(--ok);color:#fff;font-weight:800;letter-spacing:.08em;font-size:14px}
+.pc-jugado b{font-family:var(--ff);font-size:20px;letter-spacing:.02em}
+.partido-card.jugado .senior-flag{top:46px}
 
 </style>
 </head>
@@ -3276,6 +3281,9 @@ function renderPartidos(parts,ctx,puede){
   const cf=window._cambiosFecha!==undefined?window._cambiosFecha:3;
 
   window._finIdx=0;
+  // Primero los que faltan jugarse; los ya jugados (o suspendidos) al final
+  const _jug=function(p){return p.estado==="Finalizado"||p.estado==="Suspendido"?1:0;};
+  parts=parts.slice().sort(function(a,b){return _jug(a)-_jug(b)||(a.numero-b.numero);});
   el.innerHTML=parts.map(function(p){
     const pr=window._pr[p.id]||{};
     const sel=pr.v;
@@ -3319,7 +3327,7 @@ function renderPartidos(parts,ctx,puede){
     const _vr=!sinGoles?(["A","B","C"][window._finIdx++]||"A"):null;
     const _calc=!sinGoles&&_prd.calculado;
     const _tot=_calc?(_prd.ptsTotal!=null?_prd.ptsTotal:0):0;
-    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}${_calc?(_tot>0?" suma":" nosuma"):""}${esSenior(p)?" senior":""}" id="pc-${p.id}">${esSenior(p)?`<span class="senior-flag">Senior</span>`:""}
+    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}${_calc?(_tot>0?" suma":" nosuma"):""}${esSenior(p)?" senior":""}${p.estado==="Finalizado"?" jugado":""}" id="pc-${p.id}">${p.estado==="Finalizado"?`<div class="pc-jugado"><span>✓ JUGADO</span><b>${p.golesLocal}-${p.golesVisita}</b></div>`:""}${esSenior(p)?`<span class="senior-flag">Senior</span>`:""}
       <div class="pc-meta">
         <div class="pc-bdgs">
           <span style="font-size:14px;font-weight:700;color:var(--txt3)">#${p.numero}</span>
