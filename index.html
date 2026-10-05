@@ -3451,6 +3451,7 @@ function renderPartidos(parts,ctx,puede){
   const pb=document.getElementById("prog");if(pb)pb.style.width=(tot?Math.round(comp/tot*100):0)+"%";
   const pt=document.getElementById("prog-txt");if(pt)pt.textContent=comp+" de "+tot+" pronósticos";
   const pp=document.getElementById("prog-pct");if(pp)pp.textContent=tot?Math.round(comp/tot*100)+"%":"";
+  const pw=document.querySelector(".prog-wrap");if(pw)pw.style.display=_enLibre()?"":"none";
   const ahora=new Date();
   const cf=window._cambiosFecha!==undefined?window._cambiosFecha:3;
 
