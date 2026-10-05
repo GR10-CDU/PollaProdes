@@ -2540,6 +2540,13 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .team-goles span{font-size:12.5px;font-weight:600;color:var(--ink-3);line-height:1.3;text-align:center}
 .team-goles b{color:var(--ink-2);font-weight:800}
 .tg-roja{display:inline-block;width:9px;height:12px;border-radius:2px;background:var(--danger,#e53935);vertical-align:-1px;margin-right:2px}
+/* Partido jugado: número, tipo y reglas van en la franja verde de arriba (celda más baja) */
+.pcj-bdgs{display:flex;align-items:center;gap:6px;flex:1;min-width:0;margin:0 12px;flex-wrap:wrap;letter-spacing:0}
+.pcj-bdgs>span:first-child{color:#fff!important;opacity:.9}
+.pcj-bdgs .pc-tipo-n{color:#fff;opacity:.95}
+.pcj-bdgs .t-tag.t-s{background:rgba(255,255,255,.18);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.5)}
+.pcj-bdgs .bdg{height:22px!important;padding:0 8px!important;font-size:12px!important}
+.partido-card.jugado .teams-block{margin-bottom:10px}
 
 </style>
 </head>
@@ -3542,7 +3549,7 @@ function _fmtH(d){return cuandoPartido(d instanceof Date?d.toISOString():d);}
 function golesEq(p,e){
   const g=(p.golesDet||[]).filter(function(x){return x.e===e;});
   if(!g.length)return"";
-  return`<div class="team-goles">${g.map(function(x){return`<span${x.t==="roja"?' class="roja"':""}>${x.t==="roja"||x.t==="r"?"🟥":"⚽"} ${escH(x.j)} <b>${escH(x.m)}</b>${x.t==="pen"?" (p)":x.t==="ec"?" (e/c)":""}</span>`;}).join("")}</div>`;
+  return`<div class="team-goles">${g.map(function(x){return`<span${x.t==="roja"?' class="roja"':""}>${x.t==="roja"?'<span class="tg-roja" style="display:inline-block;width:8px;height:12px;border-radius:1.5px;background:#E53935;vertical-align:-1px;margin-right:1px" aria-label="Roja"></span>':"⚽"} ${escH(x.j)} <b>${escH(x.m)}</b>${x.t==="pen"?" (p)":x.t==="ec"?" (e/c)":""}</span>`;}).join("")}</div>`;
 }
 function renderPartidos(parts,ctx,puede){
   const el=document.getElementById("jc");if(!el)return;
@@ -3603,16 +3610,15 @@ function renderPartidos(parts,ctx,puede){
     const _vr=!sinGoles?(["A","B","C"][window._finIdx++]||"A"):null;
     const _calc=!sinGoles&&_prd.calculado;
     const _tot=_calc?(_prd.ptsTotal!=null?_prd.ptsTotal:0):0;
-    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}${_calc?(_tot>0?" suma":" nosuma"):""}${esSenior(p)?" senior":""}${p.estado==="Finalizado"?" jugado":""}" id="pc-${p.id}">${p.estado==="Finalizado"?`<div class="pc-jugado"><span>✓ JUGADO</span><b>${p.fechaHora?new Date(p.fechaHora).toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","").replace(",","")+" hs":""}</b></div>`:""}${esSenior(p)?`<span class="senior-flag">Senior</span>`:""}
-      <div class="pc-meta">
-        <div class="pc-bdgs">
-          <span style="font-size:14px;font-weight:700;color:var(--txt3)">#${p.numero}</span>
+    const _bdgs=`<span style="font-size:14px;font-weight:700;color:var(--txt3)">#${p.numero}</span>
           ${(function(){const t=TIPO_INFO[p.tipo]||TIPO_INFO.Normal;return`<span class="t-tag ${t.cls} pc-tipo">${t.k}</span><span class="pc-tipo-n">${t.n}</span>`;})()}${p.esToleTole?'<span class="t-tag t-tole pc-tipo">🔥 TOLE</span>':""}
           ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:16px;padding:4px 11px">● VIVO</span>`:""}
-          ${reglaEnPartido.map(function(r){return`<span class="bdg bgold" style="font-size:14px;padding:3px 8px">${r.codigo}</span>`;}).join("")}
-        </div>
+          ${reglaEnPartido.map(function(r){return`<span class="bdg bgold" style="font-size:14px;padding:3px 8px">${r.codigo}</span>`;}).join("")}`;
+    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}${_calc?(_tot>0?" suma":" nosuma"):""}${esSenior(p)?" senior":""}${p.estado==="Finalizado"?" jugado":""}" id="pc-${p.id}">${p.estado==="Finalizado"?`<div class="pc-jugado"><span>✓ JUGADO</span><div class="pcj-bdgs">${_bdgs}</div><b>${p.fechaHora?new Date(p.fechaHora).toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","").replace(",","")+" hs":""}</b></div>`:""}${esSenior(p)?`<span class="senior-flag">Senior</span>`:""}
+      ${p.estado==="Finalizado"?"":`<div class="pc-meta">
+        <div class="pc-bdgs">${_bdgs}</div>
         ${_calc?"":plazoHtml}
-      </div>
+      </div>`}
       <div class="teams-block">
         <div class="team-box">
           <div class="team-escudo">${p.localLogo?escL:li}</div>
