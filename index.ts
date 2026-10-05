@@ -309,6 +309,7 @@ Deno.serve(async (req) => {
       case "eliminarNoticia": return resp(await eliminarNoticia(db, data));
       case "importarPartidos": return resp(await importarPartidos(db, data));
       case "adminAgregarPartido": return resp(await adminAgregarPartido(db, data));
+      case "adminLinksAuto": return resp(await adminLinksAuto(db, data));
       case "adminLinkPartido": { const au = await requireAuth(db, data); if (!au.ok || au.rol !== "Admin") return resp({ok:false, error:"Sin permisos"}); const l = String(data.link||"").trim(); if (l && !/^https?:\/\//i.test(l)) return resp({ok:false, error:"El link tiene que empezar con https://"}); const ids = await partidosGemelos(db, data.partidoId); for (const id of ids) await db.from("partidos").update({link_stats:l.slice(0,500)}).eq("id", id); return resp({ok:true}); }
       case "adminLeerCaptura": return resp(await adminLeerCaptura(db, data));
       case "getEscudosEquipos": return resp(await getEscudosEquipos(db, data));
@@ -2934,4 +2935,56 @@ async function adminEliminarEmpresa(db: any, data: any) {
   const {error} = await db.from("empresas").delete().eq("id", e.id); // miembros, novedades, invitaciones y pagos se borran solos
   if (error) return {ok:false, error:error.message};
   return {ok:true, fechasBorradas:(fs||[]).length};
+}
+
+// ============================================================
+//  LINKS DE FLASHSCORE AUTOMÁTICOS
+//  Busca cada equipo en el buscador público de Flashscore, arma el link del cruce
+//  (flashscore.com.ar/partido/futbol/<local>/<visitante>/) y verifica que la fecha coincida.
+// ============================================================
+const UA_WEB = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36";
+const ALIAS_FS: Record<string,string> = {"atl tucuman":"atletico tucuman","atl. tucuman":"atletico tucuman","gimnasia lp":"gimnasia la plata","gimnasia l.p.":"gimnasia la plata","estudiantes l.p.":"estudiantes la plata","estudiantes lp":"estudiantes la plata","newell's":"newells old boys","newells":"newells old boys","riestra":"deportivo riestra","barracas":"barracas central","independ. rivadavia":"independiente rivadavia","ind. rivadavia":"independiente rivadavia","central cordoba":"central cordoba santiago del estero","union":"union santa fe","velez":"velez sarsfield","talleres":"talleres cordoba","belgrano":"belgrano cordoba","sarmiento":"sarmiento junin","instituto":"instituto cordoba","san martin s.j.":"san martin san juan","argentinos jrs":"argentinos juniors","argentinos":"argentinos juniors","racing":"racing club","boca":"boca juniors","river":"river plate"};
+async function equipoFS(nombre: string, pais: string) {
+  const n0 = normEquipo(nombre), n = ALIAS_FS[n0] || ALIAS_FS[nombre.toLowerCase()] || n0;
+  for (const q of [n, n.split(" ").slice(0,2).join(" ")]) {
+    try {
+      const r = await fetch(`https://s.livesport.services/api/v2/search/?q=${encodeURIComponent(q)}&lang-id=13&type-ids=2&project-type-id=1&project-id=13&sport-ids=1`, {headers:{"User-Agent":UA_WEB}});
+      const lista = await r.json();
+      const equipos = (Array.isArray(lista) ? lista : []).filter((x:any) => x?.type?.id === 2 && x?.gender?.id === 1);
+      if (!equipos.length) continue;
+      const enPais = equipos.find((x:any) => pais && normEquipo(x.defaultCountry?.name||"") === normEquipo(pais));
+      const e = enPais || equipos[0];
+      return {id:e.id, slug:e.url, nombre:e.name};
+    } catch { /* probar con la siguiente */ }
+  }
+  return null;
+}
+async function adminLinksAuto(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const {data: f} = await db.from("fechas").select("liga").eq("id", data.fechaId).maybeSingle();
+  const {data: ps} = await db.from("partidos").select("id,numero,local,visita,fecha_hora,link_stats,liga").eq("fecha_id", data.fechaId).order("numero");
+  const res: any[] = [];
+  for (const p of (ps||[])) {
+    if (p.link_stats && !data.rehacer) { res.push({numero:p.numero, estado:"ya tenía"}); continue; }
+    const liga = String(p.liga || f?.liga || "");
+    const pais = /argentin|profesional|copa argentina/i.test(liga) || !liga ? "Argentina" : "";
+    const [a, b] = await Promise.all([equipoFS(p.local, pais), equipoFS(p.visita, pais)]);
+    if (!a || !b) { res.push({numero:p.numero, estado:"no encontrado", detalle:!a?p.local:p.visita}); continue; }
+    let url = `https://www.flashscore.com.ar/partido/futbol/${a.slug}-${a.id}/${b.slug}-${b.id}/`;
+    let estado = "ok";
+    try {
+      const html = await (await fetch(url, {headers:{"User-Agent":UA_WEB, "Accept-Language":"es-AR"}})).text();
+      const mid = /mid=([A-Za-z0-9]{8})/.exec(html)?.[1];
+      const fechaTit = /(\d{2})\/(\d{2})\/(\d{4})/.exec(/<title>([^<]*)/.exec(html)?.[1] || "");
+      const esperada = new Date(p.fecha_hora).toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric",timeZone:"America/Argentina/Buenos_Aires"});
+      if (fechaTit && `${fechaTit[1]}/${fechaTit[2]}/${fechaTit[3]}` !== esperada) estado = "otra fecha";
+      if (mid && estado === "ok") url += `?mid=${mid}`;
+    } catch { estado = "sin verificar"; }
+    if (estado === "otra fecha") { res.push({numero:p.numero, estado, detalle:`${a.nombre} vs ${b.nombre}`}); continue; }
+    const ids = await partidosGemelos(db, p.id);
+    for (const id of ids) await db.from("partidos").update({link_stats:url}).eq("id", id);
+    res.push({numero:p.numero, estado, detalle:`${a.nombre} vs ${b.nombre}`});
+  }
+  return {ok:true, resultados:res, cargados:res.filter((r:any)=>r.estado==="ok"||r.estado==="sin verificar").length};
 }

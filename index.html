@@ -4296,6 +4296,7 @@ async function loadAdminFechas(){
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         ${f.codigoGrupo?`<button class="btn btn-p" style="padding:6px 12px;font-size:16px" onclick="compartirFecha('${f.id}')">🔗 Compartir</button>`:""}
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="partidosManual('${f.id}')">✍️ Cargar a mano</button>
+        <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="linksAuto('${f.id}',this)">📊 Cargar links de estadísticas</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-importar',{fechaId:'${f.id}'})">🔗 Importar</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-res',{fechaId:'${f.id}'})">⚽ Resultados</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showEditarFecha('${f.id}')">✏️ Editar</button>
@@ -5913,6 +5914,15 @@ function linkStats(p){
 }
 function botonStats(p,cls){return`<a class="st-btn ${cls||""}" href="${escH(linkStats(p))}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ver estadísticas en Flashscore">📊 Estadísticas</a>`;}
 window.guardarLinkStats=async function(pid,inp){const r=await api("adminLinkPartido",{partidoId:pid,link:inp.value});toast(r.ok?(inp.value?"✅ Link guardado":"Link borrado"):"❌ "+r.error);};
+
+window.linksAuto=async function(fid,btn){
+  if(btn){btn.disabled=true;btn.textContent="Buscando en Flashscore…";}
+  const r=await api("adminLinksAuto",{fechaId:fid});
+  if(btn){btn.disabled=false;btn.textContent="📊 Cargar links de estadísticas";}
+  if(!r.ok){toast("❌ "+r.error);return;}
+  const no=r.resultados.filter(function(x){return x.estado==="no encontrado"||x.estado==="otra fecha";});
+  toast(`✅ ${r.cargados} link${r.cargados!==1?"s":""} cargado${r.cargados!==1?"s":""}`+(no.length?` · ${no.length} sin encontrar (#${no.map(function(x){return x.numero;}).join(", #")})`:""),6000);
+};
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
