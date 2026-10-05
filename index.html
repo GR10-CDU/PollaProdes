@@ -2384,6 +2384,9 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .t-camb{text-align:center}
 .dx-camb{display:flex;justify-content:space-between;gap:8px;margin-top:10px;font-size:13px;color:var(--ink-2)}
 .dx-camb b{font-family:var(--ff);font-size:16px;color:var(--ink)}
+.dx-camb{align-items:center}
+.dx-act{height:32px;padding:0 14px;border-radius:16px;font-size:13px;font-weight:800;color:var(--accent-text);background:var(--accent-soft);border:1px solid var(--accent-line)}
+.dx-act:disabled{opacity:.6}
 
 </style>
 </head>
@@ -4075,7 +4078,7 @@ function renderGrilla(){
       <div class="dh dh-a"><div class="dha-j yo">${av(base)}<b>${nm(base)}</b><small>${medal(base)} ${ptxt(base)}</small></div>
         <div class="dha-mid"><div class="dha-score"><span>${base.ptsTotal||0}</span><i>–</i><span>${r.ptsTotal||0}</span></div><div class="dh-dif ${cls}">${difTxt}</div></div>
         <div class="dha-j">${av(r)}<b>${nm(r)}</b><small>${medal(r)} ${ptxt(r)}</small></div></div>
-      <div class="dx-camb"><span>🔄 ${nm(base)}: <b>${base.cambiosRestantes}</b> cambio${base.cambiosRestantes!==1?"s":""}</span><span>🔄 ${nm(r)}: <b>${r.cambiosRestantes}</b> cambio${r.cambiosRestantes!==1?"s":""}</span></div>
+      <div class="dx-camb"><span>Cambios: <b>${base.cambiosRestantes}</b></span><button class="dx-act" onclick="actualizarGrilla(this)" title="Actualizar la comparación">↻ Actualizar</button><span>Cambios: <b>${r.cambiosRestantes}</b></span></div>
       <div class="dx">
         ${barra("Partidos acertados",base.acertados||0,r.acertados||0)}
         ${barra("Puntos por partidos",base.ptsPartidos||0,r.ptsPartidos||0)}
@@ -5883,6 +5886,15 @@ function cuandoPartido(iso,conHs){
   const f=d.toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"numeric",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","").replace(",","");
   return`<b class="cp-dia">${f.charAt(0).toUpperCase()+f.slice(1)}</b> ${h}`;
 }
+
+// Grilla: un solo botón que vuelve a traer los datos de todos (vos y el rival)
+window.actualizarGrilla=async function(btn){
+  if(btn){btn.disabled=true;btn.textContent="Actualizando…";}
+  const g=window._grilla,ctx=App.ctx||{};
+  const r=await api("getGrilla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});
+  if(r.ok&&g){g.data=r;renderGrilla();toast("✅ Comparación actualizada");}
+  else{toast("❌ "+(r.error||"No se pudo actualizar"));if(btn){btn.disabled=false;btn.textContent="↻ Actualizar";}}
+};
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
