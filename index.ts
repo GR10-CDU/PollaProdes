@@ -249,6 +249,9 @@ Deno.serve(async (req) => {
       // ── EMPRESAS ──────────────────────────────────────────
       case "getEmpresaPublica": return resp(await getEmpresaPublica(db, data));
       case "ogEmpresas": return resp(await ogEmpresas(db, data));
+      case "pushPruebaUsuario": { const K = Deno.env.get("OG_SECRET"); if (!K || data.clave !== K) return resp({ok:false, error:"No autorizado"}, 401);
+        const {data: us} = await db.from("usuarios").select("id").eq("usuario", String(data.usuario||"")).maybeSingle(); if (!us) return resp({ok:false, error:"No existe"});
+        return resp({ok:true, enviados: await enviarPush(db, [us.id], {titulo:String(data.titulo||"Prueba"), texto:String(data.texto||""), url:data.url||"/", tag:"prueba-"+Date.now()})}); }
       case "jugarEmpresa": return resp(await jugarEmpresa(db, data));
       case "pasarCuentaAEmpresa": return resp(await pasarCuentaAEmpresa(db, data));
       case "getNovedades": return resp(await getNovedades(db, data));
