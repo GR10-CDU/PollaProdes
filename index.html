@@ -2240,6 +2240,22 @@ body.login-active #inst-banner{display:none}
   #topbar .tb-chip{height:38px;border-radius:19px}
   html body #bn{bottom:max(4px,calc(env(safe-area-inset-bottom) - 24px))!important}
 }
+/* v9: las dos cápsulas iguales (58px de alto, íconos de 21px) y la de abajo 5px más arriba */
+@media(max-width:880px){
+  html body #topbar{height:58px!important}
+  #scroll{padding-top:calc(env(safe-area-inset-top) + 70px)!important}
+  #topbar .icon-btn,#topbar .tb-chip{height:44px!important}
+  #topbar .icon-btn{width:44px!important;border-radius:22px!important}
+  #topbar .tb-chip{border-radius:22px!important}
+  #topbar .icon-btn svg{width:21px!important;height:21px!important}
+  .tb-brand .tb-logo{width:40px!important;height:40px!important;border-radius:12px!important}
+  html body #bn{bottom:max(9px,calc(env(safe-area-inset-bottom) - 19px))!important;padding:3px 6px!important}
+  html body #bn .bn-wrap{height:52px!important}
+  .bn-item{height:50px!important;border-radius:25px}
+  .bn-pill{height:50px;margin-top:-25px;border-radius:25px}
+  .bn-item .ni svg{width:21px!important;height:21px!important}
+  html body #topbar,html body #bn{box-sizing:border-box}
+}
 
 </style>
 </head>
