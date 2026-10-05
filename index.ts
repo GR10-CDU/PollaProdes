@@ -485,7 +485,7 @@ async function getFechas(db: any, data: any) {
   const quien: any = data.sessionToken ? await requireAuth(db, data) : {ok:false};
   const esAdmin = quien.ok && quien.rol === "Admin";
   let q = db.from("fechas").select("*").in("estado", ["Abierta","Cerrada","Jugada"]).order("plazo_limite");
-  if (!esAdmin) q = quien.ok && quien.empresaId ? q.eq("empresa_id", quien.empresaId) : q.is("empresa_id", null);
+  if (!esAdmin) { q = quien.ok && quien.empresaId ? q.eq("empresa_id", quien.empresaId) : q.is("empresa_id", null); q = q.eq("publicada", true); }
   const {data: fechas} = await q;
   const {data: emps} = esAdmin ? await db.from("empresas").select("id,nombre") : {data: []};
 
@@ -508,7 +508,7 @@ async function getFechas(db: any, data: any) {
       minutosRestantes: mins,
       tieneCodigo: !!f.codigo_grupo,
       plazoGuardado: esAdmin ? f.plazo_limite : undefined,
-      terminada: terminadas.has(f.id),
+      terminada: terminadas.has(f.id), publicada: f.publicada !== false,
       empresaId: f.empresa_id || null, oculta: esAdmin ? !!f.oculta : undefined, cambiosGratis: !!(f.cambios_gratis || f.empresa_id) || (conPozo.has(f.id) && !conPago.has(f.id)),
       empresaNombre: esAdmin && f.empresa_id ? ((emps||[]).find((e:any) => e.id === f.empresa_id)?.nombre || "") : undefined,
       codigoGrupo: esAdmin ? (f.codigo_grupo || "") : undefined,
@@ -621,7 +621,7 @@ async function inscribirse(db: any, data: any) {
 
   // Verificar fecha abierta
   const {data: fecha} = await db.from("fechas").select("*").eq("id", fechaId).single();
-  if (!fecha || fecha.estado !== "Abierta") return {ok:false, error:"Fecha cerrada"};
+  if (!fecha || fecha.estado !== "Abierta" || fecha.publicada === false) return {ok:false, error:"Fecha cerrada"};
   if ((fecha.empresa_id || null) !== (auth.empresaId || null)) return {ok:false, error:"Esta fecha no es de tu grupo"};
   if (fecha.codigo_grupo) return {ok:false, error:"Esta fecha es con código: ingresalo para jugar", pideCodigo:true};
   const {data: partsF} = await db.from("partidos").select("fecha_hora").eq("fecha_id", fechaId);
@@ -1042,7 +1042,7 @@ async function adminCrearFecha(db: any, data: any) {
     reglas_habilitadas:data.reglasHabilitadas||[],
     codigo_grupo: normalizarCodigo(data.codigoGrupo),
     pago_alias: String(data.pagoAlias||"").trim() || null, pago_titular: String(data.pagoTitular||"").trim() || null,
-    empresa_id: data.empresaId || null, cambios_gratis: !!data.cambiosGratis,
+    empresa_id: data.empresaId || null, cambios_gratis: !!data.cambiosGratis, publicada: false,
   });
   if (error) return {ok:false, error: error.code === "23505" ? "Ese código ya lo usa otra fecha" : error.message};
   if (data.empresaId) {
@@ -1065,6 +1065,7 @@ async function adminEditarFecha(db: any, data: any) {
   if (data.pagoAlias !== undefined) upd.pago_alias = String(data.pagoAlias||"").trim() || null;
   if (data.pagoTitular !== undefined) upd.pago_titular = String(data.pagoTitular||"").trim() || null;
   if (data.cambiosGratis !== undefined) upd.cambios_gratis = !!data.cambiosGratis;
+  if (data.publicada !== undefined) upd.publicada = !!data.publicada;
   const {error} = await db.from("fechas").update(upd).eq("id",data.fechaId);
   if (error) return {ok:false, error: error.code === "23505" ? "Ese código ya lo usa otra fecha" : error.message};
   return {ok:true};
@@ -1774,7 +1775,7 @@ async function unirseConCodigo(db: any, data: any) {
   if (!auth.ok) return auth;
 
   const fecha = await fechaPorCodigo(db, data.codigo);
-  if (!fecha) return {ok:false, error:"Código inválido"};
+  if (!fecha || fecha.publicada === false) return {ok:false, error:"Código inválido"};
   if (fecha.estado !== "Abierta") return {ok:false, error:"Esa fecha ya está cerrada"};
   const {data: partsF} = await db.from("partidos").select("fecha_hora").eq("fecha_id", fecha.id);
   if (minutosHasta(cierreFecha(fecha, partsF||[])) <= 0) return {ok:false, error:"La fecha ya cerró (1 hora antes del primer partido)"};
@@ -2211,7 +2212,7 @@ async function jugarEmpresa(db: any, data: any) {
   const auth = await requireAuth(db, data);
   if (!auth.ok) return auth;
   const {data: fecha} = await db.from("fechas").select("*").eq("id", data.fechaId).single();
-  if (!fecha || !fecha.empresa_id || fecha.empresa_id !== auth.empresaId) return {ok:false, error:"Esta fecha no es de tu empresa"};
+  if (!fecha || !fecha.empresa_id || fecha.empresa_id !== auth.empresaId || fecha.publicada === false) return {ok:false, error:"Esta fecha no es de tu empresa"};
   const {data: pozos} = await db.from("pozos").select("id").eq("fecha_id", fecha.id).eq("estado","Activo").order("monto");
   const pozo = pozos?.[0];
   if (!pozo) return {ok:false, error:"La fecha todavía no está lista"};
@@ -2424,7 +2425,7 @@ async function adminCopiarFecha(db: any, data: any) {
     const {error} = await db.from("fechas").insert({
       id, nombre: String(data.nombre||f.nombre).slice(0,80), descripcion:f.descripcion||"", liga:f.liga||"",
       plazo_limite:f.plazo_limite, reglas_habilitadas:f.reglas_habilitadas||[], cant_partidos:(parts||[]).length,
-      estado:"Abierta", empresa_id: emp ? emp.id : null,
+      estado:"Abierta", empresa_id: emp ? emp.id : null, publicada: false,
     });
     if (error) return {ok:false, error:error.message};
     if ((parts||[]).length) await db.from("partidos").insert((parts||[]).map((p:any) => ({
@@ -2700,7 +2701,7 @@ async function avisosResultado(db: any, partidoId: string) {
 }
 // Cada 15 minutos (pg_cron): fechas que cierran en menos de 2 horas → aviso a quien le faltan pronósticos
 async function cronAvisos(db: any) {
-  const {data: fechas} = await db.from("fechas").select("*").eq("estado","Abierta");
+  const {data: fechas} = await db.from("fechas").select("*").eq("estado","Abierta").eq("publicada", true);
   let avisos = 0;
   for (const f of (fechas||[])) {
     const {data: parts} = await db.from("partidos").select("id,fecha_hora").eq("fecha_id", f.id);

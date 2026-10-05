@@ -2424,6 +2424,7 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .pf-inst{display:flex;align-items:center;gap:12px;width:100%;text-align:left}
 .pf-inst>span{font-size:28px}.pf-inst div{flex:1}.pf-inst b{display:block;font-size:16px}.pf-inst small{color:var(--ink-3);font-size:13px}.pf-inst i{font-style:normal;font-size:24px;color:var(--ink-3)}
 .tut-pasos small b{display:inline;font-size:inherit;font-weight:800;color:var(--ink-2)}
+.af-lista{width:100%;margin-bottom:10px}
 
 </style>
 </head>
@@ -4320,13 +4321,14 @@ async function loadAdminFechas(){
     return`<div class="card" style="margin-bottom:10px;padding:16px" id="fcard-${f.id}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div>
-          <div style="font-family:var(--ff);font-size:26px;font-weight:800">${f.nombre||"Sin nombre"}</div>
+          <div style="font-family:var(--ff);font-size:26px;font-weight:800">${f.nombre||"Sin nombre"}${f.publicada===false?' <span class="bdg bgold" style="vertical-align:middle">📝 Borrador · no la ven los jugadores</span>':""}</div>
           <div style="font-size:14px;color:var(--txt3);margin-top:2px">⚽ ${f.cantPartidos||0} partido${f.cantPartidos!==1?"s":""}${f.liga?" · "+f.liga:""}${plazoStr?" · Cierra: "+plazoStr+" hs":""}</div>
           ${reglas.length||f.codigoGrupo||f.empresaNombre?`<div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap">${f.empresaNombre?`<span class="bdg bblue" title="Fecha de empresa">🏢 ${f.empresaNombre}</span>`:""}${f.codigoGrupo?`<span class="bdg bpur" title="Código de grupo cerrado">🔒 ${f.codigoGrupo}</span>`:""}${reglas.map(function(cod){return`<span class="bdg bgold">${cod}</span>`;}).join("")}</div>`:""}
         </div>
         <span class="bdg ${estadoFecha(f).c}">${estadoFecha(f).t}</span>
       </div>
       <div id="pozos-${f.id}" style="margin-bottom:8px"></div>
+      ${f.publicada===false?`<button class="btn btn-p af-lista" onclick="publicarFecha('${f.id}')">✅ La fecha está lista · publicarla</button>`:""}
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         ${f.codigoGrupo?`<button class="btn btn-p" style="padding:6px 12px;font-size:16px" onclick="compartirFecha('${f.id}')">🔗 Compartir</button>`:""}
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="partidosManual('${f.id}')">✍️ Cargar a mano</button>
@@ -4370,7 +4372,7 @@ window.showCrearFecha=async function(){
 window.crearFecha=async function(){
   const r=await api("adminCrearFecha",{cambiosGratis:document.getElementById("nfg")?.value==="1",empresaId:document.getElementById("nfe")?.value||"",nombre:document.getElementById("nfn")?.value,liga:document.getElementById("nfl")?.value,plazoLimite:fhISO("nfp"),descripcion:document.getElementById("nfd")?.value,codigoGrupo:document.getElementById("nfc")?.value||"",pagoAlias:document.getElementById("nfa")?.value||"",pagoTitular:document.getElementById("nft")?.value||"",reglasHabilitadas:Array.from(window._reglasSelAdmin)});
   document.querySelector(".modal-bg")?.remove();
-  if(r.ok){toast("✅ Fecha creada");loadAdminFechas();}else toast("❌ "+r.error);
+  if(r.ok){toast("✅ Fecha creada como borrador. Cargale partidos y pozos, y tocá \"La fecha está lista\" para publicarla",6000);loadAdminFechas();}else toast("❌ "+r.error);
 };
 window.showEditarFecha=function(fechaId){
   const f=window._adminFechas[fechaId];if(!f){toast("Fecha no encontrada");return;}
@@ -6048,6 +6050,13 @@ window.tutorialInstalar=function(os){
     ${tutPasos(os)}
     ${esApp()?`<p class="tut-ok">✅ Ya la estás usando instalada.</p>`:_instalarEvt?`<button class="btn btn-p btn-lg" style="width:100%" onclick="instalarApp()">Instalar ahora</button>`:""}</div>`;
   document.body.appendChild(m);
+};
+
+window.publicarFecha=async function(id){
+  const f=window._adminFechas[id]||{};
+  if(!confirm(`¿Publicar "${f.nombre}"? Desde ahora la ven los jugadores${f.empresaNombre?" de "+f.empresaNombre:""}.`))return;
+  const r=await api("adminEditarFecha",{fechaId:id,publicada:true});
+  toast(r.ok?"✅ Fecha publicada: ya la ven los jugadores":"❌ "+r.error);if(r.ok)loadAdminFechas();
 };
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
