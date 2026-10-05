@@ -311,6 +311,8 @@ Deno.serve(async (req) => {
       case "importarPartidos": return resp(await importarPartidos(db, data));
       case "adminAgregarPartido": return resp(await adminAgregarPartido(db, data));
       case "adminLinksAuto": return resp(await adminLinksAuto(db, data));
+      case "fsLigas": return resp(await fsLigas(db, data));
+      case "fsPartidos": return resp(await fsPartidos(db, data));
       case "adminLinkPartido": { const au = await requireAuth(db, data); if (!au.ok || au.rol !== "Admin") return resp({ok:false, error:"Sin permisos"}); const l = String(data.link||"").trim(); if (l && !/^https?:\/\//i.test(l)) return resp({ok:false, error:"El link tiene que empezar con https://"}); const ids = await partidosGemelos(db, data.partidoId); for (const id of ids) await db.from("partidos").update({link_stats:l.slice(0,500)}).eq("id", id); return resp({ok:true}); }
       case "adminLeerCaptura": return resp(await adminLeerCaptura(db, data));
       case "getEscudosEquipos": return resp(await getEscudosEquipos(db, data));
@@ -3003,4 +3005,38 @@ async function adminPushMasivo(db: any, data: any) {
   if (data.soloContar) return {ok:true, usuarios:ids.length};
   const n = await enviarPush(db, ids, {titulo, texto, tag:"admin-"+Date.now()});
   return {ok:true, usuarios:ids.length, dispositivos:n};
+}
+
+// ============================================================
+//  IMPORTAR PARTIDOS DESDE FLASHSCORE (gratis, sin API)
+// ============================================================
+function slugPais(n: string) { return String(n||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
+async function fsLigas(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const q = String(data.q||"").trim();
+  if (q.length < 3) return {ok:true, ligas:[]};
+  const r = await fetch(`https://s.livesport.services/api/v2/search/?q=${encodeURIComponent(q)}&lang-id=13&type-ids=1&project-type-id=1&project-id=13&sport-ids=1`, {headers:{"User-Agent":UA_WEB}});
+  const lista = await r.json();
+  return {ok:true, ligas:(Array.isArray(lista)?lista:[]).filter((x:any)=>x?.gender?.id!==2).slice(0,12).map((x:any) => ({nombre:x.name, pais:x.defaultCountry?.name||"", path:`${slugPais(x.defaultCountry?.name||"mundial")}/${x.url}`}))};
+}
+async function fsPartidos(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const path = String(data.path||"").replace(/[^a-z0-9\-\/]/gi,"");
+  if (!path) return {ok:false, error:"Elegí una liga"};
+  const html = await (await fetch(`https://www.flashscore.com.ar/futbol/${path}/partidos/`, {headers:{"User-Agent":UA_WEB,"Accept-Language":"es-AR"}})).text();
+  const out: any[] = []; let torneo = "";
+  for (const bloque of html.split("¬~")) {
+    const c: Record<string,string> = {};
+    for (const par of bloque.split("¬")) { const i = par.indexOf("÷"); if (i > 0) c[par.slice(0,i).replace(/^~/,"")] = par.slice(i+1); }
+    if (c.ZA) torneo = c.ZA;
+    if (!c.AA || !c.AD || c.AB !== "1") continue;
+    const img = (x:string) => x ? `https://static.flashscore.com/res/image/data/${x}` : "";
+    out.push({id:c.AA, ts:Number(c.AD)*1000, ronda:c.ER||"", torneo, local:c.AE||"", visita:c.AF||"",
+      localLogo:img(c.OA), visitaLogo:img(c.OB),
+      link: c.WU && c.WV && c.PX && c.PY ? `https://www.flashscore.com.ar/partido/futbol/${c.WU}-${c.PX}/${c.WV}-${c.PY}/?mid=${c.AA}` : ""});
+  }
+  out.sort((a,b) => a.ts - b.ts);
+  return {ok:true, partidos:out.slice(0,120)};
 }

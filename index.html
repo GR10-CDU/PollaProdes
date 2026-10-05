@@ -2425,6 +2425,23 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .pf-inst>span{font-size:28px}.pf-inst div{flex:1}.pf-inst b{display:block;font-size:16px}.pf-inst small{color:var(--ink-3);font-size:13px}.pf-inst i{font-style:normal;font-size:24px;color:var(--ink-3)}
 .tut-pasos small b{display:inline;font-size:inherit;font-weight:800;color:var(--ink-2)}
 .af-lista{width:100%;margin-bottom:10px}
+/* Importar de Flashscore */
+.fs-ligas{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-top:10px}
+.fs-liga{text-align:left;padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.fs-liga:hover{border-color:var(--accent-line)}
+.fs-liga b{display:block;font-size:14.5px}.fs-liga small{font-size:12.5px;color:var(--ink-3)}
+.fs-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0;font-size:14px}
+.fs-ronda{margin-bottom:10px}
+.fs-rh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.fs-rh b{font-family:var(--ff);font-size:18px;text-transform:uppercase}
+.fs-p{display:grid;grid-template-columns:22px 1fr auto 1fr auto;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--line);margin-bottom:5px;font-size:14px;cursor:pointer}
+.fs-p input{width:18px;height:18px;accent-color:var(--accent)}
+.fs-eq{display:flex;align-items:center;gap:6px;font-weight:700;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.fs-eq img{width:22px;height:22px;object-fit:contain;flex:none}
+.fs-p i{font-style:normal;font-size:12px;color:var(--ink-3)}
+.fs-p small{font-size:12.5px;color:var(--ink-2);white-space:nowrap}
+.fs-acc{position:sticky;bottom:0;background:var(--accent-soft);padding:8px 0}
+@media(max-width:560px){.fs-p{grid-template-columns:22px 1fr 1fr}.fs-p i{display:none}.fs-p small{grid-column:2/-1}}
 
 </style>
 </head>
@@ -5362,7 +5379,8 @@ window.partidosManual=async function(fechaId){
   const diaPlazo=(isoArg(f.plazoLimite)||isoArg(new Date().toISOString())).slice(0,10);
   const m=mkModal("Partidos · "+escH(f.nombre||""),`<div class="pm">
     <div id="pm-lista" class="pm-lista"><div class="loading"><div class="spinner"></div></div></div>
-    <div class="pm-cap"><label class="btn btn-s pm-cap-btn">📷 Desde captura<input type="file" accept="image/*" multiple hidden onchange="capLeer(this.files)"></label><small>Subí 1 a 4 capturas del fixture y la IA arma la lista para que la revises.</small></div>
+    <div class="pm-cap"><button class="btn btn-s" onclick="fsAbrir()">⚽ Desde Flashscore</button><label class="btn btn-s pm-cap-btn">📷 Desde captura<input type="file" accept="image/*" multiple hidden onchange="capLeer(this.files)"></label><small>Subí 1 a 4 capturas del fixture y la IA arma la lista para que la revises.</small></div>
+    <div id="pm-fs"></div>
     <div id="pm-capres"></div>
     <div class="pm-form">
       <div class="pm-tit" id="pm-tit">Agregar partido</div>
@@ -6057,6 +6075,45 @@ window.publicarFecha=async function(id){
   if(!confirm(`¿Publicar "${f.nombre}"? Desde ahora la ven los jugadores${f.empresaNombre?" de "+f.empresaNombre:""}.`))return;
   const r=await api("adminEditarFecha",{fechaId:id,publicada:true});
   toast(r.ok?"✅ Fecha publicada: ya la ven los jugadores":"❌ "+r.error);if(r.ok)loadAdminFechas();
+};
+
+// ── Importar partidos de Flashscore: buscar liga → elegir partidos → agregar ──
+window.fsAbrir=function(){
+  const el=document.getElementById("pm-fs");if(!el)return;
+  el.innerHTML=`<div class="cap"><div class="cap-h"><b>Importar de Flashscore</b><small>Buscá la liga y elegí los partidos. Trae equipos, escudos, día, hora y el link de estadísticas.</small></div>
+    <div class="pq-fila"><input class="inp" id="fs-q" placeholder="Ej: Liga Profesional, Premier League, Libertadores" onkeydown="if(event.key==='Enter')fsBuscar()"/><button class="btn btn-p" onclick="fsBuscar()">Buscar</button></div>
+    <div id="fs-res"></div></div>`;
+  document.getElementById("fs-q").focus();
+};
+window.fsBuscar=async function(){
+  const q=document.getElementById("fs-q").value.trim(),el=document.getElementById("fs-res");if(q.length<3){toast("Escribí al menos 3 letras");return;}
+  el.innerHTML=`<div class="cap-cargando"><div class="spinner"></div><span>Buscando…</span></div>`;
+  const r=await api("fsLigas",{q});if(!r.ok){el.innerHTML=errBox(r.error);return;}
+  el.innerHTML=r.ligas.length?`<div class="fs-ligas">${r.ligas.map(function(l){return`<button class="fs-liga" onclick="fsLiga('${escH(l.path)}','${escH(l.nombre).replace(/'/g,"")}')"><b>${escH(l.nombre)}</b><small>${escH(l.pais)}</small></button>`;}).join("")}</div>`:`<p class="me-p">No encontré esa liga.</p>`;
+};
+window.fsLiga=async function(path,nombre){
+  const el=document.getElementById("fs-res");el.innerHTML=`<div class="cap-cargando"><div class="spinner"></div><span>Trayendo partidos de ${escH(nombre)}…</span></div>`;
+  const r=await api("fsPartidos",{path});if(!r.ok){el.innerHTML=errBox(r.error);return;}
+  const ps=r.partidos||[];if(!ps.length){el.innerHTML=`<p class="me-p">No hay partidos próximos para ${escH(nombre)}.</p>`;return;}
+  window._fs=ps.map(function(p){return Object.assign({ok:false,tipo:"Normal"},p);});
+  const rondas=[...new Set(ps.map(function(p){return p.ronda||"Próximos";}))];
+  el.innerHTML=`<div class="fs-top"><b>${escH(nombre)}</b> · ${ps.length} partidos próximos <button class="btn btn-s" onclick="fsAbrir()">Cambiar liga</button></div>
+    ${rondas.map(function(rd){const idx=ps.map(function(p,i){return(p.ronda||"Próximos")===rd?i:-1;}).filter(function(i){return i>=0;});
+      return`<div class="fs-ronda"><div class="fs-rh"><b>${escH(rd)}</b><button class="btn btn-s" onclick="fsMarcar([${idx}])">Elegir toda la jornada</button></div>
+      ${idx.map(function(i){const p=ps[i];return`<label class="fs-p"><input type="checkbox" data-fs="${i}" onchange="window._fs[${i}].ok=this.checked;fsContar()"/>
+        <span class="fs-eq">${p.localLogo?`<img src="${p.localLogo}" alt="">`:""}${escH(p.local)}</span><i>vs</i><span class="fs-eq">${p.visitaLogo?`<img src="${p.visitaLogo}" alt="">`:""}${escH(p.visita)}</span><small>${cuandoPartido(new Date(p.ts).toISOString())}</small></label>`;}).join("")}</div>`;}).join("")}
+    <div class="me-acc fs-acc"><button class="btn btn-p" id="fs-ok" onclick="fsImportar()" disabled>Agregar 0 partidos</button></div>`;
+};
+window.fsMarcar=function(idx){const todos=idx.every(function(i){return window._fs[i].ok;});idx.forEach(function(i){window._fs[i].ok=!todos;const c=document.querySelector(`[data-fs="${i}"]`);if(c)c.checked=!todos;});fsContar();};
+window.fsContar=function(){const n=(window._fs||[]).filter(function(p){return p.ok;}).length,b=document.getElementById("fs-ok");if(b){b.disabled=!n;b.textContent=`Agregar ${n} partido${n!==1?"s":""}`;}};
+window.fsImportar=async function(){
+  const ps=(window._fs||[]).filter(function(p){return p.ok;});if(!ps.length)return;
+  const b=document.getElementById("fs-ok");b.disabled=true;let ok=0;
+  for(const p of ps){b.textContent=`Agregando ${ok+1} de ${ps.length}…`;
+    const r=await api("adminAgregarPartido",{fechaId:window._pm.fechaId,local:p.local,visita:p.visita,fechaHora:new Date(p.ts).toISOString(),tipo:"Normal",localLogo:p.localLogo,visitaLogo:p.visitaLogo,sinEscudoLocal:!p.localLogo,sinEscudoVisita:!p.visitaLogo,linkStats:p.link});
+    if(r.ok)ok++;else toast("❌ "+p.local+" vs "+p.visita+": "+r.error,4000);}
+  toast(`✅ ${ok} partido${ok!==1?"s":""} agregado${ok!==1?"s":""}. Marcá cuál es Doble y cuál la Polla con "Editar"`,5000);
+  document.getElementById("pm-fs").innerHTML="";pmCargar();if(App.screen==="admin-fechas")loadAdminFechas();
 };
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
