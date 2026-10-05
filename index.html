@@ -2578,6 +2578,10 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
   .pct-r{gap:6px}
   .partido-card .senior-flag{top:40px}
 }
+.pcj-est{margin-left:4px;padding-left:10px;border-left:1px solid rgba(255,255,255,.35);white-space:nowrap}
+.partido-card.jugado .pcj-bdgs{margin-left:0}
+.partido-card.jugado .st-ico{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.35);color:#fff}
+@media(max-width:560px){.pcj-est{padding-left:6px;margin-left:0}}
 
 </style>
 </head>
@@ -3646,7 +3650,7 @@ function renderPartidos(parts,ctx,puede){
           ${(function(){const t=TIPO_INFO[p.tipo]||TIPO_INFO.Normal;return`<span class="t-tag ${t.cls} pc-tipo">${t.k}</span><span class="pc-tipo-n">${t.n}</span>`;})()}${p.esToleTole?'<span class="t-tag t-tole pc-tipo">🔥 TOLE</span>':""}
           ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:16px;padding:4px 11px">● VIVO</span>`:""}
           ${reglaEnPartido.map(function(r){return`<span class="bdg bgold" style="font-size:14px;padding:3px 8px">${r.codigo}</span>`;}).join("")}`;
-    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}${_calc?(_tot>0?" suma":" nosuma"):""}${esSenior(p)?" senior":""}${p.estado==="Finalizado"?" jugado":""}" id="pc-${p.id}">${p.estado==="Finalizado"?`<div class="pc-jugado"><span>✓<i class="pcj-txt"> JUGADO</i></span><div class="pcj-bdgs">${_bdgs}</div><b>${p.fechaHora?new Date(p.fechaHora).toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","").replace(",","")+" hs":""}</b></div>`:""}${esSenior(p)?`<span class="senior-flag">Senior</span>`:""}
+    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}${_calc?(_tot>0?" suma":" nosuma"):""}${esSenior(p)?" senior":""}${p.estado==="Finalizado"?" jugado":""}" id="pc-${p.id}">${p.estado==="Finalizado"?`<div class="pc-jugado"><div class="pcj-bdgs">${_bdgs}</div><div class="pct-r">${botonStats(p,"st-mini st-ico").replace("📊 Estadísticas","📊")}<b>${p.fechaHora?new Date(p.fechaHora).toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","").replace(",","")+" hs":""}</b><span class="pcj-est">✓<i class="pcj-txt"> JUGADO</i></span></div></div>`:""}${esSenior(p)?`<span class="senior-flag">Senior</span>`:""}
       ${p.estado==="Finalizado"?"":`<div class="pc-jugado pend"><div class="pcj-bdgs">${_bdgs}</div><div class="pct-r">${_statsH}${_cuandoH?`<b>${_cuandoH}</b>`:""}</div></div>${_pillH&&!_calc?`<div class="pct-aviso">${_pillH}</div>`:""}`}
       <div class="teams-block">
         <div class="team-box">
