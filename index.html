@@ -2955,7 +2955,7 @@ async function cargarExtraFecha(f){
   const pozos=rp.pozos;
   const yaJugo=pozos.find(function(p){return p.yaJugo;});
   const pozosHtml=pozos.map(function(p){
-    const prem=p.premioGanador?`<span class="bdg bgold" style="font-size:14px;padding:3px 8px">🏆 ${p.premioFijo?"Premio":"Premio est."} $${p.premioGanador.toLocaleString("es-AR")}</span>`:"";
+    const prem=p.premioGanador?`<span class="bdg bgold" style="font-size:17px;padding:5px 12px;font-weight:800">🏆 ${p.premioFijo?"Premio":"Premio est."} $${p.premioGanador.toLocaleString("es-AR")}</span>`:"";
     return`<span class="bdg ${p.yaJugo?"bg":p.yaInscripto?"bg":"bgr"}" style="font-size:14px;padding:3px 8px">${p.yaInscripto?"✓ ":""}${p.monto?"$"+p.monto.toLocaleString("es-AR"):"Gratis"}</span>${prem}`;
   }).join("");
   const reglasHtml=f.reglasHabilitadas?.length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${f.reglasHabilitadas.map(function(cod){return`<span class="bdg bgold" style="font-size:13px;padding:2px 7px">${cod}</span>`;}).join("")}</div>`:"";
