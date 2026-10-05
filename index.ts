@@ -1354,10 +1354,11 @@ async function getGrilla(db: any, data: any) {
   const {data: toles} = await db.from("partidos").select("id,es_tole").eq("fecha_id",fechaId);
   for (const p of (parts||[])) p.es_tole = !!(toles||[]).find((t:any) => t.id === p.id && t.es_tole);
 
-  const [{data: pronos}, {data: usuarios}, tablaRes] = await Promise.all([
+  const [{data: pronos}, {data: usuarios}, tablaRes, {data: regs}] = await Promise.all([
     db.from("pronosticos").select("user_id,usuario,partido_id,pronostico,acertado,cambios_realizados").eq("fecha_id",fechaId).eq("pozo_id",pozoId),
     db.from("usuarios").select("id,nombre,usuario,avatar"),
     armarTabla(db, fechaId, pozoId),
+    db.from("reglas").select("user_id,codigo,partido_id,numero_partido,puntos_obtenidos").eq("fecha_id",fechaId).eq("pozo_id",pozoId),
   ]);
   const pos: Record<string,any> = {};
   for (const u of tablaRes.tabla) pos[u.userId] = u;
@@ -1371,7 +1372,8 @@ async function getGrilla(db: any, data: any) {
     j.pronos[p.partido_id] = {v:p.pronostico, ok:p.acertado};
     j.cambiosUsados += p.cambios_realizados||0;
   }
-  const lista = Object.values(jugadores).map((j:any) => ({...j, cambiosRestantes: Math.max(0, MAX_CAMBIOS - j.cambiosUsados)}))
+  for (const r of (regs||[])) if (jugadores[r.user_id]) (jugadores[r.user_id].reglas ||= []).push({codigo:r.codigo, partidoId:r.partido_id, numero:r.numero_partido, pts:r.puntos_obtenidos||0});
+  const lista = Object.values(jugadores).map((j:any) => ({...j, reglas:(j.reglas||[]).sort((a:any,b:any)=>a.numero-b.numero), cambiosRestantes: Math.max(0, MAX_CAMBIOS - j.cambiosUsados)}))
     .sort((a:any,b:any) => (a.posicion||999)-(b.posicion||999) || b.ptsTotal-a.ptsTotal);
   return {ok:true, cerrada:true, partidos:parts||[], jugadores:lista};
 }
