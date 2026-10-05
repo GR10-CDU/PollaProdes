@@ -2450,6 +2450,11 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .vivo.on .vivo-k i{animation:livedot 1.4s infinite}
 .vivo b{font-family:var(--ff);font-size:24px;font-weight:800;color:var(--ink);line-height:1}
 .vivo.g{margin-bottom:8px}.vivo.g b{font-size:34px}
+/* Parcial en vivo: claramente distinto del resultado final (fondo oscuro sólido) */
+.vivo{border:2px dashed var(--no)!important;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--no) 7%,transparent) 0 6px,transparent 6px 12px)!important;padding:5px 12px 6px!important}
+.vivo b{color:var(--no)!important;display:flex;gap:6px;align-items:center}
+.vivo b em{font-style:normal;opacity:.6}
+.vivo small{font-size:10px;font-weight:700;color:var(--ink-3);white-space:nowrap}
 
 </style>
 </head>
@@ -4589,6 +4594,7 @@ function renderReglamento(){
     <section class="rg-sec" id="rg-4"><h2>Validez de los partidos</h2>
       <div class="rg-grid">
         <div class="rg-card"><span class="rg-ico">⏱</span><b>Solo 90 minutos</b><p>Se cuenta el resultado de los 90 minutos más el adicional. El alargue y los penales no cuentan.</p></div>
+        <div class="rg-card"><span class="rg-ico">🔴</span><b>Los puntos se suman al final</b><p>Mientras se juega, la app muestra el <b>resultado parcial en vivo</b> solo como referencia. Los puntajes se calculan recién cuando el partido terminó y el administrador carga el resultado final.</p></div>
         <div class="rg-card"><span class="rg-ico">🟥</span><b>Tarjetas rojas</b><p>Cuentan las rojas que figuren en Flashscore.</p></div>
         <div class="rg-card"><span class="rg-ico">⛔</span><b>Partido suspendido</b><p>No suma para nadie: ni el pronóstico ni las reglas de ese partido.</p></div>
         <div class="rg-card"><span class="rg-ico">📅</span><b>Partido postergado</b><p>Queda a criterio del administrador, según cuándo se juegue efectivamente.</p></div>
@@ -6131,8 +6137,9 @@ window.fsImportar=async function(){
 // Resultado parcial en vivo (no suma puntos hasta que el admin carga el final)
 function vivoHtml(p,grande){
   const v=p&&p.vivo;if(!v||v.gl===null||v.gl===undefined)return"";
-  const et=v.estado==="entretiempo"?"ENTRETIEMPO":v.estado==="final"?"FINAL · sin confirmar":"EN VIVO";
-  return`<div class="vivo${grande?" g":""}${v.estado==="vivo"?" on":""}"><span class="vivo-k"><i></i>${et}</span><b>${v.gl} - ${v.gv}</b></div>`;
+  const et=v.estado==="entretiempo"?"ENTRETIEMPO":v.estado==="final"?"TERMINÓ":"EN VIVO";
+  const sub=v.estado==="final"?"Falta confirmar · aún no suma":"Parcial · no suma puntos";
+  return`<div class="vivo${grande?" g":""}${v.estado==="vivo"?" on":""}"><span class="vivo-k"><i></i>${et}</span><b>${v.gl}<em>-</em>${v.gv}</b><small>${sub}</small></div>`;
 }
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
