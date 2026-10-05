@@ -2604,6 +2604,11 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 /* Tema oscuro: franja de "Jugado" en verde más profundo para que el blanco se lea bien */
 [data-mode="dark"] .partido-card.jugado .pc-jugado{background:#0F7A3E;color:#fff}
 [data-mode="dark"] .partido-card.jugado .pc-jugado b{color:#fff}
+/* Tema oscuro: todos los verdes llenos (con letra blanca) en el mismo verde profundo */
+[data-mode="dark"] :is(.pc-pill.pos,.pc-res.pos,.dz-ab.pos .dz-totb,.dz-b.pos .dz-totb,.dz-c.pos .dz-tile.tot,.rs-card.final .rs-head,.st-tog input:checked+i,.partido-card.jugado .pc-jugado){background:#0F7A3E!important;border-color:#0F7A3E;color:#fff}
+[data-mode="dark"] :is(.pc-pill.pos,.dz-ab.pos .dz-totb,.dz-b.pos .dz-totb){box-shadow:0 10px 24px -10px rgba(15,122,62,.8)!important}
+[data-mode="dark"] .partido-card.suma{border-color:rgba(15,122,62,.75)!important;background:linear-gradient(180deg,color-mix(in srgb,#0F7A3E 22%,var(--surface)),color-mix(in srgb,#0F7A3E 9%,var(--surface)))!important}
+[data-mode="dark"] .partido-card.jugado{border-color:rgba(15,122,62,.75)!important}
 
 </style>
 </head>

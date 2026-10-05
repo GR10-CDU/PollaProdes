@@ -3251,7 +3251,7 @@ async function cronVivo(db: any) {
           const ult = delEq.length === (lado === "L" ? ngl : ngv) ? delEq[delEq.length-1] : null;
           const min = c.DD ? Math.floor((Date.now()-Number(c.DD)*1000)/60000)+1+(etapa==="2T"?45:0) : null;
           const jug = ult ? `, ${String(ult.j).replace(/\s+[A-ZÁÉÍÓÚÑ]\.(\s*[A-ZÁÉÍÓÚÑ]\.)*$/,"")} ${ult.m}${ult.t==="pen"?" (p)":ult.t==="ec"?" (e/c)":""}` : (min ? `, ${min}'` : "");
-          await avisoPartido(db, p.id, "avisos_goles", `gol:${p.id}:${ngl}-${ngv}`, `⚽ GOL de ${sigla(quien)}${jug}`, `${sigla(viejo.local)} ${ngl}-${ngv} ${sigla(viejo.visita)}`);
+          await avisoPartido(db, p.id, "avisos_goles", `gol:${p.id}:${ngl}-${ngv}`, `⚽ ${sigla(viejo.local)} ${ngl}-${ngv} ${sigla(viejo.visita)}`, `GOL de ${sigla(quien)}${jug}`);
         }
       }
       await db.from("partidos").update({vivo_gl: ngl, vivo_gv: ngv, vivo_estado:est, vivo_at:new Date().toISOString(),
