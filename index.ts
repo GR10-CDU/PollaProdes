@@ -3154,7 +3154,7 @@ function golesDeInc(inc: string) {
     for (const it of s.txt.split("III÷").slice(1)) {
       const c = parseFeed(it);
       const k = c.IK || "";
-      if (/red card/i.test(k)) { out.push({e: c.IA === "2" ? "V" : "L", m: c.IB || "", j: c.IF || "", t: "roja"}); continue; }
+      if (/IK÷[^¬]*red card/i.test(it)) { out.push({e: c.IA === "2" ? "V" : "L", m: c.IB || "", j: c.IF || "", t: "roja"}); continue; }
       if (!/^(goal|own goal|penalty)$/i.test(k)) continue;
       out.push({e: c.IA === "2" ? "V" : "L", m: c.IB || "", j: c.IF || "", t: /own/i.test(k) ? "ec" : /penalty/i.test(k) ? "pen" : ""});
     }
@@ -3235,19 +3235,24 @@ async function cronVivo(db: any) {
       }
       const etapa = c.DB === "12" ? "1T" : c.DB === "13" ? "2T" : c.DB === "38" ? "ET" : "";
       const ngl = c.DE!==undefined&&c.DE!=="" ? parseInt(c.DE)||0 : null, ngv = c.DF!==undefined&&c.DF!=="" ? parseInt(c.DF)||0 : null;
+      // Goles y rojas con nombre y minuto (se guarda solo si cambió algo)
+      const inc = await fsFeed(`df_sui_1_${p.mid}`);
+      const det = inc ? golesDeInc(inc) : null;
+      {
+        if (det && JSON.stringify(det) !== JSON.stringify(p.goles_det||[])) await db.from("partidos").update({goles_det: det}).eq("id", p.id);
+      }
       if (est === "vivo" && ngl !== null && ngv !== null && (ngl+ngv) > 0) {
         const {data: viejo} = await db.from("partidos").select("vivo_gl,vivo_gv,local,visita").eq("id", p.id).single();
         if (viejo && (ngl+ngv) > ((viejo.vivo_gl||0)+(viejo.vivo_gv||0))) {
-          const quien = ngl > (viejo.vivo_gl||0) ? viejo.local : viejo.visita;
+          const lado = ngl > (viejo.vivo_gl||0) ? "L" : "V";
+          const quien = lado === "L" ? viejo.local : viejo.visita;
+          // Último gol de ese equipo según Flashscore (jugador y minuto); si todavía no figura, el minuto calculado
+          const delEq = (det||[]).filter((g:any) => g.t !== "roja" && g.e === lado);
+          const ult = delEq.length === (lado === "L" ? ngl : ngv) ? delEq[delEq.length-1] : null;
           const min = c.DD ? Math.floor((Date.now()-Number(c.DD)*1000)/60000)+1+(etapa==="2T"?45:0) : null;
-          await avisoPartido(db, p.id, "avisos_goles", `gol:${p.id}:${ngl}-${ngv}`, `⚽ ¡Gol! ${sigla(viejo.local)} ${ngl}-${ngv} ${sigla(viejo.visita)}`, `Gol de ${quien}${min?` · ${min}'`:""}`);
+          const jug = ult ? `, ${String(ult.j).replace(/\s+[A-ZÁÉÍÓÚÑ]\.(\s*[A-ZÁÉÍÓÚÑ]\.)*$/,"")} ${ult.m}${ult.t==="pen"?" (p)":ult.t==="ec"?" (e/c)":""}` : (min ? `, ${min}'` : "");
+          await avisoPartido(db, p.id, "avisos_goles", `gol:${p.id}:${ngl}-${ngv}`, `⚽ GOL de ${sigla(quien)}${jug}`, `${sigla(viejo.local)} ${ngl}-${ngv} ${sigla(viejo.visita)}`);
         }
-      }
-      // Goles y rojas con nombre y minuto (se guarda solo si cambió algo)
-      {
-        const inc = await fsFeed(`df_sui_1_${p.mid}`);
-        const det = inc ? golesDeInc(inc) : null;
-        if (det && JSON.stringify(det) !== JSON.stringify(p.goles_det||[])) await db.from("partidos").update({goles_det: det}).eq("id", p.id);
       }
       await db.from("partidos").update({vivo_gl: ngl, vivo_gv: ngv, vivo_estado:est, vivo_at:new Date().toISOString(),
         vivo_etapa:etapa, vivo_desde: c.DD ? new Date(Number(c.DD)*1000).toISOString() : null}).eq("id", p.id);

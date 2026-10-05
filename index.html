@@ -3542,7 +3542,7 @@ function _fmtH(d){return cuandoPartido(d instanceof Date?d.toISOString():d);}
 function golesEq(p,e){
   const g=(p.golesDet||[]).filter(function(x){return x.e===e;});
   if(!g.length)return"";
-  return`<div class="team-goles">${g.map(function(x){return`<span${x.t==="roja"?' class="roja"':""}>${x.t==="roja"?'<i class="tg-roja" aria-label="Roja"></i>':"⚽"} ${escH(x.j)} <b>${escH(x.m)}</b>${x.t==="pen"?" (p)":x.t==="ec"?" (e/c)":""}</span>`;}).join("")}</div>`;
+  return`<div class="team-goles">${g.map(function(x){return`<span${x.t==="roja"?' class="roja"':""}>${x.t==="roja"||x.t==="r"?"🟥":"⚽"} ${escH(x.j)} <b>${escH(x.m)}</b>${x.t==="pen"?" (p)":x.t==="ec"?" (e/c)":""}</span>`;}).join("")}</div>`;
 }
 function renderPartidos(parts,ctx,puede){
   const el=document.getElementById("jc");if(!el)return;
