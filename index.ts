@@ -102,28 +102,75 @@ async function enviarMail(para: string, asunto: string, html: string) {
     const r = await fetch("https://api.resend.com/emails", {
       method:"POST",
       headers:{"Authorization":`Bearer ${KEY}`, "Content-Type":"application/json"},
-      body: JSON.stringify({from: Deno.env.get("MAIL_FROM") || "Polla Prodes <hola@pollaprodes.ar>", to:[para], subject:asunto, html}),
+      body: JSON.stringify({from: Deno.env.get("MAIL_FROM") || "Polla Prodes <info@pollaprodes.ar>", reply_to:"info@pollaprodes.ar", to:[para], subject:asunto, html}),
     });
     return {ok:r.ok};
   } catch (e) { console.error("mail", e); return {ok:false}; }
 }
 const esc = (t: any) => String(t ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"} as any)[c]);
-function mailBienvenida(nombre: string, usuario: string, tel: string, alias: string) {
-  const APP_URL = Deno.env.get("APP_URL") || "https://gr10-cdu.github.io/PollaProdes/";
-  return `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;background:#0B2A1B;border-radius:18px;overflow:hidden;color:#fff">
-  <div style="padding:28px 28px 8px"><div style="font-size:30px;font-weight:900;letter-spacing:2px">POLLA <span style="color:#3BEA8B">PRODES</span></div></div>
-  <div style="padding:8px 28px 28px">
-    <p style="font-size:18px">¡Hola ${esc(nombre)}! Ya sos parte de Polla Prodes.</p>
-    <p style="color:#B8D8C6">Estos son los datos de tu registro:</p>
-    <table style="width:100%;background:#06140D;border-radius:12px;padding:12px;color:#fff">
-      <tr><td style="color:#8FB3A0;padding:6px">Usuario</td><td style="font-weight:bold;padding:6px">${esc(usuario)}</td></tr>
-      <tr><td style="color:#8FB3A0;padding:6px">Teléfono</td><td style="font-weight:bold;padding:6px">${esc(tel)}</td></tr>
-      ${alias ? `<tr><td style="color:#8FB3A0;padding:6px">Alias MP</td><td style="font-weight:bold;padding:6px">${esc(alias)}</td></tr>` : ""}
-    </table>
-    <p style="color:#B8D8C6;margin-top:16px">Para entrar usás tu teléfono y tu PIN. Nunca te vamos a pedir el PIN por mail ni por WhatsApp.</p>
-    <a href="${APP_URL}" style="display:inline-block;margin-top:10px;background:#27E07F;color:#03140A;font-weight:bold;text-decoration:none;padding:14px 22px;border-radius:12px">Entrar a jugar →</a>
-    <p style="color:#6E8F7E;font-size:12px;margin-top:22px">Si no te registraste vos, respondé este mail y lo revisamos.</p>
-  </div></div>`;
+// ── Mails: un solo diseño para todos (encabezado con logo, cuerpo, botón y firma) ──
+const SITIO = "https://pollaprodes.ar/";
+function mailBase(o: {preheader?:string, titulo:string, cuerpo:string, boton?:{texto:string,url:string}, marca?:{nombre:string,logo?:string,color?:string}}) {
+  const c = o.marca?.color || "#0FA958", logo = o.marca?.logo || SITIO+"icons/icon-192.png", nombre = o.marca ? esc(o.marca.nombre) : `POLLA <span style="color:#3BEA8B">PRODES</span>`;
+  return `<!doctype html><html><body style="margin:0;background:#EEF2EE;padding:24px 12px;font-family:Arial,Helvetica,sans-serif">
+  <span style="display:none;max-height:0;overflow:hidden">${esc(o.preheader||"")}</span>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+  <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.06)">
+    <tr><td style="background:${o.marca?c:"#0B2A1B"};padding:22px 26px">
+      <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+        <td style="width:44px"><img src="${logo}" width="44" height="44" alt="" style="display:block;border-radius:11px;background:#fff"></td>
+        <td style="padding-left:12px;color:#fff;font-size:22px;font-weight:900;letter-spacing:1.5px">${nombre}</td></tr></table></td></tr>
+    <tr><td style="padding:28px 26px 8px;color:#0C1A11">
+      <h1 style="margin:0 0 14px;font-size:24px;line-height:1.2">${o.titulo}</h1>
+      <div style="font-size:15.5px;line-height:1.6;color:#33443A">${o.cuerpo}</div>
+      ${o.boton?`<p style="margin:24px 0 8px"><a href="${o.boton.url}" style="display:inline-block;background:${c};color:#fff;font-weight:bold;text-decoration:none;padding:14px 24px;border-radius:12px;font-size:16px">${o.boton.texto}</a></p>`:""}
+    </td></tr>
+    <tr><td style="padding:22px 26px 26px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #E3E8E3"><tr><td style="padding-top:16px;font-size:13px;line-height:1.6;color:#6A7C71">
+        Saludos,<br><b style="color:#0C1A11">El equipo de Polla Prodes</b><br>
+        <a href="${SITIO}" style="color:#0A8746;text-decoration:none">pollaprodes.ar</a> · <a href="mailto:info@pollaprodes.ar" style="color:#0A8746;text-decoration:none">info@pollaprodes.ar</a> · WhatsApp +54 9 11 6163-0873
+      </td></tr></table>
+    </td></tr>
+  </table>
+  <p style="max-width:560px;margin:14px auto 0;font-size:11px;line-height:1.5;color:#8A988F;text-align:center">Jugar compulsivamente es perjudicial para la salud · Prohibido para menores de 18 años.<br>Recibís este correo porque tenés una cuenta en Polla Prodes. Nunca te vamos a pedir tu PIN por mail ni por WhatsApp.<br><a href="${SITIO}" style="color:#8A988F">Términos · Privacidad · Juego responsable</a></p>
+  </td></tr></table></body></html>`;
+}
+const filaDato = (k: string, v: string) => `<tr><td style="padding:8px 12px;color:#6A7C71;font-size:14px">${k}</td><td style="padding:8px 12px;font-weight:bold;font-size:15px;color:#0C1A11">${v}</td></tr>`;
+const tablaDatos = (filas: string) => `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:#F4F7F4;border-radius:12px;margin:12px 0">${filas}</table>`;
+
+function mailBienvenida(nombre: string, usuario: string, tel: string, alias: string, empresa?: any) {
+  return mailBase({preheader:"Tu cuenta ya está lista", marca: empresa ? {nombre:empresa.nombre, logo:empresa.logo, color:empresa.color} : undefined,
+    titulo:`¡Bienvenido${empresa?" a la Polla de "+esc(empresa.nombre):" a Polla Prodes"}, ${esc(nombre.split(" ")[0])}!`,
+    cuerpo:`<p style="margin:0">Ya tenés tu cuenta para pronosticar y competir. Estos son tus datos:</p>
+      ${tablaDatos(filaDato("Usuario", esc(usuario)) + filaDato("Teléfono", esc(tel)) + (alias ? filaDato("Alias de pago", esc(alias)) : ""))}
+      <p style="margin:0">Para entrar usás tu <b>teléfono</b> y tu <b>PIN</b>. Te recomendamos instalar la app en tu celular y activar los avisos para enterarte cuando pegás una regla.</p>`,
+    boton:{texto:"Entrar a jugar →", url: empresa ? SITIO+String(empresa.codigo||"").toLowerCase() : SITIO}});
+}
+function mailPagoAprobado(nombre: string, concepto: string, monto: string) {
+  return mailBase({preheader:"Tu pago fue verificado", titulo:"✅ Pago aprobado",
+    cuerpo:`<p style="margin:0">Hola ${esc(nombre)}, verificamos tu transferencia. ¡Está todo en orden!</p>${tablaDatos(filaDato("Concepto", esc(concepto)) + filaDato("Monto", esc(monto)))}<p style="margin:0">Ya estás jugando. ¡Mucha suerte!</p>`,
+    boton:{texto:"Ver mis pronósticos →", url:SITIO}});
+}
+function mailPagoRechazado(nombre: string, concepto: string, motivo: string) {
+  return mailBase({preheader:"No pudimos verificar tu pago", titulo:"❌ No pudimos verificar tu pago",
+    cuerpo:`<p style="margin:0">Hola ${esc(nombre)}, revisamos el comprobante y no pudimos confirmarlo.</p>${tablaDatos(filaDato("Concepto", esc(concepto)) + filaDato("Motivo", esc(motivo)))}<p style="margin:0">Podés volver a subir el comprobante desde la app. Si creés que es un error, respondé este mail y lo vemos.</p>`,
+    boton:{texto:"Volver a subir el comprobante →", url:SITIO}});
+}
+function mailCierre(nombre: string, fecha: string, falta: string, faltan: number) {
+  return mailBase({preheader:`Te faltan ${faltan} pronósticos`, titulo:`⏰ ${esc(fecha)} está por cerrar`,
+    cuerpo:`<p style="margin:0">Hola ${esc(nombre)}, la fecha cierra en <b>${esc(falta)}</b> y todavía te falta${faltan!==1?"n":""} <b>${faltan} pronóstico${faltan!==1?"s":""}</b>.</p><p>Después del cierre ya no vas a poder cargarlos.</p>`,
+    boton:{texto:"Completar mis pronósticos →", url:SITIO}});
+}
+function mailGanaste(nombre: string, fecha: string, pozo: string, puntos: number, premio: string, compartido: number) {
+  return mailBase({preheader:"¡Sos el ganador de la fecha!", titulo:"🏆 ¡Ganaste la fecha!",
+    cuerpo:`<p style="margin:0">¡Felicitaciones, ${esc(nombre)}! Terminaste primero en <b>${esc(fecha)}</b>.</p>${tablaDatos(filaDato("Pozo", esc(pozo)) + filaDato("Puntos", String(puntos)) + filaDato("Premio", esc(premio) + (compartido > 1 ? ` (compartido entre ${compartido})` : "")))}<p style="margin:0">Para cobrar, verificá que tu alias de pago esté cargado en tu Perfil. Te transferimos en las próximas 48 horas hábiles.</p>`,
+    boton:{texto:"Ver la tabla →", url:SITIO}});
+}
+function mailInvitacionAdmin(empresa: any, email: string, link: string) {
+  return mailBase({preheader:"Te sumaron como administrador", marca:{nombre:empresa.nombre, logo:empresa.logo_url||empresa.logo, color:empresa.color},
+    titulo:`Sos administrador de la Polla de ${esc(empresa.nombre)}`,
+    cuerpo:`<p style="margin:0">¡Hola! Te sumaron como <b>administrador</b> del prode de ${esc(empresa.nombre)}.</p><p>Registrate con este correo (<b>${esc(email)}</b>) y vas a poder publicar novedades y premios, cambiar el logo y los colores, y ver a todos los participantes.</p>`,
+    boton:{texto:"Entrar a la Polla →", url:link}});
 }
 
 function generarId(prefix: string): string {
@@ -190,6 +237,7 @@ Deno.serve(async (req) => {
       case "setAvisosReglas": return resp(await setAvisosReglas(db, data));
       case "aceptarLegales": { const au = await requireAuth(db, data); if (!au.ok) return resp(au); await db.from("usuarios").update({legales_version:LEGALES_VERSION, legales_at:new Date().toISOString()}).eq("id", au.userId); return resp({ok:true}); }
       case "adminEnviarPush": return resp(await adminEnviarPush(db, data));
+      case "adminMailsPrueba": return resp(await adminMailsPrueba(db, data));
       case "cronAvisos": return resp(await cronAvisos(db));
       case "logout": return resp(await logout(db, data));
 
@@ -342,7 +390,7 @@ async function registro(db: any, data: any) {
   if (error) return {ok:false, error: error.message};
 
   const token = await crearSesion(db, id);
-  if (data.email) await enviarMail(data.email, "¡Bienvenido a Polla Prodes!", mailBienvenida(nombre, usuario, tel, data.alias || ""));
+  if (email) await enviarMail(email, empresa ? `¡Bienvenido a la Polla de ${empresa.nombre}!` : "¡Bienvenido a Polla Prodes!", mailBienvenida(nombre, usuario, tel, empresa ? "" : (data.alias || ""), empresa ? empresaOut(empresa) : null));
   if (empresa) await sumarMiembro(db, id, empresa.id, invitacion ? "AdminEmpresa" : "Jugador", datosExtra);
   if (invitacion) await db.from("empresa_invitaciones").delete().eq("id", invitacion.id);
   const {data: nuevo} = await db.from("usuarios").select("*").eq("id", id).single();
@@ -922,6 +970,13 @@ async function registrarGanadores(db: any, fechaId: string) {
     });
   }
   if (filas.length) await db.from("ganadores").insert(filas);
+  const {data: fe} = await db.from("fechas").select("nombre").eq("id",fechaId).maybeSingle();
+  for (const g of filas) {
+    if (!(await primeraVez(db, `gano:${fechaId}:${g.pozo_id}:${g.user_id}`))) continue;
+    const pz = (pozos||[]).find((p:any) => p.id === g.pozo_id);
+    await mailA(db, g.user_id, `🏆 ¡Ganaste ${fe?.nombre||"la fecha"}!`, (n) => mailGanaste(n, fe?.nombre||"", pz?.nombre||"", g.puntos, g.premio ? "$"+Number(g.premio).toLocaleString("es-AR") : "—", g.compartido_con));
+    await enviarPush(db, [g.user_id], {titulo:`🏆 ¡Ganaste ${fe?.nombre||"la fecha"}! 🏆`, texto:"", tag:`gano-${fechaId}`});
+  }
   return filas.length;
 }
 
@@ -2044,6 +2099,7 @@ async function adminResolverPago(db: any, data: any) {
     if (aprobar) {
       await db.from("inscripciones").update({estado_pago:"Aprobado", habilitado:true, pagado_at:new Date().toISOString(), rechazo_motivo:null}).eq("id",id);
       await avisar(db, i.user_id, "ok", `✅ Pago de ${i.fechas?.nombre||"la fecha"} aprobado (${i.pozos?.nombre||fmt(i.monto)})`);
+      await mailA(db, i.user_id, `Pago aprobado · ${i.fechas?.nombre||"Polla Prodes"}`, (n) => mailPagoAprobado(n, `Inscripción · ${i.fechas?.nombre||""} · ${i.pozos?.nombre||""}`, fmt(i.monto ?? i.pozos?.monto)));
     } else {
       await db.from("inscripciones").update({estado_pago:"Rechazado", rechazo_motivo:motivo}).eq("id",id);
       // Sin pago no juega: se borran sus pronósticos, reglas y puntos de ese pozo
@@ -2053,6 +2109,7 @@ async function adminResolverPago(db: any, data: any) {
         db.from("puntajes").delete().eq("user_id",i.user_id).eq("pozo_id",i.pozo_id),
       ]);
       await avisar(db, i.user_id, "no", `❌ Pago de ${i.fechas?.nombre||"la fecha"} rechazado: ${motivo}. Podés volver a subir el comprobante.`);
+      await mailA(db, i.user_id, "No pudimos verificar tu pago", (n) => mailPagoRechazado(n, `Inscripción · ${i.fechas?.nombre||""} · ${i.pozos?.nombre||""}`, motivo));
     }
     return {ok:true};
   }
@@ -2412,8 +2469,7 @@ async function adminInvitarAdmin(db: any, data: any) {
   if (error) return {ok:false, error:error.message};
   const APP_URL = Deno.env.get("APP_URL") || "https://gr10-cdu.github.io/PollaProdes/";
   const link = `${APP_URL.replace(/\/?$/,"/")}${encodeURIComponent(String(emp.codigo).toLowerCase())}`;
-  const m = await enviarMail(email, `Sos administrador de la Polla de ${emp.nombre}`,
-    `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px"><h2>¡Hola!</h2><p>Te sumaron como <b>administrador de la Polla de ${esc(emp.nombre)}</b>.</p><p>Registrate con este correo (<b>${esc(email)}</b>) y vas a poder publicar novedades y premios para tu gente.</p><p><a href="${link}" style="display:inline-block;background:#0FA958;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:bold">Entrar a la Polla</a></p></div>`);
+  const m = await enviarMail(email, `Sos administrador de la Polla de ${emp.nombre}`, mailInvitacionAdmin(emp, email, link));
   return {ok:true, estado:"invitado", link, mailEnviado: !!m.ok};
 }
 async function adminQuitarInvitacion(db: any, data: any) {
@@ -2625,6 +2681,7 @@ async function cronAvisos(db: any) {
       if (faltan <= 0) continue;
       if (!(await primeraVez(db, `cierre:${f.id}:${i.user_id}`))) continue;
       const h = Math.floor(mins/60), m = Math.round(mins%60);
+      await mailA(db, i.user_id, `⏰ ${f.nombre} está por cerrar`, (n) => mailCierre(n, f.nombre, `${h?h+" h ":""}${m} min`, faltan));
       await enviarPush(db, [i.user_id], {titulo:`⏰ ${f.nombre} está por cerrar`, texto:`Faltan ${h?h+" h ":""}${m} min y te falta${faltan!==1?"n":""} ${faltan} pronóstico${faltan!==1?"s":""}.`, tag:`cierre-${f.id}`});
       avisos++;
     }
@@ -2779,4 +2836,30 @@ function nombreDispositivo(ua: string, endpoint: string) {
   if (/fcm\.googleapis/.test(endpoint)) return "Chrome (Android o compu)";
   if (/mozilla/.test(endpoint)) return "Firefox";
   return "Otro";
+}
+
+// Mail a un usuario (si cargó email)
+async function mailA(db: any, userId: string, asunto: string, html: (nombre:string)=>string) {
+  const {data: u} = await db.from("usuarios").select("email,nombre").eq("id", userId).maybeSingle();
+  if (u?.email) await enviarMail(u.email, asunto, html((u.nombre||"").split(" ")[0] || ""));
+}
+// Admin: mandar todos los modelos de mail a una casilla para revisarlos
+async function adminMailsPrueba(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const para = String(data.email||"").trim();
+  if (!para) return {ok:false, error:"Falta el email"};
+  const {data: emp} = await db.from("empresas").select("*").limit(1).maybeSingle();
+  const lista: [string,string][] = [
+    ["¡Bienvenido a Polla Prodes!", mailBienvenida("Germán Rodríguez","GR873","5491161630873","polla2027")],
+    ...(emp ? [[`¡Bienvenido a la Polla de ${emp.nombre}!`, mailBienvenida("Germán Rodríguez","GR873","5491161630873","",empresaOut(emp))] as [string,string]] : []),
+    ["Pago aprobado · Fecha 12", mailPagoAprobado("Germán","Inscripción · Fecha 12 · Pozo $5.000","$5.000")],
+    ["No pudimos verificar tu pago", mailPagoRechazado("Germán","Inscripción · Fecha 12 · Pozo $5.000","No se encontró la transferencia")],
+    ["⏰ Fecha 12 está por cerrar", mailCierre("Germán","Fecha 12","1 h 40 min",3)],
+    ["🏆 ¡Ganaste la Fecha 12!", mailGanaste("Germán","Fecha 12","Pozo $5.000",31,"$45.000",1)],
+    ...(emp ? [[`Sos administrador de la Polla de ${emp.nombre}`, mailInvitacionAdmin(emp, para, SITIO+String(emp.codigo).toLowerCase())] as [string,string]] : []),
+  ];
+  const res: any[] = [];
+  for (const [asunto, html] of lista) { const r: any = await enviarMail(para, "[Prueba] " + asunto, html); res.push({asunto, ok:!!r.ok, motivo:r.motivo||""}); }
+  return {ok:true, enviados:res};
 }
