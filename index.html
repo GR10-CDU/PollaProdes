@@ -2397,6 +2397,14 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .fx-extra{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px;margin-top:18px}
 .fx-card{padding:16px}
 .fx-tit{font-family:var(--ff);font-size:20px;font-weight:800;text-transform:uppercase;margin-bottom:8px}
+/* Noticias con más punch */
+.noticia-item{font-size:16px!important;line-height:1.5!important;font-weight:600;color:var(--ink)!important;padding:14px 0!important}
+.noticia-fecha{font-size:12.5px!important;margin-bottom:5px!important}
+.fx-tit{font-size:24px!important}
+.nv-pop{max-width:460px;text-align:center;padding:28px 24px}
+.nv-pop-k{font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-text);margin-bottom:12px}
+.nv-pop-t{font-family:var(--ff);font-size:30px;font-weight:800;line-height:1.1;text-transform:uppercase;color:var(--ink);margin-bottom:22px}
+.nv-pop .btn{width:100%}
 
 </style>
 </head>
@@ -4785,6 +4793,7 @@ function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
   setTimeout(unirsePorLink,700);
   setTimeout(sincronizarPush,1500);
   setTimeout(pedirLegales,800);
+  setTimeout(popupNoticia,2200);
 }
 
 /* ══ HELPERS ═════════════════════════════════════════════════ */
@@ -5940,6 +5949,19 @@ async function extrasFechas(el){
   if(!nots.length&&!gans.length){box.remove();return;}
   box.innerHTML=`${nots.length?`<div class="card fx-card"><div class="fx-tit">📣 Noticias</div>${nots.slice(0,4).map(function(n){return`<div class="noticia-item">${n.fecha?`<div class="noticia-fecha">${n.fecha}</div>`:""}${n.texto}</div>`;}).join("")}</div>`:""}
     ${gans.length?`<div class="card fx-card"><div class="fx-tit">🏆 Salón de la fama</div>${(function(){const m={};gans.forEach(function(g){const k=g.usuario||"";m[k]=(m[k]||0)+1;});return Object.keys(m).sort(function(a,b){return m[b]-m[a];}).slice(0,5).map(function(u,i){return`<div class="sr-hof-item"><span class="sr-hof-medal">${puestoIco(i+1,24)}</span><div class="sr-hof-name">${escH(u)}</div><span class="sr-hof-wins">${m[u]} fecha${m[u]!==1?"s":""}</span></div>`;}).join("");})()}</div>`:""}`;
+}
+
+// Popup con la última noticia: una sola vez por noticia y por usuario
+async function popupNoticia(){
+  if(!App.user||App.user.rol==="Admin"||App.user.empresa)return;
+  if(document.querySelector(".modal-bg"))return setTimeout(popupNoticia,4000);
+  const r=await api("getNoticias");const n=r.ok&&(r.noticias||[])[0];if(!n||!n.texto)return;
+  const clave="pp_not_"+App.user.id;let vista="";try{vista=localStorage.getItem(clave)||"";}catch(e){}
+  const id=String(n.texto).slice(0,60)+"|"+(n.fecha||"");if(vista===id)return;
+  try{localStorage.setItem(clave,id);}catch(e){}
+  const m=document.createElement("div");m.className="modal-bg";m.onclick=function(e){if(e.target===m)m.remove();};
+  m.innerHTML=`<div class="modal-box nv-pop"><div class="nv-pop-k">📣 Novedad${n.fecha?` · ${escH(n.fecha)}`:""}</div><div class="nv-pop-t">${n.texto}</div><button class="btn btn-p btn-lg" onclick="this.closest('.modal-bg').remove()">¡Dale!</button></div>`;
+  document.body.appendChild(m);
 }
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
