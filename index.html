@@ -2286,6 +2286,13 @@ body.login-active #inst-banner{display:none}
 .st-tog input:checked+i{background:var(--ok)}
 .st-tog input:checked+i::after{transform:translateX(20px)}
 #st-avisos[hidden]{display:none}
+/* Camisetas de puesto (1º oro, 2º plata, 3º bronce) */
+.pu-ico{display:inline-block;vertical-align:middle;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
+.pu-n{font-family:var(--ff);font-weight:800}
+.t-med{display:inline-grid;place-items:center;font-size:0}
+.podio-item .med{font-size:0;display:grid;place-items:center;margin-bottom:4px}
+.podio-item.first .pu-ico{filter:drop-shadow(0 6px 12px rgba(226,168,20,.45))}
+.sr-hof-medal{font-size:0;display:inline-grid;place-items:center}
 
 </style>
 </head>
@@ -3069,7 +3076,7 @@ async function loadSRHoF(){
   const r=await api("getEstadisticas");
   if(!r.ok||!r.ganadores?.length){el.innerHTML=`<div style="font-size:16px;color:var(--txt3)">Sin ganadores aún</div>`;return;}
   const medals=["🥇","🥈","🥉"];
-  el.innerHTML=r.ganadores.slice(0,5).map(function(u,i){return`<div class="sr-hof-item"><span class="sr-hof-medal">${medals[i]||"🏅"}</span><div class="sr-hof-name">${u.usuario||""}</div><span class="sr-hof-wins">🏆</span></div>`;}).join("");
+  el.innerHTML=r.ganadores.slice(0,5).map(function(u,i){return`<div class="sr-hof-item"><span class="sr-hof-medal">${puestoIco(i+1,26)}</span><div class="sr-hof-name">${u.usuario||""}</div><span class="sr-hof-wins">🏆</span></div>`;}).join("");
 }
 
 /* ══ JUGAR ═══════════════════════════════════════════════════ */
@@ -3718,7 +3725,7 @@ async function loadMisFechas(){
           <div style="text-align:right">
             <div style="font-family:var(--ff);font-size:32px;font-weight:900;color:var(--g2)">${pts}</div>
             <div style="font-size:12px;color:var(--txt3)">puntos</div>
-            ${pos?`<div style="font-size:13px;color:var(--txt2);margin-top:2px">${pos===1?"🥇":pos===2?"🥈":pos===3?"🥉":"#"+pos}</div>`:""}
+            ${pos?`<div style="font-size:13px;color:var(--txt2);margin-top:2px">${pos<=3?puestoIco(pos,22):"#"+pos}</div>`:""}
           </div>
         </div>
         ${cerrada&&cf!==undefined?cf>0?`<div style="padding:8px 12px;background:var(--bluel);border:1px solid rgba(68,138,255,.15);border-radius:var(--rs);margin-bottom:10px;display:flex;align-items:center;gap:8px"><span style="font-family:var(--ff);font-size:24px;font-weight:900;color:var(--blue)">${cf}</span><span style="font-size:14px;color:var(--blue);font-weight:600">cambio${cf!==1?"s":""} disponible${cf!==1?"s":""}</span></div>`:`<div style="padding:6px 10px;background:rgba(255,82,82,.06);border-radius:var(--rs);margin-bottom:10px;text-align:center"><span style="font-size:13px;color:var(--red)">🔒 Sin cambios</span></div>`:""}
@@ -3778,7 +3785,7 @@ function renderTabla(){
   const flecha=function(u){const m=mov[u.userId];return m>0?`<span class="t-mov up">▲${m}</span>`:m<0?`<span class="t-mov down">▼${-m}</span>`:`<span class="t-mov">–</span>`;};
   const fila=function(u,cls){const esYo=u.userId===me;const pos=u.posicion;
     return`<tr class="${cls||""}${esYo?" t-yo":""}${pos<=3?" t-top":""}">
-      <td class="t-pos">${pos<=3?`<span class="t-med">${md[pos-1]}</span>`:pos}</td>
+      <td class="t-pos">${pos<=3?`<span class="t-med">${puestoIco(pos,30)}</span>`:pos}</td>
       <td class="t-movc">${flecha(u)}</td>
       <td class="t-jug"><div class="t-jw">${avatarHtml(u)}<div><div class="t-nm">${esYo?"Vos":u.siglas}</div><div class="t-full">${u.nombre&&u.nombre!==u.siglas?u.nombre:""}</div></div></div></td>
       <td class="t-big">${u.ptsTotal||0}</td>
@@ -3794,7 +3801,7 @@ function renderTabla(){
       ${yo?`<div class="g-stat yo"><b>${yo.posicion}º</b><span>tu puesto · ${yo.ptsTotal} pts</span></div>`:""}
     </div>
     ${primeros.length>1?`<div class="t-empate">🤝 <b>${primeros.length} jugadores empatados en el primer puesto</b> en todos los criterios: si termina así, se dividen el premio.</div>`:""}
-    ${po.length>=3?`<div class="podio-wrap">${[po[1],po[0],po[2]].map(function(u,i){const first=i===1;return`<div class="podio-item${first?" first":""}"><div class="med">${md[u.posicion-1]||u.posicion+"º"}</div><div class="pnm">${u.userId===me?"Vos":(u.nombre||u.siglas)}</div><div class="podio-box"><div class="podio-pts">${u.ptsTotal}</div><div style="font-size:12px;opacity:.7">pts · ${u.acertados} aciertos</div></div></div>`;}).join("")}</div>`:""}
+    ${po.length>=3?`<div class="podio-wrap">${[po[1],po[0],po[2]].map(function(u,i){const first=i===1;return`<div class="podio-item${first?" first":""}"><div class="med">${puestoIco(u.posicion,first?54:42)}</div><div class="pnm">${u.userId===me?"Vos":(u.nombre||u.siglas)}</div><div class="podio-box"><div class="podio-pts">${u.ptsTotal}</div><div style="font-size:12px;opacity:.7">pts · ${u.acertados} aciertos</div></div></div>`;}).join("")}</div>`:""}
     <div class="g-bar">
       <input class="inp g-q" placeholder="Buscar jugador…" value="${T.q||""}" oninput="window._tabla.q=this.value;clearTimeout(window._tqT);window._tqT=setTimeout(function(){renderTabla();var i=document.querySelector('#tc .g-q');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},250)"/>
     </div>
@@ -3922,7 +3929,7 @@ function renderGrilla(){
 
   const nm=function(j){return j.userId===me?"Vos":j.siglas;};
   const av=function(j){return avatarHtml(j);};
-  const medal=function(j){const p=j.posicion;return p&&p<=3?["🥇","🥈","🥉"][p-1]:"";};
+  const medal=function(j){const p=j.posicion;return p&&p<=3?puestoIco(p,20):"";};
   const ptxt=function(j){return j.posicion?j.posicion+"º":"";};
   const dif=function(j){return (j.ptsTotal||0)-(base.ptsTotal||0);};
   const difHtml=function(j){if(j===base)return"";const d=dif(j);return`<span class="gx-d ${d>0?"arriba":d<0?"abajo":""}">${d>0?"+"+d:d<0?d:"="}</span>`;};
@@ -4045,6 +4052,7 @@ async function loadPerfil(){
     <div class="pf-av">${avatarHtml(u,"pf-big")}${pend?'<span class="pf-pend" title="Foto pendiente de aprobación">⏳</span>':""}</div>
     <div class="pf-id"><div class="pf-user">${u.usuario||""}</div><div class="pf-nombre">${u.nombre||""}</div><span class="bdg ${u.rol==="Admin"?"bpur":"bg"}">${u.rol||"Jugador"}</span></div>
   </div>
+  <div class="card pf-sec" id="pf-avisos"></div>
 
   <div class="card pf-sec">
     <div class="pf-tit">Tu avatar</div>
@@ -4076,7 +4084,6 @@ async function loadPerfil(){
     </div>
   </div>
   ${u.empresa&&(u.empresa.campos||[]).length?`<div class="card pf-sec" id="pf-emp"><div class="pf-tit">Tus datos para ${escH(u.empresa.nombre)}</div><div class="fg">${camposEmpresaHtml(u.empresa,u.datosExtra||{},"inp")}<button class="btn btn-p" onclick="guardarDatosEmp(document.getElementById('pf-emp'))">Guardar</button></div></div>`:""}
-  <div class="card pf-sec" id="pf-avisos"></div>
   <button class="btn btn-d" style="width:100%" onclick="if(confirm('¿Cerrar sesión?'))logout()">⎋ Cerrar sesión</button>`;
   pintarAvisos();
 }
@@ -5591,6 +5598,17 @@ window.toggleAvisosReglas=async function(on){
   App.user.avisosReglas=on;saveSession(App.user,App.token);toast(on?"🔔 Avisos de reglas activados":"🔕 Avisos de reglas desactivados");
   if(on&&typeof pushEstado==="function"&&await pushEstado()==="apagado")activarAvisos();
 };
+
+// Puesto 1/2/3: camiseta de fútbol oro / plata / bronce con el número
+const PUESTO_COL=[["#FFE08A","#E2A814","#8A5B00"],["#F2F4F7","#AEB6C2","#4B5563"],["#F6C79B","#C47A3A","#6B3A12"]];
+function puestoIco(pos,tam){
+  if(!pos||pos>3)return`<span class="pu-n">${pos||"–"}º</span>`;
+  const c=PUESTO_COL[pos-1],t=tam||28,id="pu"+pos+"_"+t;
+  return`<svg class="pu-ico pu-${pos}" width="${t}" height="${t}" viewBox="0 0 32 32" aria-label="${pos}º puesto"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient></defs>
+    <path d="M11 3 4 7.5l2.6 6 3-1.4V29h12.8V12.1l3 1.4 2.6-6L21 3c-.6 2.2-2.6 3.6-5 3.6S11.6 5.2 11 3z" fill="url(#${id})" stroke="${c[2]}" stroke-width="1.3" stroke-linejoin="round"/>
+    <path d="M11 3c.6 2.2 2.6 3.6 5 3.6S20.4 5.2 21 3" fill="none" stroke="${c[2]}" stroke-width="1.3"/>
+    <text x="16" y="23.5" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="800" font-size="13" fill="${c[2]}">${pos}</text></svg>`;
+}
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
