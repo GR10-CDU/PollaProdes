@@ -2152,6 +2152,22 @@ body.login-active #inst-banner{display:none}
   .bn-item{height:50px!important}
   .page{padding-bottom:calc(74px + env(safe-area-inset-bottom))!important}
 }
+/* Header sin desenfoque; menú de abajo con pastilla deslizable tipo WhatsApp */
+@media(max-width:880px){
+  html body #topbar{background:var(--bg)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  #topbar .icon-btn,#topbar .tb-chip{background:var(--surface-2)!important}
+  .bn-wrap{position:relative}
+  .bn-pill{position:absolute;left:0;top:50%;height:50px;margin-top:-25px;border-radius:18px;pointer-events:none;opacity:0;z-index:0;
+    background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 24%,transparent),color-mix(in srgb,var(--accent) 10%,transparent));
+    -webkit-backdrop-filter:blur(10px) saturate(1.8);backdrop-filter:blur(10px) saturate(1.8);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.25),inset 0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent),0 6px 18px -8px color-mix(in srgb,var(--accent) 60%,transparent);
+    transition:transform .38s cubic-bezier(.3,1.35,.5,1),width .3s,opacity .2s}
+  .bn-wrap.arrastrando .bn-pill{transition:transform .06s linear;transform-origin:center;scale:1.08}
+  .bn-item{position:relative;z-index:1}
+  .bn-item.active{background:none!important;box-shadow:none!important}
+  .bn-wrap.arrastrando .bn-item.active:not(.hover){color:var(--ink-3)}
+  .bn-item.hover{color:var(--accent-text)}
+}
 
 </style>
 </head>
@@ -2490,7 +2506,7 @@ function renderNav(){
   const tn=document.getElementById("tb-nav");
   if(tn){tn.innerHTML=n.map(x=>`<div class="tn-item${App.screen===x.k?" active":""}" data-k="${x.k}" onclick="go('${x.k}')" role="link" tabindex="0" onkeydown="if(event.key==='Enter')go('${x.k}')">${x.i}<span>${x.l}</span></div>`).join("");requestAnimationFrame(acomodarMenu);}
   const bn=document.getElementById("bn-wrap");
-  if(bn)bn.innerHTML=n.filter(function(x){return x.k!=="reglamento";}).slice(0,5).map(x=>`<div class="bn-item${App.screen===x.k?" active":""}" onclick="go('${x.k}')" role="link" aria-label="${x.t}"><span class="ni">${x.i}</span>${badge(x.k)?`<span class="bn-badge">${badge(x.k)}</span>`:""}<span class="nl">${x.l}</span></div>`).join("");
+  if(bn){bn.innerHTML=`<span class="bn-pill" aria-hidden="true"></span>`+n.filter(function(x){return x.k!=="reglamento";}).slice(0,5).map(x=>`<div class="bn-item${App.screen===x.k?" active":""}" data-k="${x.k}" onclick="if(!window._bnDrag)go('${x.k}')" role="link" aria-label="${x.t}"><span class="ni">${x.i}</span>${badge(x.k)?`<span class="bn-badge">${badge(x.k)}</span>`:""}<span class="nl">${x.l}</span></div>`).join("");requestAnimationFrame(function(){bnPill();});setTimeout(function(){bnPill();},250);}
 }
 
 // Menú superior: lo que no entra va a "Más ▾"
@@ -5402,6 +5418,30 @@ async function selectorAdminFechas(el,destino){
     return`<div class="card adm-sel-f"><div class="adm-sel-h"><b>${escH(f.nombre)}</b><span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr"}">${f.estado}</span>${f.empresaNombre?`<span class="bdg bblue">🏢 ${escH(f.empresaNombre)}</span>`:""}</div>
       ${ps.length?`<div class="adm-sel-pz">${ps.map(function(p){return`<button class="adm-sel-b" onclick="go('${destino}',{fechaId:'${f.id}',pozoId:'${p.id}'})"><span>${f.empresaId?"Polla":(p.monto?"Pozo "+fmt(p.monto):"Gratis")}</span><small>👥 ${p.inscriptos} anotado${p.inscriptos!==1?"s":""}</small><i>→</i></button>`;}).join("")}</div>`:`<p class="me-p">Todavía no tiene pozos.</p>`}</div>`;}).join("")}</div>`;
 }
+
+// ── Menú de abajo tipo WhatsApp: pastilla de vidrio que se desliza y se arrastra con el dedo ──
+function bnPill(x){
+  const w=document.getElementById("bn-wrap");if(!w)return;const pill=w.querySelector(".bn-pill");if(!pill)return;
+  const items=[...w.querySelectorAll(".bn-item")];if(!items.length)return;
+  const wr=w.getBoundingClientRect(),iw=items[0].getBoundingClientRect().width;
+  let left;
+  if(typeof x==="number"){left=Math.max(0,Math.min(wr.width-iw,x-wr.left-iw/2));}
+  else{const a=w.querySelector(".bn-item.active");if(!a){pill.style.opacity="0";return;}left=a.offsetLeft;}
+  pill.style.opacity="1";pill.style.width=iw+"px";pill.style.transform=`translateX(${left}px)`;
+}
+function bnCercano(x){const items=[...document.querySelectorAll("#bn-wrap .bn-item")];let best=null,d=1e9;items.forEach(function(it){const r=it.getBoundingClientRect(),c=r.left+r.width/2;if(Math.abs(c-x)<d){d=Math.abs(c-x);best=it;}});return best;}
+(function(){
+  let x0=null,mov=false;
+  document.addEventListener("touchstart",function(e){const w=e.target.closest&&e.target.closest("#bn-wrap");if(!w)return;x0=e.touches[0].clientX;mov=false;window._bnDrag=false;},{passive:true});
+  document.addEventListener("touchmove",function(e){if(x0===null)return;const x=e.touches[0].clientX;if(!mov&&Math.abs(x-x0)<8)return;
+    mov=true;window._bnDrag=true;const w=document.getElementById("bn-wrap");w.classList.add("arrastrando");bnPill(x);
+    const c=bnCercano(x);document.querySelectorAll("#bn-wrap .bn-item").forEach(function(it){it.classList.toggle("hover",it===c);});},{passive:true});
+  document.addEventListener("touchend",function(e){if(x0===null)return;const w=document.getElementById("bn-wrap");if(w)w.classList.remove("arrastrando");
+    document.querySelectorAll("#bn-wrap .bn-item.hover").forEach(function(it){it.classList.remove("hover");});
+    if(mov){const x=(e.changedTouches[0]||{}).clientX;const c=bnCercano(x);if(c&&c.dataset.k)go(c.dataset.k);else bnPill();setTimeout(function(){window._bnDrag=false;},50);}
+    x0=null;mov=false;});
+  window.addEventListener("resize",function(){bnPill();});
+})();
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
