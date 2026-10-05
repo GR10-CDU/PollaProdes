@@ -2197,6 +2197,12 @@ body.login-active #inst-banner{display:none}
   html body #bn{background:var(--surface)!important}
   #dbg-ios{position:fixed;left:8px;right:8px;top:50%;z-index:99999;padding:10px 12px;border-radius:12px;background:#111;color:#0f0;font:600 13px/1.4 monospace;white-space:pre-wrap;pointer-events:none}
 }
+/* v6 (cualquier celular): solo medidas estándar del sistema; si el sistema deja una franja abajo, se pinta del color del menú para que se vea unido al borde */
+@media(max-width:880px){
+  html,body{background:var(--surface)!important}
+  html body #bn{background:var(--surface)!important;padding-bottom:max(6px,calc(env(safe-area-inset-bottom) - 20px))!important}
+  #app{background:var(--bg)}
+}
 
 </style>
 </head>
