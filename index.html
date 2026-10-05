@@ -5478,24 +5478,7 @@ function bnCercano(x){const items=[...document.querySelectorAll("#bn-wrap .bn-it
   window.addEventListener("resize",function(){bnPill();});
 })();
 
-// iPhone con la app instalada: si la pantalla real es más alta que el área que nos da iOS, bajamos el menú hasta el borde
-function ajustarBordeIOS(){
-  try{
-    const ios=/iphone|ipad|ipod/i.test(navigator.userAgent),standalone=navigator.standalone===true||matchMedia("(display-mode: standalone)").matches;
-    if(!ios||!standalone||window.innerWidth>880)return;
-    const alto=Math.max(screen.height,screen.width)>window.innerHeight&&window.innerHeight>window.innerWidth?Math.max(screen.height,screen.width):screen.height;
-    const gap=Math.round(alto-window.innerHeight);
-    const h=document.documentElement;
-    if(gap>4&&gap<80){h.style.setProperty("--ios-gap",gap+"px");h.classList.add("ios-gap");}else{h.style.removeProperty("--ios-gap");h.classList.remove("ios-gap");}
-  }catch(e){}
-}
-ajustarBordeIOS();window.addEventListener("resize",ajustarBordeIOS);
-// Diagnóstico temporal (solo con ?medir): muestra las medidas de la pantalla
-if(/[?&]medir/.test(location.search)||(function(){try{return localStorage.getItem("pp_medir")==="1";}catch(e){return false;}})()){
-  try{localStorage.setItem("pp_medir","1");}catch(e){}
-  setTimeout(function(){const d=document.createElement("div");d.id="dbg-ios";const p=document.createElement("div");p.style.cssText="position:fixed;bottom:0;left:0;width:1px;height:env(safe-area-inset-bottom)";const t=document.createElement("div");t.style.cssText="position:fixed;top:0;left:0;width:1px;height:env(safe-area-inset-top)";document.body.append(p,t);
-    d.textContent=`pantalla ${screen.width}x${screen.height}\nventana ${innerWidth}x${innerHeight}\nvisual ${Math.round(visualViewport?visualViewport.height:0)}\nsafe arriba ${t.offsetHeight} · abajo ${p.offsetHeight}\napp ${navigator.standalone}`;document.body.appendChild(d);},1500);
-}window.addEventListener("orientationchange",function(){setTimeout(ajustarBordeIOS,300);});
+try{localStorage.removeItem("pp_medir");}catch(e){}
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
