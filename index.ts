@@ -2704,7 +2704,7 @@ async function avisosResultado(db: any, partidoId: string) {
   if (p.tipo === "Polla") {
     const {data: ac} = await db.from("pronosticos").select("user_id").eq("partido_id", p.id).eq("acertado", true);
     for (const a of (ac||[])) if (await primeraVez(db, `polla:${p.id}:${a.user_id}`))
-      await enviarPush(db, [a.user_id], {titulo:`⭐ Acertaste la Polla: +5 pts ⭐`, texto:"", tag:`polla-${p.id}`});
+      await enviarPush(db, [a.user_id], {titulo:`⭐ Acertaste el Polla Partido: +5 pts ⭐`, texto:"", tag:`polla-${p.id}`});
   }
   // ⚽ Reglas: las de un partido avisan al sumar; LMR, LR y EL DIEGO recién cuando terminan sus 3 partidos
   await avisosReglas(db, p.fecha_id);

@@ -4121,7 +4121,7 @@ function avatarHtml(u,cls){
   if(a&&a.length<=4)return`<span class="${cls||"g-av"} av-emo">${a}</span>`;
   return`<span class="${cls||"g-av"}">${ini}</span>`;
 }
-const TIPO_INFO={Normal:{k:"×1",n:"Simple",pts:1,cls:"t-s"},Doble:{k:"×2",n:"Doble",pts:2,cls:"t-d"},Polla:{k:"P",n:"Polla",pts:5,cls:"t-p"}};
+const TIPO_INFO={Normal:{k:"×1",n:"Simple",pts:1,cls:"t-s"},Doble:{k:"×2",n:"Doble",pts:2,cls:"t-d"},Polla:{k:"P",n:"Polla Partido",pts:5,cls:"t-p"}};
 function renderGrilla(){
   const el=document.getElementById("gc");if(!el||!window._grilla)return;
   const g=window._grilla,parts=g.data.partidos||[],jug=g.data.jugadores||[];
@@ -4616,10 +4616,10 @@ function renderReglamento(){
       <div class="rg-pts">
         <div class="rg-pt"><span class="t-tag t-s">×1</span><b>1</b><small>Simple</small></div>
         <div class="rg-pt"><span class="t-tag t-d">×2</span><b>2</b><small>Doble</small></div>
-        <div class="rg-pt polla"><span class="t-tag t-p">P</span><b>5</b><small>Polla</small></div>
+        <div class="rg-pt polla"><span class="t-tag t-p">P</span><b>5</b><small>Polla Partido</small></div>
         <div class="rg-pt tole"><span class="t-tag t-tole">🔥</span><b>3</b><small>TOLE</small></div>
       </div>
-      <div class="rg-box"><b>🔥 TOLE:</b> si al cierre ninguna opción juntó el 45% de los pronósticos (el grupo estuvo muy dividido), el partido pasa a valer <b>3 puntos</b>, sea Simple o Doble. No se suma: reemplaza el valor. <b>La Polla nunca es TOLE</b> y vale siempre 5. El TOLE queda fijo al cierre, aunque después haya cambios.</div>
+      <div class="rg-box"><b>🔥 TOLE:</b> si al cierre ninguna opción juntó el 45% de los pronósticos (el grupo estuvo muy dividido), el partido pasa a valer <b>3 puntos</b>, sea Simple o Doble. No se suma: reemplaza el valor. <b>El Polla Partido nunca es TOLE</b> y vale siempre 5. El TOLE queda fijo al cierre, aunque después haya cambios.</div>
     </section>
 
     <section class="rg-sec" id="rg-2"><h2>Cambios de pronóstico</h2>
@@ -5456,7 +5456,7 @@ window.partidosManual=async function(fechaId){
       <datalist id="pm-equipos">${ESCUDOS.map(function(e){return`<option value="${escH(e[0])}">`;}).join("")}</datalist>
       ${fhInput("pm",(window._pmDia||diaPlazo)+"T"+(window._pmHora||"21:00"))}
       <input class="inp" id="pm-ls" placeholder="Link de Flashscore (opcional)"/>
-      <div class="pm-fila"><select class="inp" id="pm-t"><option value="Normal">Simple ×1</option><option value="Doble">Doble ×2</option><option value="Polla">Polla</option></select></div>
+      <div class="pm-fila"><select class="inp" id="pm-t"><option value="Normal">Simple ×1</option><option value="Doble">Doble ×2</option><option value="Polla">Polla Partido</option></select></div>
       <div class="me-acc"><button class="btn btn-s" id="pm-cancel" hidden onclick="pmLimpiar()">Cancelar</button><button class="btn btn-p" id="pm-ok" onclick="pmGuardar()">+ Agregar partido</button></div>
       <p class="pm-nota">El escudo aparece solo si conocemos al equipo. Si no, el partido queda sin escudo y funciona igual.</p>
     </div></div>`);
@@ -5673,8 +5673,8 @@ async function pintarAvisos(){
   const est=await pushEstado();
   const pf=document.getElementById("pf-avisos");
   if(pf){const tog=function(on){return`<label class="st-tog"><span><b>Avisos en este dispositivo</b><small>${on?"Activados":"Desactivados"}</small></span><input type="checkbox" ${on?"checked":""} onchange="this.checked?activarAvisos():desactivarAvisos()"/><i></i></label>`;};
-    const T={activo:["🔔 Avisos","Te avisamos cuando pegás una regla, acertás la Polla o se está por cerrar una fecha.",tog(true)],
-      apagado:["🔔 Avisos","Activalos y te avisamos cuando pegás una regla, acertás la Polla o se está por cerrar una fecha.",tog(false)],
+    const T={activo:["🔔 Avisos","Te avisamos cuando pegás una regla, acertás el Polla Partido o se está por cerrar una fecha.",tog(true)],
+      apagado:["🔔 Avisos","Activalos y te avisamos cuando pegás una regla, acertás el Polla Partido o se está por cerrar una fecha.",tog(false)],
       bloqueado:["🔕 Notificaciones bloqueadas","Las bloqueaste en este navegador. Habilitalas desde el candadito de la barra de direcciones → Notificaciones → Permitir.",""],
       "ios-instalar":["📲 Instalá la app para recibir avisos","En iPhone los avisos llegan solo con la app instalada: Compartir → Agregar a inicio, y abrila desde el ícono.",""],
       no:["Avisos no disponibles","Este navegador no permite notificaciones.",""]}[est];
@@ -5719,7 +5719,7 @@ function capPintar(){
       <span class="cap-vs">vs</span>
       <div class="cap-eq">${capEsc(c.visita)}<input class="inp" value="${escH(c.visita)}" onchange="window._cap[${i}].visita=this.value;capPintar()" aria-label="Visitante"/></div>
       <input class="inp cap-hora" value="${escH(c.hora||"")}" placeholder="HH:MM" maxlength="5" oninput="window._cap[${i}].hora=this.value" aria-label="Hora"/>
-      <select class="inp cap-tipo" onchange="window._cap[${i}].tipo=this.value"><option value="Normal"${c.tipo==="Normal"?" selected":""}>×1</option><option value="Doble"${c.tipo==="Doble"?" selected":""}>×2</option><option value="Polla"${c.tipo==="Polla"?" selected":""}>Polla</option></select>
+      <select class="inp cap-tipo" onchange="window._cap[${i}].tipo=this.value"><option value="Normal"${c.tipo==="Normal"?" selected":""}>×1</option><option value="Doble"${c.tipo==="Doble"?" selected":""}>×2</option><option value="Polla"${c.tipo==="Polla"?" selected":""}>Polla Partido</option></select>
       ${c.extra?`<small class="cap-extra">${escH(c.extra)}</small>`:""}</div>`;}).join("")}</div>
     <div class="me-acc"><button class="btn btn-s" onclick="window._cap=null;document.getElementById('pm-capres').innerHTML=''">Descartar</button><button class="btn btn-p" id="cap-ok" onclick="capAgregar()" ${n?"":"disabled"}>Agregar ${n} partido${n!==1?"s":""}</button></div>
   </div>`;
@@ -5729,7 +5729,7 @@ window.capAgregar=async function(){
   const dia=leerFH("cap").slice(0,10);
   const malo=cs.find(function(c){return!c.local.trim()||!c.visita.trim()||!/^\d{1,2}:\d{2}$/.test((c.hora||"").trim());});
   if(malo){toast("Revisá "+(malo.local||"un partido")+": falta un equipo o la hora (HH:MM)",4500);return;}
-  if(cs.filter(function(c){return c.tipo==="Polla";}).length>1){toast("Solo puede haber una Polla por fecha");return;}
+  if(cs.filter(function(c){return c.tipo==="Polla";}).length>1){toast("Solo puede haber un Polla Partido por fecha");return;}
   const b=document.getElementById("cap-ok");if(b){b.disabled=true;}
   let ok=0;
   for(const c of cs){
@@ -6178,7 +6178,7 @@ window.fsImportar=async function(){
   for(const p of ps){b.textContent=`Agregando ${ok+1} de ${ps.length}…`;
     const r=await api("adminAgregarPartido",{fechaId:window._pm.fechaId,local:p.local,visita:p.visita,fechaHora:new Date(p.ts).toISOString(),tipo:"Normal",localLogo:p.localLogo,visitaLogo:p.visitaLogo,sinEscudoLocal:!p.localLogo,sinEscudoVisita:!p.visitaLogo,linkStats:p.link});
     if(r.ok)ok++;else toast("❌ "+p.local+" vs "+p.visita+": "+r.error,4000);}
-  toast(`✅ ${ok} partido${ok!==1?"s":""} agregado${ok!==1?"s":""}. Marcá cuál es Doble y cuál la Polla con "Editar"`,5000);
+  toast(`✅ ${ok} partido${ok!==1?"s":""} agregado${ok!==1?"s":""}. Marcá cuál es Doble y cuál el Polla Partido con "Editar"`,5000);
   document.getElementById("pm-fs").innerHTML="";pmCargar();if(App.screen==="admin-fechas")loadAdminFechas();
 };
 
