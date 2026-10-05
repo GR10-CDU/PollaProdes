@@ -2377,6 +2377,7 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .cp-man{color:var(--accent-text)}
 .cp-dia{color:var(--ink)}
 .pc-cuando{font-size:16px!important}
+.cp-hoy,.cp-man,.cp-dia{font-weight:900}
 
 </style>
 </head>
@@ -3349,7 +3350,7 @@ function _libreHasta(parts){
   return t.length?new Date(Math.min.apply(null,t)-60*60000):null;
 }
 function _enLibre(){const h=_libreHasta(window._parts);return !h||Date.now()<h.getTime();}
-function _fmtH(d){return d.toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","");}
+function _fmtH(d){return cuandoPartido(d instanceof Date?d.toISOString():d);}
 function renderPartidos(parts,ctx,puede){
   const el=document.getElementById("jc");if(!el)return;
   // Si la lista ya estaba dibujada, no repetir la animación de entrada (evita el parpadeo)
@@ -3385,7 +3386,7 @@ function renderPartidos(parts,ctx,puede){
     const cambiosCerrados=partidoFinalizado||(inicioOk&&minRest<=60);
     const libre=_enLibre();
     const puedePonerProno=!partidoFinalizado&&(sel?(libre||(cf>0&&!cambiosCerrados)):libre);
-    const fmtH=function(d){return d.toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","");};
+    const fmtH=function(d){return cuandoPartido(d.toISOString());};
     let plazoHtml="";
     if(inicioOk&&!partidoFinalizado){
       const hasta=function(m){return fmtH(new Date(inicioP.getTime()-m*60000));};
@@ -5458,7 +5459,7 @@ async function mejorarCtaJugar(fid,pozoId,empresa){
   pr.forEach(function(x){const e=document.getElementById("pdm-"+x.partidoId);if(e&&x.pronostico)e.innerHTML=`<span class="pcell ${x.pronostico}${x.acertado===true?" ok":x.acertado===false?" no":""}" title="Tu pronóstico">${x.pronostico}</span>`;});
   if(!n)return;
   const hasta=r.cambiosLibresHasta?new Date(r.cambiosLibresHasta):null,libre=hasta&&hasta>new Date();
-  const fmt=function(d){return d.toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","").replace(",", " a las");};
+  const fmt=function(d){return cuandoPartido(d.toISOString());};
   const falta=Math.max(0,total-n);
   // Reglas especiales: cuántas de las habilitadas ya usó (y marcarlas con ✓ en la cabecera)
   const habil=window._fdReglas||[],usadas=habil.filter(function(c){return(r.reglas||[]).some(function(x){return x.codigo===c;});});
@@ -5466,7 +5467,7 @@ async function mejorarCtaJugar(fid,pozoId,empresa){
   const faltanR=habil.length-usadas.length;
   const titulo=falta?`Completar pronósticos`:faltanR&&(libre||r.cambiosRestantes>0)?`Completar reglas`:libre?`✏️ Modificar pronósticos`:`Ver mis pronósticos`;
   const k=(falta?`Pusiste ${n} de ${total} · te falta${falta!==1?"n":""} ${falta}`:`Pusiste ${n} de ${total}`)+(habil.length?` · Reglas ${usadas.length} de ${habil.length}`:"");
-  const t=libre?`Podés cambiarlos gratis hasta el ${fmt(hasta)}`:(r.cambiosRestantes>0?`Te quedan ${r.cambiosRestantes} cambio${r.cambiosRestantes!==1?"s":""} ${r.cambiosGratis||empresa?"gratis":"pagos"} · hasta 1 hora antes de cada partido`:"Ya no quedan cambios");
+  const t=libre?`Podés cambiarlos gratis hasta ${fmt(hasta)}`:(r.cambiosRestantes>0?`Te quedan ${r.cambiosRestantes} cambio${r.cambiosRestantes!==1?"s":""} ${r.cambiosGratis||empresa?"gratis":"pagos"} · hasta 1 hora antes de cada partido`:"Ya no quedan cambios");
   const go_=`go('jugar',{fechaId:'${fid}',pozoId:'${pozoId}'})`;
   const top=document.getElementById("pjtop");if(top)top.innerHTML=`<div class="cta-top"><div class="cta-txt"><div class="cta-k">${k}</div><div class="cta-t">${t}</div></div><button class="btn btn-p btn-lg" onclick="${go_}">${titulo} →</button></div>`;
   const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=`<button class="btn btn-p btn-lg" onclick="${go_}">${titulo} →</button>`;}
