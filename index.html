@@ -2168,6 +2168,19 @@ body.login-active #inst-banner{display:none}
   .bn-wrap.arrastrando .bn-item.active:not(.hover){color:var(--ink-3)}
   .bn-item.hover{color:var(--accent-text)}
 }
+/* Celular v3: menos espacio muerto arriba (debajo de la hora) y abajo (zona de la rayita del iPhone) */
+@media(max-width:880px){
+  :root{--m-top:52px;--m-safe-top:max(0px,calc(env(safe-area-inset-top) - 10px));--m-safe-bot:max(0px,calc(env(safe-area-inset-bottom) - 28px))}
+  html body #topbar{height:calc(var(--m-top) + var(--m-safe-top))!important;padding-top:var(--m-safe-top)!important}
+  #scroll{padding-top:calc(var(--m-top) + var(--m-safe-top))}
+  html body #bn{padding-top:2px!important;padding-bottom:var(--m-safe-bot)!important;bottom:0!important}
+  html body #bn .bn-wrap{height:50px!important}
+  .bn-item{height:48px!important}
+  .bn-pill{height:46px;margin-top:-23px}
+  .page{padding-bottom:calc(64px + var(--m-safe-bot))!important}
+  .toast{bottom:calc(64px + var(--m-safe-bot))}
+  #inst-banner{bottom:calc(60px + var(--m-safe-bot))}
+}
 
 </style>
 </head>
