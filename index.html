@@ -2478,6 +2478,40 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .cbp-it.oro b{color:var(--gold)}
 .cbp-btn{flex:0 0 40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:16px;cursor:pointer}
 
+/* Lista de fechas en "Tabla" */
+.tbs-list{display:flex;flex-direction:column;gap:14px}
+.tbs-card{padding:18px 20px!important;cursor:pointer;transition:transform .25s var(--ease-out),box-shadow .25s var(--ease),border-color .25s}
+.tbs-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-2);border-color:var(--line-2)}
+.tbs-h{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.tbs-tit{min-width:0}
+.tbs-tit b{display:block;font-family:var(--ff);font-size:24px;font-weight:800;line-height:1.05;text-transform:uppercase}
+.tbs-tit small{display:block;margin-top:5px;font-size:14px;font-weight:600;color:var(--ink-3)}
+.tbs-est{flex-shrink:0;padding:4px 11px;border-radius:20px;font-size:13px;font-weight:800;white-space:nowrap;background:var(--surface-3);color:var(--ink-2);border:1px solid var(--line)}
+.tbs-est.vivo{background:var(--danger);color:#fff;border-color:transparent;animation:tbsPulse 1.6s ease-in-out infinite}
+.tbs-est.juego{background:var(--accent-soft);color:var(--accent-text);border-color:var(--accent-line)}
+.tbs-est.fin{background:var(--gold-soft);color:var(--gold);border-color:var(--gold-line)}
+@keyframes tbsPulse{50%{opacity:.7}}
+@media(prefers-reduced-motion:reduce){.tbs-est.vivo{animation:none}}
+.tbs-av{margin-top:14px}
+.tbs-bar{height:7px;border-radius:7px;background:var(--surface-3);overflow:hidden}
+.tbs-bar i{display:block;height:100%;border-radius:7px;background:var(--accent)}
+.tbs-av>span{display:block;margin-top:6px;font-size:13.5px;font-weight:600;color:var(--ink-3)}
+.tbs-vivo{color:var(--danger)}
+.tbs-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.tbs-it{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 6px;border-radius:12px;background:var(--surface-3);border:1px solid var(--line);text-align:center}
+.tbs-it b{font-family:var(--ff);font-size:26px;font-weight:900;line-height:1;color:var(--ink)}
+.tbs-it span{margin-top:4px;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.tbs-it.oro{background:var(--gold-soft);border-color:var(--gold-line)}
+.tbs-it.oro b{color:var(--gold)}
+.tbs-f{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.tbs-pie{font-size:14.5px;font-weight:600;color:var(--ink-2)}
+.tbs-pie.gane{color:var(--gold);font-weight:800}
+.tbs-sep{color:var(--ink-3)}
+.tbs-extra{display:flex;align-items:center;gap:14px;margin-left:auto;font-size:14px;font-weight:600;color:var(--ink-3)}
+.tbs-extra b{color:var(--gold);font-weight:800}
+.tbs-extra i{font-style:normal;font-weight:700;color:var(--accent-text)}
+@media(max-width:560px){.tbs-card{padding:16px!important}.tbs-tit b{font-size:21px}.tbs-it b{font-size:22px}.tbs-it span{font-size:10.5px}.tbs-stats{gap:6px}.tbs-f{flex-direction:column;align-items:flex-start}.tbs-extra{margin-left:0;width:100%;justify-content:space-between}}
+
 </style>
 </head>
 <body>
@@ -3957,6 +3991,37 @@ async function loadMisFechas(){
   </div>`;
 }
 
+/* Tarjeta de cada fecha jugada en la lista de "Tabla" */
+function tbsCard(x){
+  const $=function(n){return"$"+Number(n||0).toLocaleString("es-AR");};
+  const dia=function(iso){return iso?new Date(iso).toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"short",timeZone:"America/Argentina/Buenos_Aires"}).replace(".",""):"";};
+  const rango=x.desde?(dia(x.desde)===dia(x.hasta)?dia(x.desde):dia(x.desde)+" al "+dia(x.hasta)):"";
+  const est=x.terminada?["Terminada","fin"]:x.enVivo?["● En vivo","vivo"]:x.jugados>0?["En juego","juego"]:["Por arrancar","prox"];
+  const pct=x.total?Math.round(x.jugados/x.total*100):0;
+  const y=x.yo;
+  const box=function(v,l,c){return`<div class="tbs-it${c?" "+c:""}"><b>${v}</b><span>${l}</span></div>`;};
+  const stats=[
+    box(y?y.pos+"º":"–",x.jugadores?"de "+x.jugadores:"Posición"),
+    box(y?y.pts:0,"Puntos","oro"),
+    box(!y||!x.lider?"–":y.dif===0?"1º":"-"+y.dif,y&&x.lider&&y.dif===0?(x.lider.empatados>1?"Compartido":"Puntero"):"Al puntero"),
+    box(y?y.acertados+"/"+x.jugados:"–","Aciertos"),
+  ].join("");
+  let pie="";
+  if(x.terminada&&x.ganadores.length){
+    const gano=x.ganadores.some(function(g){return g.yo;});
+    pie=`<div class="tbs-pie${gano?" gane":""}">🏆 ${gano?"¡Ganaste!":"Ganó "+x.ganadores.map(function(g){return escH(g.siglas);}).join(", ")} · ${x.ganadores[0].puntos} pts${!x.empresa&&x.ganadores[0].premio?" · "+$(x.ganadores[0].premio)+(x.ganadores.length>1?" c/u":""):""}</div>`;
+  }else if(x.lider){
+    pie=`<div class="tbs-pie">Puntero${x.lider.empatados>1?"s":""}: <b>${escH(x.lider.siglas)}</b> · ${x.lider.pts} pts${y&&y.ptsReglas?` <span class="tbs-sep">·</span> Tus reglas: ${y.ptsReglas} pts`:""}</div>`;
+  }
+  const meta=[x.empresa?"":(x.monto?"Pozo "+$(x.monto):"Gratis"),x.liga,rango,x.reglas?x.reglas+" regla"+(x.reglas!==1?"s":"")+" especial"+(x.reglas!==1?"es":""):""].filter(Boolean).join(" · ");
+  return`<div class="tbs-card card" onclick="go('tabla',{fechaId:'${x.fechaId}',pozoId:'${x.pozoId}'})">
+    <div class="tbs-h"><div class="tbs-tit"><b>${escH(x.nombre)}</b><small>${escH(meta)}</small></div><span class="tbs-est ${est[1]}">${est[0]}</span></div>
+    <div class="tbs-av"><div class="tbs-bar"><i style="width:${pct}%"></i></div><span>${x.jugados} de ${x.total} partidos jugados${x.enVivo?` · <b class="tbs-vivo">${x.enVivo} en vivo</b>`:""}</span></div>
+    <div class="tbs-stats">${stats}</div>
+    <div class="tbs-f">${pie}<div class="tbs-extra">${!x.empresa&&x.premio?`<span>${x.terminada?"Premio":x.premioFijo?"Premio":"Premio est."} <b>${$(x.premio)}</b></span>`:""}<span>👥 ${x.inscriptos}</span><i>Ver tabla →</i></div></div>
+  </div>`;
+}
+
 /* ══ TABLA ═══════════════════════════════════════════════════ */
 async function loadTabla(ctx){
   const el=document.getElementById("tc");if(!el)return;
@@ -3969,7 +4034,15 @@ async function loadTabla(ctx){
     if(!inscripciones.length){el.innerHTML=emptyBox("🏆","No estás inscripto en ninguna fecha");return;}
     if(inscripciones.length===1){go("tabla",{fechaId:inscripciones[0].fechaId,pozoId:inscripciones[0].pozoId});return;}
     const fechas=rf.ok?(rf.fechas||[]):[];
-    el.innerHTML=`<div class="card" style="padding:20px"><p class="sec" style="margin-top:0;color:var(--txt)">${App.user?.empresa?"Seleccioná la fecha":"Seleccioná fecha y pozo"}</p>${inscripciones.map(function(i){const f=fechas.find(function(x){return x.id===i.fechaId;});return`<div class="admin-btn" onclick="go('tabla',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})"><div><div class="abt">${f?f.nombre:i.fechaId}</div><div class="abd">${App.user?.empresa?"":"Pozo $"+(i.monto||0).toLocaleString("es-AR")+" · "}${f?f.liga||"":""}</div></div><span style="color:var(--g2);font-size:23px">→</span></div>`;}).join("")}</div>`;
+    const rr=await api("resumenTablas",{pares:inscripciones.map(function(i){return{fechaId:i.fechaId,pozoId:i.pozoId};})});
+    if(!document.getElementById("tc"))return;
+    const res=rr.ok?(rr.resumen||[]):[];
+    if(!res.length){el.innerHTML=`<div class="card" style="padding:20px"><p class="sec" style="margin-top:0;color:var(--txt)">${App.user?.empresa?"Seleccioná la fecha":"Seleccioná fecha y pozo"}</p>${inscripciones.map(function(i){const f=fechas.find(function(x){return x.id===i.fechaId;});return`<div class="admin-btn" onclick="go('tabla',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})"><div><div class="abt">${f?f.nombre:i.fechaId}</div><div class="abd">${App.user?.empresa?"":"Pozo $"+(i.monto||0).toLocaleString("es-AR")+" · "}${f?f.liga||"":""}</div></div><span style="color:var(--g2);font-size:23px">→</span></div>`;}).join("")}</div>`;return;}
+    // En juego primero, después abiertas, al final las terminadas (más recientes arriba)
+    const orden=function(x){return x.terminada?2:x.jugados>0||x.enVivo?0:1;};
+    res.sort(function(a,b){return orden(a)-orden(b)||String(b.desde||"").localeCompare(String(a.desde||""));});
+    el.innerHTML=`<p class="sec" style="margin-top:0">${App.user?.empresa?"Elegí la fecha":"Elegí la fecha y el pozo"}</p><div class="tbs-list">${res.map(tbsCard).join("")}</div>`;
+
     return;
   }
   const r=await api("getTabla",{fechaId:ctx.fechaId,pozoId:ctx.pozoId});if(!r.ok){el.innerHTML=errBox(r.error);return;}

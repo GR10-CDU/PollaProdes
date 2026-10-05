@@ -298,6 +298,7 @@ Deno.serve(async (req) => {
 
       // ── PUNTAJES ──────────────────────────────────────────
       case "getTabla": return resp(await getTabla(db, data));
+      case "resumenTablas": return resp(await resumenTablas(db, data));
       case "getNoticias": return resp(await getNoticias(db));
 
       // ── ADMIN ─────────────────────────────────────────────
@@ -970,6 +971,48 @@ async function getTabla(db: any, data: any) {
   for (const p of (pr||[])) usados[p.user_id] = (usados[p.user_id]||0) + (p.cambios_realizados||0);
   for (const u of (r.tabla||[])) u.cambiosRestantes = Math.max(0, MAX_CAMBIOS - (usados[u.userId]||0));
   return {ok:true, ...r};
+}
+
+// Resumen de cada fecha/pozo para la lista de "Tabla": estado, avance, premio, puntero y mi posición
+async function resumenTablas(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok) return auth;
+  const pares = (data.pares||[]).slice(0, 30).filter((p:any) => p && p.fechaId && p.pozoId);
+  const out = await Promise.all(pares.map(async (par:any) => {
+    const [{data: fe}, {data: parts}, {data: pozo}, {data: insc}, {data: cambios}, {data: gans}, tb] = await Promise.all([
+      db.from("fechas").select("id,nombre,liga,estado,reglas_habilitadas,empresa_id").eq("id", par.fechaId).maybeSingle(),
+      db.from("partidos").select("id,estado,fecha_hora,vivo_estado").eq("fecha_id", par.fechaId),
+      db.from("pozos").select("*").eq("id", par.pozoId).maybeSingle(),
+      db.from("inscripciones").select("pozo_id,via_codigo").eq("pozo_id", par.pozoId).eq("estado_pago","Aprobado"),
+      db.from("cambios_pagos").select("pozo_id,monto").eq("pozo_id", par.pozoId).in("estado",["Pagado","Usado"]),
+      db.from("ganadores").select("usuario,puntos,premio,user_id").eq("pozo_id", par.pozoId),
+      armarTabla(db, par.fechaId, par.pozoId),
+    ]);
+    if (!fe) return null;
+    const ps = parts||[];
+    const horas = ps.map((p:any) => p.fecha_hora).filter(Boolean).sort();
+    const tabla = tb.tabla||[];
+    const yo = tabla.find((u:any) => u.userId === auth.userId) || null;
+    const lider = tabla[0] || null;
+    const lideres = lider ? tabla.filter((u:any) => u.posicion === 1) : [];
+    return {
+      fechaId: par.fechaId, pozoId: par.pozoId, nombre: fe.nombre, liga: fe.liga||"", estado: fe.estado, empresa: !!fe.empresa_id,
+      reglas: (fe.reglas_habilitadas||[]).length,
+      desde: horas[0]||null, hasta: horas[horas.length-1]||null,
+      total: ps.length,
+      jugados: ps.filter((p:any) => p.estado === "Finalizado" || p.estado === "Suspendido").length,
+      enVivo: ps.filter((p:any) => p.estado !== "Finalizado" && p.vivo_estado).length,
+      monto: pozo?.monto||0, inscriptos: (insc||[]).length,
+      premio: pozo ? calcPremio(pozo, insc||[], cambios||[]).premio : 0,
+      premioFijo: !!pozo?.premio_fijo,
+      terminada: !!(gans||[]).length,
+      ganadores: (gans||[]).map((g:any) => ({siglas:g.usuario, puntos:g.puntos, premio:g.premio, yo:g.user_id===auth.userId})),
+      lider: lider ? {siglas: lideres.map((u:any) => u.siglas).join(", "), pts: lider.ptsTotal, empatados: lideres.length} : null,
+      yo: yo ? {pos: yo.posicion, pts: yo.ptsTotal, acertados: yo.acertados, ptsReglas: yo.ptsReglas, dif: lider ? lider.ptsTotal - yo.ptsTotal : 0} : null,
+      jugadores: tabla.length,
+    };
+  }));
+  return {ok:true, resumen: out.filter(Boolean)};
 }
 
 // Al cerrar y calcular: registra el/los ganadores de cada pozo; si empatan, se dividen el premio
