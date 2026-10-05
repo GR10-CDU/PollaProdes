@@ -186,6 +186,7 @@ Deno.serve(async (req) => {
       case "guardarPush": return resp(await guardarPush(db, data));
       case "borrarPush": return resp(await borrarPush(db, data));
       case "probarPush": return resp(await probarPush(db, data));
+      case "logCliente": { const au = data.sessionToken ? await requireAuth(db, data) : {ok:false}; await db.from("log_cliente").insert({user_id:(au as any).userId||null, que:String(data.que||"").slice(0,60), detalle:String(data.detalle||"").slice(0,1000), agente:String(data.agente||"").slice(0,300)}); return resp({ok:true}); }
       case "setAvisosReglas": return resp(await setAvisosReglas(db, data));
       case "adminEnviarPush": return resp(await adminEnviarPush(db, data));
       case "cronAvisos": return resp(await cronAvisos(db));
