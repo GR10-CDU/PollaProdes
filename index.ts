@@ -1040,7 +1040,7 @@ async function adminCrearFecha(db: any, data: any) {
   const id = generarId("FECHA");
   const {error} = await db.from("fechas").insert({
     id, nombre:data.nombre, descripcion:data.descripcion||"",
-    plazo_limite:data.plazoLimite, liga:data.liga||"",
+    plazo_limite:null, liga:data.liga||"",
     reglas_habilitadas:data.reglasHabilitadas||[],
     codigo_grupo: normalizarCodigo(data.codigoGrupo),
     pago_alias: String(data.pagoAlias||"").trim() || null, pago_titular: String(data.pagoTitular||"").trim() || null,
