@@ -2925,9 +2925,7 @@ async function loadFechas(){
         <div class="fecha-info">
           <div class="fecha-nom">${f.nombre}${f.plazoLimite&&mins>0?`<span class="fecha-cierre">⏰ Jugá hasta ${cuandoPartido(f.plazoLimite)} hs</span>`:""}</div>
           <div class="fecha-meta">
-            <span>⚽ ${f.cantPartidos||0} partidos</span>
-            <span style="color:var(--bdr-l2)">·</span>
-            <span class="${urgente?"bdg bred bdg-urgent":""}" style="${urgente?"":""}${!urgente&&urg?"color:var(--red);font-weight:600":""}">${pt}</span>
+            <span>⚽ ${f.cantPartidos||0} partidos</span>${!f.plazoLimite||mins<=0?`<span style="color:var(--bdr-l2)">·</span><span>${pt}</span>`:""}
           </div>
           <div id="fecha-extra-${f.id}" style="margin-top:5px"></div>
         </div>
