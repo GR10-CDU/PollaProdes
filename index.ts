@@ -2652,7 +2652,7 @@ async function primeraVez(db: any, clave: string) {
 async function probarPush(db: any, data: any) {
   const auth = await requireAuth(db, data);
   if (!auth.ok) return auth;
-  const n = await enviarPush(db, [auth.userId!], {titulo:"🔔 Avisos activados", texto:"Te vamos a avisar cuando pegues una regla, aciertes la Polla o se esté por cerrar una fecha.", tag:"prueba"});
+  const n = await enviarPush(db, [auth.userId!], {titulo:"🔔 Avisos activados", texto:"Te avisaremos cuando aciertes una REGLA.", tag:"prueba"});
   return {ok:true, enviados:n};
 }
 // Después de cargar un resultado
