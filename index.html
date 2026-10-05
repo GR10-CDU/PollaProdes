@@ -2410,6 +2410,20 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .pu-prev{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:18px;background:color-mix(in srgb,var(--surface-3) 80%,transparent);border:1px solid var(--line)}
 .pu-prev img{width:38px;height:38px;border-radius:9px;background:#fff}
 .pu-prev b{display:block;font-size:15px}.pu-prev small{display:block;font-size:12px;color:var(--ink-3)}.pu-prev span{display:block;font-size:14px;color:var(--ink-2)}
+/* Tutorial de instalación */
+.tut-box{max-width:520px}
+.tut-intro{font-size:14.5px;color:var(--ink-2);margin-bottom:12px}
+.tut-tabs{margin-bottom:14px}
+.tut-pasos{list-style:none;display:grid;gap:10px;margin:0 0 14px;padding:0}
+.tut-pasos li{display:flex;gap:12px;align-items:flex-start}
+.tut-n{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--ff);font-weight:800;font-size:17px;background:var(--accent);color:var(--accent-ink)}
+.tut-pasos b{display:block;font-size:15.5px;line-height:1.35;font-weight:600}
+.tut-pasos b b{display:inline;font-weight:800}
+.tut-pasos small{display:block;font-size:13px;color:var(--ink-3);margin-top:2px}
+.tut-ok{text-align:center;font-weight:700;color:var(--ok)}
+.pf-inst{display:flex;align-items:center;gap:12px;width:100%;text-align:left}
+.pf-inst>span{font-size:28px}.pf-inst div{flex:1}.pf-inst b{display:block;font-size:16px}.pf-inst small{color:var(--ink-3);font-size:13px}.pf-inst i{font-style:normal;font-size:24px;color:var(--ink-3)}
+.tut-pasos small b{display:inline;font-size:inherit;font-weight:800;color:var(--ink-2)}
 
 </style>
 </head>
@@ -2586,7 +2600,7 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 
   <footer class="ld-foot">
     <div class="ld-brand"><img src="icons/icon-192.png" alt="" width="30" height="30"><span>POLLA <b>PRODES</b></span></div>
-    <div class="ld-foot-links"><button onclick="landingIr('login')">Ingresar</button><button onclick="landingIr('registro')">Registrarse</button></div>
+    <div class="ld-foot-links"><button onclick="tutorialInstalar()">📲 Instalá la app</button><button onclick="landingIr('login')">Ingresar</button><button onclick="landingIr('registro')">Registrarse</button></div>
     <small><a href="#" onclick="abrirLegales('terminos');return false">Términos</a> · <a href="#" onclick="abrirLegales('privacidad');return false">Privacidad</a> · <a href="#" onclick="abrirLegales('juego');return false">Juego responsable</a></small>
     <small>Jugar compulsivamente es perjudicial para la salud · Prohibido para menores de 18 años</small>
   </footer>
@@ -4195,6 +4209,7 @@ async function loadPerfil(){
     <div class="pf-id"><div class="pf-user">${u.usuario||""}</div><div class="pf-nombre">${u.nombre||""}</div><span class="bdg ${u.rol==="Admin"?"bpur":"bg"}">${u.rol||"Jugador"}</span></div>
   </div>
   <div class="card pf-sec" id="pf-avisos"></div>
+  ${esApp()?"":`<button class="card pf-sec pf-inst" onclick="tutorialInstalar()"><span>📲</span><div><b>Instalá la app</b><small>Paso a paso para iPhone y Android</small></div><i>›</i></button>`}
 
   <div class="card pf-sec">
     <div class="pf-tit">Tu avatar</div>
@@ -4925,7 +4940,7 @@ function mostrarInstalar(){
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
   const b=document.createElement("div");b.id="inst-banner";
   b.innerHTML=`<div class="ib-ico"><img src="icons/icon-192.png" alt=""></div>
-    <div class="ib-txt"><b>Instalá Polla Prodes</b><span>${_instalarEvt?"Se abre como una app, sin la barra del navegador.":ios?"Tocá <b>Compartir</b> <span class='ib-share'>⎙</span> y después <b>Agregar a inicio</b>.":"Menú <b>⋮</b> del navegador → <b>Instalar app</b> o <b>Agregar a pantalla de inicio</b>."}</span></div>
+    <div class="ib-txt" onclick="tutorialInstalar()" style="cursor:pointer"><b>Instalá Polla Prodes</b><span>${_instalarEvt?"Se abre como una app, sin la barra del navegador.":ios?"Tocá <b>Compartir</b> <span class='ib-share'>⎙</span> y después <b>Agregar a inicio</b>.":"Menú <b>⋮</b> del navegador → <b>Instalar app</b> o <b>Agregar a pantalla de inicio</b>."}<u style="display:block;margin-top:2px">Ver cómo, paso a paso →</u></span></div>
     ${_instalarEvt?'<button class="btn btn-p ib-btn" onclick="instalarApp()">Instalar</button>':""}
     <button class="ib-x" onclick="cerrarInstalar()" aria-label="Cerrar">×</button>`;
   document.body.appendChild(b);
@@ -6001,6 +6016,38 @@ window.pushEnviar=async function(){
   const r=await api("adminPushMasivo",Object.assign({titulo:t,texto:x},pushDest()));
   b.disabled=false;b.textContent="Enviar aviso";
   toast(r.ok?`✅ Enviado a ${r.usuarios} jugador${r.usuarios!==1?"es":""} (${r.dispositivos} dispositivo${r.dispositivos!==1?"s":""})`:"❌ "+r.error,5000);
+};
+
+// ── Tutorial: instalar la app en iPhone y Android ──
+const ICO_COMP='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+function tutPasos(os){
+  const P=os==="ios"?[
+    ["Abrí <b>pollaprodes.ar</b> en <b>Safari</b>","Tiene que ser Safari, no Chrome ni otro navegador."],
+    [`Tocá el botón <b>Compartir</b> ${ICO_COMP}`,"Está abajo en el medio (o arriba a la derecha en iPad)."],
+    ["Bajá y tocá <b>Agregar a inicio</b>","Si no lo ves, tocá <b>Editar acciones</b> y agregalo."],
+    ["Tocá <b>Agregar</b>","Arriba a la derecha."],
+    ["Abrila desde el ícono ⚽ en tu pantalla de inicio","Se abre como una app, sin barras del navegador. Iniciá sesión una vez."],
+    ["Activá los avisos","En <b>Perfil</b> → prendé <b>Avisos en este dispositivo</b> → <b>Permitir</b>."]
+  ]:[
+    ["Abrí <b>pollaprodes.ar</b> en <b>Chrome</b>",""],
+    ["Tocá el menú <b>⋮</b>","Los tres puntitos, arriba a la derecha."],
+    ["Tocá <b>Instalar app</b> o <b>Agregar a pantalla de inicio</b>","Si aparece un cartel de \"Instalar\" abajo, también sirve."],
+    ["Confirmá con <b>Instalar</b>",""],
+    ["Abrila desde el ícono ⚽","Queda junto a tus otras apps."],
+    ["Activá los avisos","En <b>Perfil</b> → prendé <b>Avisos en este dispositivo</b> → <b>Permitir</b>."]
+  ];
+  return`<ol class="tut-pasos">${P.map(function(x,i){return`<li><span class="tut-n">${i+1}</span><div><b>${x[0]}</b>${x[1]?`<small>${x[1]}</small>`:""}</div></li>`;}).join("")}</ol>`;
+}
+window.tutorialInstalar=function(os){
+  os=os||(/android/i.test(navigator.userAgent)?"android":"ios");
+  document.getElementById("tut-modal")?.remove();
+  const m=document.createElement("div");m.className="modal-bg";m.id="tut-modal";m.style.zIndex="3000";m.onclick=function(e){if(e.target===m)m.remove();};
+  m.innerHTML=`<div class="modal-box tut-box"><div class="modal-head"><div class="modal-title">📲 Instalá la app</div><div class="modal-close" onclick="this.closest('.modal-bg').remove()">×</div></div>
+    <p class="tut-intro">Polla Prodes se instala en 1 minuto, sin pasar por ninguna tienda. Queda como una app más y te llegan los avisos.</p>
+    <div class="seg tut-tabs"><button aria-pressed="${os==="ios"}" onclick="tutorialInstalar('ios')"> iPhone</button><button aria-pressed="${os==="android"}" onclick="tutorialInstalar('android')">🤖 Android</button></div>
+    ${tutPasos(os)}
+    ${esApp()?`<p class="tut-ok">✅ Ya la estás usando instalada.</p>`:_instalarEvt?`<button class="btn btn-p btn-lg" style="width:100%" onclick="instalarApp()">Instalar ahora</button>`:""}</div>`;
+  document.body.appendChild(m);
 };
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
