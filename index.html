@@ -2309,6 +2309,7 @@ body.login-active #inst-banner{display:none}
 .rg-p.ok b{color:var(--ok)}
 .rg-p.no{opacity:.55}
 .rg-no{color:var(--ink-3)}
+.rg-mk{font-style:normal;font-family:var(--ff);font-weight:800;font-size:13.5px;padding:0 5px;border-radius:5px;background:var(--gold-soft);color:var(--gold)}
 
 </style>
 </head>
@@ -4035,7 +4036,7 @@ function renderGrilla(){
     const pp=function(id){return parts.find(function(x){return x.id===id;});};
     const chips=function(j,c){const rs=(j.reglas||[]).filter(function(x){return x.codigo===c;});
       if(!rs.length)return`<span class="rg-no">—</span>`;
-      return rs.map(function(x){const m=pp(x.partidoId),jug=m&&m.estado==="Finalizado";return`<span class="rg-p${jug?(x.pts>0?" ok":" no"):""}" title="${m?escH(m.local+" vs "+m.visita):""}">#${x.numero} ${m?sigla(m.local)+"-"+sigla(m.visita):""}${jug&&x.pts>0?` <b>+${x.pts}</b>`:""}</span>`;}).join("");};
+      return rs.map(function(x){const m=pp(x.partidoId),jug=m&&m.estado==="Finalizado";return`<span class="rg-p${jug?(x.pts>0?" ok":" no"):""}" title="${m?escH(m.local+" vs "+m.visita):""}">#${x.numero} ${m?sigla(m.local)+"-"+sigla(m.visita):""}${x.detalle?` <em class="rg-mk">${escH(x.detalle)}</em>`:""}${jug&&x.pts>0?` <b>+${x.pts}</b>`:""}</span>`;}).join("");};
     return`<div class="rg-duelo"><div class="rg-h"><span>Reglas</span><span>${nm(a)}</span><span>${nm(b)}</span></div>${cods.map(function(c){return`<div class="rg-row"><span class="t-tag rg-cod">${c}</span><div class="rg-cell">${chips(a,c)}</div><div class="rg-cell">${chips(b,c)}</div></div>`;}).join("")}</div>`;
   };
   const ttG=document.getElementById("topbar-title");if(ttG)ttG.innerHTML=`Los Otros <span class="tt-n">${jug.length} jugadores</span>`;
