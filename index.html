@@ -3961,8 +3961,8 @@ function tbsCard(x,mis){
   const y=x.yo;
   const box=function(v,l,c){return`<div class="tbs-it${c?" "+c:""}"><b>${v}</b><span>${l}</span></div>`;};
   const stats=[
-    box(y?y.pos+"º":"–",x.jugadores?"de "+x.jugadores:"Posición"),
     box(y?y.pts:0,"Puntos","oro"),
+    box(y?y.pos+"º":"–",x.jugadores?"de "+x.jugadores:"Posición"),
     box(!y||!x.lider?"–":y.dif===0?"1º":"-"+y.dif,y&&x.lider&&y.dif===0?(x.lider.empatados>1?"Compartido":"Puntero"):"Al puntero"),
     box(y?y.acertados+"/"+x.jugados:"–","Aciertos"),
   ].join("");
