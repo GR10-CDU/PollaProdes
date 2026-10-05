@@ -3505,7 +3505,7 @@ function renderPartidos(parts,ctx,puede){
         </div>
       </div>
       ${_vr?desglosePuntos(p,_prd,sel,"AB",false):""}
-      ${!bloq?`<div class="lev-wrap">${["L","E","V"].map(function(v){const label=v==="L"?"Local":v==="E"?"Empate":"Visitante";return`<button class="lev-btn ${v}${sel===v?" sel":""}" onclick="pronosticar('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')"><span class="lev-letra">${v}</span><span class="lev-sub">${label}</span></button>`;}).join("")}</div>`:!sinGoles?"":sel?`<div class="partido-blocked">🔒 ${cambiosCerrados?"Los cambios cerraron 1 hora antes del partido":"Ya usaste los 3 cambios de la fecha"} · queda tu ${sel}</div>`:`<div class="partido-blocked">${!libre?"🔒 La fecha cerró y este partido quedó sin pronóstico":"Sin pronóstico aún"}</div>`}
+      ${!bloq?`<div class="lev-wrap">${["L","E","V"].map(function(v){const label=v==="L"?"Local":v==="E"?"Empate":"Visitante";return`<button class="lev-btn ${v}${sel===v?" sel":""}" onclick="pronosticar('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')"><span class="lev-letra">${v}</span><span class="lev-sub">${label}</span></button>`;}).join("")}</div>`:!sinGoles?"":sel?"":`<div class="partido-blocked">${!libre?"🔒 La fecha cerró y este partido quedó sin pronóstico":"Sin pronóstico aún"}</div>`}
     </div>`;
   }).join("");
 
