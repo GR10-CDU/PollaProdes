@@ -552,6 +552,7 @@ async function getFecha(db: any, data: any) {
       golesLocal:p.goles_local, golesVisita:p.goles_visita,
       resultado:p.resultado, tarjetasRojas:p.tarjetas_rojas||0, esToleTole:!!p.es_tole,
       localLogo:p.local_logo||"", visitaLogo:p.visita_logo||"", linkStats:p.link_stats||"",
+      golesDet: p.goles_det||[],
       vivo: p.estado !== "Finalizado" && p.vivo_estado ? {gl:p.vivo_gl, gv:p.vivo_gv, estado:p.vivo_estado, etapa:p.vivo_etapa||"", desde:p.vivo_desde} : null,
       resultadoAuto: !!p.resultado_auto,
     })),
@@ -3136,6 +3137,20 @@ function seccionesInc(inc: string) {
   }
   return out;
 }
+// Goleadores desde las incidencias: [{e:"L"|"V", m:"38'", j:"Santos M.", t:""|"pen"|"ec"}] (sin la tanda de penales)
+function golesDeInc(inc: string) {
+  const out: any[] = [];
+  for (const s of seccionesInc(inc)) {
+    if (/penalt/i.test(s.nombre)) continue;
+    for (const it of s.txt.split("III÷").slice(1)) {
+      const c = parseFeed(it);
+      const k = c.IK || "";
+      if (!/^(goal|own goal|penalty)$/i.test(k)) continue;
+      out.push({e: c.IA === "2" ? "V" : "L", m: c.IB || "", j: c.IF || "", t: /own/i.test(k) ? "ec" : /penalty/i.test(k) ? "pen" : ""});
+    }
+  }
+  return out;
+}
 function goles90(inc: string): [number,number] | null {
   const ss = seccionesInc(inc).filter(s => /^(1st|2nd) Half$/.test(s.nombre));
   return ss.length === 2 ? [ss[0].gl+ss[1].gl, ss[0].gv+ss[1].gv] : null;
@@ -3146,7 +3161,7 @@ function rojasHasta90(inc: string) {
 }
 async function cronVivo(db: any) {
   const ahora = Date.now();
-  const {data: ps} = await db.from("partidos").select("id,link_stats,fecha_hora,estado,vivo_estado")
+  const {data: ps} = await db.from("partidos").select("id,link_stats,fecha_hora,estado,vivo_estado,goles_det")
     .neq("estado","Finalizado").neq("estado","Suspendido").like("link_stats","%flashscore%mid=%")
     .gte("fecha_hora", new Date(ahora - 4*3600e3).toISOString()).lte("fecha_hora", new Date(ahora + 5*60e3).toISOString());
   if (!(ps||[]).length) return {ok:true, partidos:0};
@@ -3171,6 +3186,7 @@ async function cronVivo(db: any) {
         const r90 = goles90(inc);
         const gL = r90 ? r90[0] : parseInt(c.DE), gV = r90 ? r90[1] : parseInt(c.DF);
         const rojas = rojasHasta90(inc);
+        if (inc) await db.from("partidos").update({goles_det: golesDeInc(inc)}).eq("id", p.id);
         if (!isNaN(gL) && !isNaN(gV)) {
           const {data: ya} = await db.from("partidos").select("estado,local,visita").eq("id", p.id).single();
           if (ya && ya.estado !== "Finalizado") {
@@ -3189,6 +3205,11 @@ async function cronVivo(db: any) {
           const min = c.DD ? Math.floor((Date.now()-Number(c.DD)*1000)/60000)+1+(etapa==="2T"?45:0) : null;
           await avisoPartido(db, p.id, "avisos_goles", `gol:${p.id}:${ngl}-${ngv}`, `⚽ ¡Gol! ${sigla(viejo.local)} ${ngl}-${ngv} ${sigla(viejo.visita)}`, `Gol de ${quien}${min?` · ${min}'`:""}`);
         }
+      }
+      // Goleadores: se piden solo cuando cambia la cantidad de goles
+      if (ngl !== null && ngv !== null && (ngl+ngv) !== (Array.isArray(p.goles_det) ? p.goles_det.length : 0)) {
+        const inc = await fsFeed(`df_sui_1_${p.mid}`);
+        if (inc) await db.from("partidos").update({goles_det: golesDeInc(inc)}).eq("id", p.id);
       }
       await db.from("partidos").update({vivo_gl: ngl, vivo_gv: ngv, vivo_estado:est, vivo_at:new Date().toISOString(),
         vivo_etapa:etapa, vivo_desde: c.DD ? new Date(Number(c.DD)*1000).toISOString() : null}).eq("id", p.id);
