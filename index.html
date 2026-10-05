@@ -2804,7 +2804,7 @@ async function loadFechas(){
         </div>
       </div>
       <div class="fecha-right">
-        <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr"}">${f.estado}</span>
+        <span class="bdg ${estadoFecha(f).c}">${estadoFecha(f).t}</span>
         <span style="font-size:16px;font-weight:600;color:${f.estado==="Abierta"?"var(--g2)":"var(--txt3)"}">${f.estado==="Abierta"?"Jugar →":"Ver →"}</span>
       </div>
     </div>`;
@@ -2873,7 +2873,7 @@ async function loadFechaDet(ctx){
           <div class="fecha-hero-title">${f.nombre}</div>
           <div class="fecha-hero-sub">${f.liga||""} ${f.temporada?`· ${f.temporada}`:""}</div>
         </div>
-        <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr"}" style="font-size:16px;padding:5px 12px">${f.estado}</span>
+        <span class="bdg ${estadoFecha(f).c}" style="font-size:16px;padding:5px 12px">${estadoFecha(f).t}</span>
       </div>
       <div id="fd-premio"></div>
       <div class="fecha-hero-stats">
@@ -3774,7 +3774,7 @@ async function loadMisFechas(){
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
           <div style="flex:1">
             <div style="font-family:var(--ff);font-size:23px;font-weight:800">${f.nombre||i.fechaId}</div>
-            <div style="font-size:15px;color:var(--txt3);margin-top:2px">${f.liga||""} · <span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr"}" style="font-size:12px">${f.estado||""}</span></div>
+            <div style="font-size:15px;color:var(--txt3);margin-top:2px">${f.liga||""} · <span class="bdg ${estadoFecha(f).c}" style="font-size:12px">${estadoFecha(f).t}</span></div>
             ${App.user?.empresa?"":`<div style="font-size:14px;color:var(--gold);margin-top:4px">💰 Pozo: <strong>$${pozoActual.toLocaleString("es-AR")}</strong></div>`}
           </div>
           <div style="text-align:right">
@@ -4233,7 +4233,7 @@ async function loadAdminFechas(){
           <div style="font-size:14px;color:var(--txt3);margin-top:2px">⚽ ${f.cantPartidos||0} partido${f.cantPartidos!==1?"s":""}${f.liga?" · "+f.liga:""}${plazoStr?" · Cierra: "+plazoStr+" hs":""}</div>
           ${reglas.length||f.codigoGrupo||f.empresaNombre?`<div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap">${f.empresaNombre?`<span class="bdg bblue" title="Fecha de empresa">🏢 ${f.empresaNombre}</span>`:""}${f.codigoGrupo?`<span class="bdg bpur" title="Código de grupo cerrado">🔒 ${f.codigoGrupo}</span>`:""}${reglas.map(function(cod){return`<span class="bdg bgold">${cod}</span>`;}).join("")}</div>`:""}
         </div>
-        <span class="bdg ${estadoBdg}">${f.estado}</span>
+        <span class="bdg ${estadoFecha(f).c}">${estadoFecha(f).t}</span>
       </div>
       <div id="pozos-${f.id}" style="margin-bottom:8px"></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -5634,7 +5634,7 @@ async function selectorAdminFechas(el,destino){
   const pozos=await Promise.all(fs.map(function(f){return api("getPozos",{fechaId:f.id}).then(function(r){return r.ok?(r.pozos||[]):[];});}));
   const fmt=function(n){return"$"+Number(n||0).toLocaleString("es-AR");};
   el.innerHTML=`<p class="sec" style="margin-top:0">${destino==="tabla"?"Elegí la fecha para ver su tabla":"Elegí la fecha para ver la grilla"}</p><div class="adm-sel">${fs.map(function(f,i){const ps=pozos[i];
-    return`<div class="card adm-sel-f"><div class="adm-sel-h"><b>${escH(f.nombre)}</b><span class="bdg ${f.estado==="Abierta"?"bg":f.estado==="Cerrada"?"bred":"bgr"}">${f.estado}</span>${f.empresaNombre?`<span class="bdg bblue">🏢 ${escH(f.empresaNombre)}</span>`:""}</div>
+    return`<div class="card adm-sel-f"><div class="adm-sel-h"><b>${escH(f.nombre)}</b><span class="bdg ${estadoFecha(f).c}">${estadoFecha(f).t}</span>${f.empresaNombre?`<span class="bdg bblue">🏢 ${escH(f.empresaNombre)}</span>`:""}</div>
       ${ps.length?`<div class="adm-sel-pz">${ps.map(function(p){return`<button class="adm-sel-b" onclick="go('${destino}',{fechaId:'${f.id}',pozoId:'${p.id}'})"><span>${f.empresaId?"Polla":(p.monto?"Pozo "+fmt(p.monto):"Gratis")}</span><small>👥 ${p.inscriptos} anotado${p.inscriptos!==1?"s":""}</small><i>→</i></button>`;}).join("")}</div>`:`<p class="me-p">Todavía no tiene pozos.</p>`}</div>`;}).join("")}</div>`;
 }
 
@@ -5787,6 +5787,14 @@ window.aceptarLegalesApp=async function(){
   const r=await api("aceptarLegales");if(!r.ok){toast("❌ "+r.error);return;}
   App.user.legalesPendientes=false;saveSession(App.user,App.token);document.getElementById("lg-acepta")?.remove();
 };
+
+// Estado de una fecha para mostrar: Abierta (se puede jugar) · Cerrada (ya no se puede jugar) · Terminada (ya hay ganador)
+function estadoFecha(f){
+  if(!f)return{t:"",c:"bgr"};
+  if(f.terminada||["Jugada","Finalizada"].includes(f.estado))return{t:"Terminada",c:"bgr"};
+  if(f.estado==="Abierta"&&(f.minutosRestantes===undefined||f.minutosRestantes>0))return{t:"Abierta",c:"bg"};
+  return{t:"Cerrada",c:"bred"};
+}
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){

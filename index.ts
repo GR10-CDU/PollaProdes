@@ -486,6 +486,8 @@ async function getFechas(db: any, data: any) {
 
   const ids = (fechas||[]).map((f:any) => f.id);
   const {data: pts} = ids.length ? await db.from("partidos").select("fecha_id,fecha_hora").in("fecha_id", ids) : {data: []};
+  const {data: gans} = ids.length ? await db.from("ganadores").select("fecha_id").in("fecha_id", ids) : {data: []};
+  const terminadas = new Set((gans||[]).map((g:any) => g.fecha_id));
   return {ok:true, fechas: (fechas||[]).map((f:any) => {
     const cierre = cierreFecha(f, (pts||[]).filter((p:any) => p.fecha_id === f.id));
     const mins = minutosHasta(cierre);
@@ -498,6 +500,7 @@ async function getFechas(db: any, data: any) {
       minutosRestantes: mins,
       tieneCodigo: !!f.codigo_grupo,
       plazoGuardado: esAdmin ? f.plazo_limite : undefined,
+      terminada: terminadas.has(f.id),
       empresaId: f.empresa_id || null, oculta: esAdmin ? !!f.oculta : undefined, cambiosGratis: !!(f.cambios_gratis || f.empresa_id),
       empresaNombre: esAdmin && f.empresa_id ? ((emps||[]).find((e:any) => e.id === f.empresa_id)?.nombre || "") : undefined,
       codigoGrupo: esAdmin ? (f.codigo_grupo || "") : undefined,
@@ -526,7 +529,7 @@ async function getFecha(db: any, data: any) {
   }));
 
   return {ok:true,
-    fecha: {id:fecha.id, nombre:fecha.nombre, descripcion:fecha.descripcion, plazoLimite:cierre?.toISOString()||fecha.plazo_limite, estado:fecha.estado, cantPartidos:fecha.cant_partidos, liga:fecha.liga, puedeJugar:fecha.estado==="Abierta"&&mins>0, minutosRestantes:mins, reglasHabilitadas:fecha.reglas_habilitadas||[], reglasDetalle, tieneCodigo:!!fecha.codigo_grupo, cambiosGratis:!!(fecha.cambios_gratis||fecha.empresa_id)},
+    fecha: {id:fecha.id, nombre:fecha.nombre, descripcion:fecha.descripcion, plazoLimite:cierre?.toISOString()||fecha.plazo_limite, estado:fecha.estado, cantPartidos:fecha.cant_partidos, liga:fecha.liga, puedeJugar:fecha.estado==="Abierta"&&mins>0, minutosRestantes:mins, reglasHabilitadas:fecha.reglas_habilitadas||[], reglasDetalle, tieneCodigo:!!fecha.codigo_grupo, terminada: !!((await db.from("ganadores").select("id").eq("fecha_id", fecha.id).limit(1)).data||[]).length, cambiosGratis:!!(fecha.cambios_gratis||fecha.empresa_id)},
     partidos: (parts||[]).map((p:any) => ({
       id:p.id, numero:p.numero, local:p.local, visita:p.visita,
       fechaHora:p.fecha_hora, liga:p.liga, tipo:p.tipo, estado:p.estado,
