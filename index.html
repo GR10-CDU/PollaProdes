@@ -2542,11 +2542,42 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .tg-roja{display:inline-block;width:9px;height:12px;border-radius:2px;background:var(--danger,#e53935);vertical-align:-1px;margin-right:2px}
 /* Partido jugado: número, tipo y reglas van en la franja verde de arriba (celda más baja) */
 .pcj-bdgs{display:flex;align-items:center;gap:6px;flex:1;min-width:0;margin:0 12px;flex-wrap:wrap;letter-spacing:0}
-.pcj-bdgs>span:first-child{color:#fff!important;opacity:.9}
-.pcj-bdgs .pc-tipo-n{color:#fff;opacity:.95}
-.pcj-bdgs .t-tag.t-s{background:rgba(255,255,255,.18);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.5)}
+.partido-card.jugado .pcj-bdgs>span:first-child{color:#fff!important;opacity:.9}
+.partido-card.jugado .pcj-bdgs .pc-tipo-n{color:#fff;opacity:.95}
+.partido-card.jugado .pcj-bdgs .t-tag.t-s{background:rgba(255,255,255,.18);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.5)}
 .pcj-bdgs .bdg{height:22px!important;padding:0 8px!important;font-size:12px!important}
 .partido-card.jugado .teams-block{margin-bottom:10px}
+/* Franja de arriba también en los partidos que no se jugaron (mismo alto y orden que "Jugado") */
+.pc-jugado.pend{background:var(--surface-3);color:var(--ink-2);border-bottom:1px solid var(--line)}
+.partido-card.doble .pc-jugado.pend{background:var(--violet-soft);border-bottom-color:var(--violet-line)}
+.partido-card.polla .pc-jugado.pend{background:var(--gold-soft);border-bottom-color:var(--gold-line)}
+.pc-jugado.pend .pcj-bdgs{margin-left:0}
+.pc-jugado.pend b{color:var(--ink)}
+.pct-r{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.pct-r .st-btn{margin:0!important}
+.pc-jugado .pc-cuando,.pc-jugado.pend b .hoy{color:var(--danger)}
+.pct-aviso{display:flex;justify-content:center;margin:-4px 0 10px}
+.partido-card .senior-flag{top:46px}
+/* Goleadores en su propia fila: los escudos y nombres quedan siempre a la misma altura */
+.teams-block{grid-template-rows:auto auto;row-gap:6px}
+.teams-block>.team-goles{grid-row:2;align-self:start;margin-top:0}
+.teams-block>.tg-L{grid-column:1}
+.teams-block>.tg-V{grid-column:3}
+/* Reglas legibles sobre la franja verde */
+.partido-card.jugado .pc-jugado .bdg.bgold{background:#fff!important;color:#8A5A00!important;border-color:transparent!important;font-weight:800}
+.pcj-txt{font-style:normal}
+.st-ico{min-width:30px;height:26px;padding:0 6px!important;justify-content:center;font-size:14px}
+/* Celular: la franja en una sola línea */
+@media(max-width:560px){
+  .pc-jugado{flex-wrap:nowrap;gap:6px;padding:7px 12px!important;font-size:12px}
+  .pcj-txt,.pc-jugado .pc-tipo-n{display:none}
+  .pcj-bdgs{flex-wrap:nowrap;margin:0 4px!important;gap:4px;overflow:hidden}
+  .pcj-bdgs>span:first-child{font-size:12.5px!important}
+  .pcj-bdgs .bdg{height:20px!important;padding:0 6px!important;font-size:11px!important}
+  .pc-jugado b{font-size:12.5px!important;white-space:nowrap}
+  .pct-r{gap:6px}
+  .partido-card .senior-flag{top:40px}
+}
 
 </style>
 </head>
@@ -3549,7 +3580,7 @@ function _fmtH(d){return cuandoPartido(d instanceof Date?d.toISOString():d);}
 function golesEq(p,e){
   const g=(p.golesDet||[]).filter(function(x){return x.e===e;});
   if(!g.length)return"";
-  return`<div class="team-goles">${g.map(function(x){return`<span${x.t==="roja"?' class="roja"':""}>${x.t==="roja"?'<span class="tg-roja" style="display:inline-block;width:8px;height:12px;border-radius:1.5px;background:#E53935;vertical-align:-1px;margin-right:1px" aria-label="Roja"></span>':"⚽"} ${escH(x.j)} <b>${escH(x.m)}</b>${x.t==="pen"?" (p)":x.t==="ec"?" (e/c)":""}</span>`;}).join("")}</div>`;
+  return`<div class="team-goles tg-${e}">${g.map(function(x){return`<span${x.t==="roja"?' class="roja"':""}>${x.t==="roja"?'<span class="tg-roja" style="display:inline-block;width:8px;height:12px;border-radius:1.5px;background:#E53935;vertical-align:-1px;margin-right:1px" aria-label="Roja"></span>':"⚽"} ${escH(x.j)} <b>${escH(x.m)}</b>${x.t==="pen"?" (p)":x.t==="ec"?" (e/c)":""}</span>`;}).join("")}</div>`;
 }
 function renderPartidos(parts,ctx,puede){
   const el=document.getElementById("jc");if(!el)return;
@@ -3588,7 +3619,7 @@ function renderPartidos(parts,ctx,puede){
     const libre=_enLibre();
     const puedePonerProno=!partidoFinalizado&&(sel?(libre||(cf>0&&!cambiosCerrados)):libre);
     const fmtH=function(d){return cuandoPartido(d.toISOString());};
-    let plazoHtml="";
+    let plazoHtml="",_cuandoH="",_pillH="",_statsH="";
     if(inicioOk&&!partidoFinalizado){
       const hasta=function(m){return fmtH(new Date(inicioP.getTime()-m*60000));};
       const costo=window._proximoCosto&&!App.user?.empresa?` · $${Number(window._proximoCosto).toLocaleString("es-AR")}`:"";
@@ -3601,6 +3632,7 @@ function renderPartidos(parts,ctx,puede){
       else if(!cambiosCerrados){cls="off";txt="No te quedan cambios";}
       else{cls="";txt="";}
       plazoHtml=`<div class="pc-plazo"><span class="pp-k pc-cuando">${cuandoPartido(p.fechaHora,true)}</span>${txt?`<span class="pp-v ${cls}">${txt}</span>`:""}${botonStats(p,"st-mini")}</div>`;
+      _cuandoH=cuandoPartido(p.fechaHora,true);_pillH=txt?`<span class="pp-v ${cls}">${txt}</span>`:"";_statsH=botonStats(p,"st-mini st-ico").replace("📊 Estadísticas","📊");
     }
     const bloq=!puedePonerProno;
     // Reglas aplicadas a este partido
@@ -3614,15 +3646,12 @@ function renderPartidos(parts,ctx,puede){
           ${(function(){const t=TIPO_INFO[p.tipo]||TIPO_INFO.Normal;return`<span class="t-tag ${t.cls} pc-tipo">${t.k}</span><span class="pc-tipo-n">${t.n}</span>`;})()}${p.esToleTole?'<span class="t-tag t-tole pc-tipo">🔥 TOLE</span>':""}
           ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:16px;padding:4px 11px">● VIVO</span>`:""}
           ${reglaEnPartido.map(function(r){return`<span class="bdg bgold" style="font-size:14px;padding:3px 8px">${r.codigo}</span>`;}).join("")}`;
-    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}${_calc?(_tot>0?" suma":" nosuma"):""}${esSenior(p)?" senior":""}${p.estado==="Finalizado"?" jugado":""}" id="pc-${p.id}">${p.estado==="Finalizado"?`<div class="pc-jugado"><span>✓ JUGADO</span><div class="pcj-bdgs">${_bdgs}</div><b>${p.fechaHora?new Date(p.fechaHora).toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","").replace(",","")+" hs":""}</b></div>`:""}${esSenior(p)?`<span class="senior-flag">Senior</span>`:""}
-      ${p.estado==="Finalizado"?"":`<div class="pc-meta">
-        <div class="pc-bdgs">${_bdgs}</div>
-        ${_calc?"":plazoHtml}
-      </div>`}
+    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}${_calc?(_tot>0?" suma":" nosuma"):""}${esSenior(p)?" senior":""}${p.estado==="Finalizado"?" jugado":""}" id="pc-${p.id}">${p.estado==="Finalizado"?`<div class="pc-jugado"><span>✓<i class="pcj-txt"> JUGADO</i></span><div class="pcj-bdgs">${_bdgs}</div><b>${p.fechaHora?new Date(p.fechaHora).toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","").replace(",","")+" hs":""}</b></div>`:""}${esSenior(p)?`<span class="senior-flag">Senior</span>`:""}
+      ${p.estado==="Finalizado"?"":`<div class="pc-jugado pend"><div class="pcj-bdgs">${_bdgs}</div><div class="pct-r">${_statsH}${_cuandoH?`<b>${_cuandoH}</b>`:""}</div></div>${_pillH&&!_calc?`<div class="pct-aviso">${_pillH}</div>`:""}`}
       <div class="teams-block">
         <div class="team-box">
           <div class="team-escudo">${p.localLogo?escL:li}</div>
-          <div class="team-name-big">${p.local}</div>${golesEq(p,"L")}
+          <div class="team-name-big">${p.local}</div>
         </div>
         <div class="vs-center">
           ${(()=>{
@@ -3653,8 +3682,8 @@ function renderPartidos(parts,ctx,puede){
         </div>
         <div class="team-box">
           <div class="team-escudo">${p.visitaLogo?escV:vi}</div>
-          <div class="team-name-big">${p.visita}</div>${golesEq(p,"V")}
-        </div>
+          <div class="team-name-big">${p.visita}</div>
+        </div>${golesEq(p,"L")}${golesEq(p,"V")}
       </div>
       ${_vr?desglosePuntos(p,_prd,sel,"AB",false):""}
       ${!bloq?`<div class="lev-wrap">${["L","E","V"].map(function(v){const label=v==="L"?"Local":v==="E"?"Empate":"Visitante";return`<button class="lev-btn ${v}${sel===v?" sel":""}" onclick="pronosticar('${p.id}','${v}','${ctx.fechaId}','${ctx.pozoId}')"><span class="lev-letra">${v}</span><span class="lev-sub">${label}</span></button>`;}).join("")}</div>`:!sinGoles?"":sel?"":`<div class="partido-blocked">${!libre?"🔒 La fecha cerró y este partido quedó sin pronóstico":"Sin pronóstico aún"}</div>`}
