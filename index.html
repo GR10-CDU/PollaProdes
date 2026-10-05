@@ -2511,6 +2511,10 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .tbs-extra b{color:var(--gold);font-weight:800}
 .tbs-extra i{font-style:normal;font-weight:700;color:var(--accent-text)}
 @media(max-width:560px){.tbs-card{padding:16px!important}.tbs-tit b{font-size:21px}.tbs-it b{font-size:22px}.tbs-it span{font-size:10.5px}.tbs-stats{gap:6px}.tbs-f{flex-direction:column;align-items:flex-start}.tbs-extra{margin-left:0;width:100%;justify-content:space-between}}
+.tbs-plazo{margin-top:10px;font-size:14.5px;font-weight:700;color:var(--danger)}
+.tbs-plazo.ab{color:var(--accent-text)}
+.tbs-bot{display:flex;gap:8px;margin-top:14px}
+.tbs-bot .btn{flex:1;padding:11px}
 
 </style>
 </head>
@@ -3933,66 +3937,20 @@ window.guardarTodos=async function(){
 async function loadMisFechas(){
   const el=document.getElementById("mfc");if(!el)return;
   el.innerHTML=`<div class="loading"><div class="spinner"></div></div>`;
-  const [rf,ri]=await Promise.all([api("getFechas"),api("getMisInscripciones")]);
+  const ri=await api("getMisInscripciones");
   const inscripciones=ri.ok?(ri.inscripciones||[]):[];
   if(!inscripciones.length){el.innerHTML=emptyBox("🎯","No estás inscripto en ninguna fecha");return;}
-  const fechas=rf.ok?(rf.fechas||[]):[];
-
-  // Para cada inscripción, cargar cambios restantes Y puntos
-  const items=await Promise.all(inscripciones.map(async function(i){
-    const f=fechas.find(function(x){return x.id===i.fechaId;})||{};
-    const [rp,rt]=await Promise.all([
-      api("getPozos",{fechaId:i.fechaId,userId:App.user?.id}),
-      api("getTabla",{fechaId:i.fechaId,pozoId:i.pozoId})
-    ]);
-    const pozo=rp.ok?rp.pozos?.find(function(p){return p.id===i.pozoId;}):null;
-    const cf=pozo?.cambiosRestantesFecha;
-    const pozoActual=pozo?.pozoActual||pozo?.premioGanador||i.monto||0;
-    // Buscar mis puntos en la tabla
-    const miPuntaje=rt.ok?(rt.tabla||[]).find(function(u){return u.userId===App.user?.id;}):null;
-    const pts=miPuntaje?miPuntaje.ptsTotal:0;
-    const pos=miPuntaje?miPuntaje.posicion:null;
-    return{...i,fecha:f,cf,pts,pos,pozoActual};
-  }));
-
-  el.innerHTML=`<div>
-    <p class="sec" style="margin-bottom:14px">Tus fechas inscriptas</p>
-    ${items.map(function(i){
-      const f=i.fecha;
-      const cerrada=f.estado==="Cerrada"||f.estado==="Finalizada";
-      const cf=i.cf;
-      const pts=i.pts||0;
-      const pos=i.pos;
-      const pozoActual=i.pozoActual;
-      return`<div class="card" style="margin-bottom:12px;padding:16px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-          <div style="flex:1">
-            <div style="font-family:var(--ff);font-size:23px;font-weight:800">${f.nombre||i.fechaId}</div>
-            <div style="font-size:15px;color:var(--txt3);margin-top:2px">${f.liga||""} · <span class="bdg ${estadoFecha(f).c}" style="font-size:12px">${estadoFecha(f).t}</span></div>
-            ${App.user?.empresa?"":`<div style="font-size:14px;color:var(--gold);margin-top:4px">💰 Pozo: <strong>$${pozoActual.toLocaleString("es-AR")}</strong></div>`}
-          </div>
-          <div style="text-align:right">
-            <div style="font-family:var(--ff);font-size:32px;font-weight:900;color:var(--g2)">${pts}</div>
-            <div style="font-size:12px;color:var(--txt3)">puntos</div>
-            ${pos?`<div style="font-size:13px;color:var(--txt2);margin-top:2px">${pos<=3?puestoIco(pos,22):"#"+pos}</div>`:""}
-          </div>
-        </div>
-        ${cerrada&&cf!==undefined?cf>0?`<div style="padding:8px 12px;background:var(--bluel);border:1px solid rgba(68,138,255,.15);border-radius:var(--rs);margin-bottom:10px;display:flex;align-items:center;gap:8px"><span style="font-size:14px;color:var(--blue);font-weight:600">Te ${cf!==1?"quedan":"queda"} <b style="font-family:var(--ff);font-size:20px">${cf}</b> cambio${cf!==1?"s":""}</span></div>`:`<div style="padding:6px 10px;background:rgba(255,82,82,.06);border-radius:var(--rs);margin-bottom:10px;text-align:center"><span style="font-size:13px;color:var(--red)">🔒 Sin cambios</span></div>`:""}
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-p" style="flex:1;padding:10px" onclick="go('jugar',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})">
-            ${cerrada&&cf>0?"✏️ Modificar":"👁 Ver"} pronósticos
-          </button>
-          <button class="btn btn-s" style="flex:1;padding:10px" onclick="go('tabla',{fechaId:'${i.fechaId}',pozoId:'${i.pozoId}'})">
-            🏆 Ver tabla
-          </button>
-        </div>
-      </div>`;
-    }).join("")}
-  </div>`;
+  const rr=await api("resumenTablas",{pares:inscripciones.map(function(i){return{fechaId:i.fechaId,pozoId:i.pozoId};})});
+  if(!document.getElementById("mfc"))return;
+  if(!rr.ok){el.innerHTML=errBox(rr.error);return;}
+  const res=rr.resumen||[];
+  const orden=function(x){return x.terminada?2:x.jugados>0||x.enVivo?0:1;};
+  res.sort(function(a,b){return orden(a)-orden(b)||String(b.desde||"").localeCompare(String(a.desde||""));});
+  el.innerHTML=`<p class="sec" style="margin-bottom:14px">Tus fechas inscriptas</p><div class="tbs-list">${res.map(function(x){return tbsCard(x,true);}).join("")}</div>`;
 }
 
 /* Tarjeta de cada fecha jugada en la lista de "Tabla" */
-function tbsCard(x){
+function tbsCard(x,mis){
   const $=function(n){return"$"+Number(n||0).toLocaleString("es-AR");};
   const dia=function(iso){return iso?new Date(iso).toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"short",timeZone:"America/Argentina/Buenos_Aires"}).replace(".",""):"";};
   const rango=x.desde?(dia(x.desde)===dia(x.hasta)?dia(x.desde):dia(x.desde)+" al "+dia(x.hasta)):"";
@@ -4013,12 +3971,17 @@ function tbsCard(x){
   }else if(x.lider){
     pie=`<div class="tbs-pie">Puntero${x.lider.empatados>1?"s":""}: <b>${escH(x.lider.siglas)}</b> · ${x.lider.pts} pts${y&&y.ptsReglas?` <span class="tbs-sep">·</span> Tus reglas: ${y.ptsReglas} pts`:""}</div>`;
   }
-  const meta=[x.empresa?"":(x.monto?"Pozo "+$(x.monto):"Gratis"),x.liga,rango,x.reglas?x.reglas+" regla"+(x.reglas!==1?"s":"")+" especial"+(x.reglas!==1?"es":""):""].filter(Boolean).join(" · ");
-  return`<div class="tbs-card card" onclick="go('tabla',{fechaId:'${x.fechaId}',pozoId:'${x.pozoId}'})">
+  const meta=[x.empresa?"":(x.monto?"Entrada "+$(x.monto):"Gratis"),x.liga,rango,x.reglas?x.reglas+" regla"+(x.reglas!==1?"s":"")+" especial"+(x.reglas!==1?"es":""):""].filter(Boolean).join(" · ");
+  const abierta=x.cierre&&new Date(x.cierre)>new Date();
+  const plazo=x.cierre?`<div class="tbs-plazo${abierta?" ab":""}">${abierta?"⏰ Jugá hasta "+cuandoPartido(x.cierre)+" hs":"🔒 Cerró "+cuandoPartido(x.cierre)+" hs"}${!abierta&&!x.terminada&&!x.empresa?` <span class="tbs-sep">·</span> ${x.cambiosRestantes?"Te quedan "+x.cambiosRestantes+" cambio"+(x.cambiosRestantes!==1?"s":""):"Sin cambios"}`:""}</div>`:"";
+  const botones=mis?`<div class="tbs-bot"><button class="btn btn-p" onclick="event.stopPropagation();go('jugar',{fechaId:'${x.fechaId}',pozoId:'${x.pozoId}'})">${abierta?"✏️ Modificar":"👁 Ver"} pronósticos</button><button class="btn btn-s" onclick="event.stopPropagation();go('tabla',{fechaId:'${x.fechaId}',pozoId:'${x.pozoId}'})">🏆 Ver tabla</button></div>`:"";
+  return`<div class="tbs-card card" onclick="go('${mis?"jugar":"tabla"}',{fechaId:'${x.fechaId}',pozoId:'${x.pozoId}'})">
     <div class="tbs-h"><div class="tbs-tit"><b>${escH(x.nombre)}</b><small>${escH(meta)}</small></div><span class="tbs-est ${est[1]}">${est[0]}</span></div>
+    ${plazo}
     <div class="tbs-av"><div class="tbs-bar"><i style="width:${pct}%"></i></div><span>${x.jugados} de ${x.total} partidos jugados${x.enVivo?` · <b class="tbs-vivo">${x.enVivo} en vivo</b>`:""}</span></div>
     <div class="tbs-stats">${stats}</div>
-    <div class="tbs-f">${pie}<div class="tbs-extra">${!x.empresa&&x.premio?`<span>${x.terminada?"Premio":x.premioFijo?"Premio":"Premio est."} <b>${$(x.premio)}</b></span>`:""}<span>👥 ${x.inscriptos}</span><i>Ver tabla →</i></div></div>
+    <div class="tbs-f">${pie}<div class="tbs-extra">${!x.empresa&&x.premio?`<span>🏆 ${x.premioFijo||x.terminada?"Premio":"Premio est."} <b>${$(x.premio)}</b></span>`:""}<span>👥 ${x.inscriptos} inscripto${x.inscriptos!==1?"s":""}</span>${mis?"":"<i>Ver tabla →</i>"}</div></div>
+    ${botones}
   </div>`;
 }
 

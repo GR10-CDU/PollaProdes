@@ -980,7 +980,7 @@ async function resumenTablas(db: any, data: any) {
   const pares = (data.pares||[]).slice(0, 30).filter((p:any) => p && p.fechaId && p.pozoId);
   const out = await Promise.all(pares.map(async (par:any) => {
     const [{data: fe}, {data: parts}, {data: pozo}, {data: insc}, {data: cambios}, {data: gans}, tb] = await Promise.all([
-      db.from("fechas").select("id,nombre,liga,estado,reglas_habilitadas,empresa_id").eq("id", par.fechaId).maybeSingle(),
+      db.from("fechas").select("id,nombre,liga,estado,reglas_habilitadas,empresa_id,plazo_limite").eq("id", par.fechaId).maybeSingle(),
       db.from("partidos").select("id,estado,fecha_hora,vivo_estado").eq("fecha_id", par.fechaId),
       db.from("pozos").select("*").eq("id", par.pozoId).maybeSingle(),
       db.from("inscripciones").select("pozo_id,via_codigo").eq("pozo_id", par.pozoId).eq("estado_pago","Aprobado"),
@@ -989,6 +989,9 @@ async function resumenTablas(db: any, data: any) {
       armarTabla(db, par.fechaId, par.pozoId),
     ]);
     if (!fe) return null;
+    const {data: mp} = await db.from("pronosticos").select("cambios_realizados").eq("pozo_id", par.pozoId).eq("user_id", auth.userId);
+    const cambiosUsados = (mp||[]).reduce((s:number,p:any) => s+(p.cambios_realizados||0), 0);
+    const cierre = cierreFecha(fe, parts||[]);
     const ps = parts||[];
     const horas = ps.map((p:any) => p.fecha_hora).filter(Boolean).sort();
     const tabla = tb.tabla||[];
@@ -1010,6 +1013,8 @@ async function resumenTablas(db: any, data: any) {
       lider: lider ? {siglas: lideres.map((u:any) => u.siglas).join(", "), pts: lider.ptsTotal, empatados: lideres.length} : null,
       yo: yo ? {pos: yo.posicion, pts: yo.ptsTotal, acertados: yo.acertados, ptsReglas: yo.ptsReglas, dif: lider ? lider.ptsTotal - yo.ptsTotal : 0} : null,
       jugadores: tabla.length,
+      cierre: cierre ? cierre.toISOString() : null,
+      cambiosRestantes: Math.max(0, MAX_CAMBIOS - cambiosUsados),
     };
   }));
   return {ok:true, resumen: out.filter(Boolean)};
