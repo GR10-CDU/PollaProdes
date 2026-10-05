@@ -4926,7 +4926,8 @@ function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
   loadSidebarRight();
   // Fetch inscriptions count for badge
   api("getMisInscripciones").then(r=>{if(r.ok)window._misFechasBadge=(r.inscripciones||[]).length;renderNav();});
-  if(App.user?.rol==="Admin"){
+  if(window._irA){go(window._irA,{});window._irA=null;}
+  else if(App.user?.rol==="Admin"){
     go("admin-res");
   } else {go("fechas");irAFechaEnJuego();}
   setTimeout(procesarVueltaPago,600);
@@ -4950,6 +4951,12 @@ function mkModal(title,body){const m=document.createElement("div");m.className="
   const q=new URLSearchParams(location.search);
   const v={pago:q.get("pago"),insc:q.get("insc"),cambio:q.get("cambio"),id:q.get("id")};
   if(v.pago||v.cambio){window._vueltaPago=v;history.replaceState({},"",location.pathname);}
+})();
+// Al tocar una notificación: "?ir=tabla" abre esa pantalla (o llega un mensaje si la app ya estaba abierta)
+(()=>{
+  const ir=new URLSearchParams(location.search).get("ir");
+  if(ir&&["tabla","fechas","mis-fechas","grilla"].includes(ir)){window._irA=ir;history.replaceState({},"",location.pathname);}
+  if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("message",function(e){const d=e.data||{};if(d.ir&&App.user&&["tabla","fechas","mis-fechas","grilla"].includes(d.ir))go(d.ir,{});});
 })();
 async function mostrarAvisos(){
   const r=await api("getAvisos");if(!r.ok||!r.avisos?.length)return;

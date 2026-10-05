@@ -17,7 +17,8 @@ self.addEventListener("notificationclick", e => {
   e.notification.close();
   const url = new URL((e.notification.data && e.notification.data.url) || "./", self.registration.scope).href;
   e.waitUntil(clients.matchAll({type: "window", includeUncontrolled: true}).then(ws => {
-    for (const w of ws) if (w.url.startsWith(self.registration.scope)) return w.focus();
+    const ir = new URL(url).searchParams.get("ir");
+    for (const w of ws) if (w.url.startsWith(self.registration.scope)) { if (ir) w.postMessage({ir}); return w.focus(); }
     return clients.openWindow(url);
   }));
 });

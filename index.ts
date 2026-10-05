@@ -1172,7 +1172,7 @@ async function aplicarResultado(db: any, partidoId: string, gL: number, gV: numb
   }
   try { for (const id of ids) await avisosResultado(db, id); } catch (e) { console.error("push", e); }
   try { const {data: pf} = await db.from("partidos").select("local,visita").eq("id", partidoId).single();
-    await avisoPartido(db, partidoId, "avisos_final", `final:${partidoId}:${gL}-${gV}`, `🏁 Final: ${pf?.local} ${gL}-${gV} ${pf?.visita}`, "Ya se sumaron los puntos. Mirá cómo quedó la tabla."); } catch (e) { console.error("push final", e); }
+    await avisoPartido(db, partidoId, "avisos_final", `final:${partidoId}:${gL}-${gV}`, `🏁 Final: ${sigla(pf?.local)} ${gL}-${gV} ${sigla(pf?.visita)}`, "Ya se sumaron los puntos. Mirá cómo quedó la tabla.", "/?ir=tabla"); } catch (e) { console.error("push final", e); }
 
   return {ok:true, resultado, enOtrasFechas: ids.length - 1};
 }
@@ -3107,6 +3107,40 @@ function estadoVivo(ab: string, ac: string) {
   if (ac === "38") return "entretiempo";
   return "vivo";
 }
+// Sigla de 3 letras para los títulos de las notificaciones (si no, no entran): "Central Córdoba" → "CEN"
+function sigla(nombre: any) {
+  const pal = String(nombre||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\(S\)|[^A-Za-z0-9 ]/g," ").trim().split(/\s+/)
+    .filter((w:string) => !/^(club|ca|cd|ac|fc|atletico|deportivo|sportivo|real|sporting|the|de|del|la|el)$/i.test(w));
+  return (pal[0]||String(nombre||"")).slice(0,3).toUpperCase();
+}
+// Feeds directos de Flashscore (los mismos que usa su web para el marcador en vivo)
+async function fsFeed(nombre: string) {
+  const r = await fetch(`https://local-global.flashscore.ninja/2/x/feed/${nombre}`, {headers:{"x-fsign":"SW9D1eZo","User-Agent":UA_WEB,"Referer":"https://www.flashscore.com.ar/"}});
+  return r.ok ? await r.text() : "";
+}
+function parseFeed(txt: string) {
+  const c: Record<string,string> = {};
+  for (const par of txt.split("¬")) { const k = par.indexOf("÷"); if (k > 0 && !(par.slice(0,k) in c)) c[par.slice(0,k)] = par.slice(k+1); }
+  return c;
+}
+// Secciones de incidencias: "AC÷1st Half¬IG÷1¬IH÷1¬" ... (IG/IH = goles de cada tiempo)
+function seccionesInc(inc: string) {
+  const out: {nombre:string, gl:number, gv:number, txt:string}[] = [];
+  const partes = inc.split(/(?=AC÷)/);
+  for (const s of partes) {
+    const m = /^AC÷([^¬]*)¬IG÷(\d*)¬IH÷(\d*)¬/.exec(s);
+    if (m) out.push({nombre:m[1], gl:parseInt(m[2])||0, gv:parseInt(m[3])||0, txt:s});
+  }
+  return out;
+}
+function goles90(inc: string): [number,number] | null {
+  const ss = seccionesInc(inc).filter(s => /^(1st|2nd) Half$/.test(s.nombre));
+  return ss.length === 2 ? [ss[0].gl+ss[1].gl, ss[0].gv+ss[1].gv] : null;
+}
+function rojasHasta90(inc: string) {
+  return seccionesInc(inc).filter(s => /^(1st|2nd) Half$/.test(s.nombre))
+    .reduce((n, s) => n + (s.txt.match(/IK÷[^¬]*Red Card/g)||[]).length, 0);
+}
 async function cronVivo(db: any) {
   const ahora = Date.now();
   const {data: ps} = await db.from("partidos").select("id,link_stats,fecha_hora,estado,vivo_estado")
@@ -3121,44 +3155,43 @@ async function cronVivo(db: any) {
     (porPagina[`https://www.flashscore.com.ar/equipo/${m[1]}/${m[2]}/`] ||= []).push({...p, mid:m[3]});
   }
   let actualizados = 0;
-  for (const [url, lista] of Object.entries(porPagina)) {
+  const lista = Object.values(porPagina).flat();
+  await Promise.all(lista.map(async (p:any) => {
     try {
-      const html = await (await fetch(url, {headers:{"User-Agent":UA_WEB,"Accept-Language":"es-AR"}})).text();
-      for (const p of lista) {
-        const i = html.indexOf(`AA÷${p.mid}¬`); if (i < 0) continue;
-        const bloque = html.slice(i, html.indexOf("¬~", i) > 0 ? html.indexOf("¬~", i) : i + 3000);
-        const c: Record<string,string> = {};
-        for (const par of bloque.split("¬")) { const k = par.indexOf("÷"); if (k > 0) c[par.slice(0,k)] = par.slice(k+1); }
-        const est = estadoVivo(c.AB||"", c.AC||"");
-        if (!est) continue;
-        // Terminado: se carga el resultado final (90 min) y las rojas, y se avisa al admin
-        if (est === "final") {
-          const gL = parseInt(c.AT ?? c.AG), gV = parseInt(c.AU ?? c.AH), rojas = (parseInt(c.AJ)||0) + (parseInt(c.AK)||0);
-          if (!isNaN(gL) && !isNaN(gV)) {
-            const {data: ya} = await db.from("partidos").select("estado,local,visita").eq("id", p.id).single();
-            if (ya && ya.estado !== "Finalizado") {
-              await aplicarResultado(db, p.id, gL, gV, rojas, true);
-              await avisarAdmin(db, `✅ Cargado: ${ya.local} ${gL}-${gV} ${ya.visita}`, `${rojas} roja${rojas!==1?"s":""} · automático desde Flashscore. Revisalo en Cargar resultados.`);
-              actualizados++; continue;
-            }
+      // Feed directo del partido (al instante; la página del equipo viene con minutos de atraso)
+      const c = parseFeed(await fsFeed(`dc_1_${p.mid}`));
+      const est = estadoVivo(c.DA||"", c.DB||"");
+      if (!est) return;
+      if (est === "final") {
+        // Goles a los 90' (suma 1T + 2T) y rojas, desde las incidencias del partido
+        const inc = await fsFeed(`df_sui_1_${p.mid}`);
+        const r90 = goles90(inc);
+        const gL = r90 ? r90[0] : parseInt(c.DE), gV = r90 ? r90[1] : parseInt(c.DF);
+        const rojas = rojasHasta90(inc);
+        if (!isNaN(gL) && !isNaN(gV)) {
+          const {data: ya} = await db.from("partidos").select("estado,local,visita").eq("id", p.id).single();
+          if (ya && ya.estado !== "Finalizado") {
+            await aplicarResultado(db, p.id, gL, gV, rojas, true);
+            await avisarAdmin(db, `✅ Cargado: ${sigla(ya.local)} ${gL}-${gV} ${sigla(ya.visita)}`, `${ya.local} ${gL}-${gV} ${ya.visita} · ${rojas} roja${rojas!==1?"s":""} · automático desde Flashscore. Revisalo en Cargar resultados.`);
+            actualizados++; return;
           }
         }
-        const etapa = c.AC === "12" ? "1T" : c.AC === "13" ? "2T" : c.AC === "38" ? "ET" : "";
-        const ngl = c.AG!==undefined?parseInt(c.AG)||0:null, ngv = c.AH!==undefined?parseInt(c.AH)||0:null;
-        if (est === "vivo" && ngl !== null && ngv !== null && (ngl+ngv) > 0) {
-          const {data: viejo} = await db.from("partidos").select("vivo_gl,vivo_gv,local,visita").eq("id", p.id).single();
-          if (viejo && (ngl+ngv) > ((viejo.vivo_gl||0)+(viejo.vivo_gv||0))) {
-            const quien = ngl > (viejo.vivo_gl||0) ? viejo.local : viejo.visita;
-            const min = c.AO ? Math.floor((Date.now()-Number(c.AO)*1000)/60000)+1+(etapa==="2T"?45:0) : null;
-            await avisoPartido(db, p.id, "avisos_goles", `gol:${p.id}:${ngl}-${ngv}`, `⚽ ¡Gol de ${quien}!`, `${viejo.local} ${ngl}-${ngv} ${viejo.visita}${min?` · ${min}'`:""}`);
-          }
-        }
-        await db.from("partidos").update({vivo_gl: c.AG!==undefined?parseInt(c.AG)||0:null, vivo_gv: c.AH!==undefined?parseInt(c.AH)||0:null, vivo_estado:est, vivo_at:new Date().toISOString(),
-          vivo_etapa:etapa, vivo_desde: c.AO ? new Date(Number(c.AO)*1000).toISOString() : null}).eq("id", p.id);
-        actualizados++;
       }
-    } catch (e) { console.error("vivo", url, e); }
-  }
+      const etapa = c.DB === "12" ? "1T" : c.DB === "13" ? "2T" : c.DB === "38" ? "ET" : "";
+      const ngl = c.DE!==undefined&&c.DE!=="" ? parseInt(c.DE)||0 : null, ngv = c.DF!==undefined&&c.DF!=="" ? parseInt(c.DF)||0 : null;
+      if (est === "vivo" && ngl !== null && ngv !== null && (ngl+ngv) > 0) {
+        const {data: viejo} = await db.from("partidos").select("vivo_gl,vivo_gv,local,visita").eq("id", p.id).single();
+        if (viejo && (ngl+ngv) > ((viejo.vivo_gl||0)+(viejo.vivo_gv||0))) {
+          const quien = ngl > (viejo.vivo_gl||0) ? viejo.local : viejo.visita;
+          const min = c.DD ? Math.floor((Date.now()-Number(c.DD)*1000)/60000)+1+(etapa==="2T"?45:0) : null;
+          await avisoPartido(db, p.id, "avisos_goles", `gol:${p.id}:${ngl}-${ngv}`, `⚽ ¡Gol! ${sigla(viejo.local)} ${ngl}-${ngv} ${sigla(viejo.visita)}`, `Gol de ${quien}${min?` · ${min}'`:""}`);
+        }
+      }
+      await db.from("partidos").update({vivo_gl: ngl, vivo_gv: ngv, vivo_estado:est, vivo_at:new Date().toISOString(),
+        vivo_etapa:etapa, vivo_desde: c.DD ? new Date(Number(c.DD)*1000).toISOString() : null}).eq("id", p.id);
+      actualizados++;
+    } catch (e) { console.error("vivo", p.id, e); }
+  }));
   return {ok:true, partidos:(ps||[]).length, actualizados};
 }
 
@@ -3171,7 +3204,7 @@ async function avisarAdmin(db: any, titulo: string, texto: string) {
 }
 
 // Aviso a los anotados en las fechas que tienen ese partido (respetando su preferencia)
-async function avisoPartido(db: any, partidoId: string, pref: string, clave: string, titulo: string, texto: string) {
+async function avisoPartido(db: any, partidoId: string, pref: string, clave: string, titulo: string, texto: string, url?: string) {
   if (!(await primeraVez(db, clave))) return;
   const ids = await partidosGemelos(db, partidoId);
   const {data: ps} = await db.from("partidos").select("fecha_id").in("id", ids);
@@ -3182,5 +3215,5 @@ async function avisoPartido(db: any, partidoId: string, pref: string, clave: str
   if (!users.length) return;
   const {data: us} = await db.from("usuarios").select(`id,${pref}`).in("id", users);
   users = (us||[]).filter((u:any) => u[pref] !== false).map((u:any) => u.id);
-  await enviarPush(db, users, {titulo, texto, tag:clave});
+  await enviarPush(db, users, {titulo, texto, tag:clave, url});
 }
