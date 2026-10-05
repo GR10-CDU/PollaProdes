@@ -29,4 +29,12 @@ jobs:
           git config user.name "Polla Prodes (automático)"
           git config user.email "pollaprodes@users.noreply.github.com"
           git add -A og */index.html
-          git diff --cached --quiet || (git commit -m "Vista previa de empresas actualizada" && git push)
+          git diff --cached --quiet && echo "sin cambios" >> $GITHUB_ENV || (git commit -m "Vista previa de empresas actualizada" && git push && echo "PUBLICAR=1" >> $GITHUB_ENV)
+      - name: Publicar en Cloudflare
+        if: env.PUBLICAR == '1'
+        run: |
+          mkdir /tmp/sitio && git archive HEAD | tar -x -C /tmp/sitio && rm -rf /tmp/sitio/.github /tmp/sitio/index.ts /tmp/sitio/CNAME /tmp/sitio/og/generar.py /tmp/sitio/og/estado.json
+          npx -y wrangler@4 pages deploy /tmp/sitio --project-name pollaprodes --branch main --commit-dirty=true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_PAGES_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
