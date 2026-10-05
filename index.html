@@ -2146,6 +2146,12 @@ body.login-active #inst-banner{display:none}
   html body #bn{padding-left:10px!important;padding-right:10px!important}
   .bn-item.active{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 22%,transparent),color-mix(in srgb,var(--accent) 10%,transparent))}
 }
+@media(max-width:880px){
+  html body #bn{border-radius:0!important;padding-top:4px!important;padding-bottom:max(2px,calc(env(safe-area-inset-bottom) - 22px))!important}
+  html body #bn .bn-wrap{height:52px!important}
+  .bn-item{height:50px!important}
+  .page{padding-bottom:calc(74px + env(safe-area-inset-bottom))!important}
+}
 
 </style>
 </head>
