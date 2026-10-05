@@ -2343,6 +2343,7 @@ body.login-active #inst-banner{display:none}
 .ll-legal{margin-top:10px;font-size:11.5px;text-align:center;color:rgba(255,255,255,.45);line-height:1.6}
 .pf-legal{text-align:center;font-size:13px;color:var(--ink-3);margin-top:14px}
 body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:none!important}
+.pc-jugado b{font-family:inherit;font-size:14px;font-weight:700;letter-spacing:.02em;text-transform:capitalize;opacity:.95}
 
 </style>
 </head>
@@ -3374,7 +3375,7 @@ function renderPartidos(parts,ctx,puede){
     const _vr=!sinGoles?(["A","B","C"][window._finIdx++]||"A"):null;
     const _calc=!sinGoles&&_prd.calculado;
     const _tot=_calc?(_prd.ptsTotal!=null?_prd.ptsTotal:0):0;
-    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}${_calc?(_tot>0?" suma":" nosuma"):""}${esSenior(p)?" senior":""}${p.estado==="Finalizado"?" jugado":""}" id="pc-${p.id}">${p.estado==="Finalizado"?`<div class="pc-jugado"><span>✓ JUGADO</span><b>${p.golesLocal}-${p.golesVisita}</b></div>`:""}${esSenior(p)?`<span class="senior-flag">Senior</span>`:""}
+    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}${_calc?(_tot>0?" suma":" nosuma"):""}${esSenior(p)?" senior":""}${p.estado==="Finalizado"?" jugado":""}" id="pc-${p.id}">${p.estado==="Finalizado"?`<div class="pc-jugado"><span>✓ JUGADO</span><b>${p.fechaHora?new Date(p.fechaHora).toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","").replace(",","")+" hs":""}</b></div>`:""}${esSenior(p)?`<span class="senior-flag">Senior</span>`:""}
       <div class="pc-meta">
         <div class="pc-bdgs">
           <span style="font-size:14px;font-weight:700;color:var(--txt3)">#${p.numero}</span>
