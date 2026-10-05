@@ -2181,6 +2181,13 @@ body.login-active #inst-banner{display:none}
   .toast{bottom:calc(64px + var(--m-safe-bot))}
   #inst-banner{bottom:calc(60px + var(--m-safe-bot))}
 }
+/* Celular v4: el header vuelve debajo de la zona de la hora (iOS la difumina sola) y el menú baja hasta el borde real */
+@media(max-width:880px){
+  :root{--m-safe-top:calc(env(safe-area-inset-top) + 2px);--ios-gap:0px}
+  html body #bn{transform:translateY(var(--ios-gap))}
+  html.ios-gap body #bn{padding-bottom:max(4px,calc(env(safe-area-inset-bottom) - 26px))!important}
+  html{background:var(--surface)}
+}
 
 </style>
 </head>
@@ -5455,6 +5462,19 @@ function bnCercano(x){const items=[...document.querySelectorAll("#bn-wrap .bn-it
     x0=null;mov=false;});
   window.addEventListener("resize",function(){bnPill();});
 })();
+
+// iPhone con la app instalada: si la pantalla real es más alta que el área que nos da iOS, bajamos el menú hasta el borde
+function ajustarBordeIOS(){
+  try{
+    const ios=/iphone|ipad|ipod/i.test(navigator.userAgent),standalone=navigator.standalone===true||matchMedia("(display-mode: standalone)").matches;
+    if(!ios||!standalone||window.innerWidth>880)return;
+    const alto=Math.max(screen.height,screen.width)>window.innerHeight&&window.innerHeight>window.innerWidth?Math.max(screen.height,screen.width):screen.height;
+    const gap=Math.round(alto-window.innerHeight);
+    const h=document.documentElement;
+    if(gap>4&&gap<80){h.style.setProperty("--ios-gap",gap+"px");h.classList.add("ios-gap");}else{h.style.removeProperty("--ios-gap");h.classList.remove("ios-gap");}
+  }catch(e){}
+}
+ajustarBordeIOS();window.addEventListener("resize",ajustarBordeIOS);window.addEventListener("orientationchange",function(){setTimeout(ajustarBordeIOS,300);});
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
