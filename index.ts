@@ -1225,13 +1225,6 @@ async function calcularPuntajesPartido(db: any, partidoId: string) {
 
   // La Rachita y El Diego dependen de varios partidos
   await calcularReglasMultiples(db, part.fecha_id);
-  // Si se vuelve a cargar, que los avisos puedan salir de nuevo
-  if (estado === "Pendiente") {
-    const {data: rs} = await db.from("reglas").select("id").eq("partido_id", partidoId);
-    const claves = (rs||[]).map((r:any) => `regla:${r.id}`);
-    if (claves.length) await db.from("push_enviados").delete().in("clave", claves);
-    await db.from("push_enviados").delete().like("clave", `polla:${partidoId}:%`);
-  }
 }
 
 function calcPtsRegla(reg:any, resultado:string, gL:number, gV:number, rojas:number): number {
@@ -1795,6 +1788,13 @@ async function estadoPartidoUno(db: any, partidoId: string, estado: string) {
     db.from("reglas").update({puntos_obtenidos:0}).eq("partido_id",partidoId),
   ]);
   await calcularReglasMultiples(db, part.fecha_id);
+  // Si se vuelve a cargar, que los avisos puedan salir de nuevo
+  if (estado === "Pendiente") {
+    const {data: rs} = await db.from("reglas").select("id").eq("partido_id", partidoId);
+    const claves = (rs||[]).map((r:any) => `regla:${r.id}`);
+    if (claves.length) await db.from("push_enviados").delete().in("clave", claves);
+    await db.from("push_enviados").delete().like("clave", `polla:${partidoId}:%`);
+  }
 }
 
 // ============================================================
