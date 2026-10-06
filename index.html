@@ -2720,6 +2720,48 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .teams-block>.team-box{align-self:start}
 .team-name-big{display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:normal;word-break:normal;hyphens:auto}
 
+/* ═══ Admin: fechas en juego, todo el menú (celular) y terminar fecha ═══ */
+.dk-fin{display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
+.dkf{display:block;width:100%;text-align:left;padding:14px 16px;border-radius:var(--r);background:var(--surface);border:1px solid var(--accent-line);box-shadow:var(--shadow-1);cursor:pointer}
+.dkf-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.dkf-h b{font-family:var(--ff);font-size:22px;font-weight:800;text-transform:uppercase}
+.dkf-h span{font-size:13.5px;font-weight:700;color:var(--ink-3);white-space:nowrap}
+.dkf-f{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;font-size:14px;color:var(--ink-2)}
+.dkf-f i{font-style:normal;font-weight:800;color:var(--accent-text);white-space:nowrap}
+.dk-menu{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dkm{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:14px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:700;color:var(--ink-2);cursor:pointer;text-align:center}
+.dkm .dk-ic{width:34px;height:34px}
+@media(min-width:881px){.dk-menu-t,.dk-menu{display:none}}
+.af-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin:6px 0 14px}
+.af-head small{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-text)}
+.af-head h2{font-family:var(--ff);font-size:32px;font-weight:900;line-height:1;text-transform:uppercase;margin:4px 0 0}
+.af-parts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-bottom:14px}
+.afp{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-size:13px}
+.afp b{font-family:var(--ff);font-size:17px;min-width:34px;text-align:center}
+.afp-n{color:var(--ink-3);font-weight:800;font-size:12px}
+.afp-eq{font-weight:800}
+.afp.ok{border-color:var(--ok-line)}
+.afp.vivo{border-color:color-mix(in srgb,var(--danger) 50%,transparent)}
+.afp.vivo b{color:var(--danger);font-size:12px;font-family:inherit}
+.af-pozo{padding:16px!important;margin-bottom:12px}
+.af-pozo-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.af-pozo-h b{font-family:var(--ff);font-size:22px;font-weight:800;text-transform:uppercase}
+.af-pozo-h span{font-size:14px;font-weight:700;color:var(--ink-3)}
+.af-tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px}
+.af-t{width:100%;border-collapse:collapse;font-size:14.5px}
+.af-t th{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding:6px 8px;text-align:center;border-bottom:1px solid var(--line)}
+.af-t td{padding:9px 8px;text-align:center;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.af-t .l{text-align:left}
+.af-t td small{color:var(--ink-3);font-size:12px}
+.af-t td.tot{font-family:var(--ff);font-size:19px;font-weight:900}
+.af-t tr.gan td{background:var(--gold-soft)}
+.af-t tr.gan td.tot{color:var(--gold)}
+.af-acc{padding:18px!important;display:flex;flex-direction:column;gap:10px}
+.af-prev,.af-ok{font-size:15.5px;margin:0}
+.af-warn{font-size:14.5px;font-weight:700;color:var(--danger);margin:0}
+.af-nota{font-size:12.5px;color:var(--ink-3);line-height:1.4}
+@media(max-width:560px){.af-head h2{font-size:26px}.af-t{font-size:13.5px}.af-t th,.af-t td{padding:8px 5px}.af-t td small{display:none}}
+
 </style>
 </head>
 <body>
@@ -4641,7 +4683,7 @@ async function loadDash(){
   const pend=rp.ok?(rp.pagos||[]).length:0;
   const kpi=[[ab.length,"Fechas abiertas",ICO.fechas,"admin-fechas"],[anotados,"Anotados en juego",ICO.jugadores,"admin-fechas"],[rs.ok?rs.totalUsuarios:"—","Jugadores",ICO.perfil,"admin-users"],["$"+recaudado.toLocaleString("es-AR"),"Recaudado en juego",ICO.pagos,"admin-pagos"]];
   const acc=[[ICO.resultados,"Cargar resultados","Goles y rojas de la fecha","admin-res",""],[ICO.fechas,"Fechas","Crear, cargar partidos y pozos","admin-fechas",""],[ICO.pagos,"Pagos","Comprobantes para revisar","admin-pagos",pend?pend:""],[ICO.empresas,"Empresas","Marca, códigos y administradores","admin-empresas",""],[ICO.jugadores,"Jugadores","Cuentas registradas","admin-users",""]];
-  const enJuego=fs.filter(function(f){return f.estado==="Cerrada"&&!f.terminada&&!f.oculta;});
+  const enJuego=fs.filter(function(f){return !f.terminada&&!f.oculta&&f.publicada!==false&&(f.estado==="Cerrada"||(f.estado==="Abierta"&&f.minutosRestantes!==undefined&&f.minutosRestantes<=0));});
   const resJ=await Promise.all(enJuego.map(function(f){return api("adminResumenFecha",{fechaId:f.id});}));
   window._dashFin=enJuego.map(function(f,i){return{f:f,r:resJ[i]};}).filter(function(x){return x.r.ok;});
   el.innerHTML=`<div class="dk-grid">${kpi.map(k=>`<button class="dk" onclick="go('${k[3]}')"><span class="dk-ic">${k[2]}</span><b>${k[0]}</b><small>${k[1]}</small></button>`).join("")}</div>
@@ -5215,7 +5257,7 @@ function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
   api("getMisInscripciones").then(r=>{if(r.ok)window._misFechasBadge=(r.inscripciones||[]).length;renderNav();});
   if(window._irA){go(window._irA,{});window._irA=null;}
   else if(App.user?.rol==="Admin"){
-    go("admin-res");
+    go(window.innerWidth<=880?"admin-dash":"admin-res");
   } else {go("fechas");irAFechaEnJuego();}
   setTimeout(procesarVueltaPago,600);
   setTimeout(mostrarAvisos,1200);
