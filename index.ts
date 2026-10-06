@@ -522,7 +522,7 @@ async function getFechas(db: any, data: any) {
 
   const ids = (fechas||[]).map((f:any) => f.id);
   const {data: pts} = ids.length ? await db.from("partidos").select("fecha_id,fecha_hora").in("fecha_id", ids) : {data: []};
-  const {data: gans} = ids.length ? await db.from("ganadores").select("fecha_id").in("fecha_id", ids) : {data: []};
+  const {data: gans} = ids.length ? await db.from("ganadores").select("fecha_id,usuario,puntos,premio").in("fecha_id", ids) : {data: []};
   const terminadas = new Set((gans||[]).map((g:any) => g.fecha_id));
   const {data: pzs} = ids.length ? await db.from("pozos").select("fecha_id,monto").in("fecha_id", ids).eq("estado","Activo") : {data: []};
   const conPago = new Set((pzs||[]).filter((z:any) => Number(z.monto) > 0).map((z:any) => z.fecha_id));
@@ -540,6 +540,7 @@ async function getFechas(db: any, data: any) {
       tieneCodigo: !!f.codigo_grupo,
       plazoGuardado: esAdmin ? f.plazo_limite : undefined,
       terminada: terminadas.has(f.id), publicada: f.publicada !== false,
+      ganadores: (gans||[]).filter((g:any) => g.fecha_id === f.id).map((g:any) => ({siglas:g.usuario, puntos:g.puntos, premio: f.empresa_id ? 0 : (g.premio||0)})),
       empresaId: f.empresa_id || null, oculta: esAdmin ? !!f.oculta : undefined, cambiosGratis: !!(f.cambios_gratis || f.empresa_id) || (conPozo.has(f.id) && !conPago.has(f.id)),
       empresaNombre: esAdmin && f.empresa_id ? ((emps||[]).find((e:any) => e.id === f.empresa_id)?.nombre || "") : undefined,
       codigoGrupo: esAdmin ? (f.codigo_grupo || "") : undefined,

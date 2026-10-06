@@ -2786,6 +2786,19 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
   .us-acc{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center}
   .us-cont{grid-template-columns:1fr}
 }
+/* Fechas terminadas (plegadas al final de Fechas) */
+.ft-wrap{margin-top:16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2)}
+.ft-wrap summary{cursor:pointer;list-style:none;padding:14px 16px;font-size:15px;font-weight:800;color:var(--ink-2);display:flex;align-items:center;gap:8px}
+.ft-wrap summary::-webkit-details-marker{display:none}
+.ft-wrap summary::before{content:"▸";color:var(--ink-3)}.ft-wrap[open] summary::before{content:"▾"}
+.ft-wrap summary span{font-size:12px;padding:1px 8px;border-radius:10px;background:var(--surface-3);color:var(--ink-3)}
+.ft-list{display:flex;flex-direction:column;gap:8px;padding:0 12px 12px}
+.ft-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.ft-tx{min-width:0;display:flex;flex-direction:column;gap:2px}
+.ft-tx>b{font-family:var(--ff);font-size:19px;font-weight:800;text-transform:uppercase;line-height:1.1}
+.ft-tx small{font-size:14px;color:var(--ink-3)}
+.ft-tx small b{color:var(--gold)}
+.ft-btn{flex-shrink:0;padding:8px 14px!important;font-size:14px!important}
 
 </style>
 </head>
@@ -3246,13 +3259,22 @@ function afterRender(k,ctx){
 }
 
 /* ══ FECHAS ══════════════════════════════════════════════════ */
+// Fechas terminadas: plegadas al final, solo el nombre y quién ganó; "Ver fecha" abre el detalle
+function fechasTerminadasHtml(fs){
+  if(App.user?.rol==="Admin")return"";
+  const t=(fs||[]).filter(function(f){return f.terminada;}).reverse();
+  if(!t.length)return"";
+  return`<details class="ft-wrap"><summary>Fechas terminadas <span>${t.length}</span></summary><div class="ft-list">${t.map(function(f){
+    const g=f.ganadores||[];
+    return`<div class="ft-row"><div class="ft-tx"><b>${escH(f.nombre)}</b><small>${g.length?`🏆 ${g.length>1?"Ganaron":"Ganó"} <b>${g.map(function(x){return escH(x.siglas);}).join(", ")}</b> · ${g[0].puntos} pts`:"Sin ganador"}</small></div><button class="btn btn-s ft-btn" onclick="go('fecha-det',{fechaId:'${f.id}'})">Ver fecha</button></div>`;}).join("")}</div></details>`;
+}
 async function loadFechas(){
   const r=await api("getFechas"),el=document.getElementById("fl");if(!el)return;
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
   if(!r.fechas?.length){el.innerHTML=emptyBox("📅","No hay fechas disponibles");cajaCodigoEn(el);mostrarNovedadesEn(el);return;}
   const ICONS={"Liga Argentina":"🇦🇷","Premier League":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","La Liga":"🇪🇸","Serie A":"🇮🇹","Champions League":"🏆","Copa Libertadores":"🌎","Ligue 1":"🇫🇷"};
   var fechasVis=App.user&&App.user.rol==="Admin"?r.fechas:r.fechas.filter(function(f){return f.estado==="Abierta";});
-  if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas abiertas por ahora. Tus fechas jugadas están en F. Jugadas");cajaCodigoEn(el);mostrarNovedadesEn(el);return;}
+  if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas abiertas por ahora. Tus fechas jugadas están en F. Jugadas")+fechasTerminadasHtml(r.fechas);cajaCodigoEn(el);mostrarNovedadesEn(el);return;}
   el.innerHTML=fechasVis.map(function(f){
     const mins=f.minutosRestantes,urg=mins<120&&mins>0;
     const urgente=mins>0&&mins<=30;
@@ -3276,6 +3298,7 @@ async function loadFechas(){
       </div>
     </div>`;
   }).join("");
+  el.insertAdjacentHTML("beforeend",fechasTerminadasHtml(r.fechas));
   fechasVis.forEach(function(f){cargarExtraFecha(f);});
   cajaCodigoEn(el);
   mostrarNovedadesEn(el);
