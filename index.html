@@ -4779,8 +4779,8 @@ async function loadAdminFechas(){
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showEditarFecha('${f.id}')">✏️ Editar</button>
         ${f.empresaId?"":`<button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showGestionPozos('${f.id}')">💰 Pozos y premios</button>`}
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="verInscriptos('${f.id}')">👥 Inscriptos</button>
-        ${f.estado==="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:16px" onclick="cerrarFecha('${f.id}')">🔒 Cerrar</button>`:""}
-        ${f.estado==="Cerrada"||f.terminada?`<button class="btn btn-p" style="padding:6px 12px;font-size:16px" onclick="go('admin-fin',{fechaId:'${f.id}'})">🏁 ${f.terminada?"Resumen final":"Terminar fecha"}</button>`:""}
+        ${estadoFecha(f).t==="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:16px" onclick="cerrarFecha('${f.id}')">🔒 Cerrar</button>`:""}
+        ${estadoFecha(f).t!=="Abierta"&&f.publicada!==false?`<button class="btn btn-p" style="padding:6px 12px;font-size:16px" onclick="go('admin-fin',{fechaId:'${f.id}'})">🏁 ${f.terminada?"Resumen final":"Terminar fecha"}</button>`:""}
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="copiarFecha('${f.id}')">⧉ Copiar a…</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="ocultarFecha('${f.id}',${!f.oculta})">${f.oculta?"👁 Mostrar":"🙈 Ocultar"}</button>
         ${f.estado!=="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:16px" onclick="eliminarFecha('${f.id}')">🗑 Eliminar</button>`:""}
