@@ -3273,7 +3273,7 @@ async function loadFechas(){
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
   if(!r.fechas?.length){el.innerHTML=emptyBox("📅","No hay fechas disponibles");cajaCodigoEn(el);mostrarNovedadesEn(el);return;}
   const ICONS={"Liga Argentina":"🇦🇷","Premier League":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","La Liga":"🇪🇸","Serie A":"🇮🇹","Champions League":"🏆","Copa Libertadores":"🌎","Ligue 1":"🇫🇷"};
-  var fechasVis=App.user&&App.user.rol==="Admin"?r.fechas:r.fechas.filter(function(f){return f.estado==="Abierta";});
+  var fechasVis=App.user&&App.user.rol==="Admin"?r.fechas:r.fechas.filter(function(f){return f.estado==="Abierta"&&!f.terminada;});
   if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas abiertas por ahora. Tus fechas jugadas están en F. Jugadas")+fechasTerminadasHtml(r.fechas);cajaCodigoEn(el);mostrarNovedadesEn(el);return;}
   el.innerHTML=fechasVis.map(function(f){
     const mins=f.minutosRestantes,urg=mins<120&&mins>0;
