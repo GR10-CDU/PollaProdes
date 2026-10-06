@@ -2612,17 +2612,6 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .teams-block>.vs-center{grid-column:2}
 .teams-block>.team-box:nth-child(3){grid-column:3}
 
-/* Pantalla ancha, un partido por fila: equipos y resultado a la izquierda, puntos o botones L/E/V a la derecha */
-@container (min-width:860px){
-  #jc>.partido-card{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);column-gap:24px;align-items:center;padding-bottom:16px}
-  #jc>.partido-card>:is(.pc-jugado,.pct-aviso){grid-column:1/-1}
-  #jc>.partido-card>.teams-block{grid-column:1;margin-bottom:0}
-  #jc>.partido-card>:is(.dz,.lev-wrap,.partido-blocked){grid-column:2;margin:0}
-  #jc>.partido-card{padding-right:56px}
-  #jc>.partido-card>.pc-jugado{margin-right:-56px!important}
-  #jc>.partido-card>.pc-st-fl{top:50px;right:12px}
-  /* Sin nada a la derecha: los equipos centrados y con ancho acotado */
-  #jc>.partido-card:not(:has(>.dz,>.lev-wrap,>.partido-blocked))>.teams-block{grid-column:1/-1;width:100%;max-width:640px;justify-self:center}
 }
 
 /* Vista minimalista (interruptor junto a "Volver") */
