@@ -4300,7 +4300,6 @@ async function loadMisFechas(){
   el.innerHTML=(act.length?`<p class="sec" style="margin-bottom:14px">Fechas en las que estás anotado</p><div class="tbs-list">${act.map(function(x){return tbsCard(x,true);}).join("")}</div>`:emptyBox("🎯","No tenés fechas en juego ahora. Anotate en una desde Fechas."))
     +(fin.length?`<details class="ft-wrap"><summary>Fechas terminadas <span>${fin.length}</span></summary><div class="tbs-list" style="padding:0 12px 12px">${fin.map(function(x){return tbsCard(x,true);}).join("")}</div></details>`:"");
 }
-}
 
 /* Tarjeta de cada fecha jugada en la lista de "Tabla" */
 function tbsCard(x,mis){
