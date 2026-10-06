@@ -3120,9 +3120,9 @@ const ICO={
   salir:_svg('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>'),
   gear:_svg('<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>'),
 };
-const NAV_J=[{k:"fechas",i:ICO.fechas,l:"Fechas",t:"Fechas"},{k:"mis-fechas",i:ICO.mias,l:"F. Jugadas",t:"Fechas Jugadas"},{k:"tabla",i:ICO.tabla,l:"Tabla",t:"Tabla"},{k:"grilla",i:ICO.grilla,l:"Grilla",t:"Los Otros"},{k:"reglamento",i:ICO.reglamento,l:"Reglamento",t:"Reglamento"},{k:"perfil",i:ICO.perfil,l:"Perfil",t:"Perfil"}];
+const NAV_J=[{k:"fechas",i:ICO.fechas,l:"Fechas",t:"Fechas"},{k:"mis-fechas",i:ICO.mias,l:"En Juego",t:"Fechas en Juego"},{k:"tabla",i:ICO.tabla,l:"Tabla",t:"Tabla"},{k:"grilla",i:ICO.grilla,l:"Grilla",t:"Los Otros"},{k:"reglamento",i:ICO.reglamento,l:"Reglamento",t:"Reglamento"},{k:"perfil",i:ICO.perfil,l:"Perfil",t:"Perfil"}];
 const NAV_A=[{k:"admin-res",i:ICO.resultados,l:"Resultados",t:"Cargar resultados"},{k:"admin-dash",i:ICO.dash,l:"Inicio",t:"Dashboard"},{k:"admin-fechas",i:ICO.fechas,l:"Fechas",t:"Fechas"},{k:"tabla",i:ICO.tabla,l:"Tabla",t:"Tabla"},{k:"grilla",i:ICO.grilla,l:"Grilla",t:"Los Otros"},{k:"admin-empresas",i:ICO.empresas,l:"Empresas",t:"Empresas"},{k:"admin-pagos",i:ICO.pagos,l:"Pagos",t:"Pagos Pendientes"},{k:"admin-users",i:ICO.jugadores,l:"Jugadores",t:"Jugadores"},{k:"admin-fotos",i:ICO.foto,l:"Fotos",t:"Fotos para aprobar"},{k:"admin-importar",i:ICO.importar,l:"Importar",t:"Importar Partidos"},{k:"admin-noticias",i:ICO.noticias,l:"Noticias",t:"Noticias"},{k:"admin-push",i:ICO.noticias,l:"Avisos push",t:"Avisos push"},{k:"reglamento",i:ICO.reglamento,l:"Reglamento",t:"Reglamento"},{k:"perfil",i:ICO.perfil,l:"Perfil",t:"Perfil"}];
-const KICKER={"fechas":"Elegí y jugá","mis-fechas":"Tus inscripciones","tabla":"Posiciones","grilla":"Pronósticos de todos","perfil":"Tu cuenta","fecha-det":"Fecha","jugar":"Tus pronósticos","admin-dash":"Administración","admin-fechas":"Administración","admin-res":"Administración","admin-pagos":"Administración","admin-users":"Administración","admin-importar":"Administración","admin-noticias":"Administración","admin-fotos":"Administración","stats":"Estadísticas","reglamento":"Cómo se juega","mi-empresa":"Novedades, premios y marca","admin-push":"Administración","admin-empresas":"Administración"};
+const KICKER={"fechas":"Elegí y jugá","mis-fechas":"Tus fechas en curso","tabla":"Posiciones","grilla":"Pronósticos de todos","perfil":"Tu cuenta","fecha-det":"Fecha","jugar":"Tus pronósticos","admin-dash":"Administración","admin-fechas":"Administración","admin-res":"Administración","admin-pagos":"Administración","admin-users":"Administración","admin-importar":"Administración","admin-noticias":"Administración","admin-fotos":"Administración","stats":"Estadísticas","reglamento":"Cómo se juega","mi-empresa":"Novedades, premios y marca","admin-push":"Administración","admin-empresas":"Administración"};
 const NAV_EA=[NAV_J[0],{k:"mi-empresa",i:ICO.empresa,l:"Mi empresa",t:"Mi empresa"}].concat(NAV_J.slice(1));
 function getNav(){const r=App.user?.rol;return r==="Admin"?NAV_A:r==="AdminEmpresa"?NAV_EA:NAV_J;}
 
@@ -3274,7 +3274,7 @@ async function loadFechas(){
   if(!r.fechas?.length){el.innerHTML=emptyBox("📅","No hay fechas disponibles");cajaCodigoEn(el);mostrarNovedadesEn(el);return;}
   const ICONS={"Liga Argentina":"🇦🇷","Premier League":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","La Liga":"🇪🇸","Serie A":"🇮🇹","Champions League":"🏆","Copa Libertadores":"🌎","Ligue 1":"🇫🇷"};
   var fechasVis=App.user&&App.user.rol==="Admin"?r.fechas:r.fechas.filter(function(f){return f.estado==="Abierta"&&!f.terminada;});
-  if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas abiertas por ahora. Tus fechas jugadas están en F. Jugadas")+fechasTerminadasHtml(r.fechas);cajaCodigoEn(el);mostrarNovedadesEn(el);return;}
+  if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas abiertas por ahora. Las fechas en las que estás anotado están en En Juego")+fechasTerminadasHtml(r.fechas);cajaCodigoEn(el);mostrarNovedadesEn(el);return;}
   el.innerHTML=fechasVis.map(function(f){
     const mins=f.minutosRestantes,urg=mins<120&&mins>0;
     const urgente=mins>0&&mins<=30;
@@ -4287,14 +4287,19 @@ async function loadMisFechas(){
   el.innerHTML=`<div class="loading"><div class="spinner"></div></div>`;
   const ri=await api("getMisInscripciones");
   const inscripciones=ri.ok?(ri.inscripciones||[]):[];
+  window._misFechasBadge=inscripciones.filter(function(i){return !i.terminada;}).length;renderNav();
   if(!inscripciones.length){el.innerHTML=emptyBox("🎯","No estás inscripto en ninguna fecha");return;}
   const rr=await api("resumenTablas",{pares:inscripciones.map(function(i){return{fechaId:i.fechaId,pozoId:i.pozoId};})});
   if(!document.getElementById("mfc"))return;
   if(!rr.ok){el.innerHTML=errBox(rr.error);return;}
   const res=rr.resumen||[];
-  const orden=function(x){return x.terminada?2:x.jugados>0||x.enVivo?0:1;};
-  res.sort(function(a,b){return orden(a)-orden(b)||String(b.desde||"").localeCompare(String(a.desde||""));});
-  el.innerHTML=`<p class="sec" style="margin-bottom:14px">Tus fechas inscriptas</p><div class="tbs-list">${res.map(function(x){return tbsCard(x,true);}).join("")}</div>`;
+  const orden=function(x){return x.jugados>0||x.enVivo?0:1;};
+  // En juego: abiertas o cerradas que todavía no terminaron. Las terminadas, plegadas al final.
+  const act=res.filter(function(x){return !x.terminada;}).sort(function(a,b){return orden(a)-orden(b)||String(a.desde||"").localeCompare(String(b.desde||""));});
+  const fin=res.filter(function(x){return x.terminada;}).sort(function(a,b){return String(b.desde||"").localeCompare(String(a.desde||""));});
+  el.innerHTML=(act.length?`<p class="sec" style="margin-bottom:14px">Fechas en las que estás anotado</p><div class="tbs-list">${act.map(function(x){return tbsCard(x,true);}).join("")}</div>`:emptyBox("🎯","No tenés fechas en juego ahora. Anotate en una desde Fechas."))
+    +(fin.length?`<details class="ft-wrap"><summary>Fechas terminadas <span>${fin.length}</span></summary><div class="tbs-list" style="padding:0 12px 12px">${fin.map(function(x){return tbsCard(x,true);}).join("")}</div></details>`:"");
+}
 }
 
 /* Tarjeta de cada fecha jugada en la lista de "Tabla" */
@@ -5349,7 +5354,7 @@ function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
   if(sf)sf.innerHTML=`${avatarHtml(App.user,"sb-av")}<div class="sb-ui"><div class="nm">${App.user?.nombre||App.user?.usuario||""}</div><div class="rl">${App.user?.usuario||""} · ${App.user?.rol||"Jugador"}</div></div><button class="sb-logout" onclick="logout()" title="Salir" aria-label="Cerrar sesión">${ICO.salir}</button>`;
   loadSidebarRight();
   // Fetch inscriptions count for badge
-  api("getMisInscripciones").then(r=>{if(r.ok)window._misFechasBadge=(r.inscripciones||[]).length;renderNav();});
+  api("getMisInscripciones").then(r=>{if(r.ok)window._misFechasBadge=(r.inscripciones||[]).filter(function(i){return !i.terminada;}).length;renderNav();});
   if(window._irA){go(window._irA,{});window._irA=null;}
   else if(App.user?.rol==="Admin"){
     go(window.innerWidth<=880?"admin-dash":"admin-res");
@@ -6276,7 +6281,7 @@ function pintarEspacios(){
 window.cambiarEspacio=function(id){
   document.querySelector(".tb-user")?.classList.remove("open");
   aplicarEspacio(id);saveSession(App.user,App.token);aplicarMarca(App.user.empresa||null);pintarEspacios();
-  api("getMisInscripciones").then(function(r){if(r.ok)window._misFechasBadge=(r.inscripciones||[]).length;renderNav();});
+  api("getMisInscripciones").then(function(r){if(r.ok)window._misFechasBadge=(r.inscripciones||[]).filter(function(i){return !i.terminada;}).length;renderNav();});
   try{loadSidebarRight();}catch(e){}
   go("fechas");toast("Estás en "+(App.user.empresa?App.user.empresa.nombre:"Polla Prodes"));
   setTimeout(pedirDatosEmpresa,600);

@@ -696,8 +696,11 @@ async function getMisInscripciones(db: any, data: any) {
     .eq("user_id", auth.userId).or("estado_pago.eq.Aprobado,and(estado_pago.eq.Pendiente,comprobante_path.not.is.null)");
   const insc = (insc0||[]).filter((i:any) => auth.rol === "Admin" || (i.fechas?.empresa_id || null) === (auth.empresaId || null));
 
+  const fids = [...new Set((insc||[]).map((i:any) => i.fecha_id))];
+  const {data: gans} = fids.length ? await db.from("ganadores").select("fecha_id").in("fecha_id", fids) : {data: []};
+  const term = new Set((gans||[]).map((g:any) => g.fecha_id));
   return {ok:true, inscripciones:(insc||[]).map((i:any) => ({
-    inscripcionId:i.id, fechaId:i.fecha_id, pozoId:i.pozo_id, monto:i.pozos?.monto||0,
+    inscripcionId:i.id, fechaId:i.fecha_id, pozoId:i.pozo_id, monto:i.pozos?.monto||0, terminada: term.has(i.fecha_id),
   }))};
 }
 
