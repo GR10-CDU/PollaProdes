@@ -2761,6 +2761,8 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .af-warn{font-size:14.5px;font-weight:700;color:var(--danger);margin:0}
 .af-nota{font-size:12.5px;color:var(--ink-3);line-height:1.4}
 @media(max-width:560px){.af-head h2{font-size:26px}.af-t{font-size:13.5px}.af-t th,.af-t td{padding:8px 5px}.af-t td small{display:none}}
+.af-fin-btn{padding:6px 14px!important;font-size:16px!important;font-weight:800;background:#D32F2F!important;color:#fff!important;border:0!important;box-shadow:0 8px 18px -8px rgba(211,47,47,.7)}
+.af-fin-btn:hover{background:#B71C1C!important}
 
 </style>
 </head>
@@ -4780,7 +4782,7 @@ async function loadAdminFechas(){
         ${f.empresaId?"":`<button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showGestionPozos('${f.id}')">💰 Pozos y premios</button>`}
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="verInscriptos('${f.id}')">👥 Inscriptos</button>
         ${estadoFecha(f).t==="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:16px" onclick="cerrarFecha('${f.id}')">🔒 Cerrar</button>`:""}
-        ${estadoFecha(f).t!=="Abierta"&&f.publicada!==false?`<button class="btn btn-p" style="padding:6px 12px;font-size:16px" onclick="go('admin-fin',{fechaId:'${f.id}'})">🏁 ${f.terminada?"Resumen final":"Terminar fecha"}</button>`:""}
+        ${estadoFecha(f).t!=="Abierta"&&f.publicada!==false?`<button class="btn af-fin-btn" onclick="go('admin-fin',{fechaId:'${f.id}'})">🏁 ${f.terminada?"Resumen final":"Terminar fecha"}</button>`:""}
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="copiarFecha('${f.id}')">⧉ Copiar a…</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="ocultarFecha('${f.id}',${!f.oculta})">${f.oculta?"👁 Mostrar":"🙈 Ocultar"}</button>
         ${f.estado!=="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:16px" onclick="eliminarFecha('${f.id}')">🗑 Eliminar</button>`:""}
