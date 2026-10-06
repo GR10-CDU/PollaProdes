@@ -257,6 +257,20 @@ Deno.serve(async (req) => {
       // ── EMPRESAS ──────────────────────────────────────────
       case "getEmpresaPublica": return resp(await getEmpresaPublica(db, data));
       case "ogEmpresas": return resp(await ogEmpresas(db, data));
+      case "seedEscudos": { const K = Deno.env.get("OG_SECRET"); if (!K || data.clave !== K) return resp({ok:false, error:"No autorizado"}, 401);
+        const ok: string[] = [], no: string[] = [];
+        for (const nm of (data.nombres||[]).slice(0, 28)) { const u = await escudoHQ(db, nm, data.pais||""); (u ? ok : no).push(nm); await new Promise((r) => setTimeout(r, 2100)); }
+        return resp({ok:true, ok_:ok.length, no}); }
+      case "escudosHQ": { const K = Deno.env.get("OG_SECRET"); if (!K || data.clave !== K) return resp({ok:false, error:"No autorizado"}, 401);
+        const {data: ps} = await db.from("partidos").select("id,local,visita,local_logo,visita_logo,liga");
+        const out: any[] = []; let n = 0;
+        for (const p of (ps||[])) {
+          const pais = paisDeLiga(p.liga||"") || "Argentina", upd: any = {};
+          if (esLogoChico(p.local_logo)) { const u = await escudoHQ(db, p.local, pais); if (u) upd.local_logo = u; else out.push(p.local); }
+          if (esLogoChico(p.visita_logo)) { const u = await escudoHQ(db, p.visita, pais); if (u) upd.visita_logo = u; else out.push(p.visita); }
+          if (Object.keys(upd).length) { await db.from("partidos").update(upd).eq("id", p.id); n++; }
+        }
+        return resp({ok:true, actualizados:n, sinEscudo:[...new Set(out)]}); }
       case "recalcularFechaClave": { const K = Deno.env.get("OG_SECRET"); if (!K || data.clave !== K) return resp({ok:false, error:"No autorizado"}, 401);
         const {data: ps} = await db.from("partidos").select("id").eq("fecha_id", data.fechaId).eq("estado","Finalizado");
         for (const p of (ps||[])) await calcularPuntajesPartido(db, p.id);
@@ -1234,6 +1248,9 @@ async function importarPartidos(db: any, data: any) {
       tipo, estado:"Pendiente", tarjetas_rojas:0,
       local_logo:p.localLogo||"", visita_logo:p.visitaLogo||"",
     });
+    const f = filas[filas.length-1], pais = paisDeLiga(p.liga||"");
+    if (esLogoChico(f.local_logo)) f.local_logo = (await escudoHQ(db, p.local, pais)) || f.local_logo;
+    if (esLogoChico(f.visita_logo)) f.visita_logo = (await escudoHQ(db, p.visita, pais)) || f.visita_logo;
   }
 
   if (filas.length) {
@@ -2721,12 +2738,63 @@ async function getEscudosEquipos(db: any, data: any) {
   const {data: es} = await db.from("escudos_equipos").select("nombre_norm,nombre,logo_url").order("nombre");
   return {ok:true, escudos:(es||[]).map((e:any) => ({clave:e.nombre_norm, nombre:e.nombre, logo:e.logo_url}))};
 }
+// ============================================================
+//  ESCUDOS EN ALTA CALIDAD (TheSportsDB → guardados en nuestro almacenamiento)
+// ============================================================
+// Flashscore los da de 30 px (se ven borrosos). Buscamos el escudo de 250 px una vez, lo guardamos y queda para siempre.
+const ALIAS_EQUIPO: Record<string,string> = {
+  "def. y justicia":"Defensa y Justicia","def y justicia":"Defensa y Justicia","r. central":"Rosario Central",
+  "argentinos jrs.":"Argentinos Juniors","argentinos":"Argentinos Juniors","boca jrs.":"Boca Juniors","boca":"Boca Juniors",
+  "estudiantes l.p.":"Estudiantes de La Plata","estudiantes":"Estudiantes de La Plata","gimnasia l.p.":"Gimnasia La Plata",
+  "newell's":"Newell's Old Boys","newells":"Newell's Old Boys","velez":"Vélez Sarsfield","vélez":"Vélez Sarsfield",
+  "union santa fe":"Unión Santa Fe","unión santa fe":"Unión Santa Fe","union":"Unión Santa Fe","unión":"Unión Santa Fe",
+  "atl. tucuman":"Atlético Tucumán","atl. tucumán":"Atlético Tucumán","central cordoba":"Central Córdoba de Santiago del Estero",
+  "central córdoba":"Central Córdoba de Santiago del Estero","barracas":"Barracas Central","riestra":"Deportivo Riestra",
+  "racing":"Racing Club","river":"River Plate","talleres":"Talleres de Córdoba","belgrano":"Belgrano","godoy cruz":"Godoy Cruz",
+  "sarmiento":"Sarmiento Junín","instituto":"Instituto","independiente rivadavia":"Independiente Rivadavia",
+};
+async function escudoHQ(db: any, nombre: string, pais = "") {
+  const largo = ALIAS_EQUIPO[String(nombre||"").toLowerCase().trim()] || String(nombre||"").trim();
+  const claves = [...new Set([normEquipo(nombre), normEquipo(largo)])].filter(Boolean);
+  if (!claves.length) return "";
+  const {data: ya} = await db.from("escudos_equipos").select("nombre_norm,logo_url,origen").in("nombre_norm", claves);
+  const bueno = (ya||[]).find((e:any) => e.logo_url);
+  if (bueno) return bueno.logo_url;
+  if ((ya||[]).some((e:any) => e.origen === "sin")) return "";
+  let lista: any[] = [];
+  try {
+    const r = await fetch(`https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(largo)}`);
+    if (!r.ok) return "";                                      // límite de pedidos: se reintenta otro día
+    lista = ((await r.json()).teams || []).filter((x:any) => x.strSport === "Soccer" && x.strBadge);
+  } catch { return ""; }
+  const n = normEquipo(largo);
+  const nombres = (x:any) => [x.strTeam, ...String(x.strTeamAlternate||"").split(",")].map((s:string) => normEquipo(s)).filter(Boolean);
+  const exacto = lista.filter((x:any) => nombres(x).includes(n));
+  const cand = (exacto.length ? exacto : lista);
+  const t = cand.find((x:any) => pais && x.strCountry === pais) || cand[0];
+  if (!t) { await db.from("escudos_equipos").upsert(claves.map((k) => ({nombre_norm:k, nombre:largo, logo_url:"", origen:"sin"})), {onConflict:"nombre_norm"}); return ""; }
+  try {
+    const img = await fetch(t.strBadge + "/small");
+    if (!img.ok) return "";
+    const bytes = new Uint8Array(await img.arrayBuffer());
+    const ruta = `escudos/hq/${normEquipo(t.strTeam).replace(/ /g,"_")}.png`;
+    await db.storage.from("avatares").upload(ruta, bytes, {contentType:"image/png", upsert:true});
+    const url = db.storage.from("avatares").getPublicUrl(ruta).data.publicUrl;
+    await db.from("escudos_equipos").upsert(claves.map((k) => ({nombre_norm:k, nombre:t.strTeam, logo_url:url, origen:"thesportsdb"})), {onConflict:"nombre_norm"});
+    return url;
+  } catch { return ""; }
+}
+const esLogoChico = (u: string) => !u || /static\.flashscore\.com/.test(u);
+function paisDeLiga(liga: string) { return /argentin|profesional|copa argentina|lpf/i.test(liga||"") ? "Argentina" : /espa|laliga|la liga/i.test(liga||"") ? "Spain" : /ital|serie a/i.test(liga||"") ? "Italy" : /ingla|premier|england/i.test(liga||"") ? "England" : ""; }
+
 async function escudoDe(nombre: string): Promise<string> {
   nombre = ({"def. y justicia":"Defensa y Justicia","r. central":"Rosario Central"} as Record<string,string>)[String(nombre||"").toLowerCase()] || nombre;
   // Primero, los escudos propios (torneos amateur / de empresa)
   try {
     const {data: e} = await createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY).from("escudos_equipos").select("logo_url").eq("nombre_norm", normEquipo(nombre)).maybeSingle();
     if (e?.logo_url) return e.logo_url;
+    const hq = await escudoHQ(createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY), nombre, "");
+    if (hq) return hq;
   } catch { /* sigue con la API */ }
   try {
     const r = await callAPIFootball("teams", {search:nombre});
