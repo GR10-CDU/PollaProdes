@@ -3720,7 +3720,7 @@ function _fmtH(d){return cuandoPartido(d instanceof Date?d.toISOString():d);}
 // Vista minimalista: una línea por partido (resultado, tu pronóstico y puntos)
 try{window._vistaMini=localStorage.getItem("pp_vista_mini")==="1";}catch(e){window._vistaMini=false;}
 window.setVistaMini=function(v){window._vistaMini=!!v;try{localStorage.setItem("pp_vista_mini",v?"1":"0");}catch(e){}if(window._parts)renderPartidos(window._parts,window._ctx,true);};
-function siglaEq(n){const w=String(n||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\(S\)|[^A-Za-z0-9 ]/g," ").trim().split(/\s+/).filter(function(x){return!/^(club|ca|cd|ac|fc|atletico|atl|deportivo|sportivo|real|sporting|the|de|del|la|el)$/i.test(x);});return(w[0]||String(n||"")).slice(0,3).toUpperCase();}
+function siglaEq(n){const w=String(n||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\(S\)|[^A-Za-z0-9 ]/g," ").trim().split(/\s+/).filter(function(x){return x.length>1&&!/^(club|ca|cd|ac|fc|atletico|atl|deportivo|sportivo|real|sporting|the|de|del|la|el)$/i.test(x);});return(w[0]||String(n||"")).slice(0,3).toUpperCase();}
 function miniRow(p,sel,prd,calc,tot){
   const jugado=p.estado==="Finalizado"||p.estado==="Suspendido";
   const esc=function(u,n){return u?`<img src="${u}" alt="" onerror="this.style.display='none'">`:`<b>${escH(String(n||"?")[0])}</b>`;};

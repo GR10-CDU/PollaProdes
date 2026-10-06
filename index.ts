@@ -1205,7 +1205,7 @@ async function importarPartidos(db: any, data: any) {
     numero++;
     const tipo = tiposPartido?.[p.apiId] || tiposPartido?.[numero] || "Normal";
     filas.push({
-      id:generarId("PAR"), fecha_id:fechaId, numero, local:p.local, visita:p.visita,
+      id:generarId("PAR"), fecha_id:fechaId, numero, local:nombreCorto(p.local), visita:nombreCorto(p.visita),
       fecha_hora:p.fecha, liga:p.liga, liga_id:p.ligaId, partido_api_id:String(p.apiId),
       tipo, estado:"Pendiente", tarjetas_rojas:0,
       local_logo:p.localLogo||"", visita_logo:p.visitaLogo||"",
@@ -2609,6 +2609,7 @@ async function getEscudosEquipos(db: any, data: any) {
   return {ok:true, escudos:(es||[]).map((e:any) => ({clave:e.nombre_norm, nombre:e.nombre, logo:e.logo_url}))};
 }
 async function escudoDe(nombre: string): Promise<string> {
+  nombre = ({"def. y justicia":"Defensa y Justicia","r. central":"Rosario Central"} as Record<string,string>)[String(nombre||"").toLowerCase()] || nombre;
   // Primero, los escudos propios (torneos amateur / de empresa)
   try {
     const {data: e} = await createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY).from("escudos_equipos").select("logo_url").eq("nombre_norm", normEquipo(nombre)).maybeSingle();
@@ -2628,8 +2629,11 @@ async function renumerarPartidos(db: any, fechaId: string) {
   for (const p of (ps||[])) { i++; if (p.numero !== i) await db.from("partidos").update({numero:i}).eq("id", p.id); }
   await db.from("fechas").update({cant_partidos:i}).eq("id", fechaId);
 }
+// Nombres cortos que se muestran en la app (pedido de Germán)
+const NOMBRES_CORTOS: Record<string,string> = {"defensa y justicia":"Def. y Justicia","def. y justicia":"Def. y Justicia","def y justicia":"Def. y Justicia","rosario central":"R. Central"};
+function nombreCorto(n: any) { const s = String(n||"").trim(); return NOMBRES_CORTOS[s.toLowerCase()] || s; }
 function datosPartidoManual(data: any) {
-  const local = String(data.local||"").trim().slice(0,40), visita = String(data.visita||"").trim().slice(0,40);
+  const local = nombreCorto(String(data.local||"").trim().slice(0,40)), visita = nombreCorto(String(data.visita||"").trim().slice(0,40));
   if (!local || !visita) return {error:"Poné los dos equipos"};
   const fh = new Date(data.fechaHora);
   if (isNaN(fh.getTime())) return {error:"Fecha y hora inválidas"};
@@ -3137,7 +3141,7 @@ function estadoVivo(ab: string, ac: string) {
 // Sigla de 3 letras para los títulos de las notificaciones (si no, no entran): "Central Córdoba" → "CEN"
 function sigla(nombre: any) {
   const pal = String(nombre||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\(S\)|[^A-Za-z0-9 ]/g," ").trim().split(/\s+/)
-    .filter((w:string) => !/^(club|ca|cd|ac|fc|atletico|deportivo|sportivo|real|sporting|the|de|del|la|el)$/i.test(w));
+    .filter((w:string) => w.length > 1 && !/^(club|ca|cd|ac|fc|atletico|deportivo|sportivo|real|sporting|the|de|del|la|el)$/i.test(w));
   return (pal[0]||String(nombre||"")).slice(0,3).toUpperCase();
 }
 // Feeds directos de Flashscore (los mismos que usa su web para el marcador en vivo)
