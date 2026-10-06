@@ -4940,7 +4940,8 @@ window.eliminarNoticia=async function(idx){
 /* ══ ADMIN RESULTADOS ════════════════════════════════════════ */
 async function loadRes(ctx){
   const rf=await api("getFechas"),el=document.getElementById("arf");if(!el)return;
-  const fs=(rf.fechas||[]).filter(function(f){return["Abierta","Cerrada","Jugada"].includes(f.estado);});
+  // Las fechas ya terminadas no aparecen (se puede entrar igual desde Fechas → Resultados)
+  const fs=(rf.fechas||[]).filter(function(f){return["Abierta","Cerrada","Jugada"].includes(f.estado)&&!f.terminada&&!f.oculta;});
   // Por defecto: la fecha en juego (ya cerró y sigue activa); si no hay, la más próxima
   const enJuego=fs.filter(function(f){return f.minutosRestantes<=0;});
   const sf=ctx?.fechaId||(enJuego[0]||fs[0])?.id;
