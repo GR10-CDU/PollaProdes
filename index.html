@@ -4708,7 +4708,6 @@ async function loadAdminFin(ctx){
   window._finRes=r;
   const $=function(n){return"$"+Number(n||0).toLocaleString("es-AR");};
   const faltan=r.total-r.jugados;
-  const partidos=`<div class="af-parts">${r.partidos.map(function(p){const j=p.estado==="Finalizado"||p.estado==="Suspendido";return`<div class="afp${j?" ok":p.vivo?" vivo":""}"><span class="afp-n">#${p.numero}</span><span class="afp-eq">${escH(siglaEq(p.local))}</span><b>${j&&p.gl!==null?p.gl+"-"+p.gv:p.vivo?"● vivo":"–"}</b><span class="afp-eq">${escH(siglaEq(p.visita))}</span></div>`;}).join("")}</div>`;
   const tablaPozo=function(pz){
     const gan=new Set(pz.ganadores.map(function(g){return g.usuario;}));
     return`<div class="card af-pozo">
@@ -4720,7 +4719,6 @@ async function loadAdminFin(ctx){
   };
   const prev=r.pozos.map(function(pz){const p=pz.tabla.filter(function(u){return u.pos===1&&u.ptsTotal>0;});return p.length?`${r.pozos.length>1?(pz.monto?"Pozo "+$(pz.monto)+": ":"Gratis: "):""}${p.length>1?"ganarían":"ganaría"} <b>${p.map(function(u){return escH(u.siglas);}).join(", ")}</b> con ${p[0].ptsTotal} pts`:"";}).filter(Boolean);
   el.innerHTML=`<div class="af-head"><div><small>Resumen de la fecha</small><h2>${escH(r.fecha.nombre)}</h2></div><span class="tbs-est ${r.fecha.terminada?"fin":faltan?"juego":"prox"}">${r.fecha.terminada?"Terminada":faltan?faltan+" partido"+(faltan!==1?"s":"")+" sin resultado":"Todos jugados"}</span></div>
-    ${partidos}
     ${r.pozos.map(tablaPozo).join("")}
     <div class="card af-acc">
       ${r.fecha.terminada?`<p class="af-ok">✅ Esta fecha ya está terminada. Ganador${r.pozos.some(function(p){return p.ganadores.length>1;})?"es":""}: ${r.pozos.map(function(p){return p.ganadores.map(function(g){return"<b>"+escH(g.usuario)+"</b> ("+g.puntos+" pts)";}).join(", ");}).filter(Boolean).join(" · ")||"—"}</p>
