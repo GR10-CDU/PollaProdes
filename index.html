@@ -2686,6 +2686,13 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
   .partido-card>.pc-st-fl .st-ico{min-width:28px;height:24px;font-size:13px;box-shadow:none}
   .partido-card.jugado>.pc-st-fl .st-ico{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.45);color:#fff}
 }
+/* Admin: tipo de partido en un toque */
+.pm-tipos{display:inline-flex;gap:2px;padding:2px;border-radius:9px;background:var(--surface-3);border:1px solid var(--line)}
+.pmt{min-width:30px;height:24px;padding:0 6px;border-radius:7px;border:0;background:transparent;font-size:12px;font-weight:900;color:var(--ink-3);cursor:pointer;transition:background .15s,color .15s}
+.pmt:hover{color:var(--ink)}
+.pmt.Normal.on{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line-2)}
+.pmt.Doble.on{background:var(--violet);color:#fff}
+.pmt.Polla.on{background:var(--gold);color:#241800}
 
 </style>
 </head>
@@ -5704,12 +5711,18 @@ window.partidosManual=async function(fechaId){
   document.body.appendChild(m);
   pmCargar();
 };
+window.pmTipo=async function(id,tipo){
+  const p=(window._pm.partidos||[]).find(function(x){return x.id===id;});if(p&&p.tipo===tipo)return;
+  const r=await api("adminTipoPartido",{partidoId:id,tipo:tipo});
+  if(!r.ok){toast("❌ "+r.error);return;}
+  toast(tipo==="Polla"?"⭐ Ahora es el Polla Partido":tipo==="Doble"?"×2 Ahora es Doble":"×1 Ahora es Simple");pmCargar();
+};
 async function pmCargar(){
   const el=document.getElementById("pm-lista");if(!el)return;
   const r=await api("getFecha",{fechaId:window._pm.fechaId});const ps=r.ok?(r.partidos||[]):[];window._pm.partidos=ps;
   const TT={Normal:"×1",Doble:"×2",Polla:"P"},TC={Normal:"t-s",Doble:"t-d",Polla:"t-p"};
   el.innerHTML=ps.length?ps.map(function(x){const fh=x.fechaHora?new Date(x.fechaHora).toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"";
-    return`<div class="pm-it${esSenior(x)?" senior":""}"><span class="pm-n">#${x.numero}</span><span class="t-tag ${TC[x.tipo]||"t-s"}">${TT[x.tipo]||"×1"}</span>
+    return`<div class="pm-it${esSenior(x)?" senior":""}"><span class="pm-n">#${x.numero}</span>${x.estado==="Finalizado"?`<span class="t-tag ${TC[x.tipo]||"t-s"}">${TT[x.tipo]||"×1"}</span>`:`<span class="pm-tipos" role="group" aria-label="Tipo de partido">${[["Normal","×1","Simple"],["Doble","×2","Doble"],["Polla","PP","Polla Partido"]].map(function(o){return`<button type="button" class="pmt ${o[0]}${(x.tipo||"Normal")===o[0]?" on":""}" aria-pressed="${(x.tipo||"Normal")===o[0]}" title="${o[2]}" onclick="pmTipo('${x.id}','${o[0]}')">${o[1]}</button>`;}).join("")}</span>`}
       <div class="pm-it-eq">${x.localLogo?`<img src="${escH(x.localLogo)}" alt="">`:inicialEq(x.local)}<b>${escH(x.local)}</b><i>vs</i><b>${escH(x.visita)}</b>${x.visitaLogo?`<img src="${escH(x.visitaLogo)}" alt="">`:inicialEq(x.visita)}</div>
       <small>${fh}</small>${x.estado==="Finalizado"?`<span class="pm-fin">${x.golesLocal}-${x.golesVisita}</span>`:`<div class="pm-acc"><button onclick="pmEditar('${x.id}')">Editar</button><button onclick="pmBorrar('${x.id}')">Borrar</button></div>`}</div>`;}).join("")
     :`<p class="me-p">Todavía no hay partidos en esta fecha. Cargá el primero abajo.</p>`;

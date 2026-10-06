@@ -331,6 +331,7 @@ Deno.serve(async (req) => {
       case "getEscudosEquipos": return resp(await getEscudosEquipos(db, data));
       case "adminGetInscriptos": return resp(await adminGetInscriptos(db, data));
       case "adminEditarPartido": return resp(await adminEditarPartido(db, data));
+      case "adminTipoPartido": return resp(await adminTipoPartido(db, data));
       case "adminBorrarPartido": return resp(await adminBorrarPartido(db, data));
       case "buscarEquipos": return resp(await buscarEquipos(db, data));
       case "getRondas": return resp(await getRondas(db, data));
@@ -2652,6 +2653,19 @@ async function adminAgregarPartido(db: any, data: any) {
   if (error) return {ok:false, error:error.message};
   await renumerarPartidos(db, f.id);
   return {ok:true, partidoId:id, conEscudo: !!(ll && lv)};
+}
+// Cambio rápido de tipo (Simple / Doble / Polla Partido) desde la lista de partidos
+async function adminTipoPartido(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const tipo = ["Normal","Doble","Polla"].includes(data.tipo) ? data.tipo : null;
+  if (!tipo) return {ok:false, error:"Tipo inválido"};
+  const {data: p} = await db.from("partidos").select("id,fecha_id,estado").eq("id", data.partidoId).single();
+  if (!p) return {ok:false, error:"Partido no encontrado"};
+  if (p.estado === "Finalizado") return {ok:false, error:"Ya tiene resultado: no se puede cambiar el tipo"};
+  if (tipo === "Polla") await db.from("partidos").update({tipo:"Normal"}).eq("fecha_id", p.fecha_id).eq("tipo","Polla").neq("id", p.id);
+  await db.from("partidos").update({tipo}).eq("id", p.id);
+  return {ok:true};
 }
 async function adminEditarPartido(db: any, data: any) {
   const auth = await requireAuth(db, data);
