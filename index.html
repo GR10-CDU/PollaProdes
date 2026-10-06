@@ -5218,7 +5218,7 @@ function showLogin(){
           <div class="ig"><label class="ll-lbl">Repetí el PIN</label><div class="pin-wrap"><input class="ll-inp" id="rp2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" placeholder="Escribilo de nuevo" oninput="this.value=this.value.replace(/\D/g,'');chkPin()"/><button type="button" class="pin-eye" onclick="togglePin(this)" aria-label="Mostrar PIN">👁</button></div><div id="rp-msg" class="pin-msg"></div></div>
           <div class="ig" id="ra-g"><label class="ll-lbl">Alias MercadoPago</label><input class="ll-inp" id="ra" placeholder="tu.alias.mp"/></div>
           <div class="ig" id="rce-g"><button type="button" class="ll-emp-link" onclick="this.nextElementSibling.hidden=false;this.remove()">¿Tu empresa te dio un código?</button><div hidden><label class="ll-lbl">Código de empresa</label><input class="ll-inp" id="rce" placeholder="Ej: ACME" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" onchange="buscarEmpresaReg(this.value)"/><div id="rce-campos"></div></div></div>
-          <div class="ig"><label class="ll-lbl">Email (opcional)</label><input class="ll-inp" id="rem" type="email" placeholder="tu@email.com"/></div>
+          <div class="ig"><label class="ll-lbl">Email</label><input class="ll-inp" id="rem" type="email" placeholder="tu@email.com" required autocomplete="email" inputmode="email"/></div>
           <label class="lg-check ll-check"><input type="checkbox" id="r-legal"/> <span>Soy mayor de 18 años y acepto los <a href="#" onclick="abrirLegales('terminos');return false">Términos</a>, la <a href="#" onclick="abrirLegales('privacidad');return false">Política de privacidad</a> y <a href="#" onclick="abrirLegales('juego');return false">Juego responsable</a>.</span></label>
           <div id="re"></div>
           <button class="btn btn-p btn-lg" onclick="doReg()" style="margin-top:6px">Crear cuenta →</button>
@@ -5245,7 +5245,8 @@ window.doLogin=async()=>{
 window.doReg=async()=>{
   const n=document.getElementById("rn")?.value,t=document.getElementById("rt")?.value,p=document.getElementById("rp")?.value,p2=document.getElementById("rp2")?.value,a=document.getElementById("ra")?.value,e=document.getElementById("rem")?.value,er=document.getElementById("re");
   const err=m=>{if(er)er.innerHTML=`<div class="ll-err">⚠ ${m}</div>`;};
-  if(!n||!t||!p){err("Completá los campos obligatorios");return;}
+  if(!n||!t||!p||!e){err("Completá los campos obligatorios"+(!e?" (falta el email)":""));return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e).trim())){err("El email no parece válido");return;}
   if(!/^\d{4,8}$/.test(p)){err("El PIN tiene que tener entre 4 y 8 números");return;}
   if(p!==p2){err("Los dos PIN no coinciden");return;}
   if(!document.getElementById("r-legal")?.checked){err("Tenés que ser mayor de 18 y aceptar los Términos para registrarte");return;}
@@ -6352,7 +6353,7 @@ privacidad:{t:"Política de Privacidad",h:`
 <p>Cuidamos tus datos personales conforme la <b>Ley 25.326 de Protección de los Datos Personales</b> y sus normas complementarias. El responsable de la base de datos es Germán Alberto Rodríguez (Polla Prodes).</p>
 <h4>1. Qué datos recabamos</h4>
 <ul>
-<li><b>Datos de registro:</b> nombre y apellido, teléfono, PIN (guardado cifrado, nadie puede verlo), email (opcional) y alias de pago (opcional).</li>
+<li><b>Datos de registro:</b> nombre y apellido, teléfono, PIN (guardado cifrado, nadie puede verlo), email y alias de pago (opcional).</li>
 <li><b>Perfil:</b> avatar o foto que elijas subir.</li>
 <li><b>Juego:</b> tus pronósticos, reglas elegidas, cambios, puntajes, posiciones e inscripciones.</li>
 <li><b>Pagos:</b> las imágenes de los comprobantes de transferencia que subas y el estado de cada pago. No guardamos datos de tarjetas ni de cuentas bancarias.</li>

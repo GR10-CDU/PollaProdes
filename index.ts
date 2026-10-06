@@ -385,7 +385,8 @@ async function registro(db: any, data: any) {
   if (tel.length < 8 || tel.length > 15) return {ok:false, error:"El teléfono no parece válido"};
   if (!PIN_OK(pin)) return {ok:false, error:"El PIN tiene que tener entre 4 y 8 números"};
   if (data.pin2 !== undefined && data.pin2 !== pin) return {ok:false, error:"Los PIN no coinciden"};
-  if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) return {ok:false, error:"El email no parece válido"};
+  if (!String(data.email||"").trim()) return {ok:false, error:"Poné tu email"};
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(data.email).trim())) return {ok:false, error:"El email no parece válido"};
   if (!data.aceptaLegales) return {ok:false, error:"Para registrarte tenés que ser mayor de 18 y aceptar los Términos, la Política de privacidad y Juego responsable"};
   const pinHash = await hashPinSeguro(pin);
 
