@@ -2625,6 +2625,48 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
   #jc>.partido-card:not(:has(>.dz,>.lev-wrap,>.partido-blocked))>.teams-block{grid-column:1/-1;width:100%;max-width:640px;justify-self:center}
 }
 
+/* Vista minimalista (interruptor junto a "Volver") */
+.jg-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.jg-top .back{margin-bottom:0}
+.mini-tog{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:14.5px;font-weight:700;color:var(--ink-2);user-select:none}
+.mini-tog input{position:absolute;opacity:0;pointer-events:none}
+.mini-tog i{width:42px;height:24px;border-radius:12px;background:var(--line-2);position:relative;transition:background .2s}
+.mini-tog i::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s var(--ease-out)}
+.mini-tog input:checked+i{background:var(--accent)}
+.mini-tog input:checked+i::after{transform:translateX(18px)}
+.mini-tog input:focus-visible+i{outline:2px solid var(--accent);outline-offset:2px}
+.jg-top{margin-bottom:14px}
+.pm-row{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto minmax(0,1fr) 40px 56px;align-items:center;gap:10px;padding:10px 14px;margin-bottom:8px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1)}
+.pm-row.suma{border-color:var(--ok-line);background:color-mix(in srgb,var(--ok) 8%,var(--surface))}
+.pm-row.nosuma{border-color:var(--no-line);background:color-mix(in srgb,var(--no) 6%,var(--surface))}
+.pm-row.vivo{border-color:color-mix(in srgb,var(--danger) 45%,transparent)}
+.pmr-n{font-size:13px;font-weight:800;color:var(--ink-3)}
+.pmr-eq{display:flex;align-items:center;gap:8px;min-width:0}
+.pmr-eq.l{justify-content:flex-end;text-align:right}
+.pmr-nom{font-family:var(--ff);font-size:17px;font-weight:800;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pmr-nom i{font-style:normal}.pmr-nom .sg{display:none}
+.pmr-esc{width:28px;height:28px;flex-shrink:0;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;font-size:13px}
+.pmr-esc img{width:100%;height:100%;object-fit:contain;padding:3px}
+.pmr-c{display:flex;justify-content:center;min-width:64px}
+.pmr-sc{font-family:var(--ff);font-size:24px;font-weight:900;line-height:1}
+.pmr-hora{font-size:13px;font-weight:700;color:var(--ink-2);white-space:nowrap}
+.pmr-pr{width:34px;height:30px;border-radius:9px;display:grid;place-items:center;font-family:var(--ff);font-size:18px;font-weight:900;background:var(--surface-3);color:var(--ink);justify-self:center}
+.pmr-pr.pos{background:var(--ok);color:#fff}.pmr-pr.neg{background:var(--no);color:#fff}.pmr-pr.no{color:var(--ink-3)}
+[data-mode="dark"] .pmr-pr.pos{background:#0F7A3E}
+.pmr-pts{font-family:var(--ff);font-size:20px;font-weight:900;text-align:right;color:var(--ink-3);white-space:nowrap}
+.pmr-pts small{font-family:var(--fb,inherit);font-size:10.5px;font-weight:700;margin-left:2px;letter-spacing:.04em}
+.pmr-pts.pos{color:var(--ok)}
+@media(max-width:560px){
+  .pm-row{grid-template-columns:auto minmax(0,1fr) auto minmax(0,1fr) 34px 44px;gap:7px;padding:9px 10px}
+  .pm-row>.t-tag{display:none}
+  .pmr-nom .lg{display:none}.pmr-nom .sg{display:inline}
+  .pmr-nom{font-size:16px}
+  .pmr-esc{width:24px;height:24px}
+  .pmr-c{min-width:52px}
+  .pmr-sc{font-size:21px}
+  .pmr-pts{font-size:17px}
+}
+
 </style>
 </head>
 <body>
@@ -3005,7 +3047,7 @@ function renderScreen(k,ctx){
   switch(k){
     case"fechas":return`<div class="su"><div id="fl"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"fecha-det":return`<div class="su"><div class="back" id="bk">← Volver a fechas</div><div id="fdc"><div class="loading"><div class="spinner"></div></div></div></div>`;
-    case"jugar":return`<div class="su"><div class="back" id="bk">← Volver</div>
+    case"jugar":return`<div class="su"><div class="jg-top"><div class="back" id="bk">← Volver</div><label class="mini-tog"><input type="checkbox" ${window._vistaMini?"checked":""} onchange="setVistaMini(this.checked)"><i aria-hidden="true"></i><span>Vista minimalista</span></label></div>
       <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div><div class="prog-info"><span id="prog-txt">0 pronósticos</span><span id="prog-pct"></span></div></div>
       <div id="prog-cambios" style="display:none;margin-top:6px;padding:8px 14px;background:var(--bluel);border:1px solid rgba(68,138,255,.2);border-radius:var(--rs)"></div>
       <div id="jc"><div class="loading"><div class="spinner"></div></div></div>
@@ -3622,6 +3664,28 @@ function _libreHasta(parts){
 }
 function _enLibre(){const h=_libreHasta(window._parts);return !h||Date.now()<h.getTime();}
 function _fmtH(d){return cuandoPartido(d instanceof Date?d.toISOString():d);}
+// Vista minimalista: una línea por partido (resultado, tu pronóstico y puntos)
+try{window._vistaMini=localStorage.getItem("pp_vista_mini")==="1";}catch(e){window._vistaMini=false;}
+window.setVistaMini=function(v){window._vistaMini=!!v;try{localStorage.setItem("pp_vista_mini",v?"1":"0");}catch(e){}if(window._parts)renderPartidos(window._parts,window._ctx,true);};
+function siglaEq(n){const w=String(n||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\(S\)|[^A-Za-z0-9 ]/g," ").trim().split(/\s+/).filter(function(x){return!/^(club|ca|cd|ac|fc|atletico|atl|deportivo|sportivo|real|sporting|the|de|del|la|el)$/i.test(x);});return(w[0]||String(n||"")).slice(0,3).toUpperCase();}
+function miniRow(p,sel,prd,calc,tot){
+  const jugado=p.estado==="Finalizado"||p.estado==="Suspendido";
+  const esc=function(u,n){return u?`<img src="${u}" alt="" onerror="this.style.display='none'">`:`<b>${escH(String(n||"?")[0])}</b>`;};
+  const t=TIPO_INFO[p.tipo]||TIPO_INFO.Normal;
+  let centro;
+  if(jugado&&p.golesLocal!==null&&p.golesLocal!==undefined&&p.golesLocal!=="")centro=`<span class="pmr-sc">${p.golesLocal}-${p.golesVisita}</span>`;
+  else if(p.vivo)centro=vivoHtml(p,false,true);
+  else centro=`<span class="pmr-hora">${cuandoPartido(p.fechaHora,true)}</span>`;
+  const prCls=calc?(prd.acertado?"pos":"neg"):"";
+  return`<div class="pm-row${jugado?" jug":""}${p.vivo&&!jugado?" vivo":""}${calc?(tot>0?" suma":" nosuma"):""}" id="pc-${p.id}">
+    <span class="pmr-n">#${p.numero}</span><span class="t-tag ${t.cls}">${p.tipo==="Polla"?"PP":t.k}</span>
+    <span class="pmr-eq l"><span class="pmr-nom"><i class="lg">${escH(p.local)}</i><i class="sg">${siglaEq(p.local)}</i></span><span class="pmr-esc">${esc(p.localLogo,p.local)}</span></span>
+    <span class="pmr-c">${centro}</span>
+    <span class="pmr-eq v"><span class="pmr-esc">${esc(p.visitaLogo,p.visita)}</span><span class="pmr-nom"><i class="lg">${escH(p.visita)}</i><i class="sg">${siglaEq(p.visita)}</i></span></span>
+    <span class="pmr-pr ${sel||"no"} ${prCls}" title="Tu pronóstico">${sel||"–"}</span>
+    ${jugado?`<span class="pmr-pts ${calc?(tot>0?"pos":"neg"):""}">${calc?(tot>0?"+"+tot:"0"):"…"}<small>pts</small></span>`:`<span class="pmr-pts vac"></span>`}
+  </div>`;
+}
 // Goleadores y expulsados (con minuto) debajo del nombre de cada equipo
 function golesEq(p,e){
   const g=(p.golesDet||[]).filter(function(x){return x.e===e;});
@@ -3688,6 +3752,7 @@ function renderPartidos(parts,ctx,puede){
     const _vr=!sinGoles?(["A","B","C"][window._finIdx++]||"A"):null;
     const _calc=!sinGoles&&_prd.calculado;
     const _tot=_calc?(_prd.ptsTotal!=null?_prd.ptsTotal:0):0;
+    if(window._vistaMini&&bloq)return miniRow(p,sel,_prd,_calc,_tot);
     const _bdgs=`<span style="font-size:14px;font-weight:700;color:var(--txt3)">#${p.numero}</span>
           ${(function(){const t=TIPO_INFO[p.tipo]||TIPO_INFO.Normal;return`<span class="t-tag ${t.cls} pc-tipo">${p.tipo==="Polla"?'<i class="k-d">P</i><i class="k-m">PP</i>':t.k}</span><span class="pc-tipo-n">${t.n}</span>`;})()}${p.esToleTole?'<span class="t-tag t-tole pc-tipo">🔥 TOLE</span>':""}
           ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:16px;padding:4px 11px">● VIVO</span>`:""}
