@@ -2763,6 +2763,23 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 @media(max-width:560px){.af-head h2{font-size:26px}.af-t{font-size:13.5px}.af-t th,.af-t td{padding:8px 5px}.af-t td small{display:none}}
 .af-fin-btn{padding:6px 14px!important;font-size:16px!important;font-weight:800;background:#D32F2F!important;color:#fff!important;border:0!important;box-shadow:0 8px 18px -8px rgba(211,47,47,.7)}
 .af-fin-btn:hover{background:#B71C1C!important}
+/* Admin · Jugadores: todos los datos */
+.us-top{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.us-row{display:flex;align-items:center;gap:12px}
+.us-cont{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:4px;font-size:14px;color:var(--ink-2)}
+.us-cont a{color:var(--accent-text);font-weight:600;text-decoration:none;word-break:break-all}
+.us-nd{color:var(--ink-3)}
+.us-det{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.us-det summary{cursor:pointer;font-size:14px;font-weight:800;color:var(--accent-text);list-style:none}
+.us-det summary::-webkit-details-marker{display:none}
+.us-det summary::before{content:"▸ "}.us-det[open] summary::before{content:"▾ "}
+.us-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px 18px;margin-top:10px}
+.us-f{display:flex;flex-direction:column;gap:1px;font-size:14px;min-width:0}
+.us-f span{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.us-f b{font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+.us-f b a{color:var(--accent-text)}
+.us-f small{color:var(--ink-3)}
+@media(max-width:560px){.us-row{flex-wrap:wrap}.us-acc{width:100%;justify-content:space-between}}
 
 </style>
 </head>
@@ -5029,14 +5046,39 @@ function renderReglamento(){
 async function loadUsers(){
   const r=await api("adminGetUsuarios"),el=document.getElementById("aul");if(!el)return;
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
-  const us=r.usuarios||[],con=us.filter(u=>(u.avisos||[]).length).length;
+  window._usAll=r.usuarios||[];
+  el.innerHTML=`<div class="us-top"><input class="inp" id="us-q" placeholder="Buscar por usuario, nombre, mail, teléfono o alias…" oninput="pintarUsers()"><div class="us-res" id="us-res"></div></div><div id="us-list"></div>`;
+  pintarUsers();
+}
+function pintarUsers(){
+  const us=window._usAll||[],q=(document.getElementById("us-q")?.value||"").toLowerCase().trim();
+  const vis=q?us.filter(function(u){return[u.usuario,u.nombre,u.email,u.telefono,u.alias_mp].some(function(x){return String(x||"").toLowerCase().includes(q);});}):us;
+  const con=us.filter(u=>(u.avisos||[]).length).length;
+  const res=document.getElementById("us-res");if(res)res.innerHTML=`<span>👥 <b>${us.length}</b> jugadores${q?` · <b>${vis.length}</b> encontrados`:""}</span><span>🔔 <b>${con}</b> con avisos activados</span>`;
   const icoDisp=function(d){return/iphone|ipad/i.test(d)?"📱":/android/i.test(d)?"🤖":/mac|windows|linux|chrome|firefox|edge/i.test(d)?"💻":"🔔";};
-  el.innerHTML=`<div class="us-res"><span>👥 <b>${us.length}</b> jugadores</span><span>🔔 <b>${con}</b> con avisos activados</span></div>`+us.map(u=>{const av=u.avisos||[];return`<div class="card us-it">
-    ${avatarHtml(u,"us-av")}
-    <div class="us-tx"><div class="us-nm">${escH(u.usuario)} <span>${escH(u.nombre||"")}</span></div><div class="us-tel">${escH(u.telefono||"")}${u.rol==="Admin"?" · Admin":""}</div>
-      <div class="us-av-l">${av.length?av.map(a=>`<span class="us-disp" title="Desde ${new Date(a.desde).toLocaleDateString("es-AR")}">${icoDisp(a.dispositivo)} ${escH(a.dispositivo)}</span>`).join(""):`<span class="us-disp off">🔕 Sin avisos</span>`}${av.length&&u.avisos_reglas===false?`<span class="us-disp off">Reglas apagadas</span>`:""}</div></div>
-    <div class="us-acc"><span class="bdg ${u.estado==="Activo"?"bg":"bred"}">${u.estado}</span>
-      <button class="btn btn-s" onclick="cambiarEstado('${u.id}','${u.estado==="Activo"?"Suspendido":"Activo"}')">${u.estado==="Activo"?"Suspender":"Activar"}</button></div></div>`;}).join("")||emptyBox("👥","Sin jugadores");
+  const f=function(d){return d?new Date(d).toLocaleString("es-AR",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"—";};
+  const tel=function(t){const n=String(t||"").replace(/\D/g,"");return n?`<a href="https://wa.me/${n}" target="_blank" rel="noopener">${escH(t)}</a>`:"—";};
+  const fila=function(k,v){return`<div class="us-f"><span>${k}</span><b>${v}</b></div>`;};
+  const si=function(b){return b===false?"No":"Sí";};
+  const extra=function(d){if(!d||typeof d!=="object")return"";const ks=Object.keys(d);return ks.length?ks.map(function(k){return escH(k)+": "+escH(String(d[k]));}).join(" · "):"";};
+  const el=document.getElementById("us-list");if(!el)return;
+  el.innerHTML=vis.map(u=>{const av=u.avisos||[];return`<div class="card us-it">
+    <div class="us-row">${avatarHtml(u,"us-av")}
+      <div class="us-tx"><div class="us-nm">${escH(u.usuario)} <span>${escH(u.nombre||"")}</span>${u.rol==="Admin"?' <span class="bdg bgold">Admin</span>':""}</div>
+        <div class="us-cont">${u.email?`<a href="mailto:${escH(u.email)}">✉️ ${escH(u.email)}</a>`:'<span class="us-nd">✉️ sin mail</span>'}<span>📞 ${tel(u.telefono)}</span>${u.alias_mp?`<span>💳 ${escH(u.alias_mp)}</span>`:'<span class="us-nd">💳 sin alias</span>'}</div></div>
+      <div class="us-acc"><span class="bdg ${u.estado==="Activo"?"bg":"bred"}">${escH(u.estado)}</span>
+        <button class="btn btn-s" onclick="cambiarEstado('${u.id}','${u.estado==="Activo"?"Suspendido":"Activo"}')">${u.estado==="Activo"?"Suspender":"Activar"}</button></div></div>
+    <details class="us-det"><summary>Ver todo</summary><div class="us-grid">
+      ${fila("Usuario",escH(u.usuario))}${fila("Nombre",escH(u.nombre||"—"))}${fila("Mail",escH(u.email||"—"))}${fila("Teléfono",tel(u.telefono))}${fila("Alias / CVU",escH(u.alias_mp||"—"))}
+      ${fila("Rol",escH(u.rol||"Jugador"))}${fila("Estado",escH(u.estado||""))}${fila("Se registró",f(u.created_at))}${fila("Último ingreso",f(u.ultimo_login))}
+      ${fila("Juega en lo público",u.publico===false?"No (entró por una empresa)":"Sí")}${fila("Empresas",(u.empresas||[]).length?u.empresas.map(function(e){return escH(e.nombre)+(e.rol&&e.rol!=="Jugador"?" ("+escH(e.rol)+")":"")+(extra(e.datos)?" — "+extra(e.datos):"");}).join("<br>"):"—")}
+      ${fila("Fechas jugadas",u.fechasJugadas||0)}${fila("Fechas ganadas",(u.ganadas||0)+(u.premios?" · $"+Number(u.premios).toLocaleString("es-AR"):""))}${fila("Pagos pendientes",u.pagosPendientes||0)}${fila("Cupones",u.cupones||0)}
+      ${fila("Avisos de reglas",si(u.avisos_reglas))}${fila("Avisos de goles",si(u.avisos_goles))}${fila("Avisos de resultado final",si(u.avisos_final))}
+      ${fila("Dispositivos con avisos",av.length?av.map(a=>`${icoDisp(a.dispositivo)} ${escH(a.dispositivo)} <small>(desde ${new Date(a.desde).toLocaleDateString("es-AR")})</small>`).join("<br>"):"🔕 Ninguno")}
+      ${fila("Aceptó reglamento y legales",u.legales_at?f(u.legales_at)+(u.legales_version?" · v"+escH(u.legales_version):""):"—")}
+      ${extra(u.datos_extra)?fila("Datos extra",extra(u.datos_extra)):""}
+      ${u.intentos_fallidos||u.bloqueado_hasta?fila("Ingreso",`${u.intentos_fallidos||0} intentos fallidos${u.bloqueado_hasta&&new Date(u.bloqueado_hasta)>new Date()?" · bloqueado hasta "+f(u.bloqueado_hasta):""}`):""}
+    </div></details></div>`;}).join("")||emptyBox("👥",q?"No hay jugadores con esa búsqueda":"Sin jugadores");
 }
 window.cambiarEstado=async(id,est)=>{if(!confirm(`¿${est==="Suspendido"?"Suspender":"Activar"}?`))return;const r=await api("adminCambiarEstado",{targetUserId:id,estado:est});toast(r.ok?"✅":"❌ "+r.error);if(r.ok)loadUsers();};
 

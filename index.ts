@@ -1289,11 +1289,26 @@ async function buscarPorRonda(db: any, data: any) {
 async function adminGetUsuarios(db: any, data: any) {
   const auth = await requireAuth(db, data);
   if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
-  const [{data: users}, {data: subs}] = await Promise.all([
-    db.from("usuarios").select("id,telefono,usuario,nombre,alias_mp,email,estado,rol,avatar,avisos_reglas,created_at").order("created_at"),
+  const [{data: users}, {data: subs}, {data: miembros}, {data: emps}, {data: insc}, {data: gans}] = await Promise.all([
+    db.from("usuarios").select("id,telefono,usuario,nombre,alias_mp,email,estado,rol,avatar,avisos_reglas,avisos_goles,avisos_final,created_at,ultimo_login,cupones,publico,datos_extra,legales_version,legales_at,intentos_fallidos,bloqueado_hasta").order("created_at"),
     db.from("push_subs").select("user_id,endpoint,dispositivo,created_at"),
+    db.from("empresa_miembros").select("user_id,empresa_id,rol,datos_extra"),
+    db.from("empresas").select("id,nombre"),
+    db.from("inscripciones").select("user_id,fecha_id,estado_pago"),
+    db.from("ganadores").select("user_id,premio"),
   ]);
-  return {ok:true, usuarios:(users||[]).map((u:any) => ({...u, avisos:(subs||[]).filter((p:any) => p.user_id === u.id).map((p:any) => ({dispositivo: p.dispositivo || nombreDispositivo("", p.endpoint), desde:p.created_at}))}))};
+  const empN: Record<string,string> = {}; for (const e of (emps||[])) empN[e.id] = e.nombre;
+  return {ok:true, usuarios:(users||[]).map((u:any) => {
+    const ins = (insc||[]).filter((i:any) => i.user_id === u.id);
+    const gs = (gans||[]).filter((g:any) => g.user_id === u.id);
+    return {...u,
+      avisos:(subs||[]).filter((p:any) => p.user_id === u.id).map((p:any) => ({dispositivo: p.dispositivo || nombreDispositivo("", p.endpoint), desde:p.created_at})),
+      empresas:(miembros||[]).filter((m:any) => m.user_id === u.id).map((m:any) => ({nombre: empN[m.empresa_id]||m.empresa_id, rol:m.rol, datos:m.datos_extra||null})),
+      fechasJugadas: new Set(ins.filter((i:any) => i.estado_pago === "Aprobado").map((i:any) => i.fecha_id)).size,
+      pagosPendientes: ins.filter((i:any) => i.estado_pago === "Pendiente").length,
+      ganadas: gs.length, premios: gs.reduce((s:number,g:any) => s + (g.premio||0), 0),
+    };
+  })};
 }
 
 // ============================================================
