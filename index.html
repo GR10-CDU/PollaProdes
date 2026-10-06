@@ -2702,6 +2702,21 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
   .pd-a-side.der .st-btn{padding:0 8px}
 }
 
+/* ═══ Scroll fluido ═══════════════════════════════════════════ */
+/* El contenedor que se desplaza: inercia nativa, sin "rebote" que arrastre la página y sin scroll suave forzado */
+#scroll,#landing,.modal-box,.st-body{-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+#scroll{scroll-behavior:auto}
+/* Celular: el efecto vidrio de las barras fijas es lo más caro al desplazar → más liviano y casi sólido */
+@media(max-width:880px){
+  html body #topbar,html body #bn,html body #bn .bn-wrap{
+    -webkit-backdrop-filter:blur(10px)!important;backdrop-filter:blur(10px)!important;
+  }
+  :root{--m-glass:color-mix(in srgb,var(--bg) 88%,transparent);--wa-glass:color-mix(in srgb,var(--surface) 86%,transparent)}
+  html[data-mode="dark"]{--m-glass:color-mix(in srgb,var(--bg) 86%,transparent);--wa-glass:color-mix(in srgb,var(--surface) 84%,transparent)}
+  /* Sombras grandes y difusas cuestan al desplazar: más cortas en el celular */
+  .partido-card,.fecha-card,.tbs-card,.card{box-shadow:0 1px 2px rgba(0,0,0,.06),0 4px 12px -6px rgba(0,0,0,.12)}
+}
+
 </style>
 </head>
 <body>
