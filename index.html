@@ -2616,6 +2616,14 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .teams-block>.team-box{align-self:end}
 .teams-block>.team-goles{align-self:start}
 
+/* Columnas fijas: local | centro | visitante (sin esto el centro se iba a la izquierda) */
+.teams-block>.team-box:first-child{grid-column:1}
+.teams-block>.vs-center{grid-column:2}
+.teams-block>.team-box:nth-child(3){grid-column:3}
+/* En pantalla ancha, si la tarjeta queda más alta que su contenido, el bloque de equipos va centrado */
+@container (min-width:860px){
+  #jc>.partido-card>.teams-block{flex:none;margin-top:auto;margin-bottom:auto}
+}
 
 </style>
 </head>
