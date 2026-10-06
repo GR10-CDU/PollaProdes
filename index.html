@@ -3231,7 +3231,7 @@ function renderScreen(k,ctx){
 function afterRender(k,ctx){
   const bk=document.getElementById("bk");
   if(bk){
-    if(k==="fecha-det")bk.onclick=()=>go("fechas");
+    if(k==="fecha-det"){if(ctx.desdeAdmin){bk.textContent="← Volver a Admin · Fechas";bk.onclick=()=>go("admin-fechas");}else bk.onclick=()=>go("fechas");}
     if(k==="jugar")bk.onclick=()=>go("fecha-det",{fechaId:ctx.fechaId});
   }
   switch(k){
@@ -4831,6 +4831,7 @@ async function loadAdminFechas(){
       ${f.publicada===false?`<button class="btn btn-p af-lista" onclick="publicarFecha('${f.id}')">✅ La fecha está lista · publicarla</button>`:""}
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         ${f.codigoGrupo?`<button class="btn btn-p" style="padding:6px 12px;font-size:16px" onclick="compartirFecha('${f.id}')">🔗 Compartir</button>`:""}
+        <button class="btn btn-s af-ver" style="padding:6px 12px;font-size:16px" onclick="go('fecha-det',{fechaId:'${f.id}',desdeAdmin:1})">📱 Ver como jugador</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="partidosManual('${f.id}')">✍️ Cargar a mano</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="linksAuto('${f.id}',this)">📊 Cargar links de estadísticas</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-importar',{fechaId:'${f.id}'})">🔗 Importar</button>
