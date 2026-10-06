@@ -342,6 +342,8 @@ Deno.serve(async (req) => {
       case "getGrilla": return resp(await getGrilla(db, data));
       case "getEstadisticas": return resp(await getEstadisticas(db, data));
       case "adminCerrarYCalcular": return resp(await adminCerrarYCalcular(db, data));
+      case "adminResumenFecha": return resp(await adminResumenFecha(db, data));
+      case "adminTerminarFecha": return resp(await adminTerminarFecha(db, data));
       case "adminHabilitarManual": return resp(await adminHabilitarManual(db, data));
       case "adminCambiarEstado": return resp(await adminCambiarEstado(db, data));
       case "adminGetInscripcionesPendientes": return resp(await adminGetInscripcionesPendientes(db, data));
@@ -1552,6 +1554,78 @@ async function getEstadisticas(db: any, data: any) {
 // ============================================================
 //  ADMIN — CERRAR Y CALCULAR
 // ============================================================
+// ============================================================
+//  ADMIN — RESUMEN Y TERMINAR FECHA
+// ============================================================
+// Tabla de todos con puntos de partidos y de reglas, por pozo, para revisar antes de terminar la fecha
+async function adminResumenFecha(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const fechaId = data.fechaId;
+  const [{data: fe}, {data: parts}, {data: pozos}, {data: insc}, {data: cambios}, {data: gans}, {data: pts}] = await Promise.all([
+    db.from("fechas").select("id,nombre,estado,empresa_id").eq("id", fechaId).maybeSingle(),
+    db.from("partidos").select("id,numero,local,visita,estado,goles_local,goles_visita,tipo,fecha_hora,vivo_estado").eq("fecha_id", fechaId).order("numero"),
+    db.from("pozos").select("*").eq("fecha_id", fechaId).order("monto"),
+    db.from("inscripciones").select("pozo_id,via_codigo").eq("fecha_id", fechaId).eq("estado_pago","Aprobado"),
+    db.from("cambios_pagos").select("pozo_id,monto").eq("fecha_id", fechaId).in("estado",["Pagado","Usado"]),
+    db.from("ganadores").select("pozo_id,usuario,puntos,premio").eq("fecha_id", fechaId),
+    db.from("puntajes").select("user_id,pozo_id,partido_id,pts_total,pts_reglas").eq("fecha_id", fechaId),
+  ]);
+  if (!fe) return {ok:false, error:"Fecha no encontrada"};
+  const ps = parts||[];
+  const terminado = (p:any) => p.estado === "Finalizado" || p.estado === "Suspendido";
+  const out: any[] = [];
+  for (const pozo of (pozos||[])) {
+    const {tabla} = await armarTabla(db, fechaId, pozo.id);
+    // Puntos de cada uno partido por partido (para la tabla detallada)
+    const det: Record<string, Record<string, number>> = {};
+    for (const x of (pts||[]).filter((x:any) => x.pozo_id === pozo.id)) ((det[x.user_id] ||= {})[x.partido_id] = x.pts_total||0);
+    out.push({
+      pozoId: pozo.id, nombre: pozo.nombre||"", monto: pozo.monto||0,
+      premio: calcPremio(pozo, insc||[], cambios||[]).premio,
+      inscriptos: (insc||[]).filter((i:any) => i.pozo_id === pozo.id).length,
+      tabla: tabla.map((u:any) => ({userId:u.userId, siglas:u.siglas, nombre:u.nombre, avatar:u.avatar, pos:u.posicion, ptsPartidos:u.ptsPartidos, ptsReglas:u.ptsReglas, ptsTotal:u.ptsTotal, acertados:u.acertados, porPartido: det[u.userId]||{}})),
+      ganadores: (gans||[]).filter((g:any) => g.pozo_id === pozo.id),
+    });
+  }
+  return {ok:true, fecha:{id:fe.id, nombre:fe.nombre, estado:fe.estado, empresa:!!fe.empresa_id, terminada: !!(gans||[]).length},
+    partidos: ps.map((p:any) => ({id:p.id, numero:p.numero, local:p.local, visita:p.visita, estado:p.estado, gl:p.goles_local, gv:p.goles_visita, tipo:p.tipo, fechaHora:p.fecha_hora, vivo:!!p.vivo_estado&&!terminado(p)})),
+    jugados: ps.filter(terminado).length, total: ps.length, pozos: out};
+}
+
+// Terminar la fecha: recalcula, registra ganadores y avisa a todos quién ganó
+async function adminTerminarFecha(db: any, data: any) {
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  const fechaId = data.fechaId;
+  const {data: fe} = await db.from("fechas").select("id,nombre,empresa_id").eq("id", fechaId).maybeSingle();
+  if (!fe) return {ok:false, error:"Fecha no encontrada"};
+  await db.from("fechas").update({estado:"Cerrada"}).eq("id", fechaId);
+  const {data: parts} = await db.from("partidos").select("id").eq("fecha_id", fechaId).eq("estado","Finalizado");
+  for (const p of (parts||[])) await calcularPuntajesPartido(db, p.id);
+  const n = await registrarGanadores(db, fechaId);
+  const {data: gans} = await db.from("ganadores").select("pozo_id,usuario,puntos,premio,compartido_con").eq("fecha_id", fechaId);
+  const {data: pozos} = await db.from("pozos").select("id,nombre,monto").eq("fecha_id", fechaId).order("monto");
+  // Texto del aviso: por pozo, quién ganó
+  const lineas: string[] = [];
+  for (const pz of (pozos||[])) {
+    const g = (gans||[]).filter((x:any) => x.pozo_id === pz.id);
+    if (!g.length) continue;
+    const quien = g.map((x:any) => x.usuario).join(", ");
+    const pozoTxt = (pozos||[]).length > 1 ? (pz.monto ? `Pozo $${Number(pz.monto).toLocaleString("es-AR")}: ` : "Gratis: ") : "";
+    lineas.push(`${pozoTxt}${g.length > 1 ? "ganaron" : "ganó"} ${quien} con ${g[0].puntos} pts${!fe.empresa_id && g[0].premio ? ` ($${Number(g[0].premio).toLocaleString("es-AR")}${g.length>1?" c/u":""})` : ""}`);
+  }
+  let avisados = 0;
+  if (lineas.length && data.avisar !== false && await primeraVez(db, `fin:${fechaId}`)) {
+    let ids: string[];
+    if (fe.empresa_id) { const {data: ms} = await db.from("empresa_miembros").select("user_id").eq("empresa_id", fe.empresa_id); ids = (ms||[]).map((m:any) => m.user_id); }
+    else { const {data: us} = await db.from("usuarios").select("id"); ids = (us||[]).map((u:any) => u.id); }
+    ids = [...new Set(ids)];
+    avisados = await enviarPush(db, ids, {titulo:`🏆 Terminó ${fe.nombre}`, texto: lineas.join(" · ").slice(0, 200), tag:`fin-${fechaId}`, url:"/?ir=tabla"});
+  }
+  return {ok:true, ganadores:n, calculados:(parts||[]).length, avisados, texto: lineas.join(" · ")};
+}
+
 async function adminCerrarYCalcular(db: any, data: any) {
   const auth = await requireAuth(db, data);
   if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};

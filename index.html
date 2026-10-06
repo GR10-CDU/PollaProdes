@@ -3030,7 +3030,7 @@ function go(k,ctx={}){
   App.screen=k;App.ctx=ctx;
   if(["jugar","tabla","grilla","los-otros","fecha-det"].includes(k)){startAutoRefresh();}
   else{stopAutoRefresh();}
-  const TITULOS={"fecha-det":"Fecha","jugar":"Tus pronósticos","stats":"Estadísticas"};
+  const TITULOS={"fecha-det":"Fecha","jugar":"Tus pronósticos","stats":"Estadísticas","admin-fin":"Terminar fecha"};
   const item=getNav().find(n=>n.k===k)||{t:TITULOS[k]||"Polla Prodes"};
   renderNav();
   const tt=document.getElementById("topbar-title");if(tt)tt.textContent=item.t;
@@ -3045,7 +3045,7 @@ function go(k,ctx={}){
     "fechas":"fl","fecha-det":"fdc","jugar":"jc","tabla":"tc",
     "mis-fechas":"mfc","grilla":"gc","perfil":"pc","stats":"sc",
     "admin-dash":"adc","admin-fechas":"afl","admin-res":"arf",
-    "admin-users":"aul","admin-pagos":"apl","admin-noticias":"anl","mi-empresa":"mec","admin-empresas":"aec"
+    "admin-users":"aul","admin-pagos":"apl","admin-noticias":"anl","mi-empresa":"mec","admin-empresas":"aec","admin-fin":"afin"
   }[k];
   function waitAndRender(attempts){
     if(!keyEl){afterRender(k,ctx);return;}
@@ -3119,6 +3119,7 @@ function renderScreen(k,ctx){
     case"admin-users":return`<div class="su"><div id="aul"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"admin-pagos":return`<div class="su"><div id="apl"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"admin-push":return`<div class="su"><div id="apu"></div></div>`;
+    case"admin-fin":return`<div class="su"><div class="back" onclick="go('admin-dash')">← Volver</div><div id="afin"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"mi-empresa":return`<div class="su"><div id="mec"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"admin-empresas":return`<div class="su"><div id="aec"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"admin-noticias":return`<div class="su"><div id="anl"><div class="loading"><div class="spinner"></div></div></div></div>`;
@@ -3151,6 +3152,7 @@ function afterRender(k,ctx){
     case"admin-fotos":loadFotos();break;
     case"mi-empresa":loadMiEmpresa();break;
     case"admin-push":loadAdminPush();break;
+    case"admin-fin":loadAdminFin(ctx);break;
     case"admin-empresas":loadAdminEmpresas();break;
   }
 }
@@ -4639,11 +4641,63 @@ async function loadDash(){
   const pend=rp.ok?(rp.pagos||[]).length:0;
   const kpi=[[ab.length,"Fechas abiertas",ICO.fechas,"admin-fechas"],[anotados,"Anotados en juego",ICO.jugadores,"admin-fechas"],[rs.ok?rs.totalUsuarios:"—","Jugadores",ICO.perfil,"admin-users"],["$"+recaudado.toLocaleString("es-AR"),"Recaudado en juego",ICO.pagos,"admin-pagos"]];
   const acc=[[ICO.resultados,"Cargar resultados","Goles y rojas de la fecha","admin-res",""],[ICO.fechas,"Fechas","Crear, cargar partidos y pozos","admin-fechas",""],[ICO.pagos,"Pagos","Comprobantes para revisar","admin-pagos",pend?pend:""],[ICO.empresas,"Empresas","Marca, códigos y administradores","admin-empresas",""],[ICO.jugadores,"Jugadores","Cuentas registradas","admin-users",""]];
+  const enJuego=fs.filter(function(f){return f.estado==="Cerrada"&&!f.terminada&&!f.oculta;});
+  const resJ=await Promise.all(enJuego.map(function(f){return api("adminResumenFecha",{fechaId:f.id});}));
+  window._dashFin=enJuego.map(function(f,i){return{f:f,r:resJ[i]};}).filter(function(x){return x.r.ok;});
   el.innerHTML=`<div class="dk-grid">${kpi.map(k=>`<button class="dk" onclick="go('${k[3]}')"><span class="dk-ic">${k[2]}</span><b>${k[0]}</b><small>${k[1]}</small></button>`).join("")}</div>
   <p class="sec">Acciones rápidas</p>
   <div class="dk-acc">${acc.map(a=>`<button class="dk-a" onclick="go('${a[3]}')"><span class="dk-ic">${a[0]}</span><span class="dk-tx"><b>${a[1]}</b><small>${a[2]}</small></span>${a[4]?`<span class="dk-badge">${a[4]}</span>`:""}<i>›</i></button>`).join("")}</div>`;
+  const fin=window._dashFin||[];
+  const finHtml=fin.length?`<p class="sec">Fechas en juego</p><div class="dk-fin">${fin.map(function(x){const r=x.r,pz=r.pozos[0],lid=pz&&pz.tabla[0];const pct=r.total?Math.round(r.jugados/r.total*100):0;
+    return`<button class="dkf" onclick="go('admin-fin',{fechaId:'${x.f.id}'})"><div class="dkf-h"><b>${escH(r.fecha.nombre)}</b><span>${r.jugados}/${r.total} jugados</span></div><div class="tbs-bar"><i style="width:${pct}%"></i></div><div class="dkf-f"><span>${lid?`Puntero: <b>${escH(pz.tabla.filter(function(u){return u.pos===1;}).map(function(u){return u.siglas;}).join(", "))}</b> · ${lid.ptsTotal} pts`:"Sin puntos todavía"}</span><i>${r.jugados===r.total?"🏁 Terminar fecha":"Ver resumen"} ›</i></div></button>`;}).join("")}</div>`:"";
+  const menu=`<p class="sec dk-menu-t">Todo el menú</p><div class="dk-menu">${NAV_A.map(function(n){return`<button class="dkm" onclick="go('${n.k}')"><span class="dk-ic">${n.i}</span><span>${n.l}</span></button>`;}).join("")}</div>`;
+  el.insertAdjacentHTML("afterbegin",finHtml);
+  el.insertAdjacentHTML("beforeend",menu);
 }
 
+
+/* ══ ADMIN: RESUMEN Y TERMINAR FECHA ═════════════════════════ */
+async function loadAdminFin(ctx){
+  const el=document.getElementById("afin");if(!el)return;
+  if(!ctx.fechaId){el.innerHTML=emptyBox("🏁","Elegí una fecha desde Inicio o Fechas");return;}
+  const r=await api("adminResumenFecha",{fechaId:ctx.fechaId});
+  if(!document.getElementById("afin"))return;
+  if(!r.ok){el.innerHTML=errBox(r.error);return;}
+  window._finRes=r;
+  const $=function(n){return"$"+Number(n||0).toLocaleString("es-AR");};
+  const faltan=r.total-r.jugados;
+  const partidos=`<div class="af-parts">${r.partidos.map(function(p){const j=p.estado==="Finalizado"||p.estado==="Suspendido";return`<div class="afp${j?" ok":p.vivo?" vivo":""}"><span class="afp-n">#${p.numero}</span><span class="afp-eq">${escH(siglaEq(p.local))}</span><b>${j&&p.gl!==null?p.gl+"-"+p.gv:p.vivo?"● vivo":"–"}</b><span class="afp-eq">${escH(siglaEq(p.visita))}</span></div>`;}).join("")}</div>`;
+  const tablaPozo=function(pz){
+    const gan=new Set(pz.ganadores.map(function(g){return g.usuario;}));
+    return`<div class="card af-pozo">
+      <div class="af-pozo-h"><b>${r.fecha.empresa?"Tabla":(pz.monto?"Pozo "+$(pz.monto):"Gratis")}</b><span>👥 ${pz.inscriptos}${!r.fecha.empresa&&pz.premio?` · 🏆 Premio ${$(pz.premio)}`:""}</span></div>
+      ${pz.tabla.length?`<div class="af-tw"><table class="af-t"><thead><tr><th>#</th><th class="l">Jugador</th><th>Partidos</th><th>Reglas</th><th>Total</th><th>Aciertos</th></tr></thead><tbody>
+      ${pz.tabla.map(function(u){const g=r.fecha.terminada?gan.has(u.siglas):(u.pos===1&&u.ptsTotal>0);return`<tr class="${g?"gan":""}"><td>${u.pos}º</td><td class="l"><b>${escH(u.siglas)}</b> <small>${escH(u.nombre||"")}</small></td><td>${u.ptsPartidos}</td><td>${u.ptsReglas}</td><td class="tot">${u.ptsTotal}</td><td>${u.acertados}</td></tr>`;}).join("")}
+      </tbody></table></div>`:`<p class="me-p">Nadie sumó puntos todavía.</p>`}
+    </div>`;
+  };
+  const prev=r.pozos.map(function(pz){const p=pz.tabla.filter(function(u){return u.pos===1&&u.ptsTotal>0;});return p.length?`${r.pozos.length>1?(pz.monto?"Pozo "+$(pz.monto)+": ":"Gratis: "):""}${p.length>1?"ganarían":"ganaría"} <b>${p.map(function(u){return escH(u.siglas);}).join(", ")}</b> con ${p[0].ptsTotal} pts`:"";}).filter(Boolean);
+  el.innerHTML=`<div class="af-head"><div><small>Resumen de la fecha</small><h2>${escH(r.fecha.nombre)}</h2></div><span class="tbs-est ${r.fecha.terminada?"fin":faltan?"juego":"prox"}">${r.fecha.terminada?"Terminada":faltan?faltan+" partido"+(faltan!==1?"s":"")+" sin resultado":"Todos jugados"}</span></div>
+    ${partidos}
+    ${r.pozos.map(tablaPozo).join("")}
+    <div class="card af-acc">
+      ${r.fecha.terminada?`<p class="af-ok">✅ Esta fecha ya está terminada. Ganador${r.pozos.some(function(p){return p.ganadores.length>1;})?"es":""}: ${r.pozos.map(function(p){return p.ganadores.map(function(g){return"<b>"+escH(g.usuario)+"</b> ("+g.puntos+" pts)";}).join(", ");}).filter(Boolean).join(" · ")||"—"}</p>
+        <button class="btn btn-s btn-lg" onclick="terminarFecha('${r.fecha.id}',true)">🔄 Recalcular ganadores</button>`
+      :`${prev.length?`<p class="af-prev">🏆 Si terminás ahora, ${prev.join(" · ")}.</p>`:`<p class="af-prev">Todavía nadie sumó puntos: no habría ganador.</p>`}
+        ${faltan?`<p class="af-warn">⚠️ Faltan ${faltan} partido${faltan!==1?"s":""} sin resultado. Si terminás ahora, esos partidos no suman.</p>`:""}
+        <button class="btn btn-p btn-lg" onclick="terminarFecha('${r.fecha.id}',false)">🏁 Terminar fecha y avisar a todos</button>
+        <small class="af-nota">Se recalculan los puntos, queda registrado el ganador (le llega su aviso y su mail) y se manda un push a todos los usuarios${r.fecha.empresa?" de la empresa":""} con quién ganó.</small>`}
+    </div>`;
+}
+window.terminarFecha=async function(id,recalcular){
+  const r0=window._finRes;
+  if(!confirm(recalcular?"¿Recalcular puntos y ganadores? (no se manda otro aviso a todos)":`¿Terminar ${r0?r0.fecha.nombre:"la fecha"} definitivamente y avisar a todos quién ganó?`))return;
+  toast("Terminando la fecha…");
+  const r=await api("adminTerminarFecha",{fechaId:id,avisar:!recalcular});
+  if(!r.ok){toast("❌ "+r.error);return;}
+  toast(r.ganadores?`🏆 Listo: ${r.texto||"ganador registrado"}${r.avisados?" · aviso enviado a "+r.avisados+" dispositivo"+(r.avisados!==1?"s":""):""}`:"Listo. No hubo ganador (nadie sumó puntos).",6000);
+  loadAdminFin({fechaId:id});
+};
 /* ══ ADMIN FECHAS ════════════════════════════════════════════ */
 window._adminFechas={};
 
@@ -4686,7 +4740,7 @@ async function loadAdminFechas(){
         ${f.empresaId?"":`<button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showGestionPozos('${f.id}')">💰 Pozos y premios</button>`}
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="verInscriptos('${f.id}')">👥 Inscriptos</button>
         ${f.estado==="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:16px" onclick="cerrarFecha('${f.id}')">🔒 Cerrar</button>`:""}
-        ${f.estado==="Cerrada"?`<button class="btn btn-p" style="padding:6px 12px;font-size:16px" onclick="calcularFecha('${f.id}')">🏆 Calcular</button>`:""}
+        ${f.estado==="Cerrada"||f.terminada?`<button class="btn btn-p" style="padding:6px 12px;font-size:16px" onclick="go('admin-fin',{fechaId:'${f.id}'})">🏁 ${f.terminada?"Resumen final":"Terminar fecha"}</button>`:""}
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="copiarFecha('${f.id}')">⧉ Copiar a…</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="ocultarFecha('${f.id}',${!f.oculta})">${f.oculta?"👁 Mostrar":"🙈 Ocultar"}</button>
         ${f.estado!=="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:16px" onclick="eliminarFecha('${f.id}')">🗑 Eliminar</button>`:""}
