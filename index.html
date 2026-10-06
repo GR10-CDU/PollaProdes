@@ -2521,15 +2521,6 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 /* Partidos en pantalla ancha: dos columnas (se ve como en el celular, sin espacio vacío) */
 .page[data-screen="jugar"]{container-type:inline-size}
 @container (min-width:860px){
-  #jc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
-  #jc>:not(.partido-card){grid-column:1/-1}
-  #jc>.partido-card{margin-bottom:0;display:flex;flex-direction:column;padding:18px 18px 16px}
-  #jc>.partido-card>.teams-block{flex:1;margin-bottom:14px}
-  #jc .team-escudo{width:56px;height:56px}
-  #jc .team-name-big{font-size:20px}
-  #jc .pc-meta{align-items:flex-start;gap:10px;margin-bottom:12px}
-  #jc .pc-plazo{flex-shrink:0}
-  #jc .lev-btn{height:58px}
   /* Reglas especiales: también de a dos, del mismo ancho que los partidos */
   .reglas-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
   .reglas-grid>.card{margin-bottom:0!important}
@@ -2620,10 +2611,6 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .teams-block>.team-box:first-child{grid-column:1}
 .teams-block>.vs-center{grid-column:2}
 .teams-block>.team-box:nth-child(3){grid-column:3}
-/* En pantalla ancha, si la tarjeta queda más alta que su contenido, el bloque de equipos va centrado */
-@container (min-width:860px){
-  #jc>.partido-card>.teams-block{flex:none;margin-top:auto;margin-bottom:auto}
-}
 
 </style>
 </head>
