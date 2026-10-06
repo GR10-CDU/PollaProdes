@@ -2679,6 +2679,13 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
   .pmr-hora{font-size:14px}
   .mini-tog{font-size:15.5px}
 }
+/* Celular: estadísticas dentro de la franja, arriba a la derecha junto a la fecha del partido */
+@media(max-width:560px){
+  .partido-card>.pc-st-fl{top:7px;right:8px}
+  .partido-card .pc-jugado .pct-r{margin-right:34px}
+  .partido-card>.pc-st-fl .st-ico{min-width:28px;height:24px;font-size:13px;box-shadow:none}
+  .partido-card.jugado>.pc-st-fl .st-ico{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.45);color:#fff}
+}
 
 </style>
 </head>
