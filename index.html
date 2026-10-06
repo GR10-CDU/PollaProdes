@@ -3072,6 +3072,24 @@ async function api(action,p={}){
   finally{hideLoader();}
 }
 function saveSession(u,t){App.user=u;App.token=t;localStorage.setItem(SK,t);localStorage.setItem(UK,JSON.stringify(u));}
+// Cuentas viejas sin email: se lo pedimos al entrar (es obligatorio)
+function pedirEmail(){
+  if(!App.user||App.user.email||document.getElementById("pe-mail"))return;
+  const m=mkModal("Falta tu email",`<div class="fg"><p style="font-size:15.5px;color:var(--txt2);margin:0 0 12px">Para avisarte si ganás y mandarte novedades de las fechas, necesitamos tu correo.</p>
+    <input class="inp" id="pe-mail" type="email" inputmode="email" autocomplete="email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')guardarEmailObl()">
+    <div id="pe-err" style="color:var(--red);font-size:14px;font-weight:600;margin-top:8px"></div>
+    <button class="btn btn-p btn-lg" style="width:100%;margin-top:12px" onclick="guardarEmailObl()">Guardar</button></div>`);
+  m.onclick=null;m.querySelector(".modal-x,.modal-close,[aria-label='Cerrar']")?.remove();m.id="m-email";
+  document.body.appendChild(m);setTimeout(function(){document.getElementById("pe-mail")?.focus();},200);
+}
+window.guardarEmailObl=async function(){
+  const v=String(document.getElementById("pe-mail")?.value||"").trim(),er=document.getElementById("pe-err");
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){if(er)er.textContent="⚠ Ese email no parece válido";return;}
+  const r=await api("editarPerfil",{email:v});
+  if(!r.ok){if(er)er.textContent="⚠ "+r.error;return;}
+  App.user.email=v;try{localStorage.setItem(UK,JSON.stringify(App.user));}catch(e){}
+  document.getElementById("m-email")?.remove();toast("✅ ¡Gracias! Email guardado");
+};
 function loadSession(){const t=localStorage.getItem(SK),u=localStorage.getItem(UK);if(t&&u){App.token=t;App.user=JSON.parse(u);return true;}return false;}
 function clearSession(){api("logout");localStorage.removeItem(SK);localStorage.removeItem(UK);App.user=null;App.token=null;}
 
@@ -5328,6 +5346,7 @@ function initApp(){try{initRealtime();}catch(e){console.warn('RT:',e);};
   setTimeout(procesarVueltaPago,600);
   setTimeout(mostrarAvisos,1200);
   setTimeout(pedirDatosEmpresa,900);
+  setTimeout(pedirEmail,1600);
   setTimeout(unirsePorLink,700);
   setTimeout(sincronizarPush,1500);
   setTimeout(pedirLegales,800);

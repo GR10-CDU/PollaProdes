@@ -1502,7 +1502,7 @@ async function editarPerfil(db: any, data: any) {
   const upd: any = {};
   if (data.nombre) upd.nombre = data.nombre;
   if (data.alias) upd.alias_mp = data.alias;
-  if (data.email) upd.email = data.email;
+  if (data.email) { const em = String(data.email).trim(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return {ok:false, error:"El email no parece válido"}; upd.email = em; }
   if (data.avatar) {
     const a = String(data.avatar);
     const okEmoji = /^emoji:.{1,8}$/u.test(a);
