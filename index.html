@@ -2716,6 +2716,9 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
   /* Sombras grandes y difusas cuestan al desplazar: más cortas en el celular */
   .partido-card,.fecha-card,.tbs-card,.card{box-shadow:0 1px 2px rgba(0,0,0,.06),0 4px 12px -6px rgba(0,0,0,.12)}
 }
+/* Escudos siempre a la misma altura: los equipos se alinean arriba y el nombre ocupa como mucho 2 renglones */
+.teams-block>.team-box{align-self:start}
+.team-name-big{display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:normal;word-break:normal;hyphens:auto}
 
 </style>
 </head>
