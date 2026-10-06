@@ -2693,6 +2693,14 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .pmt.Normal.on{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line-2)}
 .pmt.Doble.on{background:var(--violet);color:#fff}
 .pmt.Polla.on{background:var(--gold);color:#241800}
+/* Celular, detalle de la fecha: número/tipo arriba a la izquierda; fecha y estadísticas arriba a la derecha */
+@media(max-width:560px){
+  .pd-a{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"s d" "m m";row-gap:8px}
+  .pd-a>.pd-a-side:not(.der){grid-area:s}
+  .pd-a>.pd-a-side.der{grid-area:d;justify-content:flex-end;align-items:center;gap:6px}
+  .pd-a>.pd-a-match{grid-area:m}
+  .pd-a-side.der .st-btn{padding:0 8px}
+}
 
 </style>
 </head>
