@@ -13,9 +13,9 @@ const API_SECRET = Deno.env.get("API_SECRET")!;
 
 const REGLAS_DEF: Record<string, any> = {
   LMR:  { nombre:"La Marea Roja",    pts:1,  cantPartidos:3, desc:"Elegí 3 partidos con tarjeta roja. +1pt por expulsión." },
-  LR:   { nombre:"La Rachita",       pts:3,  cantPartidos:1, desc:"Elegí un partido inicio. 1pt si acertás el 1ro, 2pts el 2do, 3pts el 3ro." },
+  LR:   { nombre:"La Rachita",       pts:3,  cantPartidos:1, desc:"Elegí 1 partido de inicio (cuenta ese y los 2 siguientes): 1 pt el 1.º acierto, 2 el 2.º y 3 el 3.º. Se corta al primer error." },
   LLDG: { nombre:"Lluvia de Goles",  pts:4,  cantPartidos:1, desc:"5+ goles → 4pts." },
-  DIEGO:{ nombre:"El Diego",         pts:3,  cantPartidos:3, desc:"1pt el 1er empate, 2pts el 2do, 3pts el 3ro." },
+  DIEGO:{ nombre:"El Diego",         pts:3,  cantPartidos:3, desc:"Elegí 3 partidos que creas empatados: 1 pt el 1.º empate, 2 el 2.º y 3 el 3.º." },
   GSA:  { nombre:"Goles Son Amores", pts:1,  cantPartidos:1, desc:"Ambos anotan → 1pt/gol." },
   ZPL:  { nombre:"La Zapali",        pts:4,  cantPartidos:1, desc:"Diferencia 3+ goles → 4pts." },
   MK:   { nombre:"La MK",            pts:4,  cantPartidos:1, desc:"Resultado exacto → 4pts." },

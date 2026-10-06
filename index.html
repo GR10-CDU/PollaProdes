@@ -3551,9 +3551,9 @@ window.trEnviar=async function(){
 // ── Catálogo de reglas (sin NPF) ──
 const TODAS_LAS_REGLAS=[
   {codigo:"LMR",nombre:"La Marea Roja",desc:"Elegí 3 partidos en los que creas que habrá al menos una tarjeta roja.<br>Sumás 1 punto por cada expulsión.",pts:1},
-  {codigo:"LR",nombre:"La Rachita",desc:"Elegí un partido como inicio de La Rachita.<br>1 punto si acertás el primero, 2 puntos si acertás el segundo y 3 puntos si acertás el tercero.",pts:3},
+  {codigo:"LR",nombre:"La Rachita",desc:"Elegí 1 partido de inicio: cuenta ese y los 2 siguientes.<br>1 punto por el 1.º acierto, 2 por el 2.º y 3 por el 3.º (hasta 6). Se corta al primer error.",pts:3},
   {codigo:"LLDG",nombre:"Lluvia de Goles",desc:"Elegí un partido en el que creas que habrá 5 goles o más.<br>Si acertás, sumás 4 puntos.",pts:4},
-  {codigo:"DIEGO",nombre:"El Diego",desc:"Elegí 3 partidos que creas terminarán en empate.<br>1 punto por el primer empate, 2 por el segundo y 3 por el tercero (hasta 6 puntos).",pts:3},
+  {codigo:"DIEGO",nombre:"El Diego",desc:"Elegí 3 partidos que creas que terminan empatados.<br>1 punto por el 1.º empate, 2 por el 2.º y 3 por el 3.º (hasta 6).",pts:3},
   {codigo:"GSA",nombre:"Goles Son Amores",desc:"Elegí un partido en el que ambos equipos conviertan goles.<br>Sumás 1 punto por cada gol del partido.",pts:1},
   {codigo:"ZPL",nombre:"La Zapali",desc:"Elegí un partido en el que haya un ganador por diferencia de 3 goles o más.<br>Si acertás, sumás 4 puntos.",pts:4},
   {codigo:"MK",nombre:"La MK",desc:"Elegí el resultado exacto de un partido.<br>No se puede elegir Empate en 0.<br>Si acertás, sumás 4 puntos.",pts:4},
@@ -4993,9 +4993,9 @@ window.guardarRes=async(pid,fid)=>{const gL=document.getElementById("gL-"+pid)?.
 /* ══ REGLAMENTO (para jugadores) ═════════════════════════════ */
 function renderReglamento(){
   const R=[["La Marea Roja","LMR","3 partidos","1 punto por cada tarjeta roja","No"],
-    ["La Rachita","LR","1 partido de inicio","Racha con ese y los 2 siguientes: 1 + 2 + 3 (máx. 6). Se corta al primer error","Sí"],
+    ["La Rachita","LR","1 partido de inicio (cuenta ese y los 2 siguientes)","1 pt el 1.º acierto · 2 pts el 2.º · 3 pts el 3.º (máx. 6). Se corta al primer error","Sí"],
     ["Lluvia de Goles","LLDG","1 partido","4 puntos si hay 5 goles o más","No"],
-    ["El Diego","DIEGO","3 partidos","1.er empate 1 pt · 2.º 2 pts · 3.º 3 pts (máx. 6)","No"],
+    ["El Diego","DIEGO","3 partidos que creas empatados","1 pt el 1.º empate · 2 pts el 2.º · 3 pts el 3.º (máx. 6)","No"],
     ["Goles Son Amores","GSA","1 partido","Si ambos anotan, 1 punto por gol (2-1 = 3 pts)","No"],
     ["La Zapali","ZPL","1 partido","4 puntos si hay diferencia de 3 goles o más","No"],
     ["La MK","MK","1 partido y su resultado exacto (no 0-0)","4 puntos si clavás el resultado","—"],
