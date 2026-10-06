@@ -3805,7 +3805,8 @@ function renderPartidos(parts,ctx,puede){
     const _vr=!sinGoles?(["A","B","C"][window._finIdx++]||"A"):null;
     const _calc=!sinGoles&&_prd.calculado;
     const _tot=_calc?(_prd.ptsTotal!=null?_prd.ptsTotal:0):0;
-    if(window._vistaMini&&bloq)return miniRow(p,sel,_prd,_calc,_tot);
+    // Minimalista solo para los partidos jugados o que ya empezaron
+    if(window._vistaMini&&(partidoFinalizado||p.vivo||(inicioOk&&minRest<=0)))return miniRow(p,sel,_prd,_calc,_tot);
     const _bdgs=`<span style="font-size:14px;font-weight:700;color:var(--txt3)">#${p.numero}</span>
           ${(function(){const t=TIPO_INFO[p.tipo]||TIPO_INFO.Normal;return`<span class="t-tag ${t.cls} pc-tipo">${p.tipo==="Polla"?'<i class="k-d">P</i><i class="k-m">PP</i>':t.k}</span><span class="pc-tipo-n">${t.n}</span>`;})()}${p.esToleTole?'<span class="t-tag t-tole pc-tipo">🔥 TOLE</span>':""}
           ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:16px;padding:4px 11px">● VIVO</span>`:""}
