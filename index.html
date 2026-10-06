@@ -3063,7 +3063,10 @@ async function api(action,p={}){
       body:JSON.stringify({action,apiSecret:API_SECRET,sessionToken:App.token,espacio:App.espacio||"",...p}),
     });
     if(!r.ok){const t=await r.text();return{ok:false,error:"HTTP "+r.status+": "+t};}
-    return await r.json();
+    const _j=await r.json();
+    // Fechas jugadas con el reglamento anterior: el Polla Partido valía 5
+    try{if(_j&&_j.fecha&&_j.fecha.puntosV)TIPO_INFO.Polla.pts=_j.fecha.puntosV===1?5:3;}catch(e){}
+    return _j;
   }
   catch(e){return{ok:false,error:"Sin conexión: "+e.message};}
   finally{hideLoader();}
@@ -4489,7 +4492,7 @@ function renderGrilla(){
   parts.forEach(function(p){const c={L:0,E:0,V:0},quien={L:[],E:[],V:[]};jug.forEach(function(j){const v=(j.pronos[p.id]||{}).v;if(c[v]!==undefined){c[v]++;quien[v].push(j);}});
     const t=c.L+c.E+c.V||1,pct={L:c.L/t*100,E:c.E/t*100,V:c.V/t*100};
     st[p.id]={c:c,t:c.L+c.E+c.V,pct:pct,quien:quien,tole:p.es_tole!==undefined?(p.tipo!=="Polla"&&!!p.es_tole):(p.tipo!=="Polla"&&t>=3&&pct.L<45&&pct.E<45&&pct.V<45)};});
-  const valor=function(p){return p.tipo==="Polla"?3:st[p.id].tole?3:(TIPO_INFO[p.tipo]||TIPO_INFO.Normal).pts;};
+  const valor=function(p){return p.tipo==="Polla"?TIPO_INFO.Polla.pts:st[p.id].tole?3:(TIPO_INFO[p.tipo]||TIPO_INFO.Normal).pts;};
 
   // Contra quién: atajos o elegidos a mano
   const top=function(n){return otros.filter(function(j){return (j.posicion||99)<=n;}).slice(0,n);};

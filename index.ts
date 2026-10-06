@@ -22,6 +22,14 @@ const REGLAS_DEF: Record<string, any> = {
   EQS:  { nombre:"Empate Que Suma",  pts:3,  cantPartidos:1, desc:"Empate → 3pts." },
 };
 
+// Valores según la versión del reglamento de cada fecha (las fechas ya jugadas conservan el anterior)
+function valoresPuntos(v: number) {
+  return v === 1 ? {polla:5, mk:5, lr:[1,2,4], diego:[0,1,3,5]} : {polla:3, mk:4, lr:[1,2,3], diego:[0,1,3,6]};
+}
+async function versionPuntos(db: any, fechaId: string) {
+  const {data} = await db.from("fechas").select("puntos_v").eq("id", fechaId).maybeSingle();
+  return data?.puntos_v || 2;
+}
 const PTS_NORMAL = 1, PTS_DOBLE = 2, PTS_POLLA = 3, TOLE_UMBRAL = 45, TOLE_PTS = 3;
 const MAX_CAMBIOS = 3, MINUTOS_CIERRE = 30, MINUTOS_CIERRE_CAMBIO = 60;
 // CIERRE DE LA FECHA = 1 hora antes del primer partido (o el plazo que cargó el admin, si es antes).
@@ -559,7 +567,7 @@ async function getFecha(db: any, data: any) {
   }));
 
   return {ok:true,
-    fecha: {id:fecha.id, nombre:fecha.nombre, descripcion:fecha.descripcion, plazoLimite:cierre?.toISOString()||fecha.plazo_limite, estado:fecha.estado, cantPartidos:fecha.cant_partidos, liga:fecha.liga, puedeJugar:fecha.estado==="Abierta"&&mins>0, minutosRestantes:mins, reglasHabilitadas:fecha.reglas_habilitadas||[], reglasDetalle, tieneCodigo:!!fecha.codigo_grupo, terminada: !!((await db.from("ganadores").select("id").eq("fecha_id", fecha.id).limit(1)).data||[]).length, cambiosGratis:!!(fecha.cambios_gratis||fecha.empresa_id) || await soloPozosGratis(db, fecha.id)},
+    fecha: {id:fecha.id, puntosV:fecha.puntos_v||2, nombre:fecha.nombre, descripcion:fecha.descripcion, plazoLimite:cierre?.toISOString()||fecha.plazo_limite, estado:fecha.estado, cantPartidos:fecha.cant_partidos, liga:fecha.liga, puedeJugar:fecha.estado==="Abierta"&&mins>0, minutosRestantes:mins, reglasHabilitadas:fecha.reglas_habilitadas||[], reglasDetalle, tieneCodigo:!!fecha.codigo_grupo, terminada: !!((await db.from("ganadores").select("id").eq("fecha_id", fecha.id).limit(1)).data||[]).length, cambiosGratis:!!(fecha.cambios_gratis||fecha.empresa_id) || await soloPozosGratis(db, fecha.id)},
     partidos: (parts||[]).map((p:any) => ({
       id:p.id, numero:p.numero, local:p.local, visita:p.visita,
       fechaHora:p.fecha_hora, liga:p.liga, tipo:p.tipo, estado:p.estado,
@@ -1344,6 +1352,7 @@ async function calcularPuntajesPartido(db: any, partidoId: string) {
   if (p0) await fijarTole(db, p0.fecha_id);
   const {data: part} = await db.from("partidos").select("*").eq("id",partidoId).single();
   if (!part||part.estado!=="Finalizado"||!part.resultado) return;
+  const VP = valoresPuntos(await versionPuntos(db, part.fecha_id));
 
   const [{data:pronos},{data:reglas}] = await Promise.all([
     db.from("pronosticos").select("*").eq("partido_id",partidoId),
@@ -1364,7 +1373,7 @@ async function calcularPuntajesPartido(db: any, partidoId: string) {
     const acertado = pr.pronostico === part.resultado;
     let ptsN=0,ptsD=0,ptsP=0,ptsTole=0,ptsR=0;
     if (acertado) {
-      if (part.tipo==="Polla") ptsP=PTS_POLLA;
+      if (part.tipo==="Polla") ptsP=VP.polla;
       else if (esTole) ptsTole=TOLE_PTS;
       else if (part.tipo==="Doble") ptsD=PTS_DOBLE;
       else ptsN=PTS_NORMAL;
@@ -1373,7 +1382,7 @@ async function calcularPuntajesPartido(db: any, partidoId: string) {
     const misReglas = (reglas||[]).filter((r:any)=>r.user_id===pr.user_id&&r.pozo_id===pr.pozo_id);
     for (const reg of misReglas) {
       if (reg.codigo==="LR" || reg.codigo==="DIEGO") { ptsR += reg.puntos_obtenidos||0; continue; }
-      const pts = calcPtsRegla(reg, part.resultado, part.goles_local||0, part.goles_visita||0, part.tarjetas_rojas||0);
+      const pts = calcPtsRegla(reg, part.resultado, part.goles_local||0, part.goles_visita||0, part.tarjetas_rojas||0, VP.mk);
       ptsR += pts;
       reglasUpdate.push({id:reg.id, puntos_obtenidos:pts});
     }
@@ -1398,7 +1407,7 @@ async function calcularPuntajesPartido(db: any, partidoId: string) {
   await calcularReglasMultiples(db, part.fecha_id);
 }
 
-function calcPtsRegla(reg:any, resultado:string, gL:number, gV:number, rojas:number): number {
+function calcPtsRegla(reg:any, resultado:string, gL:number, gV:number, rojas:number, ptsMK = 4): number {
   switch(reg.codigo) {
     case "LMR": return rojas;                                   // 1 por roja
     case "LLDG": return (gL+gV)>=5?4:0;                         // 5+ goles
@@ -1407,7 +1416,7 @@ function calcPtsRegla(reg:any, resultado:string, gL:number, gV:number, rojas:num
     case "EQS": return resultado==="E"?3:0;                     // termina empatado
     case "MK": {                                                // resultado exacto
       const p=(reg.detalle||"").split("-").map(Number);
-      return p.length===2&&p[0]===gL&&p[1]===gV?4:0;
+      return p.length===2&&p[0]===gL&&p[1]===gV?ptsMK:0;
     }
     default: return 0;
   }
@@ -1430,6 +1439,7 @@ async function recomputarFila(db: any, userId: string, pozoId: string, partidoId
 const DIEGO_PTS = [0, 1, 3, 6]; // empates en sus 3 partidos: 1 + 2 + 3 (1 → 1 pt, 2 → 3 pts, 3 → 6 pts)
 
 async function calcularReglasMultiples(db: any, fechaId: string) {
+  const VP = valoresPuntos(await versionPuntos(db, fechaId));
   const [{data:pronos},{data:reglas},{data:parts},{data:filas}] = await Promise.all([
     db.from("pronosticos").select("user_id,pozo_id,numero_partido,acertado,partido_id").eq("fecha_id",fechaId),
     db.from("reglas").select("*").eq("fecha_id",fechaId).in("codigo",["LR","DIEGO"]),
@@ -1453,13 +1463,13 @@ async function calcularReglasMultiples(db: any, fechaId: string) {
       const suspendidos = new Set((parts||[]).filter((p:any)=>p.estado==="Suspendido").map((p:any)=>p.id));
       const racha = (pronos||[]).filter((p:any)=>p.user_id===userId&&p.pozo_id===pozoId&&p.numero_partido>=ini.numero_partido&&!suspendidos.has(p.partido_id))
         .sort((a:any,b:any)=>a.numero_partido-b.numero_partido).slice(0,3);
-      let pts = 0; const mult = [1,2,3];
+      let pts = 0; const mult = VP.lr;
       for (let i=0;i<racha.length;i++) { if (racha[i].acertado===true) pts+=mult[i]; else break; }
       asignar[ini.id] = pts;
     } else {
       // El Diego: cuántos de sus partidos terminaron empatados (independiente del L/E/V)
       const empates = regs.filter((r:any) => (parts||[]).find((p:any)=>p.id===r.partido_id&&p.estado==="Finalizado"&&p.resultado==="E")).length;
-      const pts = DIEGO_PTS[Math.min(3, empates)];
+      const pts = VP.diego[Math.min(3, empates)];
       // Los puntos van a la fila del partido finalizado más reciente que tenga puntaje
       const conFila = regs.filter((r:any) => tieneFila(userId, pozoId, r.partido_id) && (parts||[]).find((p:any)=>p.id===r.partido_id&&p.estado==="Finalizado"));
       const destino = conFila.sort((a:any,b:any)=>b.numero_partido-a.numero_partido)[0];
@@ -2872,9 +2882,10 @@ async function avisosResultado(db: any, partidoId: string) {
   const partido = `${p.local} vs ${p.visita}`;
   // ⭐ Acertaste el Polla Partido (vale 3)
   if (p.tipo === "Polla") {
+    const vPP = valoresPuntos(await versionPuntos(db, p.fecha_id)).polla;
     const {data: ac} = await db.from("pronosticos").select("user_id").eq("partido_id", p.id).eq("acertado", true);
     for (const a of (ac||[])) if (await primeraVez(db, `polla:${p.id}:${a.user_id}`))
-      await enviarPush(db, [a.user_id], {titulo:`⭐ Acertaste el Polla Partido: +3 pts ⭐`, texto:"", tag:`polla-${p.id}`});
+      await enviarPush(db, [a.user_id], {titulo:`⭐ Acertaste el Polla Partido: +${vPP} pts ⭐`, texto:"", tag:`polla-${p.id}`});
   }
   // ⚽ Reglas: las de un partido avisan al sumar; LMR, LR y EL DIEGO recién cuando terminan sus 3 partidos
   await avisosReglas(db, p.fecha_id);
