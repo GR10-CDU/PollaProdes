@@ -429,6 +429,11 @@ async function registro(db: any, data: any) {
   if (email) await enviarMail(email, empresa ? `¡Bienvenido a la Polla de ${empresa.nombre}!` : "¡Bienvenido a Polla Prodes!", mailBienvenida(nombre, usuario, tel, empresa ? "" : (data.alias || ""), empresa ? empresaOut(empresa) : null));
   if (empresa) await sumarMiembro(db, id, empresa.id, invitacion ? "AdminEmpresa" : "Jugador", datosExtra);
   if (invitacion) await db.from("empresa_invitaciones").delete().eq("id", invitacion.id);
+  // Aviso al administrador: nuevo registro (solo push)
+  try {
+    const {data: admins} = await db.from("usuarios").select("id").eq("rol","Admin");
+    await enviarPush(db, (admins||[]).map((a:any) => a.id), {titulo:`👤 Nuevo registro: ${String(nombre).trim()}`, texto:`${usuario}${empresa ? " · " + empresa.nombre : ""}`, tag:`reg-${id}`});
+  } catch (e) { console.error("aviso registro", e); }
   const {data: nuevo} = await db.from("usuarios").select("*").eq("id", id).single();
   return {ok:true, user: await userOut(db, nuevo), sessionToken: token, espacio: empresa?.id || ""};
 }
