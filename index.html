@@ -3100,7 +3100,7 @@ function renderScreen(k,ctx){
   switch(k){
     case"fechas":return`<div class="su"><div id="fl"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"fecha-det":return`<div class="su"><div class="back" id="bk">← Volver a fechas</div><div id="fdc"><div class="loading"><div class="spinner"></div></div></div></div>`;
-    case"jugar":return`<div class="su"><div class="jg-top"><div class="back" id="bk">← Volver</div><label class="mini-tog"><input type="checkbox" ${window._vistaMini?"checked":""} onchange="setVistaMini(this.checked)"><i aria-hidden="true"></i><span>Vista minimalista</span></label></div>
+    case"jugar":return`<div class="su"><div class="jg-top"><div class="back" id="bk">← Volver</div><label class="mini-tog" style="display:none"><input type="checkbox" ${window._vistaMini?"checked":""} onchange="setVistaMini(this.checked)"><i aria-hidden="true"></i><span>Vista minimalista</span></label></div>
       <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div><div class="prog-info"><span id="prog-txt">0 pronósticos</span><span id="prog-pct"></span></div></div>
       <div id="prog-cambios" style="display:none;margin-top:6px;padding:8px 14px;background:var(--bluel);border:1px solid rgba(68,138,255,.2);border-radius:var(--rs)"></div>
       <div id="jc"><div class="loading"><div class="spinner"></div></div></div>
@@ -3758,6 +3758,9 @@ function renderPartidos(parts,ctx,puede){
   const cf=window._cambiosFecha!==undefined?window._cambiosFecha:3;
 
   window._finIdx=0;
+  // El interruptor "Vista minimalista" solo aparece si la fecha ya empezó (algún partido jugado o en juego)
+  {const emp=parts.some(function(p){return p.estado==="Finalizado"||p.estado==="Suspendido"||p.vivo||(p.fechaHora&&new Date(p.fechaHora)<=new Date());});
+   const tg=document.querySelector(".mini-tog");if(tg)tg.style.display=emp?"":"none";}
   // Primero los que faltan jugarse; los ya jugados (o suspendidos) al final
   const _jug=function(p){return p.estado==="Finalizado"||p.estado==="Suspendido"?1:0;};
   parts=parts.slice().sort(function(a,b){return _jug(a)-_jug(b)||(a.numero-b.numero);});
