@@ -2780,6 +2780,25 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .us-f b a{color:var(--accent-text)}
 .us-f small{color:var(--ink-3)}
 @media(max-width:560px){.us-row{flex-wrap:wrap}.us-acc{width:100%;justify-content:space-between}}
+/* Admin · Jugadores: tarjeta ordenada (avatar | datos | estado+acción) y el detalle abajo a todo el ancho */
+.card.us-it{display:block!important;padding:14px 16px!important}
+.us-row{display:grid!important;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:14px}
+.us-row .us-av{width:48px;height:48px}
+.us-nm{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;font-size:17px;font-weight:800}
+.us-nm span{font-weight:500;color:var(--ink-2)}
+.us-nm .bdg{font-size:11px!important;height:20px!important;padding:0 8px!important}
+.us-cont{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 16px;margin-top:6px;font-size:13.5px}
+.us-cont>*{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.us-acc{display:flex!important;flex-direction:column;align-items:flex-end;gap:6px}
+.us-acc .btn{padding:6px 14px!important;font-size:14px!important;min-height:0}
+.us-acc .bdg{font-size:12px!important}
+.us-det{margin-top:12px}
+@media(max-width:700px){
+  .us-row{grid-template-columns:42px minmax(0,1fr);gap:10px}
+  .us-row .us-av{width:42px;height:42px}
+  .us-acc{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center}
+  .us-cont{grid-template-columns:1fr}
+}
 
 </style>
 </head>
@@ -3532,12 +3551,12 @@ window.trEnviar=async function(){
 // ── Catálogo de reglas (sin NPF) ──
 const TODAS_LAS_REGLAS=[
   {codigo:"LMR",nombre:"La Marea Roja",desc:"Elegí 3 partidos en los que creas que habrá al menos una tarjeta roja.<br>Sumás 1 punto por cada expulsión.",pts:1},
-  {codigo:"LR",nombre:"La Rachita",desc:"Elegí un partido como inicio de La Rachita.<br>1 punto si acertás el primero, 2 puntos si acertás el segundo y 4 puntos si acertás el tercero.",pts:4},
+  {codigo:"LR",nombre:"La Rachita",desc:"Elegí un partido como inicio de La Rachita.<br>1 punto si acertás el primero, 2 puntos si acertás el segundo y 3 puntos si acertás el tercero.",pts:3},
   {codigo:"LLDG",nombre:"Lluvia de Goles",desc:"Elegí un partido en el que creas que habrá 5 goles o más.<br>Si acertás, sumás 4 puntos.",pts:4},
-  {codigo:"DIEGO",nombre:"El Diego",desc:"Elegí 3 partidos que creas terminarán en empate.<br>Si acertás los 3, sumás 5 puntos.",pts:5},
+  {codigo:"DIEGO",nombre:"El Diego",desc:"Elegí 3 partidos que creas terminarán en empate.<br>1 punto por el primer empate, 2 por el segundo y 3 por el tercero (hasta 6 puntos).",pts:3},
   {codigo:"GSA",nombre:"Goles Son Amores",desc:"Elegí un partido en el que ambos equipos conviertan goles.<br>Sumás 1 punto por cada gol del partido.",pts:1},
   {codigo:"ZPL",nombre:"La Zapali",desc:"Elegí un partido en el que haya un ganador por diferencia de 3 goles o más.<br>Si acertás, sumás 4 puntos.",pts:4},
-  {codigo:"MK",nombre:"La MK",desc:"Elegí el resultado exacto de un partido.<br>No se puede elegir Empate en 0.<br>Si acertás, sumás 5 puntos.",pts:5},
+  {codigo:"MK",nombre:"La MK",desc:"Elegí el resultado exacto de un partido.<br>No se puede elegir Empate en 0.<br>Si acertás, sumás 4 puntos.",pts:4},
   {codigo:"EQS",nombre:"Empate Que Suma",desc:"Elegí un partido que finalice en empate.<br>Si acertás, sumás 3 puntos.",pts:3},
 ];
 window._reglasSelAdmin=new Set();
@@ -3769,7 +3788,7 @@ function _getLRInfo(){
   const numInicio=prdInicio.numero||0;
   const result={};
   const parts3=(window._parts||[]).filter(function(p){return p.numero>=numInicio&&p.numero<numInicio+3;}).sort(function(a,b){return a.numero-b.numero;});
-  [1,2,4].forEach(function(m,i){if(parts3[i])result[parts3[i].id]={mult:m,pos:i+1};});
+  [1,2,3].forEach(function(m,i){if(parts3[i])result[parts3[i].id]={mult:m,pos:i+1};});
   return result;
 }
 
@@ -4455,7 +4474,7 @@ function avatarHtml(u,cls){
   if(a&&a.length<=4)return`<span class="${cls||"g-av"} av-emo">${a}</span>`;
   return`<span class="${cls||"g-av"}">${ini}</span>`;
 }
-const TIPO_INFO={Normal:{k:"×1",n:"Simple",pts:1,cls:"t-s"},Doble:{k:"×2",n:"Doble",pts:2,cls:"t-d"},Polla:{k:"P",n:"Polla Partido",pts:5,cls:"t-p"}};
+const TIPO_INFO={Normal:{k:"×1",n:"Simple",pts:1,cls:"t-s"},Doble:{k:"×2",n:"Doble",pts:2,cls:"t-d"},Polla:{k:"P",n:"Polla Partido",pts:3,cls:"t-p"}};
 function renderGrilla(){
   const el=document.getElementById("gc");if(!el||!window._grilla)return;
   const g=window._grilla,parts=g.data.partidos||[],jug=g.data.jugadores||[];
@@ -4470,7 +4489,7 @@ function renderGrilla(){
   parts.forEach(function(p){const c={L:0,E:0,V:0},quien={L:[],E:[],V:[]};jug.forEach(function(j){const v=(j.pronos[p.id]||{}).v;if(c[v]!==undefined){c[v]++;quien[v].push(j);}});
     const t=c.L+c.E+c.V||1,pct={L:c.L/t*100,E:c.E/t*100,V:c.V/t*100};
     st[p.id]={c:c,t:c.L+c.E+c.V,pct:pct,quien:quien,tole:p.es_tole!==undefined?(p.tipo!=="Polla"&&!!p.es_tole):(p.tipo!=="Polla"&&t>=3&&pct.L<45&&pct.E<45&&pct.V<45)};});
-  const valor=function(p){return p.tipo==="Polla"?5:st[p.id].tole?3:(TIPO_INFO[p.tipo]||TIPO_INFO.Normal).pts;};
+  const valor=function(p){return p.tipo==="Polla"?3:st[p.id].tole?3:(TIPO_INFO[p.tipo]||TIPO_INFO.Normal).pts;};
 
   // Contra quién: atajos o elegidos a mano
   const top=function(n){return otros.filter(function(j){return (j.posicion||99)<=n;}).slice(0,n);};
@@ -4974,12 +4993,12 @@ window.guardarRes=async(pid,fid)=>{const gL=document.getElementById("gL-"+pid)?.
 /* ══ REGLAMENTO (para jugadores) ═════════════════════════════ */
 function renderReglamento(){
   const R=[["La Marea Roja","LMR","3 partidos","1 punto por cada tarjeta roja","No"],
-    ["La Rachita","LR","1 partido de inicio","Racha con ese y los 2 siguientes: 1 + 2 + 4 (máx. 7). Se corta al primer error","Sí"],
+    ["La Rachita","LR","1 partido de inicio","Racha con ese y los 2 siguientes: 1 + 2 + 3 (máx. 6). Se corta al primer error","Sí"],
     ["Lluvia de Goles","LLDG","1 partido","4 puntos si hay 5 goles o más","No"],
-    ["El Diego","DIEGO","3 partidos","1 empate = 1 pt · 2 empates = 3 pts · 3 empates = 5 pts","No"],
+    ["El Diego","DIEGO","3 partidos","1.er empate 1 pt · 2.º 2 pts · 3.º 3 pts (máx. 6)","No"],
     ["Goles Son Amores","GSA","1 partido","Si ambos anotan, 1 punto por gol (2-1 = 3 pts)","No"],
     ["La Zapali","ZPL","1 partido","4 puntos si hay diferencia de 3 goles o más","No"],
-    ["La MK","MK","1 partido y su resultado exacto (no 0-0)","5 puntos si clavás el resultado","—"],
+    ["La MK","MK","1 partido y su resultado exacto (no 0-0)","4 puntos si clavás el resultado","—"],
     ["Empate Que Suma","EQS","1 partido","3 puntos si termina empatado","No"]];
   return`<div class="su rg">
     <div class="rg-index">${["Calendario","Puntos","Cambios","Reglas especiales","Validez de los partidos","Premio y desempate","Inscripción"].map(function(t,i){return`<a href="#rg-${i}" onclick="event.preventDefault();document.getElementById('rg-${i}').scrollIntoView({behavior:'smooth',block:'start'})">${t}</a>`;}).join("")}</div>
@@ -5000,10 +5019,10 @@ function renderReglamento(){
       <div class="rg-pts">
         <div class="rg-pt"><span class="t-tag t-s">×1</span><b>1</b><small>Simple</small></div>
         <div class="rg-pt"><span class="t-tag t-d">×2</span><b>2</b><small>Doble</small></div>
-        <div class="rg-pt polla"><span class="t-tag t-p">P</span><b>5</b><small>Polla Partido</small></div>
+        <div class="rg-pt polla"><span class="t-tag t-p">P</span><b>3</b><small>Polla Partido</small></div>
         <div class="rg-pt tole"><span class="t-tag t-tole">🔥</span><b>3</b><small>TOLE</small></div>
       </div>
-      <div class="rg-box"><b>🔥 TOLE:</b> si al cierre ninguna opción juntó el 45% de los pronósticos (el grupo estuvo muy dividido), el partido pasa a valer <b>3 puntos</b>, sea Simple o Doble. No se suma: reemplaza el valor. <b>El Polla Partido nunca es TOLE</b> y vale siempre 5. El TOLE queda fijo al cierre, aunque después haya cambios.</div>
+      <div class="rg-box"><b>🔥 TOLE:</b> si al cierre ninguna opción juntó el 45% de los pronósticos (el grupo estuvo muy dividido), el partido pasa a valer <b>3 puntos</b>, sea Simple o Doble. No se suma: reemplaza el valor. <b>El Polla Partido nunca es TOLE</b> y vale siempre 3. El TOLE queda fijo al cierre, aunque después haya cambios.</div>
     </section>
 
     <section class="rg-sec" id="rg-2"><h2>Cambios de pronóstico</h2>
@@ -6657,7 +6676,7 @@ window.toggleAviso=async function(col,prop,on){
 };
 
 // Cómo se cuentan los puntos de cada regla (no todas valen un número fijo)
-function ptsRegla(r){const c=r.codigo||"";return{GSA:"+1 por gol",LMR:"+1 por roja",LR:"1 · 2 · 4 pts",DIEGO:"1 · 3 · 5 pts"}[c]||("+"+r.pts+" pts");}
+function ptsRegla(r){const c=r.codigo||"";return{GSA:"+1 por gol",LMR:"+1 por roja",LR:"1 · 2 · 3 pts",DIEGO:"1 · 2 · 3 pts"}[c]||("+"+r.pts+" pts");}
 // ── LANDING (portada para quien no tiene sesión) ────────────
 const WHATSAPP="5491161630873";
 function showLanding(){
