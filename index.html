@@ -33,11 +33,11 @@
 /* Siempre por conexión segura en el dominio propio */
 if(location.protocol==="http:"&&/(^|\.)pollaprodes\.ar$/.test(location.hostname))location.replace("https://"+location.host+location.pathname+location.search+location.hash);
 /* Preferencias de apariencia: se aplican antes de pintar para que no haya parpadeo */
-(function(){var d={mode:"auto",theme:"cancha",layout:"side",vista:"full"},p=d;
+(function(){var d={mode:"auto",theme:"cancha",layout:"side"},p=d;
 try{p=Object.assign({},d,JSON.parse(localStorage.getItem("pp_prefs")||"{}"));}catch(e){}
 var h=document.documentElement,m=p.mode==="auto"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):p.mode;
 var mk=null;try{if(/[?&]e=/.test(location.search)||/^\/(PollaProdes\/)?[A-Za-z0-9_-]{3,16}\/?$/.test(location.pathname))mk=JSON.parse(localStorage.getItem("pp_marca")||"null");}catch(e){}
-h.setAttribute("data-theme",mk?mk.tema:p.theme);h.setAttribute("data-mode",m);h.setAttribute("data-layout",p.layout);h.setAttribute("data-vista",p.vista||"full");window.__prefs=p;
+h.setAttribute("data-theme",mk?mk.tema:p.theme);h.setAttribute("data-mode",m);h.setAttribute("data-layout",p.layout);window.__prefs=p;
 if(mk&&mk.css){var st=document.createElement("style");st.id="marca-css";st.textContent=mk.css;document.head.appendChild(st);}})();
 </script>
 <style>
@@ -2616,31 +2616,6 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 .teams-block>.team-box{align-self:end}
 .teams-block>.team-goles{align-self:start}
 
-/* Ajustes: vista de partidos jugados */
-.vistas{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.vista-opt{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface-2);text-align:left;cursor:pointer;color:var(--ink)}
-.vista-opt b{font-size:14.5px}
-.vista-opt span{font-size:12px;color:var(--ink-3);line-height:1.3}
-.vista-opt[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.pcj-pts{display:none}
-
-/* Vista minimalista: partido jugado en una franja + una línea */
-html[data-vista="mini"] .partido-card.jugado{padding-bottom:12px!important}
-html[data-vista="mini"] .partido-card.jugado :is(.team-goles,.dz,.pc-st-fl,.senior-flag){display:none!important}
-html[data-vista="mini"] .partido-card.jugado .teams-block{grid-template-rows:auto;margin-bottom:0!important;gap:8px}
-html[data-vista="mini"] .partido-card.jugado .vs-center{grid-row:auto}
-html[data-vista="mini"] .partido-card.jugado .team-box{flex-direction:row;gap:8px;align-self:center}
-html[data-vista="mini"] .partido-card.jugado .team-box:nth-child(3){flex-direction:row-reverse}
-html[data-vista="mini"] .partido-card.jugado .team-escudo{width:30px;height:30px;box-shadow:none}
-html[data-vista="mini"] .partido-card.jugado .team-escudo img{padding:3px!important}
-html[data-vista="mini"] .partido-card.jugado .team-name-big{font-size:15px;text-align:left}
-html[data-vista="mini"] .partido-card.jugado .team-box:nth-child(3) .team-name-big{text-align:right}
-html[data-vista="mini"] .partido-card.jugado .score-vivo{font-size:28px}
-html[data-vista="mini"] .partido-card.jugado .vs-center>div{flex-direction:row!important;gap:8px!important}
-html[data-vista="mini"] .partido-card.jugado .pc-pill{transform:scale(.75)}
-html[data-vista="mini"] .pcj-pts{display:inline-block;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,.22);font-size:12.5px;letter-spacing:0;white-space:nowrap}
-html[data-vista="mini"] .pcj-pts.pos{background:#fff;color:#0F7A3E}
-html[data-vista="mini"] #jc>.partido-card.jugado>.teams-block{flex:none}
 
 </style>
 </head>
@@ -2872,13 +2847,6 @@ html[data-vista="mini"] #jc>.partido-card.jugado>.teams-block{flex:none}
           </button>
         </div>
         <div class="st-hint">En el celular el menú siempre va abajo, al alcance del pulgar.</div>
-      </div>
-      <div class="st-group">
-        <div class="st-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Partidos jugados</div>
-        <div class="vistas" data-pref="vista">
-          <button class="vista-opt" data-v="full" onclick="setPref('vista','full')"><b>Completa</b><span>Goleadores y detalle de puntos</span></button>
-          <button class="vista-opt" data-v="mini" onclick="setPref('vista','mini')"><b>Minimalista</b><span>Solo resultado, tu pronóstico y puntos</span></button>
-        </div>
       </div>
     </div>
   </div>
@@ -3716,7 +3684,7 @@ function renderPartidos(parts,ctx,puede){
           ${(function(){const t=TIPO_INFO[p.tipo]||TIPO_INFO.Normal;return`<span class="t-tag ${t.cls} pc-tipo">${p.tipo==="Polla"?'<i class="k-d">P</i><i class="k-m">PP</i>':t.k}</span><span class="pc-tipo-n">${t.n}</span>`;})()}${p.esToleTole?'<span class="t-tag t-tole pc-tipo">🔥 TOLE</span>':""}
           ${p.estado==="En Vivo"?`<span class="bdg blive" style="font-size:16px;padding:4px 11px">● VIVO</span>`:""}
           ${reglaEnPartido.map(function(r){return`<span class="bdg bgold" style="font-size:14px;padding:3px 8px">${r.codigo}</span>`;}).join("")}`;
-    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}${_calc?(_tot>0?" suma":" nosuma"):""}${esSenior(p)?" senior":""}${p.estado==="Finalizado"?" jugado":""}" id="pc-${p.id}">${p.estado==="Finalizado"?`<div class="pc-jugado"><div class="pcj-bdgs">${_bdgs}</div><div class="pct-r"><b>${p.fechaHora?new Date(p.fechaHora).toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","").replace(",","")+" hs":""}</b>${_calc?`<span class="pcj-pts ${_tot>0?"pos":""}">${_tot>0?"+"+_tot:"0"} pts</span>`:""}<span class="pcj-est">✓<i class="pcj-txt"> JUGADO</i></span></div></div><div class="pc-st-fl">${botonStats(p,"st-mini st-ico").replace("📊 Estadísticas","📊")}</div>`:""}${esSenior(p)?`<span class="senior-flag">Senior</span>`:""}
+    return`<div class="partido-card${sel?" pronosticado":""}${tipoCls}${_calc?(_tot>0?" suma":" nosuma"):""}${esSenior(p)?" senior":""}${p.estado==="Finalizado"?" jugado":""}" id="pc-${p.id}">${p.estado==="Finalizado"?`<div class="pc-jugado"><div class="pcj-bdgs">${_bdgs}</div><div class="pct-r"><b>${p.fechaHora?new Date(p.fechaHora).toLocaleString("es-AR",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}).replace(".","").replace(",","")+" hs":""}</b><span class="pcj-est">✓<i class="pcj-txt"> JUGADO</i></span></div></div><div class="pc-st-fl">${botonStats(p,"st-mini st-ico").replace("📊 Estadísticas","📊")}</div>`:""}${esSenior(p)?`<span class="senior-flag">Senior</span>`:""}
       ${p.estado==="Finalizado"?"":`<div class="pc-jugado pend"><div class="pcj-bdgs">${_bdgs}</div><div class="pct-r">${_cuandoH?`<b>${_cuandoH}</b>`:""}</div></div>${_statsH?`<div class="pc-st-fl">${_statsH}</div>`:""}${_pillH&&!_calc?`<div class="pct-aviso">${_pillH}</div>`:""}`}
       <div class="teams-block">
         <div class="team-box">
@@ -5165,7 +5133,7 @@ function applyPrefs(p,animar){
   const h=document.documentElement;
   if(animar){h.classList.add("theming");clearTimeout(window._thT);window._thT=setTimeout(()=>h.classList.remove("theming"),450);}
   const modo=p.mode==="auto"?(_mqDark.matches?"dark":"light"):p.mode;
-  h.setAttribute("data-theme",window.__marca?(window.__marca.tema||"marca"):p.theme);h.setAttribute("data-mode",modo);h.setAttribute("data-layout",p.layout);h.setAttribute("data-vista",p.vista||"full");
+  h.setAttribute("data-theme",window.__marca?(window.__marca.tema||"marca"):p.theme);h.setAttribute("data-mode",modo);h.setAttribute("data-layout",p.layout);
   const tg=document.querySelector('#settings [data-pref="theme"]');if(tg)tg.closest(".st-group").style.display=window.__marca?"none":"";
   const tc=document.querySelector('meta[name="theme-color"]');
   if(tc)tc.setAttribute("content",getComputedStyle(h).getPropertyValue(modo==="dark"?"--bg":"--hero-b").trim()||"#050D1A");
