@@ -3398,8 +3398,8 @@ function partidoDet(p,v,etiqueta){
   const tags=`<span class="t-tag ${ti.cls}">${ti.k}</span>${p.esToleTole?'<span class="t-tag t-tole">🔥</span>':""}${esSenior(p)?TAG_SENIOR:""}`;
   const jugado=p.golesLocal!==null&&p.golesLocal!==undefined&&p.golesLocal!=="";
   const susp=p.estado==="Suspendido",post=p.estado==="Postergado";
-  const d=p.fechaHora?new Date(p.fechaHora):null;
-  const hora=d?d.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"";
+  const d=p.fechaHora&&!esAmateur(p)?new Date(p.fechaHora):null;
+  const hora=d?d.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):esAmateur(p)?"vs":"";
   const dia=d?d.toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"numeric",timeZone:"America/Argentina/Buenos_Aires"}).replace(".",""):"";
   const centro=susp?`<span class="pd-est">Susp.</span>`:post?`<span class="pd-est">Post.</span>`:jugado?`<span class="pd-gol">${p.golesLocal}</span><span class="pd-gsep">-</span><span class="pd-gol">${p.golesVisita}</span>`:`<span class="pd-hora">${hora}</span>`;
   const centroV=!jugado&&p.vivo?vivoHtml(p,false,true):centro;
@@ -4608,7 +4608,7 @@ function renderGrilla(){
       <button class="pp-top" onclick="window._grilla.pAb=window._grilla.pAb==='${p.id}'?null:'${p.id}';renderGrilla()">
         <div class="pp-eq"><span class="t-tag ${ti.cls}">${ti.k}</span>${x.tole?'<span class="t-tag t-tole">🔥</span>':""}${esSenior(p)?TAG_SENIOR:""}
           <span class="dl-team">${p.local_logo?`<img src="${p.local_logo}" alt="">`:inicialEq(p.local)}<b>${sigla(p.local)}</b></span>
-          <span class="dl-res">${jugado?p.goles_local+"-"+p.goles_visita:p.fecha_hora?new Date(p.fecha_hora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"vs"}</span>
+          <span class="dl-res">${jugado?p.goles_local+"-"+p.goles_visita:esAmateur(p)?"vs":p.fecha_hora?new Date(p.fecha_hora).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:"America/Argentina/Buenos_Aires"}):"vs"}</span>
           <span class="dl-team"><b>${sigla(p.visita)}</b>${p.visita_logo?`<img src="${p.visita_logo}" alt="">`:inicialEq(p.visita)}</span></div>
         <div class="pp-yo">${mio?`<span class="pp-yo-k">Vos</span><span class="pcell ${mio}${jugado?(mio===p.resultado?" ok":" no"):""}">${mio}</span><span class="pp-igual"><b>${igual}</b> de ${resto} igual que vos</span>`:`<span class="pp-igual">No jugaste este partido</span>`}</div>
         <div class="pp-bar">${seg("L")}${seg("E")}${seg("V")}</div>
