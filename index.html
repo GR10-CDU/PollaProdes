@@ -4157,6 +4157,14 @@ window.jugarFecha=async function(){
     setTimeout(function(){go("fechas");document.getElementById("pp-jugada")?.remove();},4000);
   }catch(e){toast("❌ Error: "+e.message);renderReglasSection(true);}
 };
+// Redibujar la lista sin mover la pantalla: en el celular, al reemplazar el botón tocado el navegador saltaba arriba de todo
+function sinSaltar(fn){
+  const sc=document.getElementById("scroll"),y=sc?sc.scrollTop:0,wy=window.scrollY;
+  try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur();}catch(e){}
+  fn();
+  const volver=function(){if(sc&&Math.abs(sc.scrollTop-y)>2)sc.scrollTop=y;if(Math.abs(window.scrollY-wy)>2)window.scrollTo(0,wy);};
+  volver();requestAnimationFrame(volver);setTimeout(volver,120);
+}
 window.pronosticar=async function(pid,v,fid,poid){
   const prev=window._pr[pid]?Object.assign({},window._pr[pid]):null;
   const esCambio=prev&&prev.v&&prev.v!==v;
@@ -4166,10 +4174,10 @@ window.pronosticar=async function(pid,v,fid,poid){
   if(esNuevo){
     if(!window._pr[pid])window._pr[pid]={v:v,cr:3};
     else window._pr[pid].v=v;
-    renderPartidos(window._parts,window._ctx,true);
+    sinSaltar(function(){renderPartidos(window._parts,window._ctx,true);});
     document.getElementById("pc-"+pid)?.classList.add("just");
     const r=await api("autoguardar",{fechaId:fid,pozoId:poid,pronos:[{partidoId:pid,pronostico:v}]});
-    if(!r.ok){toast("❌ "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];renderPartidos(window._parts,window._ctx,true);return;}
+    if(!r.ok){toast("❌ "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];sinSaltar(function(){renderPartidos(window._parts,window._ctx,true);});return;}
     if(r.cambiosRestantesFecha!==undefined){window._cambiosFecha=r.cambiosRestantesFecha;renderResumenCambios();}
     return;
   }
