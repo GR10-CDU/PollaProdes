@@ -4157,13 +4157,15 @@ window.jugarFecha=async function(){
     setTimeout(function(){go("fechas");document.getElementById("pp-jugada")?.remove();},4000);
   }catch(e){toast("❌ Error: "+e.message);renderReglasSection(true);}
 };
-// Redibujar la lista sin mover la pantalla: en el celular, al reemplazar el botón tocado el navegador saltaba arriba de todo
-function sinSaltar(fn){
-  const sc=document.getElementById("scroll"),y=sc?sc.scrollTop:0,wy=window.scrollY;
-  try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur();}catch(e){}
-  fn();
-  const volver=function(){if(sc&&Math.abs(sc.scrollTop-y)>2)sc.scrollTop=y;if(Math.abs(window.scrollY-wy)>2)window.scrollTo(0,wy);};
-  volver();requestAnimationFrame(volver);setTimeout(volver,120);
+// Al elegir L/E/V se reemplaza SOLO la tarjeta de ese partido: el resto de la pantalla no se toca ni se mueve
+function actualizarTarjeta(pid){
+  const real=document.getElementById("jc");if(!real)return;
+  const tmp=document.createElement("div");tmp.style.display="none";
+  real.id="jc-real";tmp.id="jc";document.body.appendChild(tmp);
+  try{renderPartidos(window._parts,window._ctx,true);}finally{tmp.id="";real.id="jc";}
+  const nueva=tmp.querySelector("#pc-"+CSS.escape(pid)),vieja=real.querySelector("#pc-"+CSS.escape(pid));
+  if(nueva&&vieja)vieja.replaceWith(nueva);else real.innerHTML=tmp.innerHTML;
+  tmp.remove();
 }
 window.pronosticar=async function(pid,v,fid,poid){
   const prev=window._pr[pid]?Object.assign({},window._pr[pid]):null;
@@ -4174,10 +4176,10 @@ window.pronosticar=async function(pid,v,fid,poid){
   if(esNuevo){
     if(!window._pr[pid])window._pr[pid]={v:v,cr:3};
     else window._pr[pid].v=v;
-    sinSaltar(function(){renderPartidos(window._parts,window._ctx,true);});
+    actualizarTarjeta(pid);
     document.getElementById("pc-"+pid)?.classList.add("just");
     const r=await api("autoguardar",{fechaId:fid,pozoId:poid,pronos:[{partidoId:pid,pronostico:v}]});
-    if(!r.ok){toast("❌ "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];sinSaltar(function(){renderPartidos(window._parts,window._ctx,true);});return;}
+    if(!r.ok){toast("❌ "+r.error);if(prev)window._pr[pid]=prev;else delete window._pr[pid];actualizarTarjeta(pid);return;}
     if(r.cambiosRestantesFecha!==undefined){window._cambiosFecha=r.cambiosRestantesFecha;renderResumenCambios();}
     return;
   }
@@ -6051,7 +6053,7 @@ function cajaCodigoEn(el){
 function entrarAEmpresaDeFecha(r){
   if(!r||!r.empresaId||!r.user||App.user?.rol==="Admin")return;
   const rb=App.user.rolBase;App.user=Object.assign(App.user,{empresas:r.user.empresas});if(rb)App.user.rolBase=rb;
-  aplicarEspacio(r.empresaId);saveSession(App.user,App.token);aplicarMarca(App.user.empresa||null);try{pintarEspacios();}catch(e){}
+  guardarEspacioElegido(r.empresaId);aplicarEspacio(r.empresaId);saveSession(App.user,App.token);aplicarMarca(App.user.empresa||null);try{pintarEspacios();}catch(e){}
 }
 window.entrarConCodigo=async function(cod,silencioso){
   cod=String(cod||"").trim().toUpperCase();if(cod.length<3){if(!silencioso)toast("Escribí el código");return false;}
@@ -6272,19 +6274,21 @@ function aplicarEspacio(id){
   const emp=u.rolBase==="Admin"?null:((u.empresas||[]).find(function(e){return e.id===id;})||null);
   App.espacio=emp?emp.id:"";u.empresa=emp;u.datosExtra=emp?(emp.datosExtra||{}):{};
   u.rol=u.rolBase==="Admin"?"Admin":(emp&&emp.rolEmpresa==="AdminEmpresa"?"AdminEmpresa":"Jugador");
-  try{localStorage.removeItem("pp_espacio");localStorage.setItem("pp_ult_esp",App.espacio);}catch(e){}
+  try{localStorage.removeItem("pp_espacio");localStorage.removeItem("pp_ult_esp");}catch(e){}
   // La barra de direcciones refleja dónde estás (para recargar o guardar el link)
   try{const base=location.pathname.replace(/[^/]*$/,"");history.replaceState(null,"",emp?linkEmpresa(emp).replace(location.origin,""):base);}catch(e){}
 }
+function guardarEspacioElegido(id){try{localStorage.setItem("pp_esp_elegido",id||"");}catch(e){}}
 function resolverEspacio(){
   const u=App.user,es=espaciosDe(u);let pref=window._espacioIngreso;window._espacioIngreso=undefined;
   if(pref===undefined||pref===null){
     // pollaprodes.ar → Polla Prodes · pollaprodes.ar/codigo (?e=codigo) → esa empresa, si es miembro
     const cod=String(codigoDeDireccion()||"").toUpperCase();
     const emp=cod?(u.empresas||[]).find(function(e){return String(e.codigo).toUpperCase()===cod;}):null;
-    // Sin código en la dirección (ej. el ícono de la app): vuelve al último espacio usado, así la fecha de su liga no "desaparece"
-    let ult="";try{ult=localStorage.getItem("pp_ult_esp")||"";}catch(e){}
-    pref=emp?emp.id:(cod?"":ult);
+    // Sin código en la dirección (ej. el ícono de la app instalada): el último espacio que eligió; si nunca eligió, su liga/empresa
+    let ult=null;try{ult=localStorage.getItem("pp_esp_elegido");}catch(e){}
+    if(emp)guardarEspacioElegido(emp.id);
+    pref=emp?emp.id:(cod?"":(ult!==null?ult:((u.empresas&&u.empresas[0]&&u.empresas[0].id)||"")));
   }
   const ok=es.some(function(e){return e.id===(pref||"");});
   aplicarEspacio(ok?(pref||""):((es[0]&&es[0].id)||""));
@@ -6297,6 +6301,7 @@ function pintarEspacios(){
   if(tb)tb.innerHTML=`<div class="tb-ucap">Cambiar a</div>${es.filter(function(e){return e.id!==App.espacio;}).map(function(e){return`<div class="tb-ui" onclick="cambiarEspacio('${e.id}')">${ico(e)}${escH(e.nombre)}</div>`;}).join("")}<div class="tb-usep"></div>`;
 }
 window.cambiarEspacio=function(id){
+  guardarEspacioElegido(id);
   document.querySelector(".tb-user")?.classList.remove("open");
   aplicarEspacio(id);saveSession(App.user,App.token);aplicarMarca(App.user.empresa||null);pintarEspacios();
   api("getMisInscripciones").then(function(r){if(r.ok)window._misFechasBadge=(r.inscripciones||[]).filter(function(i){return !i.terminada;}).length;renderNav();});
