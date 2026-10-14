@@ -3535,7 +3535,7 @@ async function loadPozos(fid){
 window.selPozo=id=>{window._selPozo=id;document.querySelectorAll(".pozo-card").forEach(c=>c.classList.remove("sel"));const e=document.getElementById("poz-"+id);if(e)e.classList.add("sel");const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=`<button class="btn btn-p btn-lg" onclick="inscribirse()">Inscribirme →</button>`;}};
 window.toggleGrupo=()=>{const e=document.getElementById("gform");if(e)e.style.display=e.style.display==="none"?"block":"none";};
 window.buscarGrupo=async()=>{const c=document.getElementById("gcod")?.value;if(!c||c.length<3){toast("Ingresá el código");return;}const r=await api("getGrupoPorCodigo",{codigo:c,pozoId:window._selPozo}),el=document.getElementById("gres");if(!el)return;if(!r.ok){el.innerHTML=`<div class="err-box" style="margin-top:10px">⚠ ${r.error}</div>`;return;}const g=r.grupo;el.innerHTML=`<div class="card" style="margin-top:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap"><div style="width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:var(--accent-soft)">🔓</div><div style="flex:1;min-width:160px"><div style="font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--g2)">Código válido</div><div style="font-family:var(--ff);font-size:24px;font-weight:800;text-transform:uppercase;line-height:1.1">${g.fechaNombre||g.nombre}</div><div style="font-size:13.5px;color:var(--txt3)">${g.pozoNombre||""}${g.cerrado?" · Entrás sin pagar":""}</div></div><button class="btn btn-p" id="btn-unirse" onclick="unirseConCodigo('${c}','${g.pozoId}')">Entrar al grupo →</button></div>`;};
-window.unirseConCodigo=async(codigo,pozoId)=>{const b=document.getElementById("btn-unirse");if(b){b.disabled=true;b.textContent="Entrando...";}const r=await api("unirseConCodigo",{codigo,pozoId});if(!r.ok){toast("❌ "+r.error);if(b){b.disabled=false;b.textContent="Entrar al grupo →";}return;}toast("✅ ¡Adentro! Ya podés pronosticar");window._misFechasBadge=(window._misFechasBadge||0)+1;renderNav();setTimeout(()=>go("jugar",{fechaId:r.fechaId,pozoId:r.pozoId}),700);};
+window.unirseConCodigo=async(codigo,pozoId)=>{const b=document.getElementById("btn-unirse");if(b){b.disabled=true;b.textContent="Entrando...";}const r=await api("unirseConCodigo",{codigo,pozoId});if(!r.ok){toast("❌ "+r.error);if(b){b.disabled=false;b.textContent="Entrar al grupo →";}return;}toast("✅ ¡Adentro! Ya podés pronosticar");entrarAEmpresaDeFecha(r);window._misFechasBadge=(window._misFechasBadge||0)+1;renderNav();setTimeout(()=>go("jugar",{fechaId:r.fechaId,pozoId:r.pozoId}),700);};
 window.inscribirse=async()=>{
   if(!window._selPozo){toast("Elegí un pozo");return;}
   const pozo=(window._pozos||[]).find(function(p){return p.id===window._selPozo;})||{};
@@ -6039,6 +6039,12 @@ function cajaCodigoEn(el){
     <div class="cod-in"><input class="inp" id="cod-q" placeholder="AMIGOS26" maxlength="16" autocapitalize="characters" oninput="this.value=this.value.toUpperCase().replace(/\\s/g,'')" onkeydown="if(event.key==='Enter')entrarConCodigo(this.value)"/><button class="btn btn-p" onclick="entrarConCodigo(document.getElementById('cod-q').value)">Entrar</button></div>`;
   el.prepend(box);
 }
+// Fecha de una liga/empresa: el servidor lo sumó como miembro → pasa a ese espacio para que la fecha le siga apareciendo
+function entrarAEmpresaDeFecha(r){
+  if(!r||!r.empresaId||!r.user||App.user?.rol==="Admin")return;
+  const rb=App.user.rolBase;App.user=Object.assign(App.user,{empresas:r.user.empresas});if(rb)App.user.rolBase=rb;
+  aplicarEspacio(r.empresaId);saveSession(App.user,App.token);aplicarMarca(App.user.empresa||null);try{pintarEspacios();}catch(e){}
+}
 window.entrarConCodigo=async function(cod,silencioso){
   cod=String(cod||"").trim().toUpperCase();if(cod.length<3){if(!silencioso)toast("Escribí el código");return false;}
   const g=await api("getGrupoPorCodigo",{codigo:cod});
@@ -6046,6 +6052,7 @@ window.entrarConCodigo=async function(cod,silencioso){
   const r=await api("unirseConCodigo",{codigo:cod,pozoId:g.grupo.pozoId});
   if(!r.ok){toast("❌ "+r.error);return false;}
   toast("✅ ¡Adentro de "+(g.grupo.fechaNombre||g.grupo.nombre)+"! Ya podés pronosticar",3500);
+  entrarAEmpresaDeFecha(r);
   window._misFechasBadge=(window._misFechasBadge||0)+1;renderNav();
   go("jugar",{fechaId:r.fechaId,pozoId:r.pozoId});return true;
 };

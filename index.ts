@@ -1990,7 +1990,7 @@ async function unirseConCodigo(db: any, data: any) {
     if (ya.estado_pago !== "Aprobado") {
       await db.from("inscripciones").update({estado_pago:"Aprobado", habilitado:true, pagado_at:new Date().toISOString(), via_codigo:true}).eq("id",ya.id);
     }
-    return {ok:true, fechaId:fecha.id, pozoId:pozo.id, inscripcionId:ya.id};
+    return {ok:true, fechaId:fecha.id, pozoId:pozo.id, inscripcionId:ya.id, ...(await sumarAEmpresaDeFecha(db, auth.userId!, fecha))};
   }
 
   const {data: user} = await db.from("usuarios").select("usuario").eq("id",auth.userId).single();
@@ -2000,7 +2000,14 @@ async function unirseConCodigo(db: any, data: any) {
     estado_pago:"Aprobado", habilitado:true, pagado_at:new Date().toISOString(), via_codigo:true,
   });
   if (error) return {ok:false, error:error.message};
-  return {ok:true, fechaId:fecha.id, pozoId:pozo.id, inscripcionId:id};
+  return {ok:true, fechaId:fecha.id, pozoId:pozo.id, inscripcionId:id, ...(await sumarAEmpresaDeFecha(db, auth.userId!, fecha))};
+}
+// Fecha de una empresa/liga: quien entra con el código queda como miembro, si no la fecha no le aparece al volver a entrar
+async function sumarAEmpresaDeFecha(db: any, userId: string, fecha: any) {
+  if (!fecha.empresa_id) return {};
+  await sumarMiembro(db, userId, fecha.empresa_id);
+  const {data: u} = await db.from("usuarios").select("*").eq("id", userId).single();
+  return {empresaId: fecha.empresa_id, user: u ? await userOut(db, u) : undefined};
 }
 
 // ============================================================
