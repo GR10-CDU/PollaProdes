@@ -3410,7 +3410,7 @@ function partidoDet(p,v,etiqueta){
       <span class="pd-eq loc"><b>${p.local}</b>${esc(p.localLogo,p.local)}</span>
       <span class="pd-mid">${centroV}</span>
       <span class="pd-eq vis">${esc(p.visitaLogo,p.visita)}<b>${p.visita}</b></span>
-      <span class="pd-meta pd-cuando">${cuandoPartido(p.fechaHora)}</span>
+      <span class="pd-meta pd-cuando">${cuandoP(p)}</span>
     </div>`;
   if(v==="C")return`<div class="pd pd-c${jugado?" jugado":""}${esSenior(p)?" senior":""}">${lbl}
       <div class="pd-c-top"><span class="pd-n">#${p.numero}</span>${tags}</div>
@@ -3428,7 +3428,7 @@ function partidoDet(p,v,etiqueta){
         <span class="pd-mid">${centroV}</span>
         <span class="pd-eq vis">${esc(p.visitaLogo,p.visita)}<b>${p.visita}</b></span>
       </div>
-      <div class="pd-a-side der"><span class="pd-meta pd-cuando">${jugado?"Final":cuandoPartido(p.fechaHora)}</span><span class="pd-mio" id="pdm-${p.id}"></span>${botonStats(p,"st-mini")}</div>
+      <div class="pd-a-side der"><span class="pd-meta pd-cuando">${jugado?"Final":cuandoP(p)}</span><span class="pd-mio" id="pdm-${p.id}"></span>${botonStats(p,"st-mini")}</div>
     </div>`;
 }
 
@@ -3841,7 +3841,7 @@ function miniRow(p,sel,prd,calc,tot){
   let centro;
   if(jugado&&p.golesLocal!==null&&p.golesLocal!==undefined&&p.golesLocal!=="")centro=`<span class="pmr-sc">${p.golesLocal}-${p.golesVisita}</span>`;
   else if(p.vivo)centro=vivoHtml(p,false,true);
-  else centro=`<span class="pmr-hora">${cuandoPartido(p.fechaHora,true)}</span>`;
+  else centro=`<span class="pmr-hora">${cuandoP(p,true)}</span>`;
   const prCls=calc?(prd.acertado?"pos":"neg"):"";
   return`<div class="pm-row${jugado?" jug":""}${p.vivo&&!jugado?" vivo":""}${calc?(tot>0?" suma":" nosuma"):""}" id="pc-${p.id}">
     <span class="pmr-n">#${p.numero}</span><span class="t-tag ${t.cls}">${p.tipo==="Polla"?"PP":t.k}</span>
@@ -3910,8 +3910,8 @@ function renderPartidos(parts,ctx,puede){
       else if(!cambiosCerrados&&cf>0){cls="warn";txt=`Te ${cf!==1?"quedan":"queda"} ${cf} cambio${cf!==1?"s":""}${window._cambiosGratis||App.user?.empresa?" gratis":costo} · hasta `+hasta(60);}
       else if(!cambiosCerrados){cls="off";txt="No te quedan cambios";}
       else{cls="";txt="";}
-      plazoHtml=`<div class="pc-plazo"><span class="pp-k pc-cuando">${cuandoPartido(p.fechaHora,true)}</span>${txt?`<span class="pp-v ${cls}">${txt}</span>`:""}${botonStats(p,"st-mini")}</div>`;
-      _cuandoH=cuandoPartido(p.fechaHora,true);_pillH=txt?`<span class="pp-v ${cls}">${txt}</span>`:"";_statsH=botonStats(p,"st-mini st-ico").replace("📊 Estadísticas","📊");
+      plazoHtml=`<div class="pc-plazo"><span class="pp-k pc-cuando">${cuandoP(p,true)}</span>${txt?`<span class="pp-v ${cls}">${txt}</span>`:""}${botonStats(p,"st-mini")}</div>`;
+      _cuandoH=cuandoP(p,true);_pillH=txt?`<span class="pp-v ${cls}">${txt}</span>`:"";_statsH=botonStats(p,"st-mini st-ico").replace("📊 Estadísticas","📊");
     }
     const bloq=!puedePonerProno;
     // Reglas aplicadas a este partido
@@ -6511,7 +6511,10 @@ function linkStats(p){
   const d=p&&p.fechaHora?isoArg(p.fechaHora).slice(0,10):"";
   return"https://www.google.com/search?q="+encodeURIComponent(`flashscore ${p.local} vs ${p.visita} ${d}`);
 }
-function botonStats(p,cls){return`<a class="st-btn ${cls||""}" href="${escH(linkStats(p))}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ver estadísticas en Flashscore">📊 Estadísticas</a>`;}
+// Fútbol amateur (partido con liga "…amateur…"): sin día/hora ni estadísticas, no está en Flashscore
+function esAmateur(p){return!!p&&/amateur/i.test(String(p.liga||""));}
+function cuandoP(p,conHs){return esAmateur(p)?"":cuandoPartido(p.fechaHora,conHs);}
+function botonStats(p,cls){if(esAmateur(p))return"";return`<a class="st-btn ${cls||""}" href="${escH(linkStats(p))}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ver estadísticas en Flashscore">📊 Estadísticas</a>`;}
 window.editarLinkStats=async function(pid,actual){const v=prompt("Link de Flashscore del partido (dejalo vacío para que se busque solo):",actual||"");if(v===null)return;const r=await api("adminLinkPartido",{partidoId:pid,link:v.trim()});toast(r.ok?"✅ Link guardado":"❌ "+r.error);if(r.ok&&App.screen==="admin-res")loadRes(App.ctx);};
 window.guardarLinkStats=async function(pid,inp){const r=await api("adminLinkPartido",{partidoId:pid,link:inp.value});toast(r.ok?(inp.value?"✅ Link guardado":"Link borrado"):"❌ "+r.error);};
 
