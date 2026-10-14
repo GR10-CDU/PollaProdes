@@ -535,7 +535,7 @@ async function getFechas(db: any, data: any) {
   const quien: any = data.sessionToken ? await requireAuth(db, data) : {ok:false};
   const esAdmin = quien.ok && quien.rol === "Admin";
   let q = db.from("fechas").select("*").in("estado", ["Abierta","Cerrada","Jugada"]).order("plazo_limite");
-  if (!esAdmin) { q = quien.ok && quien.empresaId ? q.eq("empresa_id", quien.empresaId) : q.is("empresa_id", null); q = q.eq("publicada", true); }
+  if (!esAdmin) { q = quien.ok && quien.empresaId ? q.eq("empresa_id", quien.empresaId) : q.is("empresa_id", null); q = q.eq("publicada", true).or("oculta.is.null,oculta.eq.false"); }
   const {data: fechas} = await q;
   const {data: emps} = esAdmin ? await db.from("empresas").select("id,nombre") : {data: []};
 

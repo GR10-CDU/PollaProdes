@@ -3273,7 +3273,7 @@ async function loadFechas(){
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
   if(!r.fechas?.length){el.innerHTML=emptyBox("📅","No hay fechas disponibles");cajaCodigoEn(el);mostrarNovedadesEn(el);return;}
   const ICONS={"Liga Argentina":"🇦🇷","Premier League":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","La Liga":"🇪🇸","Serie A":"🇮🇹","Champions League":"🏆","Copa Libertadores":"🌎","Ligue 1":"🇫🇷"};
-  var fechasVis=App.user&&App.user.rol==="Admin"?r.fechas:r.fechas.filter(function(f){return f.estado==="Abierta"&&!f.terminada;});
+  var fechasVis=App.user&&App.user.rol==="Admin"?r.fechas.filter(function(f){return!f.oculta;}):r.fechas.filter(function(f){return f.estado==="Abierta"&&!f.terminada;});
   if(!fechasVis.length){el.innerHTML=emptyBox("&#128197;","No hay fechas abiertas por ahora. Las fechas en las que estás anotado están en En Juego")+fechasTerminadasHtml(r.fechas);cajaCodigoEn(el);mostrarNovedadesEn(el);return;}
   el.innerHTML=fechasVis.map(function(f){
     const mins=f.minutosRestantes,urg=mins<120&&mins>0;
@@ -3598,7 +3598,7 @@ async function loadSRFechas(){
   const el=document.getElementById("sr-fechas-list");if(!el)return;
   const r=await api("getFechas");
   if(!r.ok||!r.fechas?.length){el.innerHTML=`<div style="font-size:16px;color:var(--txt3)">Sin fechas abiertas</div>`;return;}
-  const abiertas=r.fechas.filter(function(f){return f.estado==="Abierta";});
+  const abiertas=r.fechas.filter(function(f){return f.estado==="Abierta"&&!f.oculta;});
   if(!abiertas.length){el.innerHTML=`<div style="font-size:16px;color:var(--txt3)">Sin fechas abiertas</div>`;return;}
   el.innerHTML=abiertas.map(function(f){
     const mins=f.minutosRestantes;
@@ -5792,7 +5792,8 @@ window.mkGuardar=async function(){
 
 
 // ── Admin: ocultar, eliminar y copiar fechas ──
-window.ocultarFecha=async function(id,ocultar){const r=await api("adminOcultarFecha",{fechaId:id,oculta:ocultar});toast(r.ok?(ocultar?"Oculta: los jugadores ya no la ven":"Visible de nuevo"):"❌ "+r.error);if(r.ok)loadAdminFechas();};
+// Ocultar también la despublica: así los jugadores dejan de verla en todas las pantallas. Al mostrarla queda como borrador y se publica con "La fecha está lista".
+window.ocultarFecha=async function(id,ocultar){const r=await api("adminOcultarFecha",{fechaId:id,oculta:ocultar});if(r.ok&&ocultar)await api("adminEditarFecha",{fechaId:id,publicada:false});toast(r.ok?(ocultar?"Oculta: los jugadores ya no la ven":"Visible de nuevo"):"❌ "+r.error);if(r.ok)loadAdminFechas();};
 window.eliminarFecha=async function(id){
   const f=window._adminFechas[id]||{};
   const t=prompt(`Vas a ELIMINAR "${f.nombre}" con todos sus pronósticos, puntos y pagos. No se puede deshacer.\n\nEscribí BORRAR para confirmar:`);
