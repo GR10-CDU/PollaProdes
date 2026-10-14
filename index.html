@@ -4100,20 +4100,28 @@ window._actualizarBotonPrincipal=function(){
   if(estado.completo)div.innerHTML=`<button class="btn btn-p btn-lg" onclick="jugarFecha()">▶ Jugar Fecha</button>`;
   else div.innerHTML=`<div style="padding:12px 14px;background:var(--goldl);border:1px solid rgba(255,179,0,.3);border-radius:var(--rs);margin-bottom:10px"><p style="font-size:16px;font-weight:600;color:var(--gold);margin-bottom:4px">⚠️ Falta completar:</p>${estado.msgs.map(function(m){return`<p style="font-size:16px;color:var(--txt2)">• ${m}</p>`;}).join("")}</div><button class="btn btn-s btn-lg" onclick="guardarProgreso()">💾 Guardar progreso</button>`;
 };
+// Elegir o quitar un partido de una regla: la sección de reglas queda en el mismo lugar de la pantalla
+function quieto(fn){
+  const ref=document.getElementById("jf-reglas"),sc=document.getElementById("scroll");
+  const t0=ref?ref.getBoundingClientRect().top:null;
+  try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur();}catch(e){}
+  fn();
+  if(ref&&t0!==null){const d=ref.getBoundingClientRect().top-t0;if(Math.abs(d)>1){if(sc&&sc.scrollHeight>sc.clientHeight)sc.scrollTop+=d;else window.scrollBy(0,d);}}
+}
 window.agregarPartidoRegla=function(cod,pid){
   if(!pid)return;
   const reg=window._reglasDisp.find(function(r){return r.codigo===cod;});
   if(!reg)return;
   if(reg.partidos.includes(pid)){toast("Ya elegiste ese partido");return;}
   if(reg.partidos.length>=reg.cantReq){toast("Ya elegiste los "+reg.cantReq+" partidos");return;}
-  reg.partidos.push(pid);renderPartidos(window._parts,window._ctx,true);renderReglasSection(true);
+  reg.partidos.push(pid);quieto(function(){actualizarTarjeta(pid);renderReglasSection(true);});
 };
 window.quitarPartidoRegla=function(cod,pid){
   const reg=window._reglasDisp.find(function(r){return r.codigo===cod;});
   if(!reg)return;
   if(!_enLibre()&&(reg.guardados||[]).includes(pid)){toast("🔒 Las reglas quedaron fijas 1 hora antes del primer partido");return;}
   reg.partidos=reg.partidos.filter(function(id){return id!==pid;});
-  renderPartidos(window._parts,window._ctx,true);renderReglasSection(true);
+  quieto(function(){actualizarTarjeta(pid);renderReglasSection(true);});
 };
 window._guardarTodasLasReglas=async function(){
   const reglas=window._reglasDisp.filter(function(reg){return reg.partidos.length>0||(_enLibre()&&(reg.guardados||[]).length>0);}).map(function(reg){return{codigo:reg.codigo,partidos:reg.partidos,detalle:reg.codigo==="MK"?(reg.detalleMK||""):""};});
