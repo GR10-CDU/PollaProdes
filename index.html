@@ -6264,7 +6264,7 @@ function aplicarEspacio(id){
   const emp=u.rolBase==="Admin"?null:((u.empresas||[]).find(function(e){return e.id===id;})||null);
   App.espacio=emp?emp.id:"";u.empresa=emp;u.datosExtra=emp?(emp.datosExtra||{}):{};
   u.rol=u.rolBase==="Admin"?"Admin":(emp&&emp.rolEmpresa==="AdminEmpresa"?"AdminEmpresa":"Jugador");
-  try{localStorage.removeItem("pp_espacio");}catch(e){}
+  try{localStorage.removeItem("pp_espacio");localStorage.setItem("pp_ult_esp",App.espacio);}catch(e){}
   // La barra de direcciones refleja dónde estás (para recargar o guardar el link)
   try{const base=location.pathname.replace(/[^/]*$/,"");history.replaceState(null,"",emp?linkEmpresa(emp).replace(location.origin,""):base);}catch(e){}
 }
@@ -6274,7 +6274,9 @@ function resolverEspacio(){
     // pollaprodes.ar → Polla Prodes · pollaprodes.ar/codigo (?e=codigo) → esa empresa, si es miembro
     const cod=String(codigoDeDireccion()||"").toUpperCase();
     const emp=cod?(u.empresas||[]).find(function(e){return String(e.codigo).toUpperCase()===cod;}):null;
-    pref=emp?emp.id:"";
+    // Sin código en la dirección (ej. el ícono de la app): vuelve al último espacio usado, así la fecha de su liga no "desaparece"
+    let ult="";try{ult=localStorage.getItem("pp_ult_esp")||"";}catch(e){}
+    pref=emp?emp.id:(cod?"":ult);
   }
   const ok=es.some(function(e){return e.id===(pref||"");});
   aplicarEspacio(ok?(pref||""):((es[0]&&es[0].id)||""));
