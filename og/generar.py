@@ -62,11 +62,11 @@ for e in empresas():
   h=hashlib.sha1(json.dumps(e,sort_keys=True).encode()).hexdigest()[:12]
   if estado.get(cod)==h and (R/f"og/{cod}.jpg").exists() and (R/cod/"index.html").exists(): continue
   c=e["color"] or "#2F5BEA"
-  captura(tarjeta(e["logo"] or icon,html.escape(e["nombre"]),html.escape(e["slogan"] or "La Polla de "+e["nombre"]),"Jugá gratis con tu código · con Polla Prodes",c,"#05070C","#FFFFFF"),R/f"og/{cod}.jpg")
-  m=metas(f"Polla {e['nombre']}",(e["slogan"] or f"El prode de {e['nombre']}")+". Entrá, pronosticá y competí con tu gente.",SITE+f"og/{cod}.jpg?v={h}",SITE+cod)
+  captura(tarjeta(e["logo"] or icon,html.escape(e["nombre"]),"¡Sumate al Prode!",html.escape(e["slogan"] or "Pronosticá, seguí la tabla en vivo y demostrá quién sabe más"),c,"#05070C","#FFFFFF"),R/f"og/{cod}.jpg")
+  m=metas(f"⚽ ¡Sumate al Prode de {e['nombre']}!",(e["slogan"] or "Pronosticá los partidos, seguí la tabla en vivo y demostrá quién sabe más de fútbol")+". Gratis, desde el celular.",SITE+f"og/{cod}.jpg?v={h}",SITE+cod)
   (R/cod).mkdir(exist_ok=True)
   (R/cod/"index.html").write_text(f"""<!doctype html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Polla {html.escape(e["nombre"])}</title>
+<title>Prode {html.escape(e["nombre"])}</title>
 {m}
 <script>location.replace("../?e="+encodeURIComponent("{cod}"));</script>
 </head><body style="background:#05070C"></body></html>""")
