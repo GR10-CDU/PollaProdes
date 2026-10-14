@@ -5668,7 +5668,7 @@ function renderEditorEmpresa(el,emp,esAdminGeneral){
         <div class="me-tit">Invitá a tu gente</div>
         <p class="me-p">Compartí este link: entran con la marca de ${escH(emp.nombre)} y quedan en la empresa al registrarse.</p>
         <div class="me-link"><code>${escH(link)}</code></div>
-        <div class="me-acc"><button class="btn btn-s" onclick="navigator.clipboard?.writeText('${link}').then(function(){toast('Link copiado')})">Copiar link</button><a class="btn btn-p" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Te invito al prode de la liga, ¿quién sabe más?\n"+link+"\nCódigo para jugar: *"+emp.codigo+"*")}">Compartir por WhatsApp</a></div>
+        <div class="me-acc"><button class="btn btn-s" onclick="navigator.clipboard?.writeText('${link}').then(function(){toast('Link copiado')})">Copiar link</button><a class="btn btn-p" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("*¡Sumate al Prode de "+emp.nombre+"!*\n\nPronosticá los partidos, seguí la tabla en vivo y demostrá quién sabe más de fútbol. Es gratis y en un minuto estás jugando.\n\nEntrá acá: "+link+"\nCódigo para jugar: *"+emp.codigo+"*")}">Compartir por WhatsApp</a></div>
         <p class="me-p">O que pongan el código <b class="me-cod">${escH(emp.codigo)}</b> al registrarse.</p>
       </div>
       <div class="card me-sec"><div class="me-tit">Preguntas al registrarse</div><div id="pq-box">${preguntasHtml()}</div></div>

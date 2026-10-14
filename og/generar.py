@@ -62,8 +62,8 @@ for e in empresas():
   h=hashlib.sha1(json.dumps(e,sort_keys=True).encode()).hexdigest()[:12]
   if estado.get(cod)==h and (R/f"og/{cod}.jpg").exists() and (R/cod/"index.html").exists(): continue
   c=e["color"] or "#2F5BEA"
-  captura(tarjeta(e["logo"] or icon,html.escape(e["nombre"]),"¡Sumate al Prode!",html.escape(e["slogan"] or "Pronosticá, seguí la tabla en vivo y demostrá quién sabe más"),c,"#05070C","#FFFFFF"),R/f"og/{cod}.jpg")
-  m=metas(f"Prode {e['nombre']}","Gratis, desde el celular.",SITE+f"og/{cod}.jpg?v={h}",SITE+cod)
+  captura(tarjeta(e["logo"] or icon,html.escape(e["nombre"]),html.escape(e["slogan"] or "El prode de la liga"),"Polla Prodes",c,"#05070C","#FFFFFF"),R/f"og/{cod}.jpg")
+  m=metas(e["nombre"],"pollaprodes.ar",SITE+f"og/{cod}.jpg?v={h}",SITE+cod)
   (R/cod).mkdir(exist_ok=True)
   (R/cod/"index.html").write_text(f"""<!doctype html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Prode {html.escape(e["nombre"])}</title>
