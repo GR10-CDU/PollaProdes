@@ -63,7 +63,7 @@ for e in empresas():
   if estado.get(cod)==h and (R/f"og/{cod}.jpg").exists() and (R/cod/"index.html").exists(): continue
   c=e["color"] or "#2F5BEA"
   captura(tarjeta(e["logo"] or icon,html.escape(e["nombre"]),"¡Sumate al Prode!",html.escape(e["slogan"] or "Pronosticá, seguí la tabla en vivo y demostrá quién sabe más"),c,"#05070C","#FFFFFF"),R/f"og/{cod}.jpg")
-  m=metas(f"⚽ ¡Sumate al Prode de {e['nombre']}!",(e["slogan"] or "Pronosticá los partidos, seguí la tabla en vivo y demostrá quién sabe más de fútbol")+". Gratis, desde el celular.",SITE+f"og/{cod}.jpg?v={h}",SITE+cod)
+  m=metas(f"Prode {e['nombre']}","Gratis, desde el celular.",SITE+f"og/{cod}.jpg?v={h}",SITE+cod)
   (R/cod).mkdir(exist_ok=True)
   (R/cod/"index.html").write_text(f"""<!doctype html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Prode {html.escape(e["nombre"])}</title>
