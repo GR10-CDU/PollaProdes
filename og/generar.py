@@ -44,7 +44,7 @@ def metas(titulo,desc,img,url):
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="description" content="{d}"/>'''
+<meta name="description" content="{d}"/>'''.replace('<meta property="og:description" content=""/>\n','').replace('\n<meta name="description" content=""/>','')
 
 def empresas():
   body=json.dumps({"action":"ogEmpresas","apiSecret":os.environ["API_SECRET"],"ogSecret":os.environ["OG_SECRET"]}).encode()
@@ -63,7 +63,7 @@ for e in empresas():
   if estado.get(cod)==h and (R/f"og/{cod}.jpg").exists() and (R/cod/"index.html").exists(): continue
   c=e["color"] or "#2F5BEA"
   captura(tarjeta(e["logo"] or icon,html.escape(e["nombre"]),html.escape(e["slogan"] or "El prode de la liga"),"Polla Prodes",c,"#05070C","#FFFFFF"),R/f"og/{cod}.jpg")
-  m=metas(e["nombre"],"pollaprodes.ar",SITE+f"og/{cod}.jpg?v={h}",SITE+cod)
+  m=metas(e["nombre"],"",SITE+f"og/{cod}.jpg?v={h}",SITE+cod)
   (R/cod).mkdir(exist_ok=True)
   (R/cod/"index.html").write_text(f"""<!doctype html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Prode {html.escape(e["nombre"])}</title>
