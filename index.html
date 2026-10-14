@@ -3865,7 +3865,7 @@ function renderPartidos(parts,ctx,puede){
   const comp=Object.keys(window._pr).filter(function(k){return window._pr[k]&&window._pr[k].v;}).length,tot=parts.length;
   const pb=document.getElementById("prog");if(pb)pb.style.width=(tot?Math.round(comp/tot*100):0)+"%";
   const pt=document.getElementById("prog-txt");if(pt)pt.textContent=comp+" de "+tot+" pronósticos";
-  const pp=document.getElementById("prog-pct");if(pp)pp.textContent=tot?Math.round(comp/tot*100)+"%":"";
+  actualizarResumenJugada();
   const pw=document.querySelector(".prog-wrap");if(pw)pw.style.display=_enLibre()?"":"none";
   const ahora=new Date();
   const cf=window._cambiosFecha!==undefined?window._cambiosFecha:3;
@@ -4021,6 +4021,19 @@ function desglosePuntos(p,prd,sel,v,etiqueta){
 }
 
 // ══ SECCIÓN REGLAS ESPECIALES ══
+// Resumen arriba de la fecha: "Fecha jugada · 100%" o qué falta (partidos y reglas), contando partidos y reglas juntos
+function actualizarResumenJugada(){
+  const pt=document.getElementById("prog-txt"),pp=document.getElementById("prog-pct"),pb=document.getElementById("prog");
+  const parts=window._parts||[],regs=window._reglasDisp||[];if(!pt||!parts.length)return;
+  const hechos=parts.filter(function(p){return window._pr[p.id]&&window._pr[p.id].v;}).length,faltanP=parts.length-hechos;
+  let tot=parts.length,ok=hechos;const faltanR=[];
+  regs.forEach(function(r){tot+=r.cantReq;ok+=Math.min(r.partidos.length,r.cantReq);if(r.partidos.length<r.cantReq||(r.codigo==="MK"&&r.partidos.length&&!r.detalleMK))faltanR.push(r.nombre);});
+  const pct=tot?Math.round(ok/tot*100):0,listo=faltanP===0&&!faltanR.length;
+  if(pb)pb.style.width=(listo?100:pct)+"%";
+  if(pp)pp.textContent=(listo?100:pct)+"%";
+  const t=[];if(faltanP)t.push("Te falta"+(faltanP===1?" 1 partido":"n "+faltanP+" partidos"));if(faltanR.length)t.push("te falta elegir "+faltanR.join(", "));
+  pt.textContent=listo?"✅ Fecha jugada":t.join(" · ").replace(/^te/,"Te");
+}
 function _calcularEstado(){
   const totParts=window._parts.length;
   const pronosComp=Object.keys(window._pr).filter(function(k){return window._pr[k]&&window._pr[k].v;}).length;
@@ -4081,6 +4094,7 @@ function renderReglasSection(puede){
   let div=document.getElementById("jf-reglas");
   if(!div){div=document.createElement("div");div.id="jf-reglas";jf.parentNode.insertBefore(div,jf.nextSibling);}
   div.innerHTML=html;
+  actualizarResumenJugada();
 }
 
 window._actualizarMK=function(){
@@ -4090,7 +4104,7 @@ window._actualizarMK=function(){
   if(!reg)return;
   const conf=document.getElementById("mk-confirm");
   if(gl==="0"&&gv==="0"){reg.detalleMK="";if(conf)conf.innerHTML=`<span style="color:var(--red);font-size:16px;font-weight:600">❌ No se puede elegir 0-0</span>`;_actualizarBotonPrincipal();return;}
-  reg.detalleMK=(gl!==""&&gv!=="")?gl+"-"+gv:"";
+  reg.detalleMK=(gl!==""&&gv!=="")?gl+"-"+gv:"";actualizarResumenJugada();
   if(conf)conf.textContent=(gl!==""&&gv!=="")?(gl+"-"+gv+" ✓"):"";
   _actualizarBotonPrincipal();
 };
