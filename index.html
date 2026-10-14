@@ -5576,7 +5576,8 @@ async function loginEmpresa(){
   try{history.replaceState(null,"",linkEmpresa(emp).replace(location.origin,""));}catch(e){}
   pintarLoginEmpresa(emp);
 }
-window.salirDeEmpresa=function(){window._empLogin=null;aplicarMarca(null);history.replaceState(null,"",location.pathname+"?login");showLogin();};
+// Sale a la portada general: la dirección /codigo se saca, si no la marca vuelve a pintarse
+window.salirDeEmpresa=function(){window._empLogin=null;aplicarMarca(null);history.replaceState(null,"",(location.pathname.indexOf("/PollaProdes/")===0?"/PollaProdes/":"/")+"?login");showLogin();};
 
 // Novedades y premios de la empresa (arriba de las fechas)
 async function mostrarNovedadesEn(el){
