@@ -995,12 +995,14 @@ async function armarTabla(db: any, fechaId: string, pozoId: string) {
     db.from("partidos").select("id,numero,estado").eq("fecha_id",fechaId).order("numero"),
     db.from("usuarios").select("id,nombre,usuario,avatar"),
   ]);
+  const {data: pend} = await db.from("inscripciones").select("user_id").eq("pozo_id",pozoId).eq("estado_pago","Pendiente");
+  const pendientes = new Set((pend||[]).map((x:any) => x.user_id));
   const um: Record<string,any> = {};
   for (const u of (usuarios||[])) um[u.id] = u;
   const t: Record<string,any> = {};
   for (const p of (pts||[])) {
     const u = t[p.user_id] ||= {userId:p.user_id, siglas:p.usuario||um[p.user_id]?.usuario||"???", nombre:um[p.user_id]?.nombre||p.usuario||"Jugador", avatar:um[p.user_id]?.avatar||null,
-      ptsTotal:0, ptsPartidos:0, ptsReglas:0, acertados:0, empatesAcertados:0, visitantesAcertados:0};
+      ptsTotal:0, ptsPartidos:0, ptsReglas:0, acertados:0, empatesAcertados:0, visitantesAcertados:0, pagoPendiente: pendientes.has(p.user_id)};
     u.ptsPartidos += (p.pts_normal||0)+(p.pts_doble||0)+(p.pts_polla||0)+(p.pts_tole||0);
     u.ptsReglas += p.pts_reglas||0;
     u.ptsTotal += p.pts_total||0;
@@ -1081,7 +1083,9 @@ async function registrarGanadores(db: any, fechaId: string) {
   const filas: any[] = [];
   for (const pozo of (pozos||[])) {
     const {tabla} = await armarTabla(db, fechaId, pozo.id);
-    const primeros = tabla.filter((u:any) => u.posicion === 1 && u.ptsTotal > 0);
+    // Solo compiten por el premio los que tienen el pago aprobado
+    const enJuego = tabla.filter((u:any) => !u.pagoPendiente && u.ptsTotal > 0);
+    const primeros = enJuego.filter((u:any,k:number,a:any[]) => u.ptsTotal === a[0].ptsTotal && u.acertados === a[0].acertados && u.empatesAcertados === a[0].empatesAcertados && u.visitantesAcertados === a[0].visitantesAcertados);
     if (!primeros.length) continue;
     const {premio} = calcPremio(pozo, insc||[], cambios||[]);
     for (const u of primeros) filas.push({
@@ -1150,8 +1154,8 @@ async function adminCrearFecha(db: any, data: any) {
   });
   if (error) return {ok:false, error: error.code === "23505" ? "Ese código ya lo usa otra fecha" : error.message};
   if (data.empresaId) {
-    const {data: emp} = await db.from("empresas").select("nombre").eq("id", data.empresaId).single();
-    await db.from("pozos").insert({id:generarId("POZ"), fecha_id:id, nombre:`Polla ${emp?.nombre||"Empresa"}`, monto:0, comision_pct:0, premio_fijo:0});
+    const {data: emp} = await db.from("empresas").select("nombre,cobro_monto").eq("id", data.empresaId).single();
+    await db.from("pozos").insert({id:generarId("POZ"), fecha_id:id, nombre:`Polla ${emp?.nombre||"Empresa"}`, monto:Number(emp?.cobro_monto)||0, comision_pct:0, premio_fijo:0});
   }
   return {ok:true, fechaId:id};
 }
@@ -2231,12 +2235,17 @@ async function datosPagoDe(db: any, fechaId?: string) {
   const g = (k:string) => cfg?.find((c:any)=>c.clave===k)?.valor || "";
   let alias = g("pago_alias"), titular = g("pago_titular"), cvu = g("pago_cvu"), link = g("pago_link");
   if (fechaId) {
-    const {data: f} = await db.from("fechas").select("pago_alias,pago_titular").eq("id",fechaId).single();
+    const {data: f} = await db.from("fechas").select("pago_alias,pago_titular,empresa_id").eq("id",fechaId).single();
+    if (f?.empresa_id) return await datosPagoEmpresa(db, f.empresa_id); // la plata va a la cuenta de la empresa, nunca a la de Polla Prodes
     if (f?.pago_alias) { alias = f.pago_alias; titular = f.pago_titular || titular; cvu = ""; link = ""; }
   }
   return {alias, titular, cvu, link};
 }
 
+async function datosPagoEmpresa(db: any, empresaId: string) {
+  const {data: e} = await db.from("empresas").select("pago_alias,pago_titular,pago_cvu,pago_link").eq("id", empresaId).single();
+  return {alias:e?.pago_alias||"", titular:e?.pago_titular||"", cvu:e?.pago_cvu||"", link:e?.pago_link||""};
+}
 async function getDatosPago(db: any, data: any) {
   return {ok:true, ...(await datosPagoDe(db, data.fechaId))};
 }
@@ -2292,11 +2301,15 @@ async function enviarComprobanteCambio(db: any, data: any) {
 
 async function adminGetPagos(db: any, data: any) {
   const auth = await requireAuth(db, data);
-  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
-  const [{data: insc}, {data: cambios}] = await Promise.all([
-    db.from("inscripciones").select("*, usuarios(nombre,usuario,telefono,alias_mp), fechas(nombre), pozos(nombre,monto)").eq("estado_pago","Pendiente").order("comprobante_at",{ascending:true}),
-    db.from("cambios_pagos").select("*, usuarios(nombre,usuario,telefono,alias_mp), fechas(nombre)").eq("mp_status","revision").order("comprobante_at",{ascending:true}),
+  if (!auth.ok || (auth.rol !== "Admin" && auth.rol !== "AdminEmpresa")) return {ok:false, error:"Sin permisos"};
+  // Empresa: solo sus inscripciones (las de Polla Prodes quedan aparte para el admin general)
+  const empresaId = auth.rol === "AdminEmpresa" ? auth.empresaId : (data.empresaId || null);
+  const [{data: insc0}, {data: cambios0}] = await Promise.all([
+    db.from("inscripciones").select("*, usuarios(nombre,usuario,telefono,alias_mp), fechas(nombre,empresa_id), pozos(nombre,monto)").eq("estado_pago","Pendiente").order("comprobante_at",{ascending:true}),
+    db.from("cambios_pagos").select("*, usuarios(nombre,usuario,telefono,alias_mp), fechas(nombre,empresa_id)").eq("mp_status","revision").order("comprobante_at",{ascending:true}),
   ]);
+  const deAca = (x:any) => empresaId ? x.fechas?.empresa_id === empresaId : !x.fechas?.empresa_id;
+  const insc = (insc0||[]).filter(deAca), cambios = (cambios0||[]).filter(deAca);
   const firmar = async (path: string|null) => path ? (await db.storage.from(BUCKET_COMP).createSignedUrl(path, 3600)).data?.signedUrl || null : null;
   const items: any[] = [];
   for (const i of (insc||[]).filter((x:any) => x.comprobante_path)) items.push({tipo:"insc", id:i.id, usuario:i.usuarios?.usuario, nombre:i.usuarios?.nombre, telefono:i.usuarios?.telefono, alias:i.usuarios?.alias_mp,
@@ -2304,7 +2317,7 @@ async function adminGetPagos(db: any, data: any) {
   for (const c of (cambios||[])) items.push({tipo:"cambio", id:c.id, usuario:c.usuarios?.usuario, nombre:c.usuarios?.nombre, telefono:c.usuarios?.telefono, alias:c.usuarios?.alias_mp,
     concepto:`Cambio #${c.numero_cambio} · ${c.fechas?.nombre||""} · #${c.numero_partido} ${c.local} vs ${c.visita}: ${c.pronostico_anterior} → ${c.pronostico_nuevo}`, monto:c.monto, enviado:c.comprobante_at, comprobante: await firmar(c.comprobante_path)});
   items.sort((a,b) => String(a.enviado).localeCompare(String(b.enviado)));
-  return {ok:true, pagos:items, ...(await datosPagoDe(db))};
+  return {ok:true, pagos:items, ...(empresaId ? await datosPagoEmpresa(db, empresaId) : await datosPagoDe(db))};
 }
 
 async function avisar(db: any, userId: string, tipo: string, texto: string) {
@@ -2313,13 +2326,14 @@ async function avisar(db: any, userId: string, tipo: string, texto: string) {
 
 async function adminResolverPago(db: any, data: any) {
   const auth = await requireAuth(db, data);
-  if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
+  if (!auth.ok || (auth.rol !== "Admin" && auth.rol !== "AdminEmpresa")) return {ok:false, error:"Sin permisos"};
   const {tipo, id, aprobar} = data;
   const motivo = String(data.motivo || "").slice(0,200) || "No se encontró la transferencia";
   const fmt = (n:any) => "$" + Number(n||0).toLocaleString("es-AR");
   if (tipo === "insc") {
-    const {data: i} = await db.from("inscripciones").select("*, fechas(nombre), pozos(nombre,monto)").eq("id",id).single();
+    const {data: i} = await db.from("inscripciones").select("*, fechas(nombre,empresa_id), pozos(nombre,monto)").eq("id",id).single();
     if (!i || i.estado_pago !== "Pendiente") return {ok:false, error:"Esa inscripción ya no está pendiente"};
+    if (auth.rol === "AdminEmpresa" && i.fechas?.empresa_id !== auth.empresaId) return {ok:false, error:"Sin permisos"};
     if (aprobar) {
       await db.from("inscripciones").update({estado_pago:"Aprobado", habilitado:true, pagado_at:new Date().toISOString(), rechazo_motivo:null}).eq("id",id);
       await avisar(db, i.user_id, "ok", `✅ Pago de ${i.fechas?.nombre||"la fecha"} aprobado (${i.pozos?.nombre||fmt(i.monto)})`);
@@ -2338,6 +2352,7 @@ async function adminResolverPago(db: any, data: any) {
     return {ok:true};
   }
   if (tipo === "cambio") {
+    if (auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
     const {data: c} = await db.from("cambios_pagos").select("*, fechas(nombre)").eq("id",id).single();
     if (!c || c.mp_status !== "revision") return {ok:false, error:"Ese cambio ya no está en revisión"};
     if (aprobar) {
@@ -2385,7 +2400,8 @@ const LEGALES_VERSION = "2026-10-05";
 const TEMAS_EMPRESA = ["cancha","copa","pasion","marca"];
 function empresaOut(e: any) {
   if (!e) return null;
-  return {id:e.id, nombre:e.nombre, codigo:e.codigo, slogan:e.slogan||"", logo:e.logo_url||"", color:e.color||"#2F6BFF", tema:e.tema||"marca", campos:Array.isArray(e.campos)?e.campos:[]};
+  return {id:e.id, nombre:e.nombre, codigo:e.codigo, slogan:e.slogan||"", logo:e.logo_url||"", color:e.color||"#2F6BFF", tema:e.tema||"marca", campos:Array.isArray(e.campos)?e.campos:[],
+    cobro:{monto:Number(e.cobro_monto)||0, alias:e.pago_alias||"", titular:e.pago_titular||"", cvu:e.pago_cvu||"", link:e.pago_link||""}};
 }
 async function empresaPorCodigo(db: any, codigo: any) {
   const c = normalizarCodigo(codigo);
@@ -2420,12 +2436,14 @@ async function jugarEmpresa(db: any, data: any) {
   if (!auth.ok) return auth;
   const {data: fecha} = await db.from("fechas").select("*").eq("id", data.fechaId).single();
   if (!fecha || !fecha.empresa_id || fecha.empresa_id !== auth.empresaId || fecha.publicada === false) return {ok:false, error:"Esta fecha no es de tu empresa"};
-  const {data: pozos} = await db.from("pozos").select("id").eq("fecha_id", fecha.id).eq("estado","Activo").order("monto");
+  const {data: pozos} = await db.from("pozos").select("id,monto").eq("fecha_id", fecha.id).eq("estado","Activo").order("monto");
   const pozo = pozos?.[0];
   if (!pozo) return {ok:false, error:"La fecha todavía no está lista"};
-  const {data: ya} = await db.from("inscripciones").select("id").eq("user_id",auth.userId).eq("pozo_id",pozo.id).in("estado_pago",["Pendiente","Aprobado"]).maybeSingle();
-  if (ya) return {ok:true, fechaId:fecha.id, pozoId:pozo.id};
+  const {data: ya} = await db.from("inscripciones").select("id,estado_pago,comprobante_path").eq("user_id",auth.userId).eq("pozo_id",pozo.id).in("estado_pago",["Pendiente","Aprobado"]).maybeSingle();
+  if (ya && (ya.estado_pago === "Aprobado" || ya.comprobante_path)) return {ok:true, fechaId:fecha.id, pozoId:pozo.id};
   if (fecha.estado !== "Abierta") return {ok:false, error:"Esta fecha ya está cerrada"};
+  // La empresa/liga cobra la inscripción: el jugador transfiere a la cuenta de la empresa y sube el comprobante
+  if (Number(pozo.monto) > 0) return {ok:false, pidePago:true, fechaId:fecha.id, pozoId:pozo.id, monto:Number(pozo.monto)};
   const {data: partsF} = await db.from("partidos").select("fecha_hora").eq("fecha_id", fecha.id);
   if (minutosHasta(cierreFecha(fecha, partsF||[])) <= 0) return {ok:false, error:"La fecha ya cerró (1 hora antes del primer partido)"};
   const {data: user} = await db.from("usuarios").select("usuario").eq("id",auth.userId).single();
@@ -2495,6 +2513,14 @@ async function camposMarca(db: any, empresaId: string, data: any) {
   if (data.logo) { const r: any = await subirLogoEmpresa(db, empresaId, data.logo); if (!r.ok) return {error:r.error}; upd.logo_url = r.url; }
   if (data.quitarLogo) upd.logo_url = null;
   if (data.campos !== undefined) { const c = limpiarCampos(data.campos); if (c.error) return {error:c.error}; upd.campos = c.campos; }
+  if (data.cobro && typeof data.cobro === "object") {
+    const k = data.cobro, monto = Math.max(0, Math.min(10000000, Math.round(Number(k.monto)||0)));
+    const alias = String(k.alias||"").trim().slice(0,60), link = String(k.link||"").trim();
+    if (monto > 0 && !alias) return {error:"Para cobrar, poné el alias o CVU donde te transfieren"};
+    if (link && !/^https:\/\/(mpago\.la|link\.mercadopago\.com\.ar|www\.mercadopago\.com\.ar)\//.test(link)) return {error:"El link de Mercado Pago no es válido"};
+    Object.assign(upd, {cobro_monto:monto, pago_alias:alias||null, pago_titular:String(k.titular||"").trim().slice(0,80)||null,
+      pago_cvu:String(k.cvu||"").replace(/\D/g,"").slice(0,22)||null, pago_link:link||null});
+  }
   return {upd};
 }
 async function guardarMarcaEmpresa(db: any, data: any) {
@@ -2504,8 +2530,16 @@ async function guardarMarcaEmpresa(db: any, data: any) {
   const c: any = await camposMarca(db, empresaId, data);
   if (c.error) return {ok:false, error:c.error};
   if (Object.keys(c.upd).length) await db.from("empresas").update(c.upd).eq("id", empresaId);
+  if (c.upd.cobro_monto !== undefined) await sincronizarCobro(db, empresaId);
   const {data: e} = await db.from("empresas").select("*").eq("id", empresaId).single();
   return {ok:true, empresa: empresaOut(e)};
+}
+// El precio de la empresa se aplica a sus fechas abiertas (la plata la cobra la empresa: sin comisión de Polla Prodes)
+async function sincronizarCobro(db: any, empresaId: string) {
+  const {data: e} = await db.from("empresas").select("cobro_monto").eq("id", empresaId).single();
+  const {data: fs} = await db.from("fechas").select("id").eq("empresa_id", empresaId).eq("estado","Abierta");
+  const ids = (fs||[]).map((f:any) => f.id);
+  if (ids.length) await db.from("pozos").update({monto:Number(e?.cobro_monto)||0, comision_pct:0, premio_fijo:0}).in("fecha_id", ids);
 }
 
 // Admin general: listar, crear y editar empresas
@@ -2557,6 +2591,7 @@ async function adminGuardarEmpresa(db: any, data: any) {
   const c: any = await camposMarca(db, id, data);
   if (c.error) return {ok:false, error:c.error};
   if (Object.keys(c.upd).length) await db.from("empresas").update(c.upd).eq("id", id);
+  if (c.upd.cobro_monto !== undefined) await sincronizarCobro(db, id);
   const {data: e} = await db.from("empresas").select("*").eq("id", id).single();
   return {ok:true, empresa: empresaOut(e)};
 }
@@ -2621,7 +2656,7 @@ async function adminCopiarFecha(db: any, data: any) {
   const [{data: f}, {data: parts}, {data: emps}] = await Promise.all([
     db.from("fechas").select("*").eq("id", data.fechaId).single(),
     db.from("partidos").select("*").eq("fecha_id", data.fechaId).order("numero"),
-    db.from("empresas").select("id,nombre"),
+    db.from("empresas").select("id,nombre,cobro_monto"),
   ]);
   if (!f) return {ok:false, error:"Fecha no encontrada"};
   const creadas: string[] = [];
@@ -2639,7 +2674,7 @@ async function adminCopiarFecha(db: any, data: any) {
       id:generarId("PAR"), fecha_id:id, numero:p.numero, local:p.local, visita:p.visita, local_logo:p.local_logo, visita_logo:p.visita_logo,
       fecha_hora:p.fecha_hora, liga:p.liga, liga_id:p.liga_id, partido_api_id:p.partido_api_id, tipo:p.tipo, estado:"Pendiente", tarjetas_rojas:0,
     })));
-    if (emp) await db.from("pozos").insert({id:generarId("POZ"), fecha_id:id, nombre:`Polla ${emp.nombre}`, monto:0, comision_pct:0, premio_fijo:0});
+    if (emp) await db.from("pozos").insert({id:generarId("POZ"), fecha_id:id, nombre:`Polla ${emp.nombre}`, monto:Number(emp.cobro_monto)||0, comision_pct:0, premio_fijo:0});
     creadas.push(id);
   }
   return {ok:true, creadas: creadas.length};

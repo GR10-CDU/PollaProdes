@@ -4429,7 +4429,7 @@ function renderTabla(){
     return`<tr class="${cls||""}${esYo?" t-yo":""}${pos<=3?" t-top":""}">
       <td class="t-pos">${pos<=3?`<span class="t-med">${puestoIco(pos,30)}</span>`:pos}</td>
       <td class="t-movc">${flecha(u)}</td>
-      <td class="t-jug${esYo?"":" t-ir"}" ${esYo?"":`onclick="irAGrilla('${u.userId}')" title="Ir a su grilla"`}><div class="t-jw">${avatarHtml(u)}<div><div class="t-nm">${esYo?"Vos":u.siglas}</div><div class="t-full">${u.nombre&&u.nombre!==u.siglas?u.nombre:""}</div></div></div></td>
+      <td class="t-jug${esYo?"":" t-ir"}" ${esYo?"":`onclick="irAGrilla('${u.userId}')" title="Ir a su grilla"`}><div class="t-jw">${avatarHtml(u)}<div><div class="t-nm">${esYo?"Vos":u.siglas}</div><div class="t-full">${u.nombre&&u.nombre!==u.siglas?u.nombre:""}</div>${u.pagoPendiente?`<div class="t-pend" title="Todavía no compite por el premio">⏳ Pago sin aprobar</div>`:""}</div></div></td>
       <td class="t-big">${u.ptsTotal||0}</td>
       <td>${u.ptsPartidos||0}</td><td>${u.ptsReglas||0}</td>
       <td>${u.acertados||0}</td><td>${u.empatesAcertados||0}</td><td>${u.visitantesAcertados||0}</td>
@@ -5590,7 +5590,7 @@ function pintarLoginEmpresa(emp){
   const ft=document.querySelector(".ll-foot");if(ft)ft.innerHTML=`${escH(emp.nombre).toUpperCase()} · CON POLLA PRODES · <a href="#" onclick="salirDeEmpresa();return false">No soy de ${escH(emp.nombre)}</a>`;
   const ra=document.getElementById("ra-g");if(ra)ra.hidden=true;
   const lc=document.getElementById("lce-g");if(lc){lc.hidden=false;const i=document.getElementById("lce");if(i)i.placeholder="Te lo da "+emp.nombre;}
-  const ce=document.getElementById("rce-g");if(ce)ce.innerHTML=`<div class="ll-emp">${logoEmpHtml(emp)}<span>Te sumás a <b>${escH(emp.nombre)}</b> · jugás gratis</span></div>
+  const ce=document.getElementById("rce-g");if(ce)ce.innerHTML=`<div class="ll-emp">${logoEmpHtml(emp)}<span>Te sumás a <b>${escH(emp.nombre)}</b>${emp.cobro&&emp.cobro.monto?"":" · jugás gratis"}</span></div>
     <div class="ig"><label class="ll-lbl">Código de empresa</label><input class="ll-inp" id="rce" placeholder="Te lo da ${escH(emp.nombre)}" maxlength="16" autocapitalize="characters" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')"/></div>${camposEmpresaHtml(emp,{},"ll-inp")}`;
 }
 async function loginEmpresa(){
@@ -5638,15 +5638,52 @@ function nvItem(n){return`<div class="nv-it"><div class="nv-it-h"><b>${escH(n.ti
 // Detalle de fecha para empleados: juegan gratis, un solo botón
 function renderPozoEmpresa(fid,pozos){
   const el=document.getElementById("plist"),emp=App.user.empresa,ya=pozos.find(function(p){return p.yaInscripto;});
-  if(el)el.innerHTML=`<div class="card emp-pozo"><div class="emp-pozo-logo">${logoEmpHtml(emp)}</div><div><b>Polla ${escH(emp.nombre)}</b><p>Jugás gratis. Los premios los pone ${escH(emp.nombre)}: mirá las novedades.</p></div></div>`;
+  const monto=Number((pozos[0]||{}).monto)||0,$m="$"+monto.toLocaleString("es-AR");
+  if(el)el.innerHTML=`<div class="card emp-pozo"><div class="emp-pozo-logo">${logoEmpHtml(emp)}</div><div><b>Polla ${escH(emp.nombre)}</b><p>${monto?`Inscripción ${$m} por fecha: se paga por transferencia a ${escH(emp.nombre)}. Los premios los pone ${escH(emp.nombre)}: mirá las novedades.`:`Jugás gratis. Los premios los pone ${escH(emp.nombre)}: mirá las novedades.`}</p></div></div>`;
   const btn=`<button class="btn btn-p btn-lg" onclick="entrarEmpresa('${fid}')">▶ ${ya?"Jugar fecha":"Jugar esta fecha"} →</button>`;
   const b=document.getElementById("pjbtn");if(b){b.style.display="block";b.innerHTML=btn;}
   const top=document.getElementById("pjtop");
-  if(top)top.innerHTML=`<div class="cta-top"><div class="cta-txt"><div class="cta-k">${ya?"Ya estás adentro":"Gratis para "+escH(emp.nombre)}</div><div class="cta-t">${ya?"Seguí con tus pronósticos":"Entrá y pronosticá"}</div></div>${btn}</div>`;
+  const k=ya?(ya.enRevision?"Pago en revisión · ya podés jugar":"Ya estás adentro"):(monto?"Inscripción "+$m:"Gratis para "+escH(emp.nombre));
+  if(top)top.innerHTML=`<div class="cta-top"><div class="cta-txt"><div class="cta-k">${k}</div><div class="cta-t">${ya?"Seguí con tus pronósticos":"Entrá y pronosticá"}</div></div>${btn}</div>`;
   if(ya)mejorarCtaJugar(fid,ya.id,true);
 }
+// Cobro de la empresa/liga y sus pagos por aprobar (lo usa el admin de la empresa y el admin general)
+window.guardarCobroEmpresa=async function(){
+  const emp=window._edEmp;if(!emp)return;
+  const cobro={monto:document.getElementById("cb-monto")?.value,alias:document.getElementById("cb-alias")?.value,titular:document.getElementById("cb-tit")?.value,link:document.getElementById("cb-link")?.value};
+  const r=window._edAdmin?await api("adminGuardarEmpresa",{id:emp.id,cobro}):await api("guardarMarcaEmpresa",{cobro});
+  if(!r.ok){toast("❌ "+r.error);return;}
+  emp.cobro=r.empresa&&r.empresa.cobro||emp.cobro;
+  toast(Number(cobro.monto)>0?"✅ Listo: las fechas abiertas cobran $"+Number(cobro.monto).toLocaleString("es-AR"):"✅ Listo: las fechas son gratis",4000);
+};
+async function cargarPagosEmpresa(emp){
+  const el=document.getElementById("emp-pagos");if(!el)return;
+  const r=await api("adminGetPagos",{empresaId:emp.id});
+  if(!r.ok){el.innerHTML=errBox(r.error);return;}
+  const P=(r.pagos||[]).filter(function(p){return p.tipo==="insc";});
+  el.innerHTML=P.length?`<div class="pg-list">${P.map(function(p){return`<div class="pg-card">
+      ${p.comprobante?`<a href="${p.comprobante}" target="_blank" rel="noopener" class="pg-img"><img src="${p.comprobante}" alt="Comprobante"></a>`:`<div class="pg-img vacio">Sin imagen</div>`}
+      <div class="pg-info"><div class="pg-monto">$${Number(p.monto||0).toLocaleString("es-AR")}</div>
+        <div class="pg-quien"><b>${escH(p.usuario||"")}</b> · ${escH(p.nombre||"")}</div>
+        <div class="pg-conc">${escH(p.concepto||"")}</div>
+        <div class="pg-hora">Enviado ${p.enviado?_fmtH(new Date(p.enviado)):""}</div>
+        <div class="pg-acts"><button class="btn btn-p" onclick="resolverPagoEmpresa('${p.id}',true)">✓ Aprobar</button><button class="btn btn-d" onclick="resolverPagoEmpresa('${p.id}',false)">✗ Rechazar</button></div>
+      </div></div>`;}).join("")}</div>`:`<p class="me-p">No hay pagos para revisar. Cuando un jugador suba su comprobante, aparece acá.</p>`;
+}
+window.resolverPagoEmpresa=async function(id,ok){
+  let motivo="";
+  if(!ok){motivo=prompt("¿Por qué lo rechazás? (le llega al jugador y se borran sus pronósticos de esa fecha)","No encontré la transferencia");if(motivo===null)return;}
+  else if(!confirm("¿Aprobar este pago? Con el pago aprobado compite por el premio."))return;
+  const r=await api("adminResolverPago",{tipo:"insc",id,aprobar:ok,motivo});
+  toast(r.ok?(ok?"✅ Pago aprobado":"Pago rechazado"):"❌ "+r.error);
+  if(window._edEmp)cargarPagosEmpresa(window._edEmp);
+};
 window.entrarEmpresa=async function(fid){
   const r=await api("jugarEmpresa",{fechaId:fid});
+  // La empresa/liga cobra: transferencia a su cuenta + comprobante, y juega al instante
+  if(r.pidePago){const emp=App.user.empresa||{};modalTransferencia({titulo:"Inscripción",concepto:"Fecha · "+(emp.nombre||""),monto:r.monto,fechaId:r.fechaId,
+    enviar:function(img){return api("enviarComprobanteInscripcion",{fechaId:r.fechaId,pozoId:r.pozoId,imagen:img});},
+    listo:function(){toast("✅ ¡Listo! Ya podés jugar. Tu pago queda en revisión de "+(emp.nombre||"la organización"),4500);go("jugar",{fechaId:r.fechaId,pozoId:r.pozoId});}});return;}
   if(!r.ok){toast("❌ "+r.error);return;}
   go("jugar",{fechaId:r.fechaId,pozoId:r.pozoId});
 };
@@ -5689,6 +5726,7 @@ function renderEditorEmpresa(el,emp,esAdminGeneral){
   window._mk={tema:emp.tema||"marca",color:emp.color||"#2F5BEA",logoColor:null,logo:null,quitarLogo:false,logoUrl:emp.logo||"",modo:(emp.tema||"marca")!=="marca"?"juego":"paleta"};
   window._nvTipo="novedad";window._nvEdit=null;window._edCampos=(emp.campos||[]).map(function(c){return Object.assign({},c);});
   const link=linkEmpresa(emp);
+  setTimeout(function(){cargarPagosEmpresa(emp);},0);
   el.innerHTML=`${esAdminGeneral?`<div class="back" onclick="window._empEdit=null;loadAdminEmpresas()">← Todas las empresas</div>`:""}
   <div class="me-grid">
     <div class="me-col">
@@ -5709,6 +5747,17 @@ function renderEditorEmpresa(el,emp,esAdminGeneral){
         <div class="me-acc"><button class="btn btn-s" onclick="navigator.clipboard?.writeText('${link}').then(function(){toast('Link copiado')})">Copiar link</button><a class="btn btn-p" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("*¡Sumate al Prode de "+emp.nombre+"!*\n\nPronosticá los partidos, seguí la tabla en vivo y demostrá quién sabe más de fútbol. Es gratis y en un minuto estás jugando.\n\nEntrá acá: "+link+"\nCódigo para jugar: *"+emp.codigo+"*")}">Compartir por WhatsApp</a></div>
         <p class="me-p">O que pongan el código <b class="me-cod">${escH(emp.codigo)}</b> al registrarse.</p>
       </div>
+      <div class="card me-sec"><div class="me-tit">Cobrar a los participantes</div>
+        <p class="me-p">Si querés cobrar la inscripción de cada fecha, poné el monto y tu cuenta. Cada jugador te transfiere a vos, sube el comprobante y juega al instante. Vos aprobás los pagos acá abajo: <b>solo los aprobados compiten por el premio</b>. La plata va directo a tu cuenta: Polla Prodes no la recibe ni la maneja. Con monto 0 se juega gratis.</p>
+        <div class="cb-grid">
+          <div class="ig"><label class="lbl">Monto por fecha ($)</label><input class="inp" id="cb-monto" type="number" min="0" step="100" inputmode="numeric" value="${(emp.cobro&&emp.cobro.monto)||0}"/></div>
+          <div class="ig"><label class="lbl">Alias o CVU para transferir</label><input class="inp" id="cb-alias" maxlength="60" placeholder="tu.alias.mp" value="${escH((emp.cobro&&emp.cobro.alias)||"")}"/></div>
+          <div class="ig"><label class="lbl">Titular de la cuenta</label><input class="inp" id="cb-tit" maxlength="80" placeholder="Nombre y apellido" value="${escH((emp.cobro&&emp.cobro.titular)||"")}"/></div>
+          <div class="ig"><label class="lbl">Link de Mercado Pago (opcional)</label><input class="inp" id="cb-link" placeholder="https://mpago.la/..." value="${escH((emp.cobro&&emp.cobro.link)||"")}"/></div>
+        </div>
+        <div class="me-acc"><button class="btn btn-p" onclick="guardarCobroEmpresa()">Guardar cobro</button></div>
+      </div>
+      <div class="card me-sec"><div class="me-tit">Pagos para aprobar</div><div id="emp-pagos"><div class="loading"><div class="spinner"></div></div></div></div>
       <div class="card me-sec"><div class="me-tit">Preguntas al registrarse</div><div id="pq-box">${preguntasHtml()}</div></div>
       ${esAdminGeneral?`<div class="card me-sec"><div class="me-tit">Contrato y pagos</div>${pagosEmpHtml(emp)}</div>`:""}
       ${esAdminGeneral?`<div class="card me-sec"><div class="me-tit">Administradores</div>${adminsHtml(emp)}</div>`:`<div class="card me-sec"><div class="me-tit">Tu gente</div><div id="me-emp"><div class="loading"><div class="spinner"></div></div></div></div>`}
@@ -5870,7 +5919,7 @@ window.buscarEmpresaReg=async function(cod){
   const r=await api("getEmpresaPublica",{codigo:cod});
   if(!r.ok){box.innerHTML=`<div class="ll-err">⚠ ${escH(r.error)}</div>`;return;}
   window._empReg=r.empresa;if(ra)ra.hidden=true;
-  box.innerHTML=`<div class="ll-emp" style="margin-top:10px">${logoEmpHtml(r.empresa)}<span>Te sumás a <b>${escH(r.empresa.nombre)}</b> · jugás gratis</span></div>${camposEmpresaHtml(r.empresa,{},"ll-inp")}`;
+  box.innerHTML=`<div class="ll-emp" style="margin-top:10px">${logoEmpHtml(r.empresa)}<span>Te sumás a <b>${escH(r.empresa.nombre)}</b>${r.empresa.cobro&&r.empresa.cobro.monto?"":" · jugás gratis"}</span></div>${camposEmpresaHtml(r.empresa,{},"ll-inp")}`;
 };
 window.guardarDatosEmp=async function(root){
   const r=await api("guardarMisDatosEmpresa",{datos:leerCamposEmpresa(root)});
@@ -6422,7 +6471,7 @@ terminos:{t:"Términos y Condiciones",h:`
 <h4>5. Pozos, pagos y premios</h4>
 <p>Algunas fechas tienen pozos con inscripción paga y otras son gratuitas. En los pozos pagos, la inscripción se abona por transferencia y el jugador sube el comprobante; el administrador lo verifica. Si el pago no se verifica, la inscripción y sus pronósticos se anulan. El premio de cada pozo se informa en la app: puede ser un premio fijo o un porcentaje de lo recaudado, descontado el cargo de organización indicado en el Reglamento. Los premios se pagan por transferencia al ganador o se dividen en caso de empate total, según el Reglamento. Las inscripciones no se reembolsan una vez cerrada la fecha, salvo que la fecha se anule por decisión de la organización.</p>
 <h4>6. Torneos de empresas y grupos</h4>
-<p>Las empresas y grupos pueden organizar torneos propios dentro de la plataforma, con su marca y sus premios. Cada empresa es responsable de los premios que ofrece a su gente y de la información que publica. Polla Prodes brinda la herramienta y no es parte de la relación entre la empresa y sus empleados o clientes.</p>
+<p>Las empresas y grupos pueden organizar torneos propios dentro de la plataforma, con su marca y sus premios. Cada empresa es responsable de los premios que ofrece a su gente y de la información que publica. Polla Prodes brinda la herramienta y no es parte de la relación entre la empresa y sus empleados o clientes. Si una empresa, liga o grupo cobra una inscripción a sus participantes, el pago se hace directamente a la cuenta de esa organización: Polla Prodes no recibe, no administra ni garantiza ese dinero ni los premios, y la organización es la única responsable de cobrarlos, aprobarlos y entregarlos.</p>
 <h4>7. Uso correcto</h4>
 <p>No está permitido: crear cuentas falsas o múltiples, ponerse de acuerdo con otros jugadores para manipular resultados, intentar vulnerar la plataforma, subir comprobantes falsos, ni publicar contenido ofensivo (por ejemplo, en la foto de perfil). Ante cualquiera de estas conductas podemos suspender la cuenta y anular sus participaciones y premios.</p>
 <h4>8. Disponibilidad</h4>
