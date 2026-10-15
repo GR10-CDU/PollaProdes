@@ -4416,7 +4416,8 @@ window.irAGrilla=function(uid){window._grillaVs=uid;go("grilla",{fechaId:App.ctx
 function renderTabla(){
   const el=document.getElementById("tc");if(!el||!window._tabla)return;
   const T=window._tabla,r=T.r,t=r.tabla||[],me=App.user?.id,mov=window._tablaMov||{};
-  if(!t.length){el.innerHTML=emptyBox("🏆","Todavía no hay puntos: aparecen cuando se cargue el primer resultado");return;}
+  const avisoPago=r.miPagoPendiente?`<div class="card" style="padding:12px 16px;margin-bottom:12px;border-color:var(--gold-line);background:var(--gold-soft)"><b>⏳ Tu pago está en revisión.</b> Vas a aparecer en la tabla y en la grilla cuando lo aprueben.</div>`:"";
+  if(!t.length){el.innerHTML=avisoPago+emptyBox("🏆","Todavía no hay puntos: aparecen cuando se cargue el primer resultado");return;}
   const lider=t[0].ptsTotal||0,yo=t.find(function(u){return u.userId===me;});
   const primeros=t.filter(function(u){return u.posicion===1;});
   const md=["🥇","🥈","🥉"];
@@ -4429,7 +4430,7 @@ function renderTabla(){
     return`<tr class="${cls||""}${esYo?" t-yo":""}${pos<=3?" t-top":""}">
       <td class="t-pos">${pos<=3?`<span class="t-med">${puestoIco(pos,30)}</span>`:pos}</td>
       <td class="t-movc">${flecha(u)}</td>
-      <td class="t-jug${esYo?"":" t-ir"}" ${esYo?"":`onclick="irAGrilla('${u.userId}')" title="Ir a su grilla"`}><div class="t-jw">${avatarHtml(u)}<div><div class="t-nm">${esYo?"Vos":u.siglas}</div><div class="t-full">${u.nombre&&u.nombre!==u.siglas?u.nombre:""}</div>${u.pagoPendiente?`<div class="t-pend" title="Todavía no compite por el premio">⏳ Pago sin aprobar</div>`:""}</div></div></td>
+      <td class="t-jug${esYo?"":" t-ir"}" ${esYo?"":`onclick="irAGrilla('${u.userId}')" title="Ir a su grilla"`}><div class="t-jw">${avatarHtml(u)}<div><div class="t-nm">${esYo?"Vos":u.siglas}</div><div class="t-full">${u.nombre&&u.nombre!==u.siglas?u.nombre:""}</div></div></div></td>
       <td class="t-big">${u.ptsTotal||0}</td>
       <td>${u.ptsPartidos||0}</td><td>${u.ptsReglas||0}</td>
       <td>${u.acertados||0}</td><td>${u.empatesAcertados||0}</td><td>${u.visitantesAcertados||0}</td>
@@ -4438,7 +4439,7 @@ function renderTabla(){
     </tr>`;};
   const po=t.slice(0,3);
   const tt=document.getElementById("topbar-title");if(tt)tt.innerHTML=`Tabla <span class="tt-n">${t.length} jugadores</span>`;
-  el.innerHTML=`
+  el.innerHTML=avisoPago+`
     <div class="g-top">
       <div class="g-stat"><b>${r.ultimoPartidoCalculado?r.ultimoPartidoCalculado:0}/${r.totalPartidos||0}</b><span>calculado hasta el partido</span></div>
       ${yo?`<div class="g-stat yo"><b>${yo.posicion}º</b><span>tu puesto · ${yo.ptsTotal} pts</span></div>`:""}

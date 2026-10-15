@@ -159,9 +159,9 @@ function mailPagoAprobado(nombre: string, concepto: string, monto: string) {
     cuerpo:`<p style="margin:0">Hola ${esc(nombre)}, verificamos tu transferencia. ¡Está todo en orden!</p>${tablaDatos(filaDato("Concepto", esc(concepto)) + filaDato("Monto", esc(monto)))}<p style="margin:0">Ya estás jugando. ¡Mucha suerte!</p>`,
     boton:{texto:"Ver mis pronósticos →", url:SITIO}});
 }
-function mailPagoRechazado(nombre: string, concepto: string, motivo: string) {
+function mailPagoRechazado(nombre: string, concepto: string, motivo: string, hasta = "") {
   return mailBase({preheader:"No pudimos verificar tu pago", titulo:"❌ No pudimos verificar tu pago",
-    cuerpo:`<p style="margin:0">Hola ${esc(nombre)}, revisamos el comprobante y no pudimos confirmarlo.</p>${tablaDatos(filaDato("Concepto", esc(concepto)) + filaDato("Motivo", esc(motivo)))}<p style="margin:0">Podés volver a subir el comprobante desde la app. Si creés que es un error, respondé este mail y lo vemos.</p>`,
+    cuerpo:`<p style="margin:0">Hola ${esc(nombre)}, revisamos el comprobante y no pudimos confirmarlo.</p>${tablaDatos(filaDato("Concepto", esc(concepto)) + filaDato("Motivo", esc(motivo)))}<p style="margin:0">${hasta?`Podés volver a pagar y subir el comprobante desde la app <b>hasta el ${esc(hasta)}</b>, cuando cierra la fecha. Mientras tanto no aparecés en la tabla ni en la grilla.`:"Podés volver a subir el comprobante desde la app."} Si creés que es un error, respondé este mail y lo vemos.</p>`,
     boton:{texto:"Volver a subir el comprobante →", url:SITIO}});
 }
 function mailCierre(nombre: string, fecha: string, falta: string, faltan: number) {
@@ -996,13 +996,15 @@ async function armarTabla(db: any, fechaId: string, pozoId: string) {
     db.from("usuarios").select("id,nombre,usuario,avatar"),
   ]);
   const {data: pend} = await db.from("inscripciones").select("user_id").eq("pozo_id",pozoId).eq("estado_pago","Pendiente");
+  // Pago sin aprobar: no aparece en ningún lado hasta que lo aprueben (así nadie paga solo si le va bien)
   const pendientes = new Set((pend||[]).map((x:any) => x.user_id));
   const um: Record<string,any> = {};
   for (const u of (usuarios||[])) um[u.id] = u;
   const t: Record<string,any> = {};
   for (const p of (pts||[])) {
+    if (pendientes.has(p.user_id)) continue;
     const u = t[p.user_id] ||= {userId:p.user_id, siglas:p.usuario||um[p.user_id]?.usuario||"???", nombre:um[p.user_id]?.nombre||p.usuario||"Jugador", avatar:um[p.user_id]?.avatar||null,
-      ptsTotal:0, ptsPartidos:0, ptsReglas:0, acertados:0, empatesAcertados:0, visitantesAcertados:0, pagoPendiente: pendientes.has(p.user_id)};
+      ptsTotal:0, ptsPartidos:0, ptsReglas:0, acertados:0, empatesAcertados:0, visitantesAcertados:0};
     u.ptsPartidos += (p.pts_normal||0)+(p.pts_doble||0)+(p.pts_polla||0)+(p.pts_tole||0);
     u.ptsReglas += p.pts_reglas||0;
     u.ptsTotal += p.pts_total||0;
@@ -1018,6 +1020,8 @@ async function armarTabla(db: any, fechaId: string, pozoId: string) {
 
 async function getTabla(db: any, data: any) {
   const r: any = await armarTabla(db, data.fechaId, data.pozoId);
+  if (data.sessionToken) { const au = await requireAuth(db, data);
+    if (au.ok) { const {data: mi} = await db.from("inscripciones").select("id").eq("pozo_id",data.pozoId).eq("user_id",au.userId).eq("estado_pago","Pendiente").limit(1); r.miPagoPendiente = !!(mi||[]).length; } }
   const {data: pr} = await db.from("pronosticos").select("user_id,cambios_realizados").eq("fecha_id",data.fechaId).eq("pozo_id",data.pozoId);
   const usados: Record<string,number> = {};
   for (const p of (pr||[])) usados[p.user_id] = (usados[p.user_id]||0) + (p.cambios_realizados||0);
@@ -1083,9 +1087,7 @@ async function registrarGanadores(db: any, fechaId: string) {
   const filas: any[] = [];
   for (const pozo of (pozos||[])) {
     const {tabla} = await armarTabla(db, fechaId, pozo.id);
-    // Solo compiten por el premio los que tienen el pago aprobado
-    const enJuego = tabla.filter((u:any) => !u.pagoPendiente && u.ptsTotal > 0);
-    const primeros = enJuego.filter((u:any,k:number,a:any[]) => u.ptsTotal === a[0].ptsTotal && u.acertados === a[0].acertados && u.empatesAcertados === a[0].empatesAcertados && u.visitantesAcertados === a[0].visitantesAcertados);
+    const primeros = tabla.filter((u:any) => u.posicion === 1 && u.ptsTotal > 0);
     if (!primeros.length) continue;
     const {premio} = calcPremio(pozo, insc||[], cambios||[]);
     for (const u of primeros) filas.push({
@@ -1575,8 +1577,11 @@ async function getGrilla(db: any, data: any) {
   const um: Record<string,any> = {};
   for (const u of (usuarios||[])) um[u.id] = u;
 
+  const {data: pend} = await db.from("inscripciones").select("user_id").eq("pozo_id",pozoId).eq("estado_pago","Pendiente");
+  const pendientes = new Set((pend||[]).map((x:any) => x.user_id));
   const jugadores: Record<string,any> = {};
   for (const p of (pronos||[])) {
+    if (pendientes.has(p.user_id)) continue;
     const j = jugadores[p.user_id] ||= {userId:p.user_id, siglas:p.usuario||um[p.user_id]?.usuario, nombre:um[p.user_id]?.nombre||p.usuario, avatar:um[p.user_id]?.avatar||null,
       pronos:{}, cambiosUsados:0, ptsTotal:pos[p.user_id]?.ptsTotal||0, acertados:pos[p.user_id]?.acertados||0, ptsPartidos:pos[p.user_id]?.ptsPartidos||0, ptsReglas:pos[p.user_id]?.ptsReglas||0, posicion:pos[p.user_id]?.posicion||null};
     j.pronos[p.partido_id] = {v:p.pronostico, ok:p.acertado};
@@ -2346,8 +2351,11 @@ async function adminResolverPago(db: any, data: any) {
         db.from("reglas").delete().eq("user_id",i.user_id).eq("pozo_id",i.pozo_id),
         db.from("puntajes").delete().eq("user_id",i.user_id).eq("pozo_id",i.pozo_id),
       ]);
-      await avisar(db, i.user_id, "no", `❌ Pago de ${i.fechas?.nombre||"la fecha"} rechazado: ${motivo}. Podés volver a subir el comprobante.`);
-      await mailA(db, i.user_id, "No pudimos verificar tu pago", (n) => mailPagoRechazado(n, `Inscripción · ${i.fechas?.nombre||""} · ${i.pozos?.nombre||""}`, motivo));
+      const [{data: feR}, {data: ptR}] = await Promise.all([db.from("fechas").select("plazo_limite").eq("id",i.fecha_id).single(), db.from("partidos").select("fecha_hora").eq("fecha_id",i.fecha_id)]);
+      const ci = cierreFecha(feR, ptR||[]), abierta = minutosHasta(ci) > 0;
+      const hasta = abierta && ci ? ci.toLocaleString("es-AR",{timeZone:"America/Argentina/Buenos_Aires",weekday:"long",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit"}) + " hs" : "";
+      await avisar(db, i.user_id, "no", `❌ Pago de ${i.fechas?.nombre||"la fecha"} rechazado: ${motivo}.${hasta?` Podés volver a pagar hasta el ${hasta}.`:""}`);
+      await mailA(db, i.user_id, "No pudimos verificar tu pago", (n) => mailPagoRechazado(n, `Inscripción · ${i.fechas?.nombre||""} · ${i.pozos?.nombre||""}`, motivo, hasta));
     }
     return {ok:true};
   }
