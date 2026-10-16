@@ -193,6 +193,24 @@ function generarUsuario(nombre: string, tel: string): string {
   return letras + digitos;
 }
 
+// Admin de liga (AdminEmpresa): puede usar estas acciones de administración, solo sobre las fechas y partidos de SU empresa.
+// El despachador verifica que el recurso sea de su empresa y marca el pedido con ALCANCE (un Symbol: no puede venir del JSON).
+const ALCANCE = Symbol("alcanceEmpresa");
+const ADMIN_LIGA_FECHA = new Set(["adminEditarFecha","adminCerrarFecha","adminCrearPozo","adminOcultarFecha","adminEliminarFecha","adminCerrarYCalcular","adminResumenFecha","adminTerminarFecha","adminGetInscriptos","adminLinksAuto","importarPartidos","adminAgregarPartido"]);
+const ADMIN_LIGA_PARTIDO = new Set(["adminIngresarResultado","adminEstadoPartido","adminEditarPartido","adminTipoPartido","adminBorrarPartido","adminLinkPartido"]);
+const ADMIN_LIGA_LIBRE = new Set(["adminCrearFecha","fsLigas","fsPartidos","adminLeerCaptura","buscarEquipos","getEscudosEquipos","getRondas","buscarPorRonda"]);
+async function alcanceAdminLiga(db: any, data: any, action: string): Promise<string|null|false> {
+  if (!ADMIN_LIGA_FECHA.has(action) && !ADMIN_LIGA_PARTIDO.has(action) && !ADMIN_LIGA_LIBRE.has(action)) return null;
+  const auth = await requireAuth(db, data);
+  if (!auth.ok || auth.rol !== "AdminEmpresa" || !auth.empresaId) return null; // el admin general sigue igual; el resto, como antes
+  let fechaId = data.fechaId;
+  if (ADMIN_LIGA_PARTIDO.has(action)) { const {data: p} = await db.from("partidos").select("fecha_id").eq("id", data.partidoId).maybeSingle(); fechaId = p?.fecha_id; }
+  if (ADMIN_LIGA_LIBRE.has(action)) { if (action === "adminCrearFecha") data.empresaId = auth.empresaId; return auth.empresaId; }
+  if (!fechaId) return false;
+  const {data: f} = await db.from("fechas").select("empresa_id").eq("id", fechaId).maybeSingle();
+  return f?.empresa_id === auth.empresaId ? auth.empresaId : false;
+}
+
 async function requireAuth(db: any, data: any): Promise<{ok:boolean, userId?:string, rol?:string, empresaId?:string|null, error?:string}> {
   if (!data.sessionToken) return {ok:false, error:"Sin sesión"};
   const { data: sesion } = await db.from("sesiones")
@@ -204,6 +222,7 @@ async function requireAuth(db: any, data: any): Promise<{ok:boolean, userId?:str
     await db.from("sesiones").delete().eq("token", data.sessionToken);
     return {ok:false, error:"Sesión expirada"};
   }
+  if (data[ALCANCE]) return {ok:true, userId: sesion.user_id, rol:"Admin", empresaId: data[ALCANCE]};
   const { data: user } = await db.from("usuarios").select("rol,publico").eq("id", sesion.user_id).single();
   if (user?.rol === "Admin") return {ok:true, userId: sesion.user_id, rol:"Admin", empresaId: data.espacio || null};
   // Espacio: "" = Polla Prodes (público) · id de empresa = esa empresa (si es miembro)
@@ -231,6 +250,9 @@ Deno.serve(async (req) => {
   const { action } = data;
 
   try {
+    const alc = await alcanceAdminLiga(db, data, action);
+    if (alc === false) return resp({ok:false, error:"Sin permisos: esa fecha no es de tu liga"});
+    if (alc) data[ALCANCE] = alc;
     switch(action) {
 
       // ── AUTH ──────────────────────────────────────────────
@@ -352,7 +374,7 @@ Deno.serve(async (req) => {
       case "adminLinksAuto": return resp(await adminLinksAuto(db, data));
       case "fsLigas": return resp(await fsLigas(db, data));
       case "fsPartidos": return resp(await fsPartidos(db, data));
-      case "adminLinkPartido": { const au = await requireAuth(db, data); if (!au.ok || au.rol !== "Admin") return resp({ok:false, error:"Sin permisos"}); const l = String(data.link||"").trim(); if (l && !/^https?:\/\//i.test(l)) return resp({ok:false, error:"El link tiene que empezar con https://"}); const ids = await partidosGemelos(db, data.partidoId); for (const id of ids) await db.from("partidos").update({link_stats:l.slice(0,500)}).eq("id", id); return resp({ok:true}); }
+      case "adminLinkPartido": { const au = await requireAuth(db, data); if (!au.ok || au.rol !== "Admin") return resp({ok:false, error:"Sin permisos"}); const l = String(data.link||"").trim(); if (l && !/^https?:\/\//i.test(l)) return resp({ok:false, error:"El link tiene que empezar con https://"}); const ids = await partidosGemelos(db, data.partidoId, data[ALCANCE]||null); for (const id of ids) await db.from("partidos").update({link_stats:l.slice(0,500)}).eq("id", id); return resp({ok:true}); }
       case "adminLeerCaptura": return resp(await adminLeerCaptura(db, data));
       case "getEscudosEquipos": return resp(await getEscudosEquipos(db, data));
       case "adminGetInscriptos": return resp(await adminGetInscriptos(db, data));
@@ -533,9 +555,11 @@ async function crearSesion(db: any, userId: string): Promise<string> {
 // ============================================================
 async function getFechas(db: any, data: any) {
   const quien: any = data.sessionToken ? await requireAuth(db, data) : {ok:false};
-  const esAdmin = quien.ok && quien.rol === "Admin";
+  const adminLiga = quien.ok && quien.rol === "AdminEmpresa" && quien.empresaId && data.vistaAdmin;
+  const esAdmin = quien.ok && quien.rol === "Admin" || !!adminLiga;
   let q = db.from("fechas").select("*").in("estado", ["Abierta","Cerrada","Jugada"]).order("plazo_limite");
-  if (!esAdmin) { q = quien.ok && quien.empresaId ? q.eq("empresa_id", quien.empresaId) : q.is("empresa_id", null); q = q.eq("publicada", true).or("oculta.is.null,oculta.eq.false"); }
+  if (adminLiga) q = q.eq("empresa_id", quien.empresaId);
+  else if (!esAdmin) { q = quien.ok && quien.empresaId ? q.eq("empresa_id", quien.empresaId) : q.is("empresa_id", null); q = q.eq("publicada", true).or("oculta.is.null,oculta.eq.false"); }
   const {data: fechas} = await q;
   const {data: emps} = esAdmin ? await db.from("empresas").select("id,nombre") : {data: []};
 
@@ -1212,11 +1236,11 @@ async function adminIngresarResultado(db: any, data: any) {
 
   const gL = parseInt(data.golesLocal), gV = parseInt(data.golesVisita);
   if (isNaN(gL)||isNaN(gV)) return {ok:false, error:"Goles inválidos"};
-  return await aplicarResultado(db, data.partidoId, gL, gV, data.tarjetasRojas||0, false);
+  return await aplicarResultado(db, data.partidoId, gL, gV, data.tarjetasRojas||0, false, data[ALCANCE]||null);
 }
-async function aplicarResultado(db: any, partidoId: string, gL: number, gV: number, rojas: number, auto: boolean) {
+async function aplicarResultado(db: any, partidoId: string, gL: number, gV: number, rojas: number, auto: boolean, empresaId: string|null = null) {
   const resultado = gL>gV?"L":gL===gV?"E":"V";
-  const ids = await partidosGemelos(db, partidoId);
+  const ids = await partidosGemelos(db, partidoId, empresaId);
   for (const id of ids) {
     await db.from("partidos").update({
       estado:"Finalizado", goles_local:gL, goles_visita:gV,
@@ -2073,7 +2097,7 @@ async function adminEstadoPartido(db: any, data: any) {
   if (!auth.ok || auth.rol !== "Admin") return {ok:false, error:"Sin permisos"};
   const {partidoId, estado} = data;
   if (!["Suspendido","Postergado","Pendiente"].includes(estado)) return {ok:false, error:"Estado inválido"};
-  const ids = await partidosGemelos(db, partidoId);
+  const ids = await partidosGemelos(db, partidoId, data[ALCANCE]||null);
   for (const id of ids) await estadoPartidoUno(db, id, estado);
   return {ok:true, estado, enOtrasFechas: ids.length - 1};
 }
@@ -2623,7 +2647,8 @@ async function adminSetRol(db: any, data: any) {
 //  FECHAS: ocultar, eliminar, copiar a empresas
 // ============================================================
 // El mismo partido copiado en varias fechas (mismo id de la API, o mismos equipos y horario)
-async function partidosGemelos(db: any, partidoId: string): Promise<string[]> {
+async function partidosGemelos(db: any, partidoId: string, empresaId: string|null = null): Promise<string[]> {
+  if (empresaId) return [partidoId]; // admin de liga: nunca toca copias de otras empresas
   const {data: p} = await db.from("partidos").select("id,partido_api_id,local,visita,fecha_hora").eq("id", partidoId).single();
   if (!p) return [partidoId];
   const q = p.partido_api_id
@@ -3308,7 +3333,7 @@ async function adminLinksAuto(db: any, data: any) {
       if (mid2) { url += `?mid=${mid2}`; estado = "ok"; }
       else if (mid && estado === "ok") url += `?mid=${mid}`;
     } catch { estado = "sin verificar"; }
-    const ids = await partidosGemelos(db, p.id);
+    const ids = await partidosGemelos(db, p.id, data[ALCANCE]||null);
     for (const id of ids) await db.from("partidos").update({link_stats:url}).eq("id", id);
     res.push({numero:p.numero, estado, detalle:`${a.nombre} vs ${b.nombre}`});
   }

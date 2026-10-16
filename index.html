@@ -3128,7 +3128,9 @@ const ICO={
 const NAV_J=[{k:"fechas",i:ICO.fechas,l:"Fechas",t:"Fechas"},{k:"mis-fechas",i:ICO.mias,l:"En Juego",t:"Fechas en Juego"},{k:"tabla",i:ICO.tabla,l:"Tabla",t:"Tabla"},{k:"grilla",i:ICO.grilla,l:"Grilla",t:"Los Otros"},{k:"reglamento",i:ICO.reglamento,l:"Reglamento",t:"Reglamento"},{k:"perfil",i:ICO.perfil,l:"Perfil",t:"Perfil"}];
 const NAV_A=[{k:"admin-res",i:ICO.resultados,l:"Resultados",t:"Cargar resultados"},{k:"admin-dash",i:ICO.dash,l:"Inicio",t:"Dashboard"},{k:"admin-fechas",i:ICO.fechas,l:"Fechas",t:"Fechas"},{k:"tabla",i:ICO.tabla,l:"Tabla",t:"Tabla"},{k:"grilla",i:ICO.grilla,l:"Grilla",t:"Los Otros"},{k:"admin-empresas",i:ICO.empresas,l:"Empresas",t:"Empresas"},{k:"admin-pagos",i:ICO.pagos,l:"Pagos",t:"Pagos Pendientes"},{k:"admin-users",i:ICO.jugadores,l:"Jugadores",t:"Jugadores"},{k:"admin-fotos",i:ICO.foto,l:"Fotos",t:"Fotos para aprobar"},{k:"admin-importar",i:ICO.importar,l:"Importar",t:"Importar Partidos"},{k:"admin-noticias",i:ICO.noticias,l:"Noticias",t:"Noticias"},{k:"admin-push",i:ICO.noticias,l:"Avisos push",t:"Avisos push"},{k:"reglamento",i:ICO.reglamento,l:"Reglamento",t:"Reglamento"},{k:"perfil",i:ICO.perfil,l:"Perfil",t:"Perfil"}];
 const KICKER={"fechas":"Elegí y jugá","mis-fechas":"Tus fechas en curso","tabla":"Posiciones","grilla":"Pronósticos de todos","perfil":"Tu cuenta","fecha-det":"Fecha","jugar":"Tus pronósticos","admin-dash":"Administración","admin-fechas":"Administración","admin-res":"Administración","admin-pagos":"Administración","admin-users":"Administración","admin-importar":"Administración","admin-noticias":"Administración","admin-fotos":"Administración","stats":"Estadísticas","reglamento":"Cómo se juega","mi-empresa":"Novedades, premios y marca","admin-push":"Administración","admin-empresas":"Administración"};
-const NAV_EA=[NAV_J[0],{k:"mi-empresa",i:ICO.empresa,l:"Mi empresa",t:"Mi empresa"}].concat(NAV_J.slice(1));
+// Admin de liga: su panel, resultados y fechas (solo de su empresa) además de jugar
+const NAV_EA=[NAV_J[0],{k:"admin-res",i:ICO.resultados,l:"Resultados",t:"Cargar resultados"},{k:"admin-fechas",i:ICO.fechas,l:"Armar",t:"Armar fechas"},{k:"mi-empresa",i:ICO.empresa,l:"Mi liga",t:"Mi liga"}].concat(NAV_J.slice(1));
+function esAdminLiga(){return App.user?.rol==="AdminEmpresa";}
 function getNav(){const r=App.user?.rol;return r==="Admin"?NAV_A:r==="AdminEmpresa"?NAV_EA:NAV_J;}
 
 function go(k,ctx={}){
@@ -3225,7 +3227,7 @@ function renderScreen(k,ctx){
     case"admin-users":return`<div class="su"><div id="aul"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"admin-pagos":return`<div class="su"><div id="apl"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"admin-push":return`<div class="su"><div id="apu"></div></div>`;
-    case"admin-fin":return`<div class="su"><div class="back" onclick="go('admin-dash')">← Volver</div><div id="afin"><div class="loading"><div class="spinner"></div></div></div></div>`;
+    case"admin-fin":return`<div class="su"><div class="back" onclick="go(esAdminLiga()?'admin-fechas':'admin-dash')">← Volver</div><div id="afin"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"mi-empresa":return`<div class="su"><div id="mec"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"admin-empresas":return`<div class="su"><div id="aec"><div class="loading"><div class="spinner"></div></div></div></div>`;
     case"admin-noticias":return`<div class="su"><div id="anl"><div class="loading"><div class="spinner"></div></div></div></div>`;
@@ -4857,12 +4859,13 @@ window._adminFechas={};
 async function loadAdminFechas(){
   const el=document.getElementById("afl");if(!el)return;
   el.innerHTML=`<div class="loading"><div class="spinner"></div></div>`;
-  const r=await api("getFechas");
+  const AL=esAdminLiga();
+  const r=await api("getFechas",{vistaAdmin:1});
   if(!r.ok){el.innerHTML=errBox(r.error);return;}
   const todas=r.fechas||[];
-  if(!todas.length){el.innerHTML=emptyBox("📅","Sin fechas");return;}
+  if(!todas.length){el.innerHTML=emptyBox("📅",AL?"Todavía no hay fechas. Tocá + Nueva fecha para armar la primera.":"Sin fechas");return;}
   todas.forEach(function(f){window._adminFechas[f.id]=f;});
-  const re=await api("adminGetEmpresas");window._empresas=re.ok?(re.empresas||[]):[];
+  const re=AL?{ok:false}:await api("adminGetEmpresas");window._empresas=re.ok?(re.empresas||[]):[];
   const filtro=window._afFiltro||"todas";
   const deFiltro=function(f){return filtro==="todas"||(filtro==="pub"?!f.empresaId:f.empresaId===filtro);};
   const cuenta=function(k){return todas.filter(function(f){return !f.oculta&&(k==="todas"||(k==="pub"?!f.empresaId:f.empresaId===k));}).length;};
@@ -4887,7 +4890,7 @@ async function loadAdminFechas(){
         ${f.codigoGrupo?`<button class="btn btn-p" style="padding:6px 12px;font-size:16px" onclick="compartirFecha('${f.id}')">🔗 Compartir</button>`:""}
         <button class="btn btn-s af-ver" style="padding:6px 12px;font-size:16px" onclick="go('fecha-det',{fechaId:'${f.id}',desdeAdmin:1})">📱 Ver como jugador</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="partidosManual('${f.id}')">✍️ Cargar a mano</button>
-        <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="linksAuto('${f.id}',this)">📊 Cargar links de estadísticas</button>
+        ${AL?"":`<button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="linksAuto('${f.id}',this)">📊 Cargar links de estadísticas</button>`}
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-importar',{fechaId:'${f.id}'})">🔗 Importar</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="go('admin-res',{fechaId:'${f.id}'})">⚽ Resultados</button>
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="showEditarFecha('${f.id}')">✏️ Editar</button>
@@ -4895,13 +4898,13 @@ async function loadAdminFechas(){
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="verInscriptos('${f.id}')">👥 Inscriptos</button>
         ${estadoFecha(f).t==="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:16px" onclick="cerrarFecha('${f.id}')">🔒 Cerrar</button>`:""}
         ${estadoFecha(f).t!=="Abierta"&&f.publicada!==false?`<button class="btn af-fin-btn" onclick="go('admin-fin',{fechaId:'${f.id}'})">🏁 ${f.terminada?"Resumen final":"Terminar fecha"}</button>`:""}
-        <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="copiarFecha('${f.id}')">⧉ Copiar a…</button>
+        ${AL?"":`<button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="copiarFecha('${f.id}')">⧉ Copiar a…</button>`}
         <button class="btn btn-s" style="padding:6px 12px;font-size:16px" onclick="ocultarFecha('${f.id}',${!f.oculta})">${f.oculta?"👁 Mostrar":"🙈 Ocultar"}</button>
         ${f.estado!=="Abierta"?`<button class="btn btn-d" style="padding:6px 12px;font-size:16px" onclick="eliminarFecha('${f.id}')">🗑 Eliminar</button>`:""}
       </div>
     </div>`;
   };
-  el.innerHTML=`<div class="af-chips">${chips.map(function(c){return`<button class="af-chip${filtro===c[0]?" on":""}" onclick="window._afFiltro='${c[0]}';loadAdminFechas()">${escH(c[1])} <span>${cuenta(c[0])}</span></button>`;}).join("")}</div>
+  el.innerHTML=`${AL?"":`<div class="af-chips">`+chips.map(function(c){return`<button class="af-chip${filtro===c[0]?" on":""}" onclick="window._afFiltro='${c[0]}';loadAdminFechas()">${escH(c[1])} <span>${cuenta(c[0])}</span></button>`;}).join("")+`</div>`}
     ${visibles.length?visibles.map(card).join(""):emptyBox("📅","No hay fechas en este apartado")}
     ${ocultas.length?`<details class="af-ocultas"><summary>Ocultas (${ocultas.length})</summary>${ocultas.map(card).join("")}</details>`:""}`;
   visibles.concat(ocultas).forEach(function(f){loadPozosInline(f.id,!!f.empresaId);});
@@ -5012,7 +5015,7 @@ window.eliminarNoticia=async function(idx){
 };
 /* ══ ADMIN RESULTADOS ════════════════════════════════════════ */
 async function loadRes(ctx){
-  const rf=await api("getFechas"),el=document.getElementById("arf");if(!el)return;
+  const rf=await api("getFechas",{vistaAdmin:1}),el=document.getElementById("arf");if(!el)return;
   // Las fechas ya terminadas no aparecen (se puede entrar igual desde Fechas → Resultados)
   const fs=(rf.fechas||[]).filter(function(f){return["Abierta","Cerrada","Jugada"].includes(f.estado)&&!f.terminada&&!f.oculta;});
   // Por defecto: la fecha en juego (ya cerró y sigue activa); si no hay, la más próxima
@@ -5022,7 +5025,7 @@ async function loadRes(ctx){
   if(!sf){el.innerHTML=emptyBox("📅","No hay fechas activas. Creá una en Fechas.");return;}
   const rp=await api("getFecha",{fechaId:sf});if(!rp.ok){el.innerHTML=errBox(rp.error);return;}
   const ahora=Date.now();
-  const est=function(p){if(p.estado==="Finalizado")return"final";if(p.estado==="Suspendido")return"susp";if(p.estado==="Postergado")return"post";const t=p.fechaHora?new Date(p.fechaHora).getTime():0;return t&&t<=ahora?"cargar":"prox";};
+  const est=function(p){if(p.estado==="Finalizado")return"final";if(p.estado==="Suspendido")return"susp";if(p.estado==="Postergado")return"post";const t=p.fechaHora?new Date(p.fechaHora).getTime():0;return esAmateur(p)||t&&t<=ahora?"cargar":"prox";};
   const orden={cargar:0,prox:1,post:2,final:3,susp:4};
   const ps=(rp.partidos||[]).slice().sort(function(a,b){return orden[est(a)]-orden[est(b)]||(a.numero-b.numero);});
   const nCargar=ps.filter(function(p){return est(p)==="cargar";}).length,nFinal=ps.filter(function(p){return est(p)==="final";}).length;
@@ -5047,7 +5050,7 @@ async function loadRes(ctx){
         <span class="rs-rojas-l">🟥 Rojas</span>${step("tr-"+p.id,p.tarjetasRojas||0,"rojas")}
         <button class="btn ${done?"btn-s":"btn-p"} rs-save" onclick="guardarRes('${p.id}','${sf}')">${done?"Corregir":"Guardar"}</button>
       </div>
-      <div class="rs-link">${botonStats(p,"st-mini")}<button class="st-edit" title="Cambiar el link" onclick="editarLinkStats('${p.id}','${escH(p.linkStats||"").replace(/'/g,"")}')">✎</button></div>
+      ${esAmateur(p)?"":`<div class="rs-link">${botonStats(p,"st-mini")}<button class="st-edit" title="Cambiar el link" onclick="editarLinkStats('${p.id}','${escH(p.linkStats||"").replace(/'/g,"")}')">✎</button></div>`}
       <div class="rs-more">
         <button class="res-eb" onclick="estadoPartido('${p.id}','Suspendido','${sf}')">⛔ Suspendido</button>
         <button class="res-eb" onclick="estadoPartido('${p.id}','Postergado','${sf}')">📅 Postergado</button>
@@ -5055,7 +5058,7 @@ async function loadRes(ctx){
         ${done?`<button class="res-eb res-borrar" onclick="estadoPartido('${p.id}','Borrar','${sf}')">🗑 Borrar resultado</button>`:""}
       </div>
     </div>`;}).join("")}</div>
-    <p class="rs-nota">Goles de los 90 minutos (sin alargue ni penales). Rojas según Flashscore.</p>`;
+    <p class="rs-nota">${ps.some(esAmateur)?"Goles del tiempo reglamentario del partido (sin alargue ni penales). Rojas según la app del torneo. Con los goles, el sistema calcula solo los puntos y todas las reglas (MK, Lluvia de Goles, etc.).":"Goles de los 90 minutos (sin alargue ni penales). Rojas según Flashscore."}</p>`;
 }
 window.stp=function(id,d){const i=document.getElementById(id);if(!i)return;i.value=Math.max(0,Math.min(20,(parseInt(i.value)||0)+d));};
 window.estadoPartido=async(pid,estado,fid)=>{
