@@ -2811,7 +2811,9 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 @media(max-width:560px){
   .pmr-nom .lg{display:inline}.pmr-nom .sg{display:none}
   .pmr-nom{font-size:15px}
-  .pd-eq{gap:7px}.pd-eq b{font-size:16px;min-width:0}
+  /* En el celular el escudo va arriba del nombre, así el nombre usa todo el ancho */
+  .pd-eq{flex-direction:column;justify-content:center;gap:5px;text-align:center}.pd-eq.loc{flex-direction:column-reverse;justify-content:center;text-align:center}
+  .pd-eq b{font-size:16px;min-width:0;max-width:100%}
 }
 
 </style>
