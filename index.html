@@ -3585,13 +3585,15 @@ window.trEnviar=async function(){
 
 
 // ── Catálogo de reglas (sin NPF) ──
+// LIGA F7R (fútbol 7, 50 minutos): Lluvia de Goles con 6+ goles y La Zapali con 4+ de diferencia
+function esF7R(){return App.espacio==="EMP_MV8H7P6G7FLY";}
 const TODAS_LAS_REGLAS=[
   {codigo:"LMR",nombre:"La Marea Roja",desc:"Elegí 3 partidos en los que creas que habrá al menos una tarjeta roja.<br>Sumás 1 punto por cada expulsión.",pts:1},
   {codigo:"LR",nombre:"La Rachita",desc:"Elegí 1 partido de inicio: cuenta ese y los 2 siguientes.<br>1 punto por el 1.º acierto, 2 por el 2.º y 3 por el 3.º (hasta 6). Se corta al primer error.",pts:3},
-  {codigo:"LLDG",nombre:"Lluvia de Goles",desc:"Elegí un partido en el que creas que habrá 5 goles o más.<br>Si acertás, sumás 4 puntos.",pts:4},
+  {codigo:"LLDG",nombre:"Lluvia de Goles",get desc(){return"Elegí un partido en el que creas que habrá "+(esF7R()?6:5)+" goles o más.<br>Si acertás, sumás 4 puntos.";},pts:4},
   {codigo:"DIEGO",nombre:"El Diego",desc:"Elegí 3 partidos que creas que terminan empatados.<br>1 punto por el 1.º empate, 2 por el 2.º y 3 por el 3.º (hasta 6).",pts:3},
   {codigo:"GSA",nombre:"Goles Son Amores",desc:"Elegí un partido en el que ambos equipos conviertan goles.<br>Sumás 1 punto por cada gol del partido.",pts:1},
-  {codigo:"ZPL",nombre:"La Zapali",desc:"Elegí un partido en el que haya un ganador por diferencia de 3 goles o más.<br>Si acertás, sumás 4 puntos.",pts:4},
+  {codigo:"ZPL",nombre:"La Zapali",get desc(){return"Elegí un partido en el que haya un ganador por diferencia de "+(esF7R()?4:3)+" goles o más.<br>Si acertás, sumás 4 puntos.";},pts:4},
   {codigo:"MK",nombre:"La MK",desc:"Elegí el resultado exacto de un partido.<br>No se puede elegir Empate en 0.<br>Si acertás, sumás 4 puntos.",pts:4},
   {codigo:"EQS",nombre:"Empate Que Suma",desc:"Elegí un partido que finalice en empate.<br>Si acertás, sumás 3 puntos.",pts:3},
 ];
@@ -5071,10 +5073,10 @@ function renderReglamento(){
   const F7=App.espacio==="EMP_MV8H7P6G7FLY",PREM=F7?70:75,ORG=100-PREM;
   const R=[["La Marea Roja","LMR","3 partidos","1 punto por cada tarjeta roja","No"],
     ["La Rachita","LR","1 partido de inicio (cuenta ese y los 2 siguientes)","1 pt el 1.º acierto · 2 pts el 2.º · 3 pts el 3.º (máx. 6). Se corta al primer error","Sí"],
-    ["Lluvia de Goles","LLDG","1 partido","4 puntos si hay 5 goles o más","No"],
+    ["Lluvia de Goles","LLDG","1 partido","4 puntos si hay "+(F7?6:5)+" goles o más","No"],
     ["El Diego","DIEGO","3 partidos que creas empatados","1 pt el 1.º empate · 2 pts el 2.º · 3 pts el 3.º (máx. 6)","No"],
     ["Goles Son Amores","GSA","1 partido","Si ambos anotan, 1 punto por gol (2-1 = 3 pts)","No"],
-    ["La Zapali","ZPL","1 partido","4 puntos si hay diferencia de 3 goles o más","No"],
+    ["La Zapali","ZPL","1 partido","4 puntos si alguien gana por "+(F7?4:3)+" goles o más","No"],
     ["La MK","MK","1 partido y su resultado exacto (no 0-0)","4 puntos si clavás el resultado","—"],
     ["Empate Que Suma","EQS","1 partido","3 puntos si termina empatado","No"]];
   return`<div class="su rg">

@@ -1386,6 +1386,8 @@ async function calcularPuntajesPartido(db: any, partidoId: string) {
   const {data: part} = await db.from("partidos").select("*").eq("id",partidoId).single();
   if (!part||part.estado!=="Finalizado"||!part.resultado) return;
   const VP = valoresPuntos(await versionPuntos(db, part.fecha_id));
+  const {data: fe} = await db.from("fechas").select("empresa_id").eq("id", part.fecha_id).single();
+  const f7 = fe?.empresa_id === EMP_F7R;
 
   const [{data:pronos},{data:reglas}] = await Promise.all([
     db.from("pronosticos").select("*").eq("partido_id",partidoId),
@@ -1415,7 +1417,7 @@ async function calcularPuntajesPartido(db: any, partidoId: string) {
     const misReglas = (reglas||[]).filter((r:any)=>r.user_id===pr.user_id&&r.pozo_id===pr.pozo_id);
     for (const reg of misReglas) {
       if (reg.codigo==="LR" || reg.codigo==="DIEGO") { ptsR += reg.puntos_obtenidos||0; continue; }
-      const pts = calcPtsRegla(reg, part.resultado, part.goles_local||0, part.goles_visita||0, part.tarjetas_rojas||0, VP.mk);
+      const pts = calcPtsRegla(reg, part.resultado, part.goles_local||0, part.goles_visita||0, part.tarjetas_rojas||0, VP.mk, f7);
       ptsR += pts;
       reglasUpdate.push({id:reg.id, puntos_obtenidos:pts});
     }
@@ -1440,12 +1442,14 @@ async function calcularPuntajesPartido(db: any, partidoId: string) {
   await calcularReglasMultiples(db, part.fecha_id);
 }
 
-function calcPtsRegla(reg:any, resultado:string, gL:number, gV:number, rojas:number, ptsMK = 4): number {
+// LIGA F7R (fútbol 7, 50 minutos) tiene umbrales propios: Lluvia de Goles con 6+ goles y La Zapali con 4+ de diferencia
+const EMP_F7R = "EMP_MV8H7P6G7FLY";
+function calcPtsRegla(reg:any, resultado:string, gL:number, gV:number, rojas:number, ptsMK = 4, f7 = false): number {
   switch(reg.codigo) {
     case "LMR": return rojas;                                   // 1 por roja
-    case "LLDG": return (gL+gV)>=5?4:0;                         // 5+ goles
+    case "LLDG": return (gL+gV)>=(f7?6:5)?4:0;                  // 5+ goles (F7R: 6+)
     case "GSA": return (gL>0&&gV>0)?(gL+gV):0;                  // ambos anotan: 1 por gol
-    case "ZPL": return Math.abs(gL-gV)>=3?4:0;                  // diferencia de 3+
+    case "ZPL": return Math.abs(gL-gV)>=(f7?4:3)?4:0;           // diferencia de 3+ (F7R: 4+)
     case "EQS": return resultado==="E"?3:0;                     // termina empatado
     case "MK": {                                                // resultado exacto
       const p=(reg.detalle||"").split("-").map(Number);
