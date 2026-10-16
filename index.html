@@ -2804,6 +2804,14 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 @media(max-width:880px){
   .page{padding-bottom:calc(96px + env(safe-area-inset-bottom) + var(--oculto,0px))!important}
 }
+/* Nombres de equipos siempre completos: bajan de renglón (sin cortar palabras ni poner puntos suspensivos) */
+.pd-eq b,.rs-team small,.res-teams,.ld-live-item b,.pm-it-eq b,.fs-eq,.pmr-nom{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:normal;word-break:normal;hyphens:none;max-width:none}
+.pd-eq b,.pmr-nom{line-height:1.05}
+.rs-team small{text-align:center;line-height:1.2}
+@media(max-width:560px){
+  .pmr-nom .lg{display:inline}.pmr-nom .sg{display:none}
+  .pmr-nom{font-size:15px}
+}
 
 </style>
 </head>
