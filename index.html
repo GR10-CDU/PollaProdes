@@ -5067,6 +5067,8 @@ window.guardarRes=async(pid,fid)=>{const gL=document.getElementById("gL-"+pid)?.
 
 /* ══ REGLAMENTO (para jugadores) ═════════════════════════════ */
 function renderReglamento(){
+  // Reglamento propio de LIGA F7R (fútbol 7, partidos de 50 minutos)
+  const F7=App.espacio==="EMP_MV8H7P6G7FLY",PREM=F7?70:75,ORG=100-PREM;
   const R=[["La Marea Roja","LMR","3 partidos","1 punto por cada tarjeta roja","No"],
     ["La Rachita","LR","1 partido de inicio (cuenta ese y los 2 siguientes)","1 pt el 1.º acierto · 2 pts el 2.º · 3 pts el 3.º (máx. 6). Se corta al primer error","Sí"],
     ["Lluvia de Goles","LLDG","1 partido","4 puntos si hay 5 goles o más","No"],
@@ -5106,7 +5108,7 @@ function renderReglamento(){
         <tr><td>1.º</td><td>20% del monto del pozo</td><td>$4.000</td></tr>
         <tr><td>2.º</td><td>25% del monto del pozo</td><td>$5.000</td></tr>
         <tr><td>3.º</td><td>30% del monto del pozo</td><td>$6.000</td></tr></tbody></table>
-      <ul class="rg-ul"><li>Pagás por transferencia y subís el comprobante: el cambio se aplica en el momento.</li><li>La plata de los cambios va al pozo (75% al premio).</li><li>Si el administrador rechaza el comprobante, tu pronóstico vuelve al anterior.</li></ul>
+      <ul class="rg-ul"><li>Pagás por transferencia y subís el comprobante: el cambio se aplica en el momento.</li><li>La plata de los cambios va al pozo (${PREM}% al premio).</li><li>Si el administrador rechaza el comprobante, tu pronóstico vuelve al anterior.</li></ul>
     </section>
 
     <section class="rg-sec" id="rg-3"><h2>Reglas especiales</h2>
@@ -5117,16 +5119,16 @@ function renderReglamento(){
 
     <section class="rg-sec" id="rg-4"><h2>Validez de los partidos</h2>
       <div class="rg-grid">
-        <div class="rg-card"><span class="rg-ico">⏱</span><b>Solo 90 minutos</b><p>Se cuenta el resultado de los 90 minutos más el adicional. El alargue y los penales no cuentan.</p></div>
+        <div class="rg-card"><span class="rg-ico">⏱</span>${F7?"<b>Solo 50 minutos</b><p>Se cuenta el resultado de los 50 minutos del partido. El alargue y los penales no cuentan.</p>":"<b>Solo 90 minutos</b><p>Se cuenta el resultado de los 90 minutos más el adicional. El alargue y los penales no cuentan.</p>"}</div>
         <div class="rg-card"><span class="rg-ico">🔴</span><b>Los puntos se suman al final</b><p>Mientras se juega, la app muestra el <b>resultado parcial en vivo</b> solo como referencia. Los puntajes se calculan recién cuando el partido terminó y el administrador carga el resultado final.</p></div>
-        <div class="rg-card"><span class="rg-ico">🟥</span><b>Tarjetas rojas</b><p>Cuentan las rojas que figuren en Flashscore.</p></div>
+        <div class="rg-card"><span class="rg-ico">🟥</span><b>Tarjetas rojas</b><p>${F7?"Cuentan las rojas que figuren en la app del torneo.":"Cuentan las rojas que figuren en Flashscore."}</p></div>
         <div class="rg-card"><span class="rg-ico">⛔</span><b>Partido suspendido</b><p>No suma para nadie: ni el pronóstico ni las reglas de ese partido.</p></div>
         <div class="rg-card"><span class="rg-ico">📅</span><b>Partido postergado</b><p>Queda a criterio del administrador, según cuándo se juegue efectivamente.</p></div>
       </div>
     </section>
 
     <section class="rg-sec" id="rg-5"><h2>Premio y desempate</h2>
-      <p class="rg-lead">De cada $100 que entran a un pozo, <b>$75 son para el premio</b> y $25 para la organización. Vale para inscripciones y cambios pagos.</p>
+      <p class="rg-lead">De cada $100 que entran a un pozo, <b>$${PREM} son para el premio</b> y $${ORG} para la organización. Vale para inscripciones y cambios pagos.</p>
       <ol class="rg-ol"><li>Más puntos.</li><li>Más partidos acertados.</li><li>Más empates acertados.</li><li>Más visitantes acertados.</li><li>Si siguen iguales, se dividen el premio en partes iguales.</li></ol>
       <p class="rg-note">Cada pozo tiene su propia tabla. Las fechas con código de grupo (pruebas o invitaciones) tienen un premio fijo definido de antemano.</p>
     </section>
