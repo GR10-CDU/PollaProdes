@@ -16,6 +16,7 @@
 <meta name="description" content="Pronosticá la fecha, competí con tus amigos y demostrá que sabés de fútbol. Fechas todas las semanas."/>
 <!-- /OG -->
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<script>if(/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1))document.documentElement.classList.add("es-ios");</script>
 <meta name="theme-color" content="#050D1A"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="mobile-web-app-capable" content="yes"/>
@@ -2814,6 +2815,11 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
   /* En el celular el escudo va arriba del nombre, así el nombre usa todo el ancho */
   .pd-eq{flex-direction:column;justify-content:center;gap:5px;text-align:center}.pd-eq.loc{flex-direction:column-reverse;justify-content:center;text-align:center}
   .pd-eq b{font-size:16px;min-width:0;max-width:100%}
+}
+/* Android (y todo lo que no es iPhone): la app mide solo lo que se ve. Con la medida "pantalla sin barra del navegador"
+   el menú de abajo quedaba escondido debajo del borde. En iPhone sigue igual (contenido hasta el borde) */
+@media(max-width:880px){
+  html:not(.es-ios) #app{height:100dvh!important;min-height:0!important}
 }
 
 </style>
