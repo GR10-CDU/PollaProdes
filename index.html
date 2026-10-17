@@ -2821,6 +2821,10 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
 @media(max-width:880px){
   html:not(.es-ios) #app{height:100dvh!important;min-height:0!important}
 }
+@media(max-width:880px){
+  html:not(.es-ios) body #bn{bottom:calc(max(9px,calc(env(safe-area-inset-bottom) - 19px)) + var(--tapado,0px))!important}
+  html:not(.es-ios) #inst-banner{bottom:calc(84px + env(safe-area-inset-bottom) + var(--tapado,0px))}
+}
 
 </style>
 </head>
@@ -6901,6 +6905,22 @@ function ajustarAltoVisible(){
 window.addEventListener("resize",ajustarAltoVisible);
 if(window.visualViewport)window.visualViewport.addEventListener("resize",ajustarAltoVisible);
 setInterval(ajustarAltoVisible,1500);
+// Android (algunos modelos): si el sistema dice que se ve menos de lo que la app ocupa, el menú de abajo sube eso
+function ajustarMenuTapado(){
+  const r=document.documentElement;if(r.classList.contains("es-ios")||!window.visualViewport)return;
+  const vv=window.visualViewport,ae=document.activeElement;
+  if(vv.scale>1.01||(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)))return;
+  const g=Math.min(160,Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop)));
+  r.style.setProperty("--tapado",g+"px");
+}
+window.addEventListener("resize",ajustarMenuTapado);window.visualViewport?.addEventListener("resize",ajustarMenuTapado);setInterval(ajustarMenuTapado,1500);
+// Diagnóstico de pantalla: pollaprodes.ar/?diag muestra las medidas (para celulares donde algo no se ve)
+if(/[?&]diag\b/.test(location.search))setInterval(function(){
+  let d=document.getElementById("pp-diag");if(!d){d=document.createElement("div");d.id="pp-diag";d.style.cssText="position:fixed;left:8px;right:8px;top:30%;z-index:99999;padding:10px 12px;border-radius:12px;background:#111;color:#0f0;font:600 13px/1.45 monospace;white-space:pre-wrap;pointer-events:none";document.body.appendChild(d);}
+  const t=document.createElement("div");t.style.cssText="position:fixed;top:0;bottom:0;width:1px;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);visibility:hidden";document.body.appendChild(t);const ts=getComputedStyle(t),it=ts.paddingTop,ib=ts.paddingBottom,fh=t.getBoundingClientRect().height;t.remove();
+  const vv=window.visualViewport||{},bn=document.getElementById("bn"),br=bn?bn.getBoundingClientRect():{},ib2=document.getElementById("inst-banner")?.getBoundingClientRect();
+  d.textContent=["inner "+innerWidth+"x"+innerHeight+"  outer "+outerHeight,"vv "+Math.round(vv.height)+" off "+Math.round(vv.offsetTop)+" esc "+vv.scale,"screen "+screen.width+"x"+screen.height+" dpr "+devicePixelRatio,"fijo "+Math.round(fh)+"  safe "+it+" / "+ib,"app "+Math.round(document.getElementById("app").getBoundingClientRect().height)+"  dvh? "+CSS.supports("height","100dvh"),"menu "+(bn?getComputedStyle(bn).display:"-")+" top "+Math.round(br.top)+" bot "+Math.round(br.bottom),"aviso bot "+(ib2?Math.round(ib2.bottom):"-")+"  tapado "+getComputedStyle(document.documentElement).getPropertyValue("--tapado"),"modo "+(matchMedia("(display-mode: standalone)").matches?"app":"navegador")+"  "+document.documentElement.className,navigator.userAgent.replace(/Mozilla\/5.0 /,"").slice(0,120)].join("\n");
+},1000);
 </script>
 </body>
 </html>
