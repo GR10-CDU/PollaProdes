@@ -25,9 +25,13 @@
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
-<title>POLLA PRODES</title>
+<title>Polla Prodes · Prode de fútbol online con amigos, empresas y ligas</title>
+<link rel="canonical" href="https://pollaprodes.ar/"/>
+<link rel="icon" href="/favicon.ico" sizes="any"/>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png"/>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Organization", "@id": "https://pollaprodes.ar/#org", "name": "Polla Prodes", "url": "https://pollaprodes.ar/", "logo": "https://pollaprodes.ar/icons/icon-512.png", "email": "pollaprodes@gmail.com", "sameAs": ["https://www.instagram.com/pollaprodes.ar/"]}, {"@type": "WebSite", "@id": "https://pollaprodes.ar/#web", "name": "Polla Prodes", "url": "https://pollaprodes.ar/", "inLanguage": "es-AR", "publisher": {"@id": "https://pollaprodes.ar/#org"}}, {"@type": "WebApplication", "name": "Polla Prodes", "url": "https://pollaprodes.ar/", "applicationCategory": "GameApplication", "operatingSystem": "Android, iOS, Web", "inLanguage": "es-AR", "description": "Prode de fútbol online: pronosticá la fecha, competí con tus amigos y armá el prode de tu empresa, club o liga.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "ARS"}, "publisher": {"@id": "https://pollaprodes.ar/#org"}}]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" defer></script>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script>
@@ -2898,7 +2902,7 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
     <div class="ld-glow" aria-hidden="true"></div>
     <div class="ld-floats" aria-hidden="true"><span>L</span><span>E</span><span>V</span><span>L</span><span>E</span><span>V</span></div>
     <nav class="ld-nav">
-      <div class="ld-brand"><img src="icons/icon-192.png" alt="" width="40" height="40"><span>POLLA <b>PRODES</b></span></div>
+      <div class="ld-brand"><img src="icons/icon-192.png" alt="Logo de Polla Prodes" width="40" height="40"><span>POLLA <b>PRODES</b></span></div>
       <div class="ld-nav-r"><a class="ld-nav-biz" href="#empresas">Empresas</a><button class="ld-ingresar" onclick="landingIr('login')">Ingresar</button></div>
     </nav>
     <div class="ld-hero-in">
@@ -3000,9 +3004,9 @@ body.login-active #bn,#app:not(.on) ~ #bn,#landing:not([hidden]) ~ #bn{display:n
   </section>
 
   <footer class="ld-foot">
-    <div class="ld-brand"><img src="icons/icon-192.png" alt="" width="30" height="30"><span>POLLA <b>PRODES</b></span></div>
+    <div class="ld-brand"><img src="icons/icon-192.png" alt="Logo de Polla Prodes" width="30" height="30"><span>POLLA <b>PRODES</b></span></div>
     <div class="ld-foot-links"><button onclick="tutorialInstalar()">📲 Instalá la app</button><button onclick="landingIr('login')">Ingresar</button><button onclick="landingIr('registro')">Registrarse</button></div>
-    <small><a href="#" onclick="abrirLegales('terminos');return false">Términos</a> · <a href="#" onclick="abrirLegales('privacidad');return false">Privacidad</a> · <a href="#" onclick="abrirLegales('juego');return false">Juego responsable</a> · <a href="/bases">Bases del concurso</a></small>
+    <small><a href="/legales">Aviso legal</a> · <a href="/terminos">Términos</a> · <a href="/privacidad">Privacidad</a> · <a href="/cookies">Cookies</a> · <a href="/juego-responsable">Juego responsable</a> · <a href="/bases">Bases del concurso</a></small>
     <small>Jugar compulsivamente es perjudicial para la salud · Prohibido para menores de 18 años</small>
   </footer>
 </div>
@@ -3913,8 +3917,8 @@ function renderPartidos(parts,ctx,puede){
     const sinGoles=p.golesLocal===null||p.golesLocal===undefined||p.golesLocal==="";
     const tipoCls=p.tipo==="Polla"?" polla":p.tipo==="Doble"?" doble":"";
     const li=p.local?p.local[0].toUpperCase():"L",vi=p.visita?p.visita[0].toUpperCase():"V";
-    const escL=p.localLogo?`<img src="${p.localLogo}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'">`:"";
-    const escV=p.visitaLogo?`<img src="${p.visitaLogo}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'">`:"";
+    const escL=p.localLogo?`<img src="${p.localLogo}" alt="Escudo de ${escH(p.local)}" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'">`:"";
+    const escV=p.visitaLogo?`<img src="${p.visitaLogo}" alt="Escudo de ${escH(p.visita)}" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none'">`:"";
     // Bloqueo por partido: 30min antes del inicio O si ya finalizó
     const partidoFinalizado=p.estado==="Finalizado"||p.estado==="Suspendido";
     const inicioP=p.fechaHora?new Date(p.fechaHora):null;
@@ -5318,6 +5322,7 @@ function showLogin(){
           <div class="ig" id="ra-g"><label class="ll-lbl">Alias MercadoPago</label><input class="ll-inp" id="ra" placeholder="tu.alias.mp"/></div>
           <div class="ig" id="rce-g"><button type="button" class="ll-emp-link" onclick="this.nextElementSibling.hidden=false;this.remove()">¿Tu empresa te dio un código?</button><div hidden><label class="ll-lbl">Código de empresa</label><input class="ll-inp" id="rce" placeholder="Ej: ACME" maxlength="16" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" onchange="buscarEmpresaReg(this.value)"/><div id="rce-campos"></div></div></div>
           <div class="ig"><label class="ll-lbl">Email</label><input class="ll-inp" id="rem" type="email" placeholder="tu@email.com" required autocomplete="email" inputmode="email"/></div>
+          <div aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"><label>No completar <input id="r-web" tabindex="-1" autocomplete="off"/></label></div>
           <label class="lg-check ll-check"><input type="checkbox" id="r-legal"/> <span>Soy mayor de 18 años y acepto los <a href="#" onclick="abrirLegales('terminos');return false">Términos</a>, la <a href="#" onclick="abrirLegales('privacidad');return false">Política de privacidad</a> y <a href="#" onclick="abrirLegales('juego');return false">Juego responsable</a>.</span></label>
           <div id="re"></div>
           <button class="btn btn-p btn-lg" onclick="doReg()" style="margin-top:6px">Crear cuenta →</button>
@@ -5355,7 +5360,7 @@ window.doReg=async()=>{
   if(window._empLogin&&ce!==String(window._empLogin.codigo).toUpperCase()){err("El código de empresa no es correcto");return;}
   const dx=leerCamposEmpresa(document.getElementById("rf"));
   if(empR){const falta=(empR.campos||[]).find(function(c){return c.obligatorio&&!dx[c.id];});if(falta){err("Completá: "+falta.label);return;}}
-  const r=await api("registro",{nombre:n,telefono:t,pin:p,pin2:p2,alias:empR?"":a,email:e,codigoEmpresa:ce,datosExtra:dx,aceptaLegales:true});
+  const r=await api("registro",{nombre:n,telefono:t,pin:p,pin2:p2,alias:empR?"":a,email:e,codigoEmpresa:ce,datosExtra:dx,aceptaLegales:true,web:(document.getElementById("r-web")||{}).value||""});
   if(!r.ok){if(er)er.innerHTML=`<div class="ll-err">⚠ ${r.error}</div>`;return;}
   r.user.rolBase=r.user.rol;window._espacioIngreso=r.espacio;
   saveSession(r.user,r.sessionToken);toast(`✅ Bienvenido, ${r.user.usuario}`);initApp();
@@ -6529,14 +6534,16 @@ privacidad:{t:"Política de Privacidad",h:`
 <h4>3. Qué ven los demás</h4>
 <p>Los otros jugadores de una misma fecha ven tu usuario, tu nombre, tu avatar, tu posición y, una vez cerrada la fecha, tus pronósticos y reglas (en la Tabla y la Grilla). Tu teléfono y tu email no se muestran a otros jugadores. En los torneos de empresa, los administradores de esa empresa pueden ver a sus participantes y las respuestas a sus preguntas.</p>
 <h4>4. Con quién se comparten</h4>
-<p>Usamos proveedores que procesan datos por cuenta nuestra, solo para prestar el servicio: alojamiento de la base de datos y archivos (Supabase), publicación de la web (GitHub) y seguridad de la conexión (Cloudflare), servicios de notificaciones del sistema (Apple y Google) y envío de emails. Algunos de estos proveedores están fuera de Argentina; contratamos servicios que aplican medidas de seguridad adecuadas. También podríamos compartir datos si lo exige una autoridad competente.</p>
+<p>Usamos proveedores que procesan datos por cuenta nuestra, solo para prestar el servicio: alojamiento de la base de datos y archivos (Supabase), publicación de la web, seguridad de la conexión y estadísticas anónimas de visitas (Cloudflare), copia del código (GitHub), servicios de notificaciones del sistema (Apple y Google) y envío de emails. Algunos de estos proveedores están fuera de Argentina; contratamos servicios que aplican medidas de seguridad adecuadas. También podríamos compartir datos si lo exige una autoridad competente.</p>
 <h4>5. Cuánto tiempo los guardamos</h4>
 <p>Mientras tu cuenta esté activa. Si pedís darla de baja, eliminamos o anonimizamos tus datos, salvo los que debamos conservar por obligaciones legales o para resolver reclamos (por ejemplo, registros de pagos y premios).</p>
 <h4>6. Tus derechos</h4>
 <p>Podés pedir en cualquier momento <b>acceso, rectificación, actualización o supresión</b> de tus datos, y la baja de tu cuenta, escribiendo a pollaprodes@gmail.com o por WhatsApp al +54 9 11 6163-0873. Respondemos dentro de los plazos de ley (10 días corridos para acceso y 5 días hábiles para rectificación o supresión). Podés desactivar los avisos cuando quieras desde tu Perfil.</p>
 <p class="lg-aaip">La AGENCIA DE ACCESO A LA INFORMACIÓN PÚBLICA, en su carácter de Órgano de Control de la Ley N° 25.326, tiene la atribución de atender las denuncias y reclamos que interpongan quienes resulten afectados en sus derechos por incumplimiento de las normas vigentes en materia de protección de datos personales.</p>
 <h4>7. Seguridad</h4>
-<p>Los datos viajan cifrados (https), los PIN se guardan cifrados y los comprobantes de pago se guardan en un espacio privado al que solo accede el administrador.</p>`},
+<p>Los datos viajan cifrados (https), los PIN se guardan cifrados y los comprobantes de pago se guardan en un espacio privado al que solo accede el administrador.</p>
+<h4>8. Cookies y almacenamiento</h4>
+<p>No usamos cookies de publicidad ni de seguimiento. La app guarda en tu navegador solo lo necesario para funcionar (tu sesión y tus preferencias de apariencia). Las estadísticas de visitas son anónimas y no usan cookies. Más detalles en el <a href="/cookies" target="_blank" rel="noopener">Aviso de cookies</a>.</p>`},
 juego:{t:"Juego Responsable",h:`
 <p class="lg-alerta"><b>JUGAR COMPULSIVAMENTE ES PERJUDICIAL PARA LA SALUD.</b><br>Prohibido para menores de 18 años.</p>
 <p>Polla Prodes es un juego para divertirse con amigos y compañeros, poniendo a prueba lo que sabés de fútbol. Queremos que siga siendo eso.</p>

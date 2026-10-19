@@ -1,10 +1,46 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Polla Prodes</title>
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Página no encontrada · Polla Prodes</title>
+<meta name="description" content="La página no existe.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<style>
+:root{--bg:#F4F7F5;--card:#fff;--ink:#0C1A11;--ink2:#3D4B42;--verde:#0E7A43;--linea:#0C1A1118}
+@media (prefers-color-scheme:dark){:root{--bg:#072315;--card:#0D2F1D;--ink:#F1F6F2;--ink2:#C3D3C8;--verde:#3BE38A;--linea:#ffffff1f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:28px 16px 40px}
+.marca{display:inline-flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.02em;text-decoration:none;color:inherit}
+.marca img{width:36px;height:36px;border-radius:10px}
+h1{font-size:30px;line-height:1.15;margin:26px 0 6px}
+.lg-v,.v{color:var(--ink2);font-size:14px;margin:0 0 18px}
+.doc{background:var(--card);border:1px solid var(--linea);border-radius:16px;padding:8px 20px 14px}
+h4,h2{font-size:18px;margin:18px 0 6px;color:var(--verde)}
+p,li{color:var(--ink2);margin:6px 0}
+b{color:var(--ink)}
+ul,ol{padding-left:22px;margin:6px 0}
+a{color:var(--verde)}
+.lg-alerta{background:#E5484D1a;border:1px solid #E5484D66;border-radius:12px;padding:10px 12px;color:var(--ink)}
+.lg-aaip{font-size:14px}
+nav.pie{max-width:760px;margin:0 auto;padding:0 16px 40px;display:flex;flex-wrap:wrap;gap:8px 16px;font-size:14px}
+nav.pie a{color:var(--ink2)}
+.cta{display:inline-block;margin-top:14px;background:var(--verde);color:#fff;font-weight:800;text-decoration:none;padding:12px 20px;border-radius:12px}
+@media (prefers-color-scheme:dark){.cta{color:#072315}}
+</style></head>
 <script>
-/* Dirección de empresa: pollaprodes.ar/norte → abre la Polla de esa empresa (?e=NORTE).
-   Sirve igual en gr10-cdu.github.io/PollaProdes/norte */
-(function(){
-  var p=location.pathname,base=p.indexOf("/PollaProdes/")===0?"/PollaProdes/":"/";
-  var seg=decodeURIComponent(p.slice(base.length).split("/")[0]||"");
-  location.replace(base+(/^[A-Za-z0-9_-]{3,16}$/.test(seg)?"?e="+encodeURIComponent(seg):""));
-})();
-</script></head><body style="background:#072315"></body></html>
+/* Dirección de empresa: pollaprodes.ar/norte → abre la Polla de esa empresa (?e=NORTE). Sirve igual en gr10-cdu.github.io/PollaProdes/norte */
+(function(){var p=location.pathname,base=p.indexOf("/PollaProdes/")===0?"/PollaProdes/":"/";
+var resto=decodeURIComponent(p.slice(base.length)).replace(/\/$/,"");
+if(/^[A-Za-z0-9_-]{3,16}$/.test(resto))location.replace(base+"?e="+encodeURIComponent(resto));})();
+</script>
+<body><main>
+<a class="marca" href="/"><img src="/icons/icon-192.png" alt="Logo de Polla Prodes" width="36" height="36"><span>POLLA PRODES</span></a>
+<h1>Página no encontrada</h1>
+<div class="doc"><p>La página que buscás no existe o cambió de lugar.</p>
+<p>Si te pasaron el link de una liga o empresa, revisá que esté bien escrito.</p>
+<a class="cta" href="/">Ir a Polla Prodes</a></div>
+</main>
+<nav class="pie" aria-label="Páginas"><a href="/">Inicio</a> <a href="/legales">Aviso legal</a> <a href="/terminos">Términos</a> <a href="/privacidad">Privacidad</a> <a href="/cookies">Cookies</a> <a href="/juego-responsable">Juego responsable</a> <a href="/bases">Bases del concurso</a></nav>
+</body></html>

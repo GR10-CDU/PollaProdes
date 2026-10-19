@@ -416,6 +416,8 @@ Deno.serve(async (req) => {
 async function registro(db: any, data: any) {
   const { nombre, telefono, pin } = data;
   if (!nombre || !telefono || !pin) return {ok:false, error:"Faltan datos"};
+  // Trampa para robots: campo oculto que una persona nunca completa
+  if (String(data.web||"").trim()) return {ok:false, error:"No pudimos completar el registro. Probá de nuevo."};
   const tel = telefono.replace(/\D/g,"");
   if (String(nombre).trim().length < 3) return {ok:false, error:"Escribí tu nombre y apellido"};
   if (tel.length < 8 || tel.length > 15) return {ok:false, error:"El teléfono no parece válido"};
